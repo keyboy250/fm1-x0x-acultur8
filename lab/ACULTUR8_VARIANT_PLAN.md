@@ -289,7 +289,7 @@ Repair `tests/target_budget.py` before relying on it: its default `build/felucca
 
 No installable Acultur8 firmware asset or automatic installer promotion belongs in the browser alpha. Hardware qualification includes the device/recovery action when its identity, backups and procedure are concrete and installation is authorized.
 
-## Historical initial launch batch (completed; superseded)
+## Historical initial execution batch (superseded)
 
 1. Resolve GitHub owner/repository, then make a separate clean clone anchored to the recovered upstream commit; produce a reviewed import diff and file manifest.
 2. Make the local lab runnable from that clone; keep the live workspace and user imports untouched.
