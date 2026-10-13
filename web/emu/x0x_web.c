@@ -22,6 +22,14 @@ __attribute__((used,visibility("default"))) uint32_t web_midi_pending(void) {ret
 __attribute__((used,visibility("default"))) int web_midi_batch(int max) {return host_web_midi_batch(max);}
 __attribute__((used,visibility("default"))) uint32_t web_midi_packet(int index) {return host_web_midi_packet(index);}
 __attribute__((used,visibility("default"))) int web_midi_ack(int prefix) {return host_web_midi_ack(prefix);}
+/* Main/worklet message context only: explicit selected input is source2.
+ * Return0 is bounded input-ring acceptance, not audio application/delivery. */
+__attribute__((used,visibility("default"))) int web_midi_ingest(uint32_t packet,int source){return host_web_midi_ingest(packet,source);}
+__attribute__((used,visibility("default"))) void web_cc_reset_source(int source){if(source>=0&&source<CC_SOURCES)cc_reset_source((uint8_t)source);}
+__attribute__((used,visibility("default"))) uint32_t web_cc_source(int source,int field){return source<0||source>=CC_SOURCES||field<0?0xffffffffu:cc_source_field((uint8_t)source,(unsigned)field);}
+__attribute__((used,visibility("default"))) uint32_t web_cc_stat(int index){return index<0||index>=6?0xffffffffu:((uint32_t *)&cc_stats)[index];}
+__attribute__((used,visibility("default"))) uint32_t web_cc_pending(void){return mi_w-mi_r;}
+__attribute__((used,visibility("default"))) uint32_t web_cc_version(void){return 0x00010001u;} /* ABI1 / map1; partial candidate, not complete coverage */
 
 /* Fixed-size, shared-engine editor bridge. Never expose live project memory. */
 static variant_reply_t web_variant_reply;

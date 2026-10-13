@@ -27,6 +27,8 @@ static volatile uint32_t fm1_ms;  /* milliseconds since boot (TIMER4-based, TIME
 static inline int32_t clamp(int32_t v, int32_t lo, int32_t hi) { return v < lo ? lo : v > hi ? hi : v; }
 
 #include "app/plat.h"
+#define X0X_CC 1
+#include "app/cc.h"
 
 #define FELUCCA_OTA 1             /* M-UPGRADE update entry: keeps the web installer working */
 #ifndef X0X_CDC
@@ -129,5 +131,6 @@ static void ota_commit(const uint8_t *parm)
 #include "app/plat_fm1.c"
 #include "app/project.c"
 #include "app/ui.c"
+#include "app/cc.c"
 #include "app/editor.c"
 #include "app/main_fm1.c"

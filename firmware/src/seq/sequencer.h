@@ -119,6 +119,7 @@ typedef struct {                      /* one part's runtime */
     uint8_t started;                  /* the first step has fired since start */
     uint8_t sounding;                 /* 303: a note is held */
     uint8_t held_note;
+    uint8_t source_note; /* accepted untransposed NOTE for live CC reprojection; runtime only */
     uint8_t trigger_rejected; /* uses existing alignment gap; chance failure is not strict failure */
     uint32_t to_next;                 /* samples to the next step (Q8 fraction) */
     uint32_t to_off;                  /* 303: samples to the gate falling, Q8; 0 = none */
@@ -198,6 +199,7 @@ void seq_stop(seq_t *s);
 void seq_notes_clear(seq_t *s,const seq_sink_t *sink);
 void seq_midi_prepare(seq_t *s,int connected,const seq_sink_t *sink); /* cleanup only; never retries On */
 void seq_midi_sync(seq_t *s,int connected,const seq_sink_t *sink);
+void seq_cc_reconcile(seq_t *s,const seq_sink_t *sink);
 enum { PAD_NONE, PAD_NO_CHORD, PAD_RANGE, PAD_COLLISION, PAD_DISCONNECTED, PAD_OUTPUT_DISABLED };
 int seq_pad_channel_available(const seq_t *s,int channel);
 int seq_pad_desired(const seq_t *s,uint8_t notes[3]);

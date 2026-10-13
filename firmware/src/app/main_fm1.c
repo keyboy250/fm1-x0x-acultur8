@@ -385,6 +385,7 @@ static void fm1_main(void)
                 enter_uboot("UBOOT");
             }
         }
+        plat_midi_service();                        /* main-only canonical CC handoff */
         ed_service();                               /* sample upload SysEx */
         ota_service();                              /* M-UPGRADE handshake */
         if (usb.ota_req) {

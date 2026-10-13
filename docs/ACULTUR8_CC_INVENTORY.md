@@ -1,10 +1,10 @@
 # Acultur8 complete CC design inventory
 
-**Inventory and draft mapping only. Runtime CC reception/application is not implemented.**
+**Inventory and draft mapping only. Native candidate support is recorded in ACULTUR8_CC_RUNTIME_COVERAGE.json; this inventory does not certify browser/DAW/device acceptance.**
 
 Generated with `python tools/cc_inventory.py --write`; validate with `--check`. No firmware compilation is performed.
 
-688 inventory rows: 674 addressed field templates/descriptor rows and 14 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 641, 'nonmusical': 3, 'diagnostic': 1, 'read_only': 1, 'action': 17, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 12}.
+689 inventory rows: 675 addressed field templates/descriptor rows and 14 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 642, 'nonmusical': 3, 'diagnostic': 1, 'read_only': 1, 'action': 17, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 12}.
 
 ## Source-derived engine descriptor counts
 
@@ -24,7 +24,7 @@ Fixed channel/CC addresses are independent of configurable note channels. CC120�
 
 Structured fields use explicit MIDI-owned selectors, never the open UI page or editing focus. Pattern 0–31, part 0–4, step 0–63, block 0–191 and motion lane 0–159 are explicit contexts. Selectors must be scoped per input source and reset on detach. Split-address transactions need an explicit commit barrier; its final wire protocol is not accepted yet.
 
-Ranges describe stored encodings. Length pots add one, tempo adds 20 BPM, transpose subtracts 24. Enum holes and 255 sentinels require semantic validation, not numeric clamping. Frequency scaling is a draft logarithmic proposal; exact cutoff resolution and 14-bit pairing need acceptance. Direct CC7 quantizes wide ranges. An additional ordinary-CC explicit parameter/context/value transaction proposes exact 16-bit instrument values; browser source-BPM milli needs 19 bits and remains unresolved. No false claim of exact 7-bit representation.
+Ranges describe stored encodings. Length pots add one, tempo adds 20 BPM, transpose subtracts 24. Enum holes and 255 sentinels require semantic validation, not numeric clamping. Frequency scaling is a draft logarithmic proposal; exact cutoff resolution and 14-bit pairing need acceptance. Direct CC7 quantizes wide ranges. The additional ordinary-CC explicit parameter/context/value transaction has three 7-bit chunks (21 bits), sufficient for browser source-BPM milli (19 bits); the browser setter remains unimplemented. Old high2 retains the original 16-bit compatibility path. No false claim of exact 7-bit representation.
 
 Sparse parent/pad-channel domains use allowed-value ordinal scaling for both CC7 and optional CC14, so intermediate values remain valid. Motion values require an explicit parameter target: each sound descriptor has its own 0..max domain plus MOT_NONE=255; T_PROB supports probability 0..100, all 35 condition codes 101..135, and MOT_NONE. The original panel edits its 5%-step probability subset, while the evaluator accepts the wider domain. Exact-value transactions test target membership and preserve every condition code.
 
@@ -32,7 +32,7 @@ Sparse parent/pad-channel domains use allowed-value ordinal scaling for both CC7
 
 ## Runtime design and acceptance still required
 
-USB/TRS already deliver channel packets to the engine, but `midi_in` ignores CC. Browser input listeners, bounded worklet/WASM ingress and live semantic setters are missing. Stopped-only follow/pad/output/length setters cannot establish live DAW automation.
+The original audio `midi_in` handler ignores CC. The isolated native candidate now intercepts it in an ordered main-context handoff; consult the runtime ledger and native checkpoint. Browser input listeners, compiled worklet/WASM acceptance and complete live coverage remain open. Original stopped-only follow/pad/output/length commands alone cannot establish live DAW automation.
 
 Do not call UI/canonical/undo functions from the MIDI audio callback. Validate and publish canonical intent with audio-owner application, dirty/readback acknowledgement and bounded undo gestures. Reconcile motion hold/record. Live mode/channel/range changes retain original-channel Off debt before replacement attacks. Define musical boundaries for length/rate/block changes.
 
@@ -703,6 +703,7 @@ Acceptance: exhaustive registry coverage and endpoint/enum scaling; collision/re
 | value.exact_commit | value.exact_commit | [0, 1] | 13 / 21 | {} | musical |
 | lane.length | Proposed individual sound-lane length | [1, 64] | 13 / 104 | {"strip": [0, 24]} | musical |
 | lane.rate | Proposed individual sound-lane rate | [0, 7] | 13 / 105 | {"strip": [0, 24]} | musical |
+| value.exact_high7 | 21-bit exact value high chunk | [0, 127] | 13 / 106 | {} | musical |
 | output.master_knob | MASTER gain Q12 | [0, 4096] | 13 / 76 | {} | musical |
 | slice.level_percent | slice.level_percent | [0, 100] | 13 / 80 | {} | browser_musical |
 | slice.repeat | slice.repeat | [0, 1] | 13 / 81 | {} | browser_musical |

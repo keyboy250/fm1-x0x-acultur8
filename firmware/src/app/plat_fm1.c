@@ -91,11 +91,15 @@ void plat_leds(uint32_t buttons, uint32_t keys)
 int plat_midi_connected(void) { return usb.config && !usb.suspended; }
 int plat_midi_in(uint32_t *pkt)
 {
-    if (mi_r == mi_w)
-        return 0;
-    *pkt = midi_in_q[mi_r % MQ];
-    mi_r++;
-    return 1;
+    while(mi_r!=mi_ready){*pkt=midi_in_q[mi_r++%MQ];if(*pkt)return 1;}
+    return 0;
+}
+void plat_midi_clear_cc_source(uint8_t source){cc_ingress_clear_source(midi_in_q,&mi_w,MQ,source);}
+void plat_midi_service(void){
+    static uint8_t previous_usb;
+    uint8_t connected=(uint8_t)(usb.config&&!usb.suspended);
+    if(previous_usb&&!connected)cc_reset_source(0);
+    previous_usb=connected;cc_ingress_service(midi_in_q,&mi_w,&mi_r,MQ);
 }
 int plat_midi_out(uint32_t pkt) { return midi_out_event(pkt); }
 int plat_midi_pair(uint32_t first,uint32_t second) { return midi_out_pair(first,second); }

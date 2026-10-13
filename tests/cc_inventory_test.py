@@ -43,7 +43,7 @@ class InventoryTest(unittest.TestCase):
         self.assertEqual(sum(k.startswith('strip.') for k in byid),25*10)
         self.assertIsNone(byid['pref.BATT_P']['address'])
         self.assertEqual(byid['pref.SQ_THEME']['category'],'nonmusical')
-        self.assertTrue(all(x['runtime_cc']=='not implemented' for x in byid.values()))
+        self.assertTrue(all(x['runtime_cc']==cc.RUNTIME_NOTE for x in byid.values()))
 
     def test_collision_reserved_and_fine_pair_rejection(self):
         for kind in ['collision','channel_mode','fine','range','false_claim']:

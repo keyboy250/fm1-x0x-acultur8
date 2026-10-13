@@ -24,6 +24,7 @@ FILES = ['firmware/src/app/engine.c', 'firmware/src/app/engine.h', 'firmware/src
          'firmware/src/app/main_fm1.c', 'firmware/src/midi_uart.c', 'firmware/src/usb.c',
          'web/emu/index.html', 'web/emu/slice-panel.html', 'web/emu/pad-panel.html']
 CCS = list(range(32)) + list(range(64, 120))
+RUNTIME_NOTE = 'design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json'
 STRUCTS = {
     'tb3po_cfg_t':['density','accent','slide','oct_range','root','scale','base_oct','mutate_bars','seed'],
     'bpart_t':['step','len','rate','dir','transpose','gen'],
@@ -179,7 +180,7 @@ def build(root=ROOT):
             source='firmware/src/app/ui.c', context=None, **extra):
         row={'id':key,'name':name,'category':category,'range':[minimum,maximum],
              'default':default,'source':source,'context':context or {},
-             'runtime_cc':'not implemented','live_requirement':'while playing',
+             'runtime_cc':RUNTIME_NOTE,'live_requirement':'while playing',
              'canonical_requirement':'validated intent + dirty/undo; audio-owner application',
              'address':None,'scaling':'round(min + cc7 * (max-min) / 127)'}
         if slot is not None:
@@ -312,6 +313,8 @@ def build(root=ROOT):
     add('lane.rate','Proposed individual sound-lane rate',7,1129,context={'strip':[0,24]},
         source='proposal: preserve RATE IDs0..3, append four rates',runtime_parameter='planned; not implemented in audited base',
         choices=['1/16','1/16T','1/32','1/8T','1/4','1/8','1/4T','1/32T'])
+    add('value.exact_high7','21-bit exact value high chunk',127,1130,
+        source='CC transaction extension: same low/mid/commit IDs, new high7 address; old high2 retained')
     add('output.master_knob','MASTER gain Q12',4096,1100,source='web/emu/index.html',
         canonical_requirement='define live remote gain vs physical ADC pickup; current pot is runtime, not project intent')
     for i,(key,maximum,category) in enumerate([
@@ -333,7 +336,7 @@ def build(root=ROOT):
         if row['address']:row['parameter_number']=(row['address']['channel']-1)*len(CCS)+CCS.index(row['address']['cc'])
     covered={name:'descriptor or structured field' for name in refs}
     covered.update({'R_NONE':'sentinel','R_HDR':'non-selectable header','R_BATT':'read-only', 'R_ACT':'all ACT_P actions'})
-    result={'schema':1,'map_version':'draft-1','runtime_cc':'not implemented',
+    result={'schema':1,'map_version':'draft-1','runtime_cc':RUNTIME_NOTE,
             'source_hashes':{p:hashlib.sha256(t.encode()).hexdigest() for p,t in raw.items()},
             'descriptor_counts':counts,'ui_ref_coverage':covered,'structured_field_coverage':structured,
             'ingress_context_proof':{'USB':'firmware/src/usb.c:4,960; main_fm1.c:146 TIMER5 ISR, not main loop',
@@ -344,7 +347,7 @@ def build(root=ROOT):
                 'selectors':'Explicit input-source-owned pattern/part/kit/drum/bass/strip/step/block/lane/seed-byte selectors. Never UI focus. Reset selectors on input disconnect/replacement. Split low/high selectors commit only on explicit target-confirm barrier.',
                 'version_policy':'IDs and occupied addresses immutable after adoption; new entries use holes/new version. Reordering source descriptors requires explicit identity migration.',
                 'optional_14bit':'Only registered coarse CC0..31; CC32..63 reserved companions. Every field has an ordinary direct CC7 address, which can quantize wide ranges. Exact canonical integers use the additional explicit selector/value transaction below, never NRPN-only.',
-                'exact_values':'selector.parameter_low/high identify immutable parameter_number (7-bit chunks); selector.commit freezes complete context. value.exact_low7/mid7/high2 stages a 16-bit unsigned canonical value; value.exact_commit applies atomically. Reject incomplete/stale transactions. All four seed bytes separately addressable. Browser source BPM milli needs a wider transaction (19 bits), explicitly unresolved. Other instrument integers including 20000 Hz and 255 sentinels fit. This extra protocol uses ordinary CCs, not NRPN; it is draft, not implemented.',
+                'exact_values':'selector.parameter_low/high identify immutable parameter_number (7-bit chunks); selector.commit freezes complete context. value.exact_low7/mid7/high7 stages a 21-bit unsigned canonical value; value.exact_commit applies atomically. Old exact_high2 remains a compatible 16-bit high chunk. Reject incomplete/stale transactions. All four seed bytes separately addressable. Browser source BPM milli fits 21 bits; its browser setter remains unimplemented. This extra protocol uses ordinary CCs, not NRPN.',
                 'feedback':'No MIDI echo; browser snapshots separate from outbound MIDI. Explicit feedback opt-in needs independent routing/loop tests.',
                 'overflow':'Bounded ingress/coalescing for values, ordering barriers for selectors/actions; priority/reserve for Note-Off/Stop/clock; observable rejection/drop counters, never blocking audio.'},
             'entries':rows}
@@ -366,7 +369,7 @@ def validate(data):
             addresses.add(pair)
             fine=row.get('optional_cc14')
             if fine and (fine['channel']!=pair[0] or fine['msb']!=pair[1] or pair[1]>=32 or fine['lsb']!=pair[1]+32):raise ValueError('Invalid 14-bit companion')
-        if row['runtime_cc']!='not implemented':raise ValueError('False runtime claim')
+        if row['runtime_cc']!=RUNTIME_NOTE:raise ValueError('False runtime claim')
 
 
 def value_domain(row, target=None):
@@ -389,14 +392,14 @@ def scaled_value(row, raw, bits=7, target=None):
 
 
 def exact_value(row, raw, target=None):
-    if type(raw) is not int or not 0<=raw<=65535 or raw not in value_domain(row,target):raise ValueError('Exact transaction outside target domain')
+    if type(raw) is not int or not 0<=raw<=2097151 or raw not in value_domain(row,target):raise ValueError('Exact transaction outside target domain')
     return raw
 
 
 def markdown(data):
     counts=Counter(row['category'] for row in data['entries'])
     out=['# Acultur8 complete CC design inventory','',
-         '**Inventory and draft mapping only. Runtime CC reception/application is not implemented.**','',
+         '**Inventory and draft mapping only. Native candidate support is recorded in ACULTUR8_CC_RUNTIME_COVERAGE.json; this inventory does not certify browser/DAW/device acceptance.**','',
          'Generated with `python tools/cc_inventory.py --write`; validate with `--check`. No firmware compilation is performed.', '',
          f"{len(data['entries'])} inventory rows: {sum(r['address'] is not None for r in data['entries'])} addressed field templates/descriptor rows and {sum(r['address'] is None for r in data['entries'])} explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {dict(counts)}.",'',
          '## Source-derived engine descriptor counts','', '| Family | Per-voice counts | Total |','| --- | --- | --- |']
@@ -404,11 +407,11 @@ def markdown(data):
     out+=['','## Mapping contract','',
           'Fixed channel/CC addresses are independent of configurable note channels. CC120–127 are reserved for channel-mode messages. CC32–63 are reserved fine companions; optional 14-bit precision supplements ordinary 7-bit CC and is not NRPN-only.',
           '','Structured fields use explicit MIDI-owned selectors, never the open UI page or editing focus. Pattern 0–31, part 0–4, step 0–63, block 0–191 and motion lane 0–159 are explicit contexts. Selectors must be scoped per input source and reset on detach. Split-address transactions need an explicit commit barrier; its final wire protocol is not accepted yet.',
-          '','Ranges describe stored encodings. Length pots add one, tempo adds 20 BPM, transpose subtracts 24. Enum holes and 255 sentinels require semantic validation, not numeric clamping. Frequency scaling is a draft logarithmic proposal; exact cutoff resolution and 14-bit pairing need acceptance. Direct CC7 quantizes wide ranges. An additional ordinary-CC explicit parameter/context/value transaction proposes exact 16-bit instrument values; browser source-BPM milli needs 19 bits and remains unresolved. No false claim of exact 7-bit representation.',
+          '','Ranges describe stored encodings. Length pots add one, tempo adds 20 BPM, transpose subtracts 24. Enum holes and 255 sentinels require semantic validation, not numeric clamping. Frequency scaling is a draft logarithmic proposal; exact cutoff resolution and 14-bit pairing need acceptance. Direct CC7 quantizes wide ranges. The additional ordinary-CC explicit parameter/context/value transaction has three 7-bit chunks (21 bits), sufficient for browser source-BPM milli (19 bits); the browser setter remains unimplemented. Old high2 retains the original 16-bit compatibility path. No false claim of exact 7-bit representation.',
           '','Sparse parent/pad-channel domains use allowed-value ordinal scaling for both CC7 and optional CC14, so intermediate values remain valid. Motion values require an explicit parameter target: each sound descriptor has its own 0..max domain plus MOT_NONE=255; T_PROB supports probability 0..100, all 35 condition codes 101..135, and MOT_NONE. The original panel edits its 5%-step probability subset, while the evaluator accepts the wider domain. Exact-value transactions test target membership and preserve every condition code.',
           '','`lane.length` and `lane.rate` retain the complete proposed 25-lane scope, explicitly planned in this audited base. Existing source-derived part lengths/rates remain separately inventoried; the appended eight-rate/individual-lane implementation has not been substituted into current descriptor evidence.',
           '','## Runtime design and acceptance still required','',
-          'USB/TRS already deliver channel packets to the engine, but `midi_in` ignores CC. Browser input listeners, bounded worklet/WASM ingress and live semantic setters are missing. Stopped-only follow/pad/output/length setters cannot establish live DAW automation.',
+          'The original audio `midi_in` handler ignores CC. The isolated native candidate now intercepts it in an ordered main-context handoff; consult the runtime ledger and native checkpoint. Browser input listeners, compiled worklet/WASM acceptance and complete live coverage remain open. Original stopped-only follow/pad/output/length commands alone cannot establish live DAW automation.',
           '','Do not call UI/canonical/undo functions from the MIDI audio callback. Validate and publish canonical intent with audio-owner application, dirty/readback acknowledgement and bounded undo gestures. Reconcile motion hold/record. Live mode/channel/range changes retain original-channel Off debt before replacement attacks. Define musical boundaries for length/rate/block changes.',
           '','Context proof: `usb_poll` is TIMER5 ISR (`usb.c:4,960`, called by `main_fm1.c:146`); `uart_midi_poll` is also TIMER5 ISR (`midi_uart.c:87`, `main_fm1.c:148`). “Outside the render” does not mean main context. Reject direct canonical UI setters in either packet producer. Ordered main-context ring dispatch or a bounded CC mailbox needs further ownership/resource/order proof.',
           '','No incoming CC echo. Bound/coalesce automation without reordering selectors/actions; protect Note-Off/Stop/clock and expose rejection/overflow counters. Device IDs and input routes are not project data. Storage/destructive actions remain explicitly inventoried with preflight rather than silently omitted.',
@@ -435,7 +438,7 @@ def main():
         target=args.root/path
         if args.write:target.write_text(text,encoding='utf-8',newline='\n')
     if args.check:check_artifacts(args.root,data)
-    print(f"CC inventory: {len(data['entries'])} rows; descriptor/map/reservation checks PASS; runtime not implemented")
+    print(f"CC inventory: {len(data['entries'])} rows; descriptor/map/reservation checks PASS; runtime acceptance is separate")
 
 
 if __name__=='__main__':main()

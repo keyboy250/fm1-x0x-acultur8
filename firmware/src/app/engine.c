@@ -209,6 +209,8 @@ int engine_arrangement_refresh(const arrangement_settings_t *intent)
     return 1;
 }
 int engine_arrangement_queue(uint8_t block) { return cq_put(C_ARR_QUEUE, block, 0, 0); }
+int engine_cc_refresh(int reconcile){return cq_put(C_ARR,(uint32_t)reconcile,0,0);}
+int engine_cc_lane_set(int strip,int field,uint32_t value){(void)strip;(void)field;(void)value;return -2;}
 int engine_strip_set(int strip, int index, int value)
 {
     if (strip < 0 || strip >= 25 || index < 0 || index >= 6) return 0;
@@ -636,7 +638,11 @@ static void drain(void)
             bass303_note_off(&b303[a]);
         else if (type == C_BRK && !brk_hold)
             breaks_live(&brk, (int)a, (int)b);
-        else if (type == C_ARR) {seq_arrangement_apply_flags(&seq);seq.send_notes=(uint8_t)((proj.variant.arrangement.flags&ARR_NOTES_OUT)!=0);proj.set.notes_out=seq.send_notes;}
+        else if (type == C_ARR) {
+            if(a==1){seq_notes_clear(&seq,&SINK);bass_held[0]=bass_held[1]=255;for(int key=0;key<8;key++)breaks_live(&brk,key,0);}
+            seq_arrangement_apply_flags(&seq);seq.send_notes=(uint8_t)((proj.variant.arrangement.flags&ARR_NOTES_OUT)!=0);proj.set.notes_out=seq.send_notes;
+            if(a==2)seq_cc_reconcile(&seq,&SINK);
+        }
         else if (type == C_ARR_QUEUE) seq_arrangement_queue(&seq, (uint8_t)a);
         else if (type == C_STRIP && a < 25u) {
             uint32_t val = v | ((b & 15u) << 12);
