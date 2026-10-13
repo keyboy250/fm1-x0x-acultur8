@@ -5,11 +5,11 @@
     "acceptance": "Produce a valid x0x.fwsc using pinned pi32v2 and AC79 inputs; pass image, 96 KiB RAM, pool headroom and no-soft-double checks; report actual X0X render costs.",
     "status": "review",
     "area": "toolchain",
-    "notes": "Lossless fonts merged in reviewed PR #6; saves 18368 image bytes with 439 glyphs and 1756 rendering cases exact. Shared foundation merged in PR #7. Current kick candidate target image 570020/581564, RAM 97636/98304, pool 334612/344064; original 15 static gates pass unchanged. Active kick callee and per-sample strip costs measured separately. Device draw timing, stack watermark and physical render timing remain pending.",
+    "notes": "Lossless fonts and shared foundation are merged. Reviewed noise saving and basic arrangement combined target: image 576180/581564, RAM 97860/98304, pool 333792/344064; all 15 original cost gates pass unchanged. Additional arrangement path costs are documented separately. Physical draw/audio timing, stack and DMA checks remain pending.",
     "priority": 1,
     "milestone": "A–D · Target build",
     "depends_on": [],
-    "next_check": "Review and merge font candidate with fresh integrated checks; then measure command/save and kick-strip resource deltas. Keep device timing pending."
+    "next_check": "Preserve reviewed noise/arrangement target metrics; measure full 25 DSP resource/active costs and device timing separately."
   },
   {
     "id": "FM1-04",
@@ -17,11 +17,11 @@
     "acceptance": "Record representative and stressed patterns, clipping, output level and resource use; preserve a bypass reference for new DSP and compare each feature against it.",
     "status": "doing",
     "area": "sound",
-    "notes": "Integrated kick resource ledger measured: image spare 11544 bytes, general RAM spare 668, pool spare 9452 (1260 above 8192 reserve). Active kick processor + meter uses 80 pool bytes. Expanding all 25 processors requires a combined memory design before activation; host timing does not establish physical headroom.",
+    "notes": "Reviewed PR #11 noise-arena change saves exactly 1,024 pool bytes with 33,600 bitwise comparisons. Combined arrangement target measures image 576180, RAM 97860 and pool 333792; 15 original static gates pass unchanged. Active-path compiled costs are documented separately; full 25 processing and physical timing remain pending.",
     "priority": 2,
     "milestone": "A–D · Performance baseline",
     "depends_on": [],
-    "next_check": "Record reproducible synthetic factory/dense-pattern host/WASM bypass audio and cost; size the full proposed DSP/project/undo/arrangement/harmony workload by memory region. Keep real-device timing pending."
+    "next_check": "Measure the combined 25-strip workload, including 808 paired tails/core2 stack, with unchanged limits; keep hardware timing pending."
   },
   {
     "id": "FM1-05",
@@ -29,13 +29,13 @@
     "acceptance": "Define a versioned format for sound strips, arrangement/chords and bass/pad settings; prove old-project defaults, new save/reopen, undo, corrupt-format rejection, interrupted-save behavior and storage bounds.",
     "status": "doing",
     "area": "quality",
-    "notes": "Reviewed PR #7 merged versioned extension/save foundation with required native and actual WASM tests: legacy/default bytes, new-format save/reopen, corrupt/truncated/future-format rejection, capacity/no-write, long-gesture undo/redo and protected-load preservation. Arrangement/harmony sections and complete interrupted-save acceptance remain open.",
+    "notes": "Shared save foundation and arrangement schema 2/format 4 pass native and actual worklet migration, roundtrip, corrupt/future-format rejection, protected history, queue and transport reservation tests. Save may commit an open edit gesture before a later I/O failure. Final hosted integration, future bass/pad schema and physical interrupted-save acceptance remain open.",
     "priority": 3,
     "milestone": "B · Shared foundations",
     "depends_on": [
       "FM1-01"
     ],
-    "next_check": "Close independent review; rerun real WASM and final gesture/save checks, interrupted-save behavior and target resource gates. Freeze compact full-feature schema/migration design before arrangement/harmony expansion."
+    "next_check": "Verify final integrated format 4/schema 2 and old migrations on hosted save/reopen; keep future bass/pad schema and physical interrupted-save checks open."
   },
   {
     "id": "FM1-07",
@@ -49,7 +49,7 @@
     "depends_on": [
       "FM1-01"
     ],
-    "next_check": "Verify real WASM replies and applied queue tickets, invalid input/backpressure and capability labels; connect one complete kick editor to acknowledged snapshots. Device live editing remains separate."
+    "next_check": "Verify hosted arrangement acknowledgements, applied queue tickets and unsupported-engine gating; hardware editing remains separate."
   },
   {
     "id": "FM1-03",
@@ -57,14 +57,14 @@
     "acceptance": "Add sound-strip, arrangement and chord controls using shared engine state and acknowledged commands; preserve editing while playback continues; verify desktop and narrow layouts.",
     "status": "doing",
     "area": "interface",
-    "notes": "First kick editor in browser acceptance under FM1-27. Broader sound, arrangement and harmony editor remains planned.",
+    "notes": "Accepted kick editor plus basic arrangement/chord metadata controls share acknowledged C state. Candidate desktop/mobile, twelve pages covering 192 rows, live editing, busy-save, undo/redo and saved reload checks pass locally. Final integrated/hosted checks remain open.",
     "priority": 4,
     "milestone": "B-C - Feature controls",
     "depends_on": [
       "FM1-07",
       "FM1-05"
     ],
-    "next_check": "Expose one kick strip through engine commands and snapshots, then verify displayed values, undo and save/reopen."
+    "next_check": "Verify combined candidate on desktop/narrow hosted layouts and original slice workflow; then add remaining sound/bass/MIDI controls."
   },
   {
     "id": "FM1-27",
@@ -114,16 +114,16 @@
     "id": "FM1-13",
     "title": "Paged arrangement blocks and transitions",
     "acceptance": "Show pattern step pages separately from arrangement blocks; edit block order, repeat count and quantized transitions; verify internal/external clock, save/load and playback while editing.",
-    "status": "todo",
+    "status": "doing",
     "area": "sequencer",
-    "notes": "Reuse 32 patterns, 64 steps, 16-step pages and 192 song entries. Initial new blocks last 1–8 four-quarter-note bars, independent of 909 length; preserve legacy song semantics. Imported odd-length loops retain their own cycle.",
+    "notes": "Basic arrangement and progression metadata are implemented: twelve pages/192 rows, five pattern assignments and mutes, independent 1–8 musical-bar durations, next-bar queue and latched chord intent. 288 native timing combinations plus focused worklet cases, migration/rejection, transport-race and undo guards pass; final combined target and 15 unchanged cost gates pass. Hosted integration acceptance and broader row-order/loop controls remain open.",
     "priority": 6,
     "milestone": "C · Arrangement and harmony",
     "depends_on": [
       "FM1-05",
       "FM1-07"
     ],
-    "next_check": "Reuse existing patterns/song entries; size compact block duration/chord intent first, then verify editing/playing/queued states, quantized transitions and persistence."
+    "next_check": "Complete fresh integrated suite and hosted edit/play/queue/save/reopen checks; then implement row-order and loop-range controls without disturbing playback."
   },
   {
     "id": "FM1-14",
@@ -131,13 +131,13 @@
     "acceptance": "Sequence degrees 1-7 with scale-derived triad qualities and chord durations; verify major/minor tables, progression loops and saved-project migration. Pentatonic mode must not invent seven diatonic degrees.",
     "status": "doing",
     "area": "harmony",
-    "notes": "Reviewed shared seven-mode triad/root/chord resolver passes 18,299,366 strict native and sanitizer checks with zero data/bss. Required legacy host/WASM/browser suite also passes. The resolver is a dependency only: progression sequencing, saved block degrees, bass/pad wiring, legacy mode mapping and browser controls remain pending.",
+    "notes": "Reviewed shared C resolver and saved block degrees support twelve keys, seven modes and I-VII; explicit pentatonic parent, no invented chromatic degrees. The arrangement editor displays current latched triad metadata. Bass-follow and pad audio/MIDI wiring remain separate pending targets.",
     "priority": 7,
     "milestone": "C · Arrangement and harmony",
     "depends_on": [
       "FM1-13"
     ],
-    "next_check": "Integrate a saved progression lane with the arrangement transport, explicit legacy scale mapping and visible key/degree controls; verify actual played notes at block transitions."
+    "next_check": "Verify hosted progression transitions and saved metadata; connect both basses and dedicated-channel accompaniment to the same resolver."
   },
   {
     "id": "FM1-15",
