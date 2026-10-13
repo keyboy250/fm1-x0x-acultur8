@@ -2,7 +2,8 @@
 
 `firmware/src/seq/harmony.c` is a pure shared C implementation for future
 arrangement, bass and external MIDI pad integration. No engine, project schema,
-TB3PO, dashboard, build runner or packaging behavior changes in this slice.
+TB3PO or dashboard behavior changes in this slice. The required build runner
+now enforces the resolver test.
 Physical firmware and external receiver acceptance remain pending.
 
 ## Contract

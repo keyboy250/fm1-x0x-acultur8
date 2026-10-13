@@ -46,3 +46,6 @@ The local dashboard on port 8098 edits the reviewed variant and preserves origin
 ## 2026-10-13 — Shared harmony resolver dependency verified
 
 A separate bounded C resolver provides I–VII triads in all seven church modes and all twelve keys, explicit pentatonic parent selection, ascending MIDI voicings and strict final root/chord-tone selection after transpose/range correction. Independent review and repeated strict native plus ASan/UBSan runs pass 18,299,366 assertions. The required host/WASM/browser suite remains green. Host object text is 1036 bytes with zero data/bss; this is not target/device cost evidence. No legacy sequencer/generator/save ABI changed. Progression sequencing, saved blocks, bass/pad events and browser controls remain pending; FM1-14 stays in progress.
+
+
+The accepted first-kick browser prototype is tagged [acultur8-v0.1.0-alpha.kick.1](https://github.com/keyboy250/fm1-x0x-acultur8/releases/tag/acultur8-v0.1.0-alpha.kick.1) at `1394e5ff448106b358759ad46280d0113fa4ce87`. Its merged CI/Pages run `38375752238` passed; all 24 hosted files, exact WASM and the portable local/hosted source fingerprint match. This tag contains no hardware installer. Original alpha.1 remains unchanged.
