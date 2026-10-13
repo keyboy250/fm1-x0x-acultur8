@@ -49,6 +49,7 @@ static void bypass(void)
             drum909_trigger(&a,v,0.9f); legacy_drum909_trigger(&b,v,0.9f);
         }
         zero(l);zero(r);zero(rev);zero(dly);zero(bl);zero(br);zero(brev);zero(bdly);
+        drum909_strip_meter_clear(&a);
         drum909_render_st(&a,l,r,rev,dly,N);
         legacy_drum909_render_st(&b,bl,br,brev,bdly,N);
         CHECK(memcmp(l,bl,sizeof(l)) == 0 && memcmp(r,br,sizeof(r)) == 0);
@@ -95,6 +96,7 @@ static void integrated(void)
         legacy_drum909_render(&raw,input,unused,unused,N);
         sound_strip_meter_t m={0.0f,0.0f,1.0f};
         if(was_active) sound_strip_process(&external,input,input,N,&m);
+        drum909_strip_meter_clear(&actual);
         drum909_render_st(&actual,l,r,rev,dly,N);
         const sound_strip_meter_t *a=drum909_bd_strip_meter(&actual);
         CHECK(near(a->input_peak,m.input_peak) && near(a->output_peak,m.output_peak));
@@ -130,6 +132,7 @@ static void other_voices(void)
         drum909_trigger(&a,v,1.0f);legacy_drum909_trigger(&b,v,1.0f);
         for(int k=0;k<100;++k) {
             zero(x);zero(y);zero(s);zero(t);
+            drum909_strip_meter_clear(&a);
             drum909_render(&a,x,s,t,N);legacy_drum909_render(&b,y,s,t,N);
             CHECK(memcmp(x,y,sizeof(x))==0);
         }
@@ -150,7 +153,7 @@ static void response(void)
         if(mode==2) { c.flags|=SOUND_STRIP_LOWPASS; c.lowpass_hz=20; }
         CHECK(drum909_bd_strip_set(&d,&c)==0);drum909_trigger(&d,DR_BD,1.0f);
         for(int b=0;b<32;++b) {
-            zero(x);zero(s);zero(t);drum909_render(&d,x,s,t,N);
+            zero(x);zero(s);zero(t);drum909_strip_meter_clear(&d);drum909_render(&d,x,s,t,N);
             if(b>=16)for(int i=0;i<N;++i)energy[mode]+=(double)x[i]*(double)x[i];
         }
     }
@@ -161,11 +164,11 @@ static void response(void)
     float x[N],s[N],t[N];
     drum909_init(&d);sound_strip_config_default(&c);c.flags=SOUND_STRIP_ENABLED;
     CHECK(drum909_bd_strip_set(&d,&c)==0);
-    zero(x);zero(s);zero(t);drum909_render(&d,x,s,t,N);
+    zero(x);zero(s);zero(t);drum909_strip_meter_clear(&d);drum909_render(&d,x,s,t,N);
     CHECK(!drum909_active(&d));
     c.flags|=SOUND_STRIP_LOWPASS;c.lowpass_hz=500;
     CHECK(drum909_bd_strip_set(&d,&c)==0);CHECK(drum909_active(&d));
-    for(int b=0;b<3;++b) { zero(x);zero(s);zero(t);drum909_render(&d,x,s,t,N); }
+    for(int b=0;b<3;++b) { zero(x);zero(s);zero(t);drum909_strip_meter_clear(&d);drum909_render(&d,x,s,t,N); }
     CHECK(!drum909_active(&d) && d.bd_strip.mix==1.0f);
     puts("PASS silent stage change completes both fade legs before next trigger");
 }
@@ -182,7 +185,8 @@ static double bench(int mode)
     for(int b=0;b<8192;++b) {
         if(b%16==0) { if(mode==0)legacy_drum909_trigger(&d,DR_BD,1.0f);else drum909_trigger(&d,DR_BD,1.0f); }
         zero(x);zero(s);zero(t);
-        if(mode==0)legacy_drum909_render(&d,x,s,t,N);else drum909_render(&d,x,s,t,N);
+        if(mode==0)legacy_drum909_render(&d,x,s,t,N);
+        else { drum909_strip_meter_clear(&d); drum909_render(&d,x,s,t,N); }
     }
     return (double)(clock()-start)/(double)CLOCKS_PER_SEC;
 }
@@ -195,16 +199,16 @@ static void guard_tail(void)
     drum909_init(&d);sound_strip_config_default(&c);
     c.flags=SOUND_STRIP_ENABLED|SOUND_STRIP_LIMITER;c.ceiling_db=48;c.boost_db=24;
     CHECK(drum909_bd_strip_set(&d,&c)==0);drum909_trigger(&d,DR_BD,1.0f);
-    zero(x);zero(s);zero(t);drum909_render(&d,x,s,t,32);
+    zero(x);zero(s);zero(t);drum909_strip_meter_clear(&d);drum909_render(&d,x,s,t,32);
     CHECK(d.bd_strip.guard_gain<1.0f && d.bd_strip.mix>0.0f);
     c.flags=0;CHECK(drum909_bd_strip_set(&d,&c)==0);
-    zero(x);zero(s);zero(t);drum909_render(&d,x,s,t,32);
+    zero(x);zero(s);zero(t);drum909_strip_meter_clear(&d);drum909_render(&d,x,s,t,32);
     CHECK(d.bd_strip.mix==0.0f && (d.bd_strip.flags>>16)>0);
     d.bt[DR_BD].mute=0;
     CHECK(drum909_active(&d) && !sound_strip_bypassed(&d.bd_strip));
-    zero(x);zero(s);zero(t);drum909_render(&d,x,s,t,N);
+    zero(x);zero(s);zero(t);drum909_strip_meter_clear(&d);drum909_render(&d,x,s,t,N);
     CHECK(sound_strip_bypassed(&d.bd_strip) && !drum909_active(&d));
-    zero(x);zero(s);zero(t);drum909_render(&d,x,s,t,N);
+    zero(x);zero(s);zero(t);drum909_strip_meter_clear(&d);drum909_render(&d,x,s,t,N);
     CHECK(drum909_bd_strip_meter(&d)->input_peak==0.0f && drum909_bd_strip_meter(&d)->output_peak==0.0f);
     CHECK(drum909_bd_strip_meter(&d)->gain_min==1.0f);
     puts("PASS final-guard release drains after interrupted fade reaches dry and BD becomes silent");

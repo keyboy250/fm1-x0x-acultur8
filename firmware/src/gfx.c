@@ -21,29 +21,70 @@ typedef struct {               /* proportional, see tools/gen_font.py */
 typedef struct {
     const uint8_t *p, *end;
     uint8_t left, repeated, value;
+#if FONT_HUFFMAN
+    uint8_t bits;
+    uint32_t buffer;
+#endif
 } font_reader_t;
+
+/* Decode one packet byte. Canonical tables are flash-only; input is bounded
+ * by this glyph's offset sentinel, including incomplete final codes. */
+static int32_t font_symbol(font_reader_t *r)
+{
+#if FONT_HUFFMAN
+    uint32_t code = 0;
+    while (r->bits < 8 && r->p != r->end) {
+        r->buffer = (r->buffer << 8) | *r->p++;
+        r->bits += 8;
+    }
+    if (r->bits >= 8) {
+        uint32_t entry = FONT_HUFFMAN_PREFIX[(r->buffer >> (r->bits - 8)) & 255u];
+        if (entry) {
+            r->bits -= (uint8_t)(entry >> 8);
+            return (int32_t)(entry & 255u);
+        }
+    }
+    for (uint32_t length = 1; length <= FONT_HUFFMAN_MAX_BITS; length++) {
+        if (!r->bits) {
+            if (r->p == r->end)
+                return -1;
+            r->buffer = *r->p++;
+            r->bits = 8;
+        }
+        r->bits--;
+        code = (code << 1) | ((r->buffer >> r->bits) & 1u);
+        uint32_t first = FONT_HUFFMAN_FIRST_CODE[length];
+        if (code >= first && code - first < FONT_HUFFMAN_COUNT[length])
+            return FONT_HUFFMAN_SYMBOL[FONT_HUFFMAN_FIRST_SYMBOL[length] + code - first];
+    }
+    return -1;
+#else
+    return r->p == r->end ? -1 : *r->p++;
+#endif
+}
 
 static uint32_t font_next(font_reader_t *r)
 {
     if (!r->left) {
-        uint32_t control;
-        if (r->p == r->end)
+        int32_t control = font_symbol(r);
+        if (control < 0)
             return 0;
-        control = *r->p++;
         r->left = (uint8_t)((control & 127u) + 1u);
         r->repeated = (uint8_t)(control & 128u);
         if (r->repeated) {
-            if (r->p == r->end) {
+            int32_t value = font_symbol(r);
+            if (value < 0) {
                 r->left = 0;
                 return 0;
             }
-            r->value = *r->p++;
+            r->value = (uint8_t)value;
         }
     }
     r->left--;
     if (r->repeated)
         return r->value;
-    return r->p == r->end ? 0 : *r->p++;
+    int32_t value = font_symbol(r);
+    return value < 0 ? 0 : (uint32_t)value;
 }
 #endif
 
@@ -214,7 +255,7 @@ static int32_t cv_text(int32_t x, int32_t y, const felucca_font_t *f, const char
         bpr = (w + 1u) / 2u;
         gd = f->data + f->off[gi];
 #if FONT_RLE
-        font_reader_t reader = {gd, f->data + f->off[gi + 1u], 0, 0, 0};
+        font_reader_t reader = {.p = gd, .end = f->data + f->off[gi + 1u]};
         uint32_t packed = 0;
         (void)bpr;
 #endif

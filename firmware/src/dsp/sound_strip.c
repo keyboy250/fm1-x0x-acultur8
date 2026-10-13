@@ -82,6 +82,20 @@ int sound_strip_bypassed(const sound_strip_t *s)
         STRIP_GUARD_REMAINING(s) == 0 && s->guard_gain == 1.0f;
 }
 
+int sound_strip_active(const sound_strip_t *s)
+{
+    uint32_t desired = (s->flags >> 8) & SOUND_STRIP_FLAGS;
+    uint32_t stages = s->flags & STRIP_STAGES;
+    if (sound_strip_bypassed(s)) return 0;
+    if (s->mix != ((desired & SOUND_STRIP_ENABLED) ? 1.0f : 0.0f) ||
+        stages != (desired & STRIP_STAGES) || STRIP_GUARD_REMAINING(s) || s->guard_gain != 1.0f) return 1;
+    if ((stages & SOUND_STRIP_LIMITER) && s->gain < 1.0f - 1e-6f) return 1;
+    if ((stages & SOUND_STRIP_HIGHPASS) &&
+        (fm_fabsf(s->hp_z[0]) > 1e-8f || fm_fabsf(s->hp_z[1]) > 1e-8f)) return 1;
+    return (stages & SOUND_STRIP_LOWPASS) &&
+        (fm_fabsf(s->lp_z[0]) > 1e-8f || fm_fabsf(s->lp_z[1]) > 1e-8f);
+}
+
 static float glide(float current, float target)
 {
     float delta = target - current;
@@ -158,7 +172,12 @@ void sound_strip_process(sound_strip_t *s, float *l, float *r, uint32_t count,
                 bound = fm_minf(s->ceiling, s->ceiling_target);
                 want = peak > bound ? bound / peak : 1.0f;
                 if (want < s->gain) s->gain = want;
-                else s->gain += (want - s->gain) * s->release;
+                else {
+                    float next = s->gain + (want - s->gain) * s->release;
+                    /* Single-precision release eventually rounds to its current value.
+                     * Finish that converged release so silent-source activity is finite. */
+                    s->gain = next == s->gain ? want : next;
+                }
                 x *= s->gain; y *= s->gain;
                 used_gain = s->gain;
             }

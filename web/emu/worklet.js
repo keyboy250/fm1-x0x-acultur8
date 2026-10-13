@@ -15,6 +15,8 @@ class X0X extends AudioWorkletProcessor {
     this.lastFrame = 0;
     this.busy = 0;
     this.frames = 0;
+    this.variantStrip = 0;
+    this.variantViewRevision = 0;
     this.port.onmessage = (e) => this.onMessage(e.data);
   }
 
@@ -36,7 +38,11 @@ class X0X extends AudioWorkletProcessor {
       return;
     }
     if (m.type === 'variant-select') {
-      if (Number.isInteger(m.strip) && m.strip >= 0 && m.strip < 25) this.variantStrip = m.strip;
+      if (Number.isInteger(m.strip) && m.strip >= 0 && m.strip < 25 &&
+          (m.viewRevision === undefined || (Number.isInteger(m.viewRevision) && m.viewRevision >= 0 && m.viewRevision <= 0xffffffff))) {
+        this.variantStrip = m.strip;
+        this.variantViewRevision = m.viewRevision ?? 0;
+      }
       return;
     }
     if (m.type === "load") {
@@ -131,7 +137,7 @@ class X0X extends AudioWorkletProcessor {
         return {abi:v[0],section:v[1],revision:v[2],values:Array.from(v.subarray(4,4+Math.min(v[3],16)))};
       };
       const arrangement = read(5,0);
-      msg.variant = {info:read(0,0),strip:this.variantStrip ?? 0,settings:read(2,this.variantStrip ?? 0),meters:read(3,this.variantStrip ?? 0),
+      msg.variant = {info:read(0,0),strip:this.variantStrip ?? 0,viewRevision:this.variantViewRevision,settings:read(2,this.variantStrip ?? 0),meters:read(3,this.variantStrip ?? 0),
         arrangement,block:arrangement ? read(4,arrangement.values[2]) : null,chord:read(6,0)};
     }
     msg.sync={state:ex.web_sync_state(),bpm:ex.web_seq_bpm(),playing:!!ex.web_seq_playing(),beat:ex.web_seq_beat()};

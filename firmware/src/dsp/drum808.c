@@ -1392,6 +1392,8 @@ void drum808_init(drum808_t *d)
         d->tpan[s] = 64;                          /* centre */
         d->pan_l[s] = d->pan_r[s] = d->pan_lc[s] = d->pan_rc[s] = 1.0f;
     }
+    for (s = 0; s < D8_NUM; s++) sound_strip_init(&d->strip[s]);
+    drum808_strip_meter_clear(d);
     d->kpot[0] = 100;
     d->kpot[1] = 127;
     kit_apply(d);
@@ -1615,6 +1617,8 @@ int drum808_active(const drum808_t *d)
     for (l = 0; l < L_NUM; l++)
         if (lane_on(d, l))
             return 1;
+    for (l = 0; l < D8_NUM; l++)
+        if (sound_strip_active(&d->strip[l])) return 1;
     return 0;
 }
 
@@ -1700,6 +1704,92 @@ static void lane_mix(drum808_t *d, d8_lane_t *l, const float *buf, int m, float 
     }
 }
 
+/* Active path only: finish each lane before summing into its track. The
+ * paired lanes must meet BEFORE the one filter/limiter, including cancellation.
+ * Extra scratch is one CHUNK (128 B), alive with render's 384 B voice/bank scratch. */
+static void strip_lane_add(drum808_t *d, d8_lane_t *l, const float *buf, int m, float *sum)
+{
+    int s = l->snd, i, type = d->pot[s][D8P_DIST];
+    const d8_shp_t *p = &d->shp[s];
+    float trim = k_trim[s], g = d->potv[s][D8P_LEVEL] * l->hit * d->vol;
+    int bypass = p->drive < 1.0e-3f;
+    if (l->cstep == 0.0f && bypass) {
+        float k = trim * g * l->cg;
+        for (i = 0; i < m; i++) sum[i] += buf[i] * k;
+        return;
+    }
+    for (i = 0; i < m; i++) {
+        float x;
+        if (l->cstep < 0.0f) {
+            l->cg += l->cstep;
+            if (l->cg <= 0.0f) { l->cg = 0.0f; l->cstep = 0.0f; }
+        }
+        if (l->cg <= 0.0f) break;
+        x = buf[i] * trim;
+        if (!bypass) x = shape(x, p, type, l->crush);
+        sum[i] += x * g * l->cg;
+    }
+}
+
+static __attribute__((noinline)) void strip_track_mix(drum808_t *d, int first, int last, float *buf,
+                            const float *bus, const float *pair, int m,
+                            float *dry, float *dry_r, float *rev, float *dly)
+{
+    float sum[CHUNK];
+    sound_strip_meter_t meter;
+    int tr = k_lane_track[first], l, i, s = track_sound(d, tr);
+    float ra = d->potv[s][D8P_REV], da = d->potv[s][D8P_DLY];
+    sound_strip_meter_t *total = &d->strip_meter[tr];
+    for (i = 0; i < m; i++) sum[i] = 0.0f;
+    for (l = first; l <= last; l++) {
+        d8_lane_t *ln = &d->lane[l];
+        int mm = m, got;
+        if (!lane_on(d, l)) continue;
+        if (ln->cstep < 0.0f) {
+            float c = ln->cg;
+            for (i = 0; i < m; i++) {
+                c += ln->cstep;
+                if (c <= 0.0f) { mm = i + 1; break; }
+            }
+        }
+        got = voice_run(d, l, buf, mm, bus, pair);
+        strip_lane_add(d, ln, buf, got, sum);
+#if D8_TAIL_DB
+        lane_tail(d, l, buf, got);
+#endif
+    }
+    sound_strip_process(&d->strip[tr], sum, sum, (uint32_t)m, &meter);
+    total->input_peak = fm_maxf(total->input_peak, meter.input_peak);
+    total->output_peak = fm_maxf(total->output_peak, meter.output_peak);
+    total->gain_min = fm_minf(total->gain_min, meter.gain_min);
+    for (i = 0; i < m; i++) {
+        float sv = sum[i];
+        if (dry_r) {
+            dry[i] += sv * (d->pan_lc[tr] + d->pan_dl[tr] * (float)i);
+            dry_r[i] += sv * (d->pan_rc[tr] + d->pan_dr[tr] * (float)i);
+        } else dry[i] += sv;
+        rev[i] += sv * ra; dly[i] += sv * da;
+    }
+}
+
+int drum808_strip_set(drum808_t *d, int track, const sound_strip_config_t *config)
+{
+    if (!d || track < 0 || track >= D8_NUM) return -1;
+    return sound_strip_set(&d->strip[track], config);
+}
+const sound_strip_meter_t *drum808_strip_meter(const drum808_t *d, int track)
+{
+    return d && track >= 0 && track < D8_NUM ? &d->strip_meter[track] : 0;
+}
+void drum808_strip_meter_clear(drum808_t *d)
+{
+    int tr;
+    for (tr = 0; tr < D8_NUM; tr++) {
+        d->strip_meter[tr].input_peak = d->strip_meter[tr].output_peak = 0.0f;
+        d->strip_meter[tr].gain_min = 1.0f;
+    }
+}
+
 static void d8_render(drum808_t *d, float *dry, float *rev, float *dly, int n)
 {
     float buf[CHUNK], bus[CHUNK], pair[CHUNK];
@@ -1724,6 +1814,16 @@ static void d8_render(drum808_t *d, float *dry, float *rev, float *dly, int n)
         for (l = 0; l < L_NUM; l++) {
             d8_lane_t *ln = &d->lane[l];
             int mm = m, got;
+            if (!sound_strip_bypassed(&d->strip[k_lane_track[l]])) {
+                int last = l;
+                while (last + 1 < L_NUM && k_lane_track[last + 1] == k_lane_track[l]) last++;
+                int run = sound_strip_active(&d->strip[k_lane_track[l]]), lane;
+                for (lane = l; lane <= last; lane++) run |= lane_on(d, lane);
+                if (run) strip_track_mix(d, l, last, buf, bus, pair, m, dry + off,
+                                         d8_dry_r ? d8_dry_r + off : 0, rev + off, dly + off);
+                l = last;
+                continue;
+            }
             if (!lane_on(d, l))
                 continue;
             if (ln->cstep < 0.0f) {               /* 8W8 stops calling a voice whose choke ran out */

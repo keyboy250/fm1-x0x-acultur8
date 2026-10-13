@@ -45,7 +45,7 @@ const p = await open(); render(p,30);
 const info = snap(p);
 assert.equal(info.abi,1);
 assert.equal(info.values[0],127,'kick processing capability advertised separately');
-assert.equal(info.values[7],1,'only the first 909 kick processes audio');
+assert.equal(info.values[7],0x01ffffff,'all 25 instrument sounds expose tested audio processing');
 assert.equal(info.values[5],2); assert.equal(info.values[6],25);
 assert.deepEqual(snap(p,2).values,[20,20000,0,1,80,0]);
 assert.equal(snap(p,1,0,0).values.length > 0,true);

@@ -1,0 +1,1268 @@
+{
+  "dis_sha256": "aca45c22c1d6749b1a85bc6eba6975a224995d1454fbb52a0336ba76d3628913",
+  "model": {
+    "nest_weight": 4,
+    "divide_extra_weight": 8,
+    "max_depth": 4
+  },
+  "rows": {
+    "drum909_strip_set@0x2012946": {
+      "metrics": {
+        "insns": 14,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "frame_bytes": 8,
+      "all_calls": [
+        [
+          "0x2012966",
+          "call 115718 <sound_strip_set : 202ed70 >"
+        ]
+      ],
+      "prologue": [
+        [
+          33630534,
+          "[--sp] = {rets, r4}"
+        ],
+        [
+          33630536,
+          "r3 = r0"
+        ],
+        [
+          33630538,
+          "r0 = -1"
+        ]
+      ]
+    },
+    "drum909_strip_meter_clear@0x201296c": {
+      "metrics": {
+        "insns": 42,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "frame_bytes": 12,
+      "all_calls": [],
+      "prologue": [
+        [
+          33630572,
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          33630574,
+          "if (r0 == 0) goto 88 <drum909_strip_meter_clear+0x5C : 20129c8 >"
+        ],
+        [
+          33630576,
+          "r2 = r0 + 6576"
+        ]
+      ]
+    },
+    "d9_strips_bypassed@0x2015028": {
+      "metrics": {
+        "insns": 44,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "frame_bytes": 12,
+      "all_calls": [
+        [
+          "0x2015032",
+          "call 107064 <sound_strip_bypassed : 202f26e >"
+        ],
+        [
+          "0x201503c",
+          "call 107054 <sound_strip_bypassed : 202f26e >"
+        ],
+        [
+          "0x2015046",
+          "call 107044 <sound_strip_bypassed : 202f26e >"
+        ],
+        [
+          "0x2015050",
+          "call 107034 <sound_strip_bypassed : 202f26e >"
+        ],
+        [
+          "0x201505c",
+          "call 107022 <sound_strip_bypassed : 202f26e >"
+        ],
+        [
+          "0x2015066",
+          "call 107012 <sound_strip_bypassed : 202f26e >"
+        ],
+        [
+          "0x2015070",
+          "call 107002 <sound_strip_bypassed : 202f26e >"
+        ],
+        [
+          "0x201507a",
+          "call 106992 <sound_strip_bypassed : 202f26e >"
+        ],
+        [
+          "0x2015086",
+          "call 106980 <sound_strip_bypassed : 202f26e >"
+        ],
+        [
+          "0x2015090",
+          "call 106970 <sound_strip_bypassed : 202f26e >"
+        ],
+        [
+          "0x201509a",
+          "call 106960 <sound_strip_bypassed : 202f26e >"
+        ]
+      ],
+      "prologue": [
+        [
+          33640488,
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          33640490,
+          "r4 = r0"
+        ],
+        [
+          33640492,
+          "r5 = r4 + 6508"
+        ]
+      ]
+    },
+    "d9_shape_other@0x20150ac": {
+      "metrics": {
+        "insns": 176,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "frame_bytes": 20,
+      "all_calls": [],
+      "prologue": [
+        [
+          33640620,
+          "[--sp] = {rets, r7-r4}"
+        ],
+        [
+          33640622,
+          "{r4, r3} = [r0+]"
+        ],
+        [
+          33640626,
+          "r5 = r3 + -1"
+        ]
+      ]
+    },
+    "d9_render_strips@0x2015336": {
+      "metrics": {
+        "insns": 2869,
+        "loop": 2785,
+        "div": 16,
+        "call": 19,
+        "cost": 29874
+      },
+      "frame_bytes": 440,
+      "all_calls": [
+        [
+          "0x20154b2",
+          "call 105952 <sound_strip_active : 202f296 >"
+        ],
+        [
+          "0x2015528",
+          "call 105794 <sound_strip_bypassed : 202f26e >"
+        ],
+        [
+          "0x2015d7e",
+          "call -3286 <d9_shape_other : 20150ac >"
+        ],
+        [
+          "0x2015e54",
+          "call 103642 <sound_strip_process : 202f332 >"
+        ],
+        [
+          "0x20161c2",
+          "call -4378 <d9_shape_other : 20150ac >"
+        ],
+        [
+          "0x2016240",
+          "call 102638 <sound_strip_process : 202f332 >"
+        ],
+        [
+          "0x20165b6",
+          "call -8750 <d9_env_exp : 201438c >"
+        ],
+        [
+          "0x20166d0",
+          "call -5672 <d9_shape_other : 20150ac >"
+        ],
+        [
+          "0x201682e",
+          "call 101120 <sound_strip_process : 202f332 >"
+        ],
+        [
+          "0x2016d38",
+          "call -7312 <d9_shape_other : 20150ac >"
+        ],
+        [
+          "0x2016de4",
+          "call -10844 <d9_env_exp : 201438c >"
+        ],
+        [
+          "0x2016f1c",
+          "call 99346 <sound_strip_process : 202f332 >"
+        ],
+        [
+          "0x20171e8",
+          "call -8512 <d9_shape_other : 20150ac >"
+        ],
+        [
+          "0x20172c2",
+          "call 98412 <sound_strip_process : 202f332 >"
+        ],
+        [
+          "0x2017584",
+          "call -12796 <d9_env_exp : 201438c >"
+        ],
+        [
+          "0x20175ac",
+          "call -12836 <d9_env_exp : 201438c >"
+        ],
+        [
+          "0x2017680",
+          "call -9688 <d9_shape_other : 20150ac >"
+        ],
+        [
+          "0x2017754",
+          "call 97242 <sound_strip_process : 202f332 >"
+        ],
+        [
+          "0x20178fe",
+          "call 96816 <sound_strip_process : 202f332 >"
+        ]
+      ],
+      "prologue": [
+        [
+          33641270,
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          33641272,
+          "sp += -388"
+        ],
+        [
+          33641274,
+          "r13 = 0  #"
+        ]
+      ]
+    },
+    "d9_render@0x20179dc": {
+      "metrics": {
+        "insns": 2740,
+        "loop": 1974,
+        "div": 6,
+        "call": 10,
+        "cost": 3465
+      },
+      "frame_bytes": 196,
+      "all_calls": [
+        [
+          "0x2017a88",
+          "call -10852 <d9_strips_bypassed : 2015028 >"
+        ],
+        [
+          "0x2017db4",
+          "call -14892 <d9_env_exp : 201438c >"
+        ],
+        [
+          "0x2017ed2",
+          "call -11818 <d9_shape_other : 20150ac >"
+        ],
+        [
+          "0x201808e",
+          "call -11612 <d9_render_strips : 2015336 >"
+        ],
+        [
+          "0x201860c",
+          "call -13668 <d9_shape_other : 20150ac >"
+        ],
+        [
+          "0x20186b6",
+          "call -17198 <d9_env_exp : 201438c >"
+        ],
+        [
+          "0x20190bc",
+          "call -16404 <d9_shape_other : 20150ac >"
+        ],
+        [
+          "0x2019530",
+          "call -17544 <d9_shape_other : 20150ac >"
+        ],
+        [
+          "0x20198e2",
+          "call -21850 <d9_env_exp : 201438c >"
+        ],
+        [
+          "0x2019906",
+          "call -21886 <d9_env_exp : 201438c >"
+        ],
+        [
+          "0x20199c8",
+          "call -18720 <d9_shape_other : 20150ac >"
+        ],
+        [
+          "0x2019d9e",
+          "call -19702 <d9_shape_other : 20150ac >"
+        ]
+      ],
+      "prologue": [
+        [
+          33651164,
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          33651166,
+          "sp += -144"
+        ],
+        [
+          33651168,
+          "r13 = [sp+196]"
+        ]
+      ]
+    },
+    "drum808_strip_meter_clear@0x201b3ba": {
+      "metrics": {
+        "insns": 31,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "frame_bytes": 12,
+      "all_calls": [],
+      "prologue": [
+        [
+          33665978,
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          33665980,
+          "r1 = r0 + 4376"
+        ],
+        [
+          33665984,
+          "r2 = 0"
+        ]
+      ]
+    },
+    "drum808_strip_set@0x201ddbc": {
+      "metrics": {
+        "insns": 11,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "frame_bytes": 4,
+      "all_calls": [
+        [
+          "0x201ddd4",
+          "call 69528 <sound_strip_set : 202ed70 >"
+        ]
+      ],
+      "prologue": [
+        [
+          33676732,
+          "[--sp] = rets"
+        ],
+        [
+          33676734,
+          "r3 = r0"
+        ],
+        [
+          33676736,
+          "r0 = -1"
+        ]
+      ]
+    },
+    "voice_run@0x201e1ca": {
+      "metrics": {
+        "insns": 2276,
+        "loop": 2125,
+        "div": 10,
+        "call": 8,
+        "cost": 2205
+      },
+      "frame_bytes": 88,
+      "all_calls": [
+        [
+          "0x201e28c",
+          "call -1206 <shaper : 201ddda >"
+        ],
+        [
+          "0x201ef90",
+          "call -4538 <shaper : 201ddda >"
+        ],
+        [
+          "0x201f396",
+          "call -19374 <bd_reset : 201a7ec >"
+        ],
+        [
+          "0x201f402",
+          "call -5676 <shaper : 201ddda >"
+        ],
+        [
+          "0x201f840",
+          "call -17452 <env_arm : 201b418 >"
+        ],
+        [
+          "0x201fade",
+          "call -7432 <shaper : 201ddda >"
+        ],
+        [
+          "0x202017a",
+          "call -8690 <hat_tick : 201df8c >"
+        ],
+        [
+          "0x20201a6",
+          "call -8734 <hat_tick : 201df8c >"
+        ]
+      ],
+      "prologue": [
+        [
+          33677770,
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          33677772,
+          "sp += -36"
+        ],
+        [
+          33677774,
+          "r5 = [sp+88]"
+        ]
+      ]
+    },
+    "strip_track_mix@0x20205a6": {
+      "metrics": {
+        "insns": 272,
+        "loop": 173,
+        "div": 0,
+        "call": 3,
+        "cost": 269
+      },
+      "frame_bytes": 292,
+      "all_calls": [
+        [
+          "0x20206de",
+          "call -9496 <voice_run : 201e1ca >"
+        ],
+        [
+          "0x20207b2",
+          "call -1526 <shape : 20201c0 >"
+        ],
+        [
+          "0x20207e2",
+          "call -760 <lane_tail : 20204ee >"
+        ],
+        [
+          "0x2020808",
+          "call 60198 <sound_strip_process : 202f332 >"
+        ]
+      ],
+      "prologue": [
+        [
+          33686950,
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          33686952,
+          "sp += -240"
+        ],
+        [
+          33686954,
+          "r6 = r1"
+        ]
+      ]
+    },
+    "d8_render@0x20208e0": {
+      "metrics": {
+        "insns": 768,
+        "loop": 709,
+        "div": 6,
+        "call": 6,
+        "cost": 7759
+      },
+      "frame_bytes": 660,
+      "all_calls": [
+        [
+          "0x2020dc8",
+          "call 58530 <sound_strip_bypassed : 202f26e >"
+        ],
+        [
+          "0x2020e18",
+          "call 58490 <sound_strip_active : 202f296 >"
+        ],
+        [
+          "0x2020ec2",
+          "call -2336 <strip_track_mix : 20205a6 >"
+        ],
+        [
+          "0x2020f3c",
+          "call -11638 <voice_run : 201e1ca >"
+        ],
+        [
+          "0x20210cc",
+          "call -3856 <shape : 20201c0 >"
+        ],
+        [
+          "0x202120a",
+          "call -3360 <lane_tail : 20204ee >"
+        ]
+      ],
+      "prologue": [
+        [
+          33687776,
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          33687778,
+          "sp += -608"
+        ],
+        [
+          33687782,
+          "r4 = [sp+660]"
+        ]
+      ]
+    },
+    "d9_shape_other@0x2027200": {
+      "metrics": {
+        "insns": 176,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "frame_bytes": 20,
+      "all_calls": [],
+      "prologue": [
+        [
+          33714688,
+          "[--sp] = {rets, r7-r4}"
+        ],
+        [
+          33714690,
+          "{r4, r3} = [r0+]"
+        ],
+        [
+          33714694,
+          "r5 = r3 + -1"
+        ]
+      ]
+    },
+    "guard_update@0x202cd5a": {
+      "metrics": {
+        "insns": 17,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "frame_bytes": 12,
+      "all_calls": [
+        [
+          "0x202cd6e",
+          "call -43326 <bass303_set_lite : 2022434 >"
+        ],
+        [
+          "0x202cd78",
+          "call -43336 <bass303_set_lite : 2022434 >"
+        ]
+      ],
+      "prologue": [
+        [
+          33738074,
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          33738076,
+          "r5 = 29457440 <mot_release_req : 1c17c20 >"
+        ],
+        [
+          33738082,
+          "r1 = b[r5+8] (u)"
+        ]
+      ]
+    },
+    "strip_block_begin@0x202cef8": {
+      "metrics": {
+        "insns": 51,
+        "loop": 16,
+        "div": 0,
+        "call": 2,
+        "cost": 16
+      },
+      "frame_bytes": 40,
+      "all_calls": [
+        [
+          "0x202cf1e",
+          "call -107996 <drum909_strip_set : 2012946 >"
+        ],
+        [
+          "0x202cf32",
+          "call -61818 <drum808_strip_set : 201ddbc >"
+        ],
+        [
+          "0x202cf4e",
+          "call 7710"
+        ],
+        [
+          "0x202cf72",
+          "call 7674"
+        ],
+        [
+          "0x202cf88",
+          "call 7652"
+        ],
+        [
+          "0x202cf96",
+          "call -108078 <drum909_strip_meter_clear : 201296c >"
+        ]
+      ],
+      "prologue": [
+        [
+          33738488,
+          "[--sp] = {rets, r12-r4}"
+        ],
+        [
+          33738490,
+          "r6 = r0"
+        ],
+        [
+          33738492,
+          "r7 = 0"
+        ]
+      ]
+    },
+    "mono_strip_process@0x202d0dc": {
+      "metrics": {
+        "insns": 37,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "frame_bytes": 36,
+      "all_calls": [
+        [
+          "0x202d0f4",
+          "call 8566 <sound_strip_bypassed : 202f26e >"
+        ],
+        [
+          "0x202d106",
+          "call 8744 <sound_strip_process : 202f332 >"
+        ]
+      ],
+      "prologue": [
+        [
+          33738972,
+          "[--sp] = {rets, r7-r4}"
+        ],
+        [
+          33738974,
+          "sp += -16"
+        ],
+        [
+          33738976,
+          "r5 = r2"
+        ]
+      ]
+    },
+    "bass_strip_render@0x202d142": {
+      "metrics": {
+        "insns": 22,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "frame_bytes": 20,
+      "all_calls": [
+        [
+          "0x202d15a",
+          "call -44318 <bass303_render : 2022440 >"
+        ],
+        [
+          "0x202d16c",
+          "call 8486 <sound_strip_active : 202f296 >"
+        ],
+        [
+          "0x202d178",
+          "call -160 <mono_strip_process : 202d0dc >"
+        ]
+      ],
+      "prologue": [
+        [
+          33739074,
+          "[--sp] = {rets, r7-r4}"
+        ],
+        [
+          33739076,
+          "r4 = r0"
+        ],
+        [
+          33739078,
+          "r0 = r4 * 0x2F0"
+        ]
+      ]
+    },
+    "break_strip_render@0x202d182": {
+      "metrics": {
+        "insns": 23,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "frame_bytes": 20,
+      "all_calls": [
+        [
+          "0x202d18e",
+          "call -31850 <breaks_silent : 2025528 >"
+        ],
+        [
+          "0x202d1a6",
+          "call -31802 <breaks_render : 2025570 >"
+        ],
+        [
+          "0x202d1b4",
+          "call 8414 <sound_strip_active : 202f296 >"
+        ],
+        [
+          "0x202d1c0",
+          "call -232 <mono_strip_process : 202d0dc >"
+        ]
+      ],
+      "prologue": [
+        [
+          33739138,
+          "[--sp] = {rets, r7-r4}"
+        ],
+        [
+          33739140,
+          "r4 = r0"
+        ],
+        [
+          33739142,
+          "r6 = 29642532 <brk : 1c44f24 >"
+        ]
+      ]
+    },
+    "core2_job@0x202d1ca": {
+      "metrics": {
+        "insns": 56,
+        "loop": 6,
+        "div": 0,
+        "call": 0,
+        "cost": 6
+      },
+      "frame_bytes": 56,
+      "all_calls": [
+        [
+          "0x202d1e2",
+          "call -179092 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202d1f4",
+          "call -62794 <drum808_active : 201dcae >"
+        ],
+        [
+          "0x202d24a",
+          "call -49040 <drum808_render_st : 20212be >"
+        ],
+        [
+          "0x202d252",
+          "call -49150 <drum808_pan_settle : 2021258 >"
+        ],
+        [
+          "0x202d260",
+          "call -179218 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202d26c",
+          "call -179230 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202d27a",
+          "call -252 <break_strip_render : 202d182 >"
+        ],
+        [
+          "0x202d282",
+          "call -179252 <plat_cycles : 2001652 >"
+        ]
+      ],
+      "prologue": [
+        [
+          33739210,
+          "[--sp] = {rets, r14-r4}"
+        ],
+        [
+          33739212,
+          "sp += -8"
+        ],
+        [
+          33739214,
+          "r6 = r0"
+        ]
+      ]
+    },
+    "engine_render@0x202d292": {
+      "metrics": {
+        "insns": 950,
+        "loop": 778,
+        "div": 2,
+        "call": 65,
+        "cost": 1202
+      },
+      "frame_bytes": 128,
+      "all_calls": [
+        [
+          "0x202d2ac",
+          "call -181606 <plat_master : 2000d4a >"
+        ],
+        [
+          "0x202d2ee",
+          "call -4050 <motion_release : 202c320 >"
+        ],
+        [
+          "0x202d302",
+          "call -1452"
+        ],
+        [
+          "0x202d306",
+          "call -179384 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202d360",
+          "call -20924 <master_key : 20281a8 >"
+        ],
+        [
+          "0x202d3b2",
+          "call -72262 <drum808_trigger : 201b970 >"
+        ],
+        [
+          "0x202d3dc",
+          "call -45476 <bass303_note_on : 202223c >"
+        ],
+        [
+          "0x202d3f6",
+          "call -45006 <bass303_note_off : 202242c >"
+        ],
+        [
+          "0x202d406",
+          "call -101170 <drum909_trigger : 20148d8 >"
+        ],
+        [
+          "0x202d434",
+          "call -37696 <breaks_live : 20240f8 >"
+        ],
+        [
+          "0x202d542",
+          "call -1966 <apply_param : 202cd98 >"
+        ],
+        [
+          "0x202d554",
+          "call -1632 <strip_block_begin : 202cef8 >"
+        ],
+        [
+          "0x202d56a",
+          "call -181976 <plat_midi_in : 2000e96 >"
+        ],
+        [
+          "0x202d58c",
+          "call -7148 <seq_ext_clock : 202b9a4 >"
+        ],
+        [
+          "0x202d628",
+          "call -21636 <master_key : 20281a8 >"
+        ],
+        [
+          "0x202d640",
+          "call -101740 <drum909_trigger : 20148d8 >"
+        ],
+        [
+          "0x202d688",
+          "call -21732 <master_key : 20281a8 >"
+        ],
+        [
+          "0x202d6a2",
+          "call -73014 <drum808_trigger : 201b970 >"
+        ],
+        [
+          "0x202d6e8",
+          "call -46256 <bass303_note_on : 202223c >"
+        ],
+        [
+          "0x202d6f4",
+          "call -7532 <seq_start : 202b98c >"
+        ],
+        [
+          "0x202d6fc",
+          "call -7524 <seq_continue : 202b99c >"
+        ],
+        [
+          "0x202d704",
+          "call -7540 <seq_stop : 202b994 >"
+        ],
+        [
+          "0x202d718",
+          "call -45808 <bass303_note_off : 202242c >"
+        ],
+        [
+          "0x202d744",
+          "call -45852 <bass303_note_off : 202242c >"
+        ],
+        [
+          "0x202d768",
+          "call -46384 <bass303_note_on : 202223c >"
+        ],
+        [
+          "0x202d79e",
+          "call -38570 <breaks_live : 20240f8 >"
+        ],
+        [
+          "0x202d7e4",
+          "call -5478 <motion_tick : 202c282 >"
+        ],
+        [
+          "0x202d7ea",
+          "call -16520 <seq_tempo : 2029766 >"
+        ],
+        [
+          "0x202d7f6",
+          "call -29388 <fxbus_set_bpm : 202652e >"
+        ],
+        [
+          "0x202d808",
+          "call r3"
+        ],
+        [
+          "0x202d80a",
+          "call -180668 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202d836",
+          "call r2"
+        ],
+        [
+          "0x202d866",
+          "call -180916 <plat_cpu2_run : 20015b6 >"
+        ],
+        [
+          "0x202d89e",
+          "call -180816 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202d8ac",
+          "call -80024 <drum909_active : 201a018 >"
+        ],
+        [
+          "0x202d8d8",
+          "call -80446 <drum909_render_st : 2019e9e >"
+        ],
+        [
+          "0x202d996",
+          "call -2552 <scale_glide : 202cfa2 >"
+        ],
+        [
+          "0x202d9a6",
+          "call -2568 <scale_glide : 202cfa2 >"
+        ],
+        [
+          "0x202d9b6",
+          "call -2584 <scale_glide : 202cfa2 >"
+        ],
+        [
+          "0x202d9c6",
+          "call -2600 <scale_glide : 202cfa2 >"
+        ],
+        [
+          "0x202d9d4",
+          "call -2382 <kit_sends : 202d08a >"
+        ],
+        [
+          "0x202d9f2",
+          "call -80754 <drum909_render : 2019e84 >"
+        ],
+        [
+          "0x202d9f8",
+          "call -80458 <drum909_pan_settle : 2019fb2 >"
+        ],
+        [
+          "0x202d9fc",
+          "call -181166 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202da0e",
+          "call -181184 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202da1a",
+          "call -2268 <bass_strip_render : 202d142 >"
+        ],
+        [
+          "0x202da22",
+          "call -181204 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202da2c",
+          "call -181214 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202da38",
+          "call -2298 <bass_strip_render : 202d142 >"
+        ],
+        [
+          "0x202da40",
+          "call -181234 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202da4a",
+          "call -181244 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202da54",
+          "call -181356 <plat_cpu2_wait : 20015ec >"
+        ],
+        [
+          "0x202da5c",
+          "call -2198 <core2_job : 202d1ca >"
+        ],
+        [
+          "0x202da62",
+          "call -181268 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202db14",
+          "call -2852 <add_glide : 202cff4 >"
+        ],
+        [
+          "0x202db2a",
+          "call -2874 <add_glide : 202cff4 >"
+        ],
+        [
+          "0x202db40",
+          "call -2896 <add_glide : 202cff4 >"
+        ],
+        [
+          "0x202db56",
+          "call -2918 <add_glide : 202cff4 >"
+        ],
+        [
+          "0x202db80",
+          "call -2810 <kit_sends : 202d08a >"
+        ],
+        [
+          "0x202dc40",
+          "call -3152 <add_glide : 202cff4 >"
+        ],
+        [
+          "0x202dc50",
+          "call -3168 <add_glide : 202cff4 >"
+        ],
+        [
+          "0x202dc60",
+          "call -3184 <add_glide : 202cff4 >"
+        ],
+        [
+          "0x202dc70",
+          "call -3200 <add_glide : 202cff4 >"
+        ],
+        [
+          "0x202dc7e",
+          "call -3112 <meter : 202d05a >"
+        ],
+        [
+          "0x202dd3c",
+          "call -3404 <add_glide : 202cff4 >"
+        ],
+        [
+          "0x202dd4c",
+          "call -3420 <add_glide : 202cff4 >"
+        ],
+        [
+          "0x202dd5c",
+          "call -3436 <add_glide : 202cff4 >"
+        ],
+        [
+          "0x202dd6c",
+          "call -3452 <add_glide : 202cff4 >"
+        ],
+        [
+          "0x202dd78",
+          "call -3362 <meter : 202d05a >"
+        ],
+        [
+          "0x202dd7c",
+          "call -182062 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202ddae",
+          "call -26920 <fxbus_process_st : 202748a >"
+        ],
+        [
+          "0x202ddb2",
+          "call -182116 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202ddc4",
+          "call -182134 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202ddd6",
+          "call r3"
+        ],
+        [
+          "0x202ddd8",
+          "call -182154 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202ddfe",
+          "call -6882 <motion_release : 202c320 >"
+        ],
+        [
+          "0x202de0a",
+          "call -182204 <plat_cycles : 2001652 >"
+        ],
+        [
+          "0x202de2c",
+          "call -23644 <master_process_st : 20281d4 >"
+        ],
+        [
+          "0x202de30",
+          "call -182242 <plat_cycles : 2001652 >"
+        ]
+      ],
+      "prologue": [
+        [
+          33739410,
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          33739412,
+          "sp += -76"
+        ],
+        [
+          33739414,
+          "r14 = 29457440 <mot_release_req : 1c17c20 >"
+        ]
+      ]
+    },
+    "sound_strip_set@0x202ed70": {
+      "metrics": {
+        "insns": 309,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "frame_bytes": 64,
+      "all_calls": [],
+      "prologue": [
+        [
+          33746288,
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          33746290,
+          "sp += -12"
+        ],
+        [
+          33746292,
+          "r2 = -1"
+        ]
+      ]
+    },
+    "sound_strip_bypassed@0x202f26e": {
+      "metrics": {
+        "insns": 15,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "frame_bytes": 0,
+      "all_calls": [],
+      "prologue": [
+        [
+          33747566,
+          "r1 = r0"
+        ],
+        [
+          33747568,
+          "r2 = [r1+64]"
+        ],
+        [
+          33747572,
+          "r0 = 0"
+        ]
+      ]
+    },
+    "sound_strip_active@0x202f296": {
+      "metrics": {
+        "insns": 51,
+        "loop": 34,
+        "div": 0,
+        "call": 0,
+        "cost": 91
+      },
+      "frame_bytes": 12,
+      "all_calls": [],
+      "prologue": [
+        [
+          33747606,
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          33747608,
+          "r2 = [r0+64]"
+        ],
+        [
+          33747612,
+          "r3 = [r0+56]"
+        ]
+      ]
+    },
+    "sound_strip_process@0x202f332": {
+      "metrics": {
+        "insns": 346,
+        "loop": 312,
+        "div": 3,
+        "call": 0,
+        "cost": 336
+      },
+      "frame_bytes": 80,
+      "all_calls": [],
+      "prologue": [
+        [
+          33747762,
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          33747764,
+          "sp += -28"
+        ],
+        [
+          33747766,
+          "r8 = [sp+80]"
+        ]
+      ]
+    }
+  },
+  "not_emitted": [
+    "lane_mix"
+  ],
+  "limits": "Static caller estimates exclude callee costs. All_calls supplements loop-only call metric; no cycle/load/headroom claim. lane_mix inlined when absent. Duplicate static functions retained by address."
+}
