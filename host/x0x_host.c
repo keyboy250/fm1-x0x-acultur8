@@ -73,6 +73,10 @@ static int32_t enc_acc[NE];
 static uint32_t lit_btn, lit_keys, dim_keys;
 
 uint32_t plat_ms(void) { return now_ms; }
+#ifndef PLAT_CONTROL_TEST
+uint32_t plat_control_enter(void) { return 0; }
+void plat_control_leave(uint32_t saved) { (void)saved; }
+#endif
 uint32_t plat_buttons(void) { return held_btn; }
 uint32_t plat_keys(void) { return held_keys; }
 int32_t plat_enc(int role)
@@ -119,8 +123,12 @@ void plat_midi_out(uint32_t pkt)
 static uint8_t store[OBJ_NOBJ][PLAT_STORE_MAX];
 static int store_len[OBJ_NOBJ] = {-1, -1, -1, -1, -1, -1, -1};
 static uint32_t store_writes;
+#ifndef HOST_STORE_PROBE
+#define HOST_STORE_PROBE(writing) 0
+#endif
 int plat_store_load(uint32_t obj, void *dst, uint32_t max)
 {
+    (void)HOST_STORE_PROBE(0);
     int n = store_len[obj];
     if (obj >= OBJ_NOBJ || n < 0)
         return -1;
@@ -131,6 +139,7 @@ int plat_store_load(uint32_t obj, void *dst, uint32_t max)
 }
 int plat_store_save(uint32_t obj, const void *src, uint32_t len)
 {
+    if (HOST_STORE_PROBE(1)) return -1;
     if (obj >= OBJ_NOBJ || len > PLAT_STORE_MAX)
         return -1;
     memcpy(store[obj], src, len);

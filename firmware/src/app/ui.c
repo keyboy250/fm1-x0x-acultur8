@@ -176,6 +176,17 @@ static void say(const char *a, const char *b)
     ui.msg_until = plat_ms() + 1300u;
 }
 
+static int arrangement_panel_locked(void)
+{
+    return ((proj.variant.arrangement.flags | seq.arrangement.flags) & ARR_ENABLED) != 0;
+}
+static int arrangement_panel_refuse(void)
+{
+    if (!arrangement_panel_locked()) return 0;
+    say("ARRANGEMENT: EDIT IN LAB", 0);
+    return 1;
+}
+
 /* =============================================================== param refs === */
 enum { R_NONE, R_ENG, R_SWING, R_DLEN, R_DRATE, R_BLEN, R_BRATE, R_BDIR, R_BTRANS, R_GEN, R_BRKSET,
        R_BRKSLOT, R_TEMPO, R_ACCENT, R_CLKOUT, R_NOTEOUT, R_PALETTE, R_KEYLED, R_KEYSOUND, R_AUTOSAVE, R_ACT, R_SBAR, R_SPAT,
@@ -233,6 +244,7 @@ static const x0x_param_t SONG_P[] = {
 static void song_fill(int k)
 {
     song_t *sg = song();
+    if (arrangement_panel_refuse()) return;
     while (sg->len <= k && sg->len < NSONG) {
         song_bar_t *b = &sg->bar[sg->len];
         int p;
@@ -357,6 +369,7 @@ static void pref_set(pref_t r, int v)
     const x0x_param_t *d = pref_desc(r);
     if (!d || r.kind == R_ACT)
         return;
+    if ((r.kind == R_SPAT || r.kind == R_SREP || r.kind == R_SLEN) && arrangement_panel_refuse()) return;
     v = v < 0 ? 0 : v > d->max ? d->max : v;
     mark_dirty();
     switch (r.kind) {
@@ -1218,13 +1231,18 @@ static void undo_start(void) { undo_init(&undo, (uint8_t *)&proj + UNDO_OFF, und
 
 uint8_t *ui_project_stage(uint32_t bytes)
 {
-    if (seq.playing || seq.req_stop) return 0;
-    return cv_stage(bytes);
+    uint8_t *p;
+    if (seq.transport_stage || !engine_transport_reserve()) return 0;
+    p = cv_stage(bytes);
+    if (!p) engine_transport_release();
+    else seq.transport_stage = 1;
+    return p;
 }
 void ui_project_stage_finish(int loaded)
 {
     ui_draw_invalidate();
     if (loaded && undo_ready) { undo_reset(&undo); external_edit = 0; }
+    if (seq.transport_stage) { seq.transport_stage = 0; engine_transport_release(); }
 }
 void ui_external_edit(int begin)
 {
@@ -1262,7 +1280,7 @@ static void undo_changed(uint32_t off, uint32_t len)
             if ((int)v < engine_nvoices((int)t) && (int)i < engine_nparams((int)t, (int)v))
                 engine_set((int)t, (int)v, (int)i, proj.sound.v[t][v][i]);
         } else if (k >= l0 && k < l1) {
-            undo_lanes = 1;
+            undo_lanes |= 1u;
         }
     }
     for (k = 0; k < VARIANT_STRIPS; k++) {
@@ -1270,6 +1288,54 @@ static void undo_changed(uint32_t off, uint32_t len)
         if (a < lo + sizeof(sound_strip_config_t) && a + len > lo)
             for (i = 0; i < VP_COUNT; i++) engine_strip_set((int)k, i, variant_field_get(&proj.variant.strip[k],i));
     }
+    {
+        uint32_t ar = __builtin_offsetof(project_t,variant) + __builtin_offsetof(variant_settings_t,arrangement);
+        uint32_t sg = __builtin_offsetof(project_t,arr) + __builtin_offsetof(arrange_t,song);
+        if ((a < ar + sizeof(arrangement_settings_t) && a + len > ar) ||
+            (a < sg + sizeof(song_t) && a + len > sg))
+            undo_lanes |= 2u; /* coalesce to one refresh after the full swap */
+    }
+}
+
+static int undo_arrangement_intent(int redo)
+{
+    uint32_t i, flag_offset;
+    int k, pending = 0;
+    uint8_t prospective;
+    const uint8_t *entry, *end;
+    uint32_t runs, run;
+    if (arrangement_panel_locked()) return 1;
+    if (!undo_ready) return 0;
+    flag_offset = __builtin_offsetof(project_t,variant) + __builtin_offsetof(variant_settings_t,arrangement)
+        + __builtin_offsetof(arrangement_settings_t,flags) - UNDO_OFF;
+    prospective = undo.region[flag_offset];
+    /* Commit creates a pending undo entry (its previous flag is shadow's), but
+     * discards old redo entries. Inspect before commit: a rejected operation
+     * must retain the entire pool, shadow, cursor and open gesture. */
+    for (i = 0; i < undo.len; i++) if (undo.region[i] != undo.shadow[i]) { pending = 1; break; }
+    if (pending) return !redo && (undo.shadow[flag_offset] & ARR_ENABLED) ? 1 : 0;
+    k = redo ? undo.cur : undo.cur - 1;
+    if (k < 0 || k >= undo.n) return 0;
+    if (undo.at[k] > undo.at[k+1] || undo.at[k+1] > undo.used || undo.at[k+1] - undo.at[k] < 8u) return 1;
+    entry = undo.pool + undo.at[k]; end = undo.pool + undo.at[k+1];
+    runs = ud_get16(entry); entry += 8;
+    for (run = 0; run < runs; run++) {
+        uint32_t off, n, padded;
+        if ((uint32_t)(end-entry) < 4u) return 1;
+        off = ud_get16(entry); n = ud_get16(entry+2); padded = (n+1u) & ~1u; entry += 4;
+        if (off > undo.len || n > undo.len-off || padded > (uint32_t)(end-entry)) return 1;
+        if (flag_offset >= off && flag_offset-off < n) prospective = entry[flag_offset-off];
+        entry += padded;
+    }
+    return prospective & ARR_ENABLED ? 1 : 0;
+}
+
+int ui_undo_preflight(int redo)
+{
+    if (project_write_protected()) return VR_PROTECTED;
+    if (engine_queue_space() < 768u) return VR_BUSY;
+    if ((seq.playing || seq.req_stop || seq.req_start || seq.req_cont) && undo_arrangement_intent(redo)) return VR_BUSY;
+    return VR_OK;
 }
 
 /* what an undo step touched, in words: "909 P3", "SOUND", "SONG", "MOTION" */
@@ -1303,20 +1369,33 @@ static void undo_name(uint32_t lo, uint32_t hi, char *t)
     }
 }
 
-static void do_undo(int redo)
+static int do_undo(int redo)
 {
     uint32_t lo, hi;
     char t[24];
-    if (engine_queue_space() < 768u) { say("AUDIO BUSY", "TRY UNDO AGAIN"); return; }
+    int held = 0, ready = ui_undo_preflight(redo);
+    if (ready == VR_OK && undo_arrangement_intent(redo)) {
+        held = engine_transport_reserve();
+        if (!held) ready = VR_BUSY;
+    }
+    if (ready != VR_OK) {
+        if (ready == VR_PROTECTED) say("PROJECT PROTECTED", 0);
+        else if (engine_queue_space() < 768u) say("AUDIO BUSY", "TRY UNDO AGAIN");
+        else say("STOP FOR ARRANGEMENT UNDO", 0);
+        return ready;
+    }
     external_edit = 0;
     undo_commit(&undo);                              /* what was just done is a step too */
     undo_lanes = 0;
     if (!(redo ? undo_redo : undo_undo)(&undo, undo_changed, &lo, &hi)) {
         say(redo ? "NOTHING TO REDO" : "NOTHING TO UNDO", 0);
-        return;
+        if (held) engine_transport_release();
+        return VR_OK;
     }
-    if (undo_lanes)
+    if (undo_lanes & 1u)
         engine_motion_reset();
+    if (undo_lanes & 2u)
+        engine_arrangement_refresh(&proj.variant.arrangement);
     engine_brk_loops();
     ui.outline_ok = 0;
     if (ui.song_sel > song()->len)
@@ -1325,8 +1404,10 @@ static void do_undo(int redo)
     mark_dirty();
     undo_name(lo, hi, t);
     say(redo ? "REDO " : "UNDO ", t);
+    if (held) engine_transport_release();
+    return VR_OK;
 }
-int ui_external_undo(int redo) { int before = undo.cur; do_undo(redo); return before != undo.cur; }
+int ui_external_undo(int redo) { return do_undo(redo); }
 
 /* SAVE while playing waits for the stop: writing the flash stops the audio (the code and the samples
  * are read from it, and a 4 KB erase takes tens of ms) */
@@ -1334,7 +1415,7 @@ static uint8_t save_wait;
 static void save_project(void)
 {
     int rc;
-    if (seq.playing || seq.req_stop) {
+    if (!engine_transport_reserve()) {
         save_wait = 1;
         say("SAVES WHEN STOPPED", 0);
         return;
@@ -1342,6 +1423,7 @@ static void save_project(void)
     save_wait = 0;
     ui_external_edit(0);
     rc = project_save();
+    engine_transport_release();
     say(rc == -8 ? "SAVE PROTECTED" : rc == -7 ? "MEMORY FULL: NOT SAVED" : rc ? "SAVE FAILED" : "SAVED", 0);
     if (!rc)
         ui.dirty = 0;
@@ -1570,6 +1652,11 @@ static void set_view(int v);
 static void run_action(int act, int arg)
 {
     char t[28], *q;
+    if ((act == ACT_SONG_INS || act == ACT_SONG_DEL || act == ACT_SONG_CLR) && arrangement_panel_refuse()) return;
+    int reset_held = 0;
+    if (act == ACT_RESET && arrangement_panel_locked() && !(reset_held = engine_transport_reserve())) {
+        say("STOP FOR ARRANGEMENT RESET", 0); return;
+    }
     switch (act) {
     case ACT_SAVE: save_project(); break;
     case ACT_CLEAR_PART:
@@ -1635,6 +1722,7 @@ static void run_action(int act, int arg)
         mark_dirty();
         ui.outline_ok = 0;
         say("FACTORY SOUND + PATTERNS", 0);
+        if (reset_held) engine_transport_release();
         break;
     case ACT_PERF:
         set_view(V_PERF);
@@ -2082,7 +2170,7 @@ static void held_note_by(int by)
 static void mute_part(int p)                         /* a whole part on / off (HOME, MIX's PARTS) */
 {
     seq.mute = part_muted(p) ? seq.mute & ~MUTE_MASK[p] : seq.mute | MUTE_MASK[p];
-    if (seq.song_rec && seq.playing && seq.song_pos < song()->len) {   /* song recording: this bar too */
+    if (!arrangement_panel_locked() && seq.song_rec && seq.playing && seq.song_pos < song()->len) {   /* legacy song recording */
         song_bar_t *b = &song()->bar[seq.song_pos];
         b->mute = (uint8_t)(part_muted(p) ? b->mute | 1u << p : b->mute & ~(1u << p));
     }
@@ -2116,6 +2204,7 @@ static void key_event(int k, int down)
         int k = ui.song_sel;
         if (!down || k >= NSONG || (w < 0 && bl >= NPARTS))
             return;
+        if (arrangement_panel_refuse()) return;
         song_fill(k);
         if (w >= 0) {
             int p;
@@ -2327,6 +2416,7 @@ static void button_tap(int b)
             ask(ACT_CLEAR_PART, ui.part, t, "IN THIS PATTERN?");
             break;
         }
+        if (ui.view == V_SONG && arrangement_panel_refuse()) break;
         ui.rec = !ui.rec;
         if (ui.rec && is_303())
             ui.wpos[bidx()] = 0;
@@ -2475,7 +2565,7 @@ static void input(void)
     build_pages();
     if (!seq.playing)                                  /* PLAY plays what is on screen: the song on SONG, */
         seq.song_on = ui.view == V_SONG;               /* else the patterns; playing, it keeps going */
-    seq.song_rec = (uint8_t)(seq.song_on && ui.rec);  /* the song + REC: the song is being written */
+    seq.song_rec = (uint8_t)(seq.song_on && ui.rec && !arrangement_panel_locked()); /* arrangement uses acknowledged lab edits */
     if (ui.overlay == O_ASK) {                         /* a question: the knobs wait */
         for (i = 0; i < NE; i++)
             enc((int)i);

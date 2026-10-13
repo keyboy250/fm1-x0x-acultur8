@@ -25,6 +25,9 @@ enum { EN_SELECT, EN_ALGO, EN_PRESET, EN_K1, EN_K2, EN_K3, EN_K4, NE };
 #define NKEYS 27                       /* F3 .. G5 */
 
 uint32_t plat_ms(void);
+/* Bounded main-producer publication only; do not compute/copy projects while held. */
+uint32_t plat_control_enter(void);
+void plat_control_leave(uint32_t saved);
 uint32_t plat_buttons(void);           /* held: bit B_* */
 uint32_t plat_keys(void);              /* held: bit k = key k (0 = F3) */
 int32_t plat_enc(int role);            /* detents since the last call, + = clockwise; EN_* */

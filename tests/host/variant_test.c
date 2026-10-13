@@ -82,7 +82,7 @@ static void roundtrip(void)
     drain();
     assert(engine_strip_config(24)->highpass_hz == 17500);
     assert(command(VC_SAVE, 0, 0, 0) == VR_OK);
-    assert(get32(store[OBJ_PAT0]) == 3 && get32(store[OBJ_PAT0] + 4) == RAW_LEN);
+    assert(get32(store[OBJ_PAT0]) == 4 && get32(store[OBJ_PAT0] + 4) == RAW_LEN);
     project_defaults();
     assert(project_load() == 0);
     assert(proj.variant.strip[24].highpass_hz == 17500 && proj.variant.strip[24].flags == 15);
@@ -96,17 +96,17 @@ static void rejected(int kind)
     assert(command(VC_SET_STRIP, 0, VP_BOOST, 8) == VR_QUEUED);
     assert(project_save() == 0);
     if (kind == 0) store[OBJ_PAT0][8] ^= 1;              /* CRC */
-    if (kind == 1) put32(store[OBJ_PAT0], 4);             /* future format */
+    if (kind == 1) put32(store[OBJ_PAT0], 5);             /* future format */
     if (kind == 2) store_len[OBJ_PAT0] = 15;              /* truncated header */
     if (kind == 3) store_len[OBJ_PAT0]--;                 /* truncated compressed stream */
     if (kind == 4) put32(store[OBJ_PAT0] + 4, RAW_LEN - 1);/* malformed length */
     if (kind >= 5 && kind <= 7) {
         uint32_t packed = 0;
-        if (kind == 5) proj.variant.schema = 2;
+        if (kind == 5) proj.variant.schema = 3;
         if (kind == 6) proj.variant.bytes--;
         if (kind == 7) proj.variant.strip[0].boost_db = 25;
         assert(stream_measure(RAW_LEN, &packed) == 0);
-        assert(save_stream(RAW_LEN, 3, packed) == 0);    /* valid CRC, invalid extension */
+        assert(save_stream(RAW_LEN, 4, packed) == 0);    /* valid CRC, invalid extension */
         variant_defaults(&proj.variant);
     }
     if (kind == 8) store_len[OBJ_PAT0] = -1;           /* missing first sector, remaining v3 sectors */
@@ -137,7 +137,7 @@ static void capacity(void)
         ((uint8_t *)&proj)[RAW_OFF + i] = (uint8_t)x;
     }
     proj.set.palette = 3; proj.sound.v[0][0][0] = 1;
-    assert(project_save() == -7);
+    assert(project_save() == -7 && !seq.transport_hold && !seq.transport_stage);
     assert(writes == store_writes && !memcmp(saved, store, sizeof saved) && !memcmp(lens, store_len, sizeof lens));
 }
 static void rejection_keeps_full_history(void)
@@ -201,11 +201,14 @@ static void canvas_borrow_guards(void)
     seq.req_stop = 0;
     canvas_dma_timeouts = 1;
     assert(ui_project_stage(RAW_LEN) == 0 && canvas_sync_calls == calls);
+    assert(!seq.transport_hold && !seq.transport_stage);
     canvas_dma_timeouts = 0; canvas_timeout_on_sync = 1;
     assert(ui_project_stage(RAW_LEN) == 0 && canvas_sync_calls == calls + 1u);
+    assert(!seq.transport_hold && !seq.transport_stage);
     canvas_dma_timeouts = canvas_timeout_on_sync = 0;
     assert(ui_project_stage(RAW_LEN) == (uint8_t *)cv_px && canvas_sync_calls == calls + 2u);
     ui_project_stage_finish(0);
+    assert(!seq.transport_hold && !seq.transport_stage);
     ui_frame();
     assert(cv_w == 240 && cv_h == KNOB_H);
 }
@@ -217,9 +220,9 @@ static void controls(void)
     int t, v, bound = VARIANT_STRIPS * VP_COUNT;
     fresh();
     for (t = 0; t < NTARGETS; t++) for (v = 0; v < engine_nvoices(t); v++) bound += engine_nparams(t,v);
-    assert(bound <= 768);                              /* undo reservation covers current schema */
+    assert(bound + 1u <= 768);                         /* includes arrangement refresh after undo */
     assert(variant_snapshot(VS_INFO, 0, 0, &snapshot) == VR_OK && snapshot.count == 8);
-    assert(snapshot.value[0] == (VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE | VCAP_STRIP_AUDIO));
+    assert(snapshot.value[0] == (VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE | VCAP_STRIP_AUDIO | VCAP_ARRANGEMENT | VCAP_HARMONY_METADATA));
     rev = snapshot.revision;
     assert(variant_command(&invalid, &reply) == VR_UNSUPPORTED && reply.request == 77);
     assert(command(VC_SET_STRIP, 25, VP_BOOST, 0) == VR_INVALID);
@@ -263,6 +266,6 @@ int main(void)
 {
     int i;
     legacy(); roundtrip(); for (i = 0; i < 9; i++) rejected(i); capacity(); rejection_keeps_full_history(); canvas_borrow_guards(); controls();
-    puts("variant: legacy v1/v2, v3 roundtrip, 9 rejection cases, exact rejected-load journal, canvas DMA guards/redraw, capacity preflight, undo and queue pressure PASS");
+    puts("variant: legacy v1/v2, v4 roundtrip, 9 rejection cases, exact rejected-load journal, canvas DMA guards/redraw, capacity preflight, undo and queue pressure PASS (v3 migration covered by arrangement_test)");
     return 0;
 }

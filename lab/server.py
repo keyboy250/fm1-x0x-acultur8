@@ -312,7 +312,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self.send(path.read_bytes(),mime)
                 if u.path.startswith('/emu/'):
                     name = u.path.removeprefix('/emu/') or 'index.html'
-                    allowed = {'index.html': 'text/html; charset=utf-8', 'emu.css': 'text/css', 'emu.js': 'text/javascript', 'slice-import.js': 'text/javascript', 'slice-ui.js': 'text/javascript', 'variant-ui.js': 'text/javascript', 'variant-ui.css': 'text/css', 'worklet.js': 'text/javascript', 'x0x.wasm': 'application/wasm', 'BarlowSemiCondensed-Medium.ttf': 'font/ttf', 'manifest.json': 'application/json'}
+                    allowed = {'index.html': 'text/html; charset=utf-8', 'emu.css': 'text/css', 'emu.js': 'text/javascript', 'slice-import.js': 'text/javascript', 'slice-ui.js': 'text/javascript', 'variant-ui.js': 'text/javascript', 'variant-ui.css': 'text/css', 'arrangement-ui.js': 'text/javascript', 'arrangement-ui.css': 'text/css', 'worklet.js': 'text/javascript', 'x0x.wasm': 'application/wasm', 'BarlowSemiCondensed-Medium.ttf': 'font/ttf', 'manifest.json': 'application/json'}
                     if name == 'manual.txt':
                         return self.send((WORK / 'docs/MANUAL.md').read_bytes(), 'text/plain; charset=utf-8')
                     if name not in allowed or not (WORK / 'build/emu' / name).is_file():

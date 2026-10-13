@@ -54,6 +54,7 @@ def main():
         run('required-engine-regressions', docker + ['sh', 'tools/acultur8_checks.sh'])
         run('portable-dashboard', [sys.executable, 'lab/test_dashboard.py'])
         run('emulator-page-bridge', [sys.executable, 'lab/test_build_emulator.py'])
+        run('arrangement-http-assets', [sys.executable, 'lab/test_arrangement_package_http.py'])
         run('target-budget-checker-regressions', [sys.executable, 'tests/test_target_budget.py'])
         run('publication-boundaries', [sys.executable, 'tests/acultur8_site_test.py'])
         site = Path(tempfile.mkdtemp(prefix='site-', dir=build))

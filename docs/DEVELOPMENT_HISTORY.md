@@ -49,3 +49,10 @@ A separate bounded C resolver provides I–VII triads in all seven church modes 
 
 
 The accepted first-kick browser prototype is tagged [acultur8-v0.1.0-alpha.kick.1](https://github.com/keyboy250/fm1-x0x-acultur8/releases/tag/acultur8-v0.1.0-alpha.kick.1) at `1394e5ff448106b358759ad46280d0113fa4ce87`. Its merged CI/Pages run `38375752238` passed; all 24 hosted files, exact WASM and the portable local/hosted source fingerprint match. This tag contains no hardware installer. Original alpha.1 remains unchanged.
+
+
+## 2026-10-13: resource saving and basic arrangement integration
+
+Reviewed PR #11 merged at `d7c63f5ecee490e275d377fd68005d3328ddcb24`; required CI and Pages passed and 24 hosted hashes match. Noise history remains 256 samples; exact pool saving 1,024 bytes and 33,600 bitwise comparison blocks pass.
+
+Basic arrangement adds 192 paged rows, 1–8 musical-bar durations, next-bar queue and shared C triad metadata. Independent review closed the IRQ-start race through bounded locks and nested long-operation reservations. Combined official target: image 576180/581564, RAM 97860/98304, pool 333792/344064; 15 original static gates pass unchanged. New active callee costs are recorded in `lab/ARRANGEMENT.md`. Final integrated browser/hosted checks are pending before this candidate is promoted. Broader row-order/loop controls, all 25 processing paths, both bass followers, MIDI accompaniment and physical qualification remain pending.

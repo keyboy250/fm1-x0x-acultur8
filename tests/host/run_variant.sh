@@ -11,5 +11,5 @@ ${CC:-cc} -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wno-unused-function -Wno
   firmware/src/dsp/drum909.c firmware/src/dsp/drum808.c firmware/src/dsp/bass303.c firmware/src/dsp/breaks.c \
   firmware/src/dsp/fxbus.c firmware/src/dsp/master.c firmware/src/dsp/sound_strip.c \
   firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c firmware/src/seq/pattern.c firmware/src/seq/motion.c \
-  firmware/src/app/engine.c firmware/src/app/variant.c -lm -o build/host/variant_test
+  firmware/src/app/engine.c firmware/src/app/variant.c firmware/src/seq/harmony.c -lm -o build/host/variant_test
 build/host/variant_test

@@ -319,3 +319,10 @@ Outstanding environment or distribution checks: device/recovery availability; re
 [Play browser alpha](https://keyboy250.github.io/fm1-x0x-acultur8/) · [Release](https://github.com/keyboy250/fm1-x0x-acultur8/releases/tag/acultur8-v0.1.0-alpha.1) · [Passing CI](https://github.com/keyboy250/fm1-x0x-acultur8/actions/runs/38361493563). Source: `0487778bf76915c2312644791d92d30378f4ecb5`. All 21 deployed files matched build hashes. Hosted synthetic import, audio startup, 90/120/180 BPM, shared transport and browser save/reopen passed.
 
 Current: fonts and command/save foundation are merged. The audible 909 kick passed browser/hosted acceptance; now expand sound processing and arrangement/harmony within the measured resource budget. Device measurements and physical acceptance remain pending.
+
+
+## 2026-10-13: resource saving and basic arrangement integration
+
+Reviewed PR #11 merged at `d7c63f5ecee490e275d377fd68005d3328ddcb24`; required CI and Pages passed and 24 hosted hashes match. Noise history remains 256 samples; exact pool saving 1,024 bytes and 33,600 bitwise comparison blocks pass.
+
+Basic arrangement adds 192 paged rows, 1–8 musical-bar durations, next-bar queue and shared C triad metadata. Independent review closed the IRQ-start race through bounded locks and nested long-operation reservations. Combined official target: image 576180/581564, RAM 97860/98304, pool 333792/344064; 15 original static gates pass unchanged. New active callee costs are recorded in `lab/ARRANGEMENT.md`. Final integrated browser/hosted checks are pending before this candidate is promoted. Broader row-order/loop controls, all 25 processing paths, both bass followers, MIDI accompaniment and physical qualification remain pending.

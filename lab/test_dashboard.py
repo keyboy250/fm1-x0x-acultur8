@@ -67,6 +67,19 @@ class DashboardTest(unittest.TestCase):
                 self.assertEqual(response.read(), expected)
         self.assertEqual(self.request('/emu/variant-panel.html')[0], 404)
 
+    def test_arrangement_editor_assets_are_served_by_local_lab(self):
+        source = Path(__file__).resolve().parent.parent / 'web/emu'
+        output = lab.WORK / 'build/emu'
+        output.mkdir(parents=True, exist_ok=True)
+        for name, mime in [('arrangement-ui.js', 'text/javascript'), ('arrangement-ui.css', 'text/css')]:
+            expected = (source / name).read_bytes()
+            (output / name).write_bytes(expected)
+            with urlopen(self.url + '/emu/' + name) as response:
+                self.assertEqual(response.status, 200)
+                self.assertEqual(response.headers['Content-Type'], mime)
+                self.assertEqual(response.read(), expected)
+        self.assertEqual(self.request('/emu/arrangement-panel.html')[0], 404)
+
     def test_faq_standalone_style_allowed_by_csp(self):
         with urlopen(self.url+'/faq') as response:
             # HTML parsing normalizes CRLF before computing inline style hashes.

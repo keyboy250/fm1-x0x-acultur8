@@ -21,6 +21,7 @@ project_t proj;
 
 #define PROJ_STREAM 2u                  /* the format word of the packed objects */
 #define PROJ_VARIANT_STREAM 3u
+#define PROJ_ARRANGEMENT_STREAM 4u
 static const uint8_t STREAM_OBJ[] = {OBJ_PAT0, OBJ_PAT1, OBJ_SONG, OBJ_MOTION};
 #define NSTREAM ((int)sizeof STREAM_OBJ)
 #define STREAM_HDR 16u                  /* in the first object: format, raw length, raw CRC, packed length */
@@ -28,6 +29,7 @@ static const uint8_t STREAM_OBJ[] = {OBJ_PAT0, OBJ_PAT1, OBJ_SONG, OBJ_MOTION};
 #define RAW_OFF __builtin_offsetof(project_t, pat)
 #define RAW_LEN (sizeof(project_t) - RAW_OFF)   /* the patterns and the arrangement, contiguous */
 #define LEGACY_RAW_LEN (__builtin_offsetof(project_t, variant) - RAW_OFF)
+#define SCHEMA1_RAW_LEN (LEGACY_RAW_LEN + 208u)
 typedef char raw_fits[(RAW_LEN < 0xFFFFu) ? 1 : -1];
 typedef char raw_contiguous[(__builtin_offsetof(project_t, arr) == RAW_OFF + sizeof proj.pat) ? 1 : -1];
 typedef char legacy_prefix_fixed[(__builtin_offsetof(project_t, variant) == 30944u && RAW_OFF == 1372u) ? 1 : -1];
@@ -35,6 +37,14 @@ typedef char legacy_prefix_fixed[(__builtin_offsetof(project_t, variant) == 3094
 static void arrange_defaults(void);
 static uint32_t packed_len;             /* the last save's (or load's) packed stream, bytes */
 static uint8_t rejected_save;
+static int arrangement_song_valid(const song_t *song)
+{
+    int b, p;
+    if (song->len > NSONG) return 0;
+    for (b = 0; b < NSONG; b++) for (p = 0; p < NTRACKS; p++)
+        if (song->bar[b].pat[p] >= NPAT) return 0;
+    return 1;
+}
 int project_write_protected(void) { return rejected_save != 0; }
 void project_discard_rejected(void) { rejected_save = 0; }
 
@@ -436,13 +446,13 @@ static void patterns_defaults(void)
 }
 
 /* Packed streams are validated in synchronized canvas scratch before changing the live project. */
-int project_load(void)
+static int project_load_impl(void)
 {
     int bad = 0, i, sound_ok, n;
     uint32_t format = 0, raw_len = 0, loaded_packed = 0;
     uint8_t *stage = 0;
     settings_t set;
-    if (seq.playing || seq.req_stop) return -9;
+    if (!engine_queue_space()) return -9;
     n = plat_store_load(OBJ_PAT0, io_buf, sizeof io_buf);
     if (n >= 4) format = get32(io_buf);
     if (n < 0) {
@@ -455,16 +465,20 @@ int project_load(void)
             }
         }
     }
-    if (n >= 0 && (n < 4 || (format != PROJ_FORMAT && format != PROJ_STREAM && format != PROJ_VARIANT_STREAM))) {
+    if (n >= 0 && (n < 4 || (format != PROJ_FORMAT && format != PROJ_STREAM &&
+        format != PROJ_VARIANT_STREAM && format != PROJ_ARRANGEMENT_STREAM))) {
         rejected_save = 1;
         return -8;
     }
-    if (format == PROJ_STREAM || format == PROJ_VARIANT_STREAM) {
-        raw_len = format == PROJ_STREAM ? LEGACY_RAW_LEN : RAW_LEN;
+    if (format == PROJ_STREAM || format == PROJ_VARIANT_STREAM || format == PROJ_ARRANGEMENT_STREAM) {
+        raw_len = format == PROJ_STREAM ? LEGACY_RAW_LEN : format == PROJ_VARIANT_STREAM ? SCHEMA1_RAW_LEN : RAW_LEN;
         stage = ui_project_stage(raw_len);
         if (!stage) return -9;
         if (load_stream(n, format, stage, raw_len) ||
-            (format == PROJ_VARIANT_STREAM && !variant_valid((const variant_settings_t *)(stage + LEGACY_RAW_LEN)))) {
+            (format == PROJ_VARIANT_STREAM && !variant_schema1_valid((const variant_settings_t *)(stage + LEGACY_RAW_LEN))) ||
+            (format == PROJ_ARRANGEMENT_STREAM &&
+             (!variant_valid((const variant_settings_t *)(stage + LEGACY_RAW_LEN)) ||
+              !arrangement_song_valid((const song_t *)(stage + __builtin_offsetof(project_t,arr) - RAW_OFF))))) {
             ui_project_stage_finish(0);
             rejected_save = 1;
             return -8;
@@ -494,6 +508,9 @@ int project_load(void)
     if (stage) {
         uint32_t b;
         for (b = 0; b < raw_len; b++) ((uint8_t *)&proj)[RAW_OFF + b] = stage[b];
+        if (format == PROJ_VARIANT_STREAM) {
+            proj.variant.schema = VARIANT_SCHEMA; proj.variant.bytes = sizeof proj.variant;
+        }
     } else {
         if (load_patterns1()) {                       /* half a set is no set: the defaults */
             patterns_defaults();
@@ -512,8 +529,18 @@ int project_load(void)
         sound_rev2();
     proj.set.snd_rev = PROJ_SND_REV;
     rejected_save = 0;
+    engine_arrangement_refresh(&proj.variant.arrangement);
     ui_project_stage_finish(1);
     return bad ? -1 : 0;
+}
+
+int project_load(void)
+{
+    int rc;
+    if (!engine_transport_reserve()) return -9;
+    rc = project_load_impl();
+    engine_transport_release();
+    return rc;
 }
 
 void project_apply_io(void)
@@ -531,15 +558,16 @@ void project_apply_io(void)
 }
 
 /* 0 = saved and verified; -7 = the patterns, song and motion do not fit (nothing was written) */
-int project_save(void)
+static int project_save_impl(void)
 {
     int p;
     uint32_t raw_len, format, measured;
     if (rejected_save || !variant_valid(&proj.variant)) return -8;
-    format = variant_is_default(&proj.variant) ? PROJ_STREAM : PROJ_VARIANT_STREAM;
+    format = variant_is_default(&proj.variant) ? PROJ_STREAM : PROJ_ARRANGEMENT_STREAM;
     raw_len = format == PROJ_STREAM ? LEGACY_RAW_LEN : RAW_LEN;
     /* Preflight before settings/sound writes, so a full project cannot partly replace a save. */
     if (stream_measure(raw_len, &measured)) return -7;
+    if (format == PROJ_ARRANGEMENT_STREAM && !arrangement_song_valid(&proj.arr.song)) return -8;
     for (p = 0; p < 5; p++)
         proj.set.midi_ch[p] = (uint8_t)(seq.ch[p] == SEQ_CH_OFF ? 17 : seq.ch[p] + 1);
     proj.set.bpm_x10 = (uint16_t)(seq.bpm * 10.0f + 0.5f);
@@ -551,4 +579,13 @@ int project_save(void)
     if (save_obj(OBJ_SOUND, &proj.sound, sizeof proj.sound))
         return -2;
     return save_stream(raw_len, format, measured);
+}
+
+int project_save(void)
+{
+    int rc;
+    if (!engine_transport_reserve()) return -9;
+    rc = project_save_impl();
+    engine_transport_release();
+    return rc;
 }

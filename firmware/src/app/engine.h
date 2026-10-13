@@ -19,6 +19,15 @@
 #include "../seq/sequencer.h"
 #include "../seq/motion.h"
 #include "../dsp/sound_strip.h"
+/* Validated producer commands; canonical bytes are published before the queue marker. */
+int engine_arrangement_block(song_bar_t *dst, uint8_t *degree, const song_bar_t *src, uint8_t chord);
+int engine_arrangement_global(uint8_t *dst, uint8_t value, int stopped_only);
+int engine_arrangement_length(uint16_t *dst, uint16_t value);
+int engine_arrangement_refresh(const arrangement_settings_t *intent);
+int engine_arrangement_queue(uint8_t block);
+/* Main context only. Nested holds permit helper calls after incoming requests defer. */
+int engine_transport_reserve(void);
+void engine_transport_release(void);
 
 enum { T_909, T_808, T_303, T_BRK, T_FX, T_MIX, T_MST, NTARGETS };
 #define T_PROB NTARGETS                /* a lane's pseudo-target: a step's chance, 5..100 % (not in sound_t);

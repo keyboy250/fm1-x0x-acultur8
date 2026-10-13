@@ -1,0 +1,31 @@
+<section class="arrangement-lab" aria-labelledby="arrangement-title">
+  <h2 id="arrangement-title">Arrangement · progression metadata</h2>
+  <p>Arrange five pattern parts into blocks. Chord information is metadata in this build; bass-follow and pad connections are pending.</p>
+  <p id="arrangement-availability">Switch on the FM1 panel to check arrangement support.</p>
+  <fieldset id="arrangement-global" disabled>
+    <legend>Arrangement settings</legend>
+    <div class="arrangement-globals">
+      <label><input id="arrangement-enabled" type="checkbox"> Enable arrangement</label>
+      <label>Length <input id="arrangement-length" type="number" min="0" max="192" step="1" value="0"> blocks</label>
+      <label>Key <select id="arrangement-key"></select></label>
+      <label>Mode <select id="arrangement-mode"></select></label>
+      <label>Pentatonic parent <select id="arrangement-parent"></select></label>
+    </div>
+    <p>Length changes require stopped playback. To keep existing chord degrees when switching to pentatonic, choose a seven-note parent first, then change the mode. The parent can be chosen in a seven-note mode; it takes effect for pentatonic chords. Chromatic mode has no degree chord.</p>
+  </fieldset>
+  <div class="arrangement-page"><button id="arrangement-previous" type="button" disabled>Previous 16</button><span id="arrangement-page-label">Blocks 1–16</span><button id="arrangement-next" type="button" disabled>Next 16</button></div>
+  <div id="arrangement-rows" class="arrangement-rows" aria-label="Arrangement block selection"></div>
+  <p id="arrangement-position">Editing — · Playing — · Queued —</p>
+  <fieldset id="arrangement-block" disabled>
+    <legend id="arrangement-editing">Block editor</legend>
+    <div id="arrangement-parts" class="arrangement-parts"></div>
+    <div class="arrangement-globals">
+      <label>Duration <select id="arrangement-duration"></select> bars</label>
+      <label>Degree metadata <select id="arrangement-degree"></select></label>
+    </div>
+  </fieldset>
+  <p id="arrangement-chord">Playing chord metadata unavailable.</p>
+  <div class="arrangement-actions"><button id="arrangement-undo" type="button" disabled>Undo</button><button id="arrangement-redo" type="button" disabled>Redo</button><button id="arrangement-save" type="button" disabled>Save project</button></div>
+  <p id="arrangement-project"></p>
+  <p id="arrangement-status" role="status" aria-live="polite">Waiting for the engine.</p>
+</section>

@@ -59,7 +59,7 @@ extern project_t proj;
 
 void project_defaults(void);
 int project_load(void);                  /* 0 loaded; -8 rejected packed save leaves live project intact */
-int project_save(void);                  /* 0 = saved and verified; -7 = too much to fit (nothing written) */
+int project_save(void);                  /* 0 verified; -7 full; -8 protected; -9 transport pending/running */
 void project_apply_io(void);             /* the settings into the sequencer and the engine: MIDI, the output */
 int project_mem_pct(void);               /* how full the room for patterns, song and motion is, % */
 int project_write_protected(void);
@@ -72,7 +72,8 @@ int ui_dirty(void);
 void ui_external_edit(int begin);        /* 1 starts a gesture; 0 commits it */
 void ui_external_changed(void);
 void ui_external_sound(int target, int voice, int index, int value);
-int ui_external_undo(int redo);
+int ui_external_undo(int redo);          /* VR_OK or shared preflight/reservation rejection */
+int ui_undo_preflight(int redo);        /* shared command/physical path; no history mutation */
 void ui_external_saved(void);
 uint8_t *ui_project_stage(uint32_t bytes);
 void ui_project_stage_finish(int loaded);
