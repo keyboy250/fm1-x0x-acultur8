@@ -9,6 +9,7 @@
 static void lcd_sync(void) {}
 static void lcd_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint16_t *p)
 { (void)x; (void)y; (void)w; (void)h; (void)p; }
+#define X0X_HOST 1
 #include "../../firmware/src/gfx.c"
 
 static const felucca_font_t *fonts[] = {&FONT_T, &FONT_XS, &FONT_S, &FONT_B, &FONT_M, &FONT_L};

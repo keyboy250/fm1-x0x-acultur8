@@ -19,6 +19,26 @@ class X0X extends AudioWorkletProcessor {
   }
 
   async onMessage(m) {
+    if (!m || typeof m !== 'object') return;
+    if (m.type === 'variant-command') {
+      const keys = ['abi', 'op', 'request', 'target', 'voice', 'index', 'value'];
+      const valid = keys.every(k => Number.isInteger(m[k])) && m.request >= 0 && m.request <= 0xffffffff &&
+        m.value >= -0x80000000 && m.value <= 0x7fffffff && m.abi >= 0 && m.abi <= 65535 &&
+        m.op >= 0 && m.op <= 65535 && ['target','voice','index'].every(k => m[k] >= 0 && m[k] <= 255);
+      const reply = {type:'variant-reply', request:m.request, result:valid ? -2 : -1, revision:0, ticket:0};
+      if (valid && this.ex?.web_variant_command) {
+        const p = this.ex.web_variant_command(...keys.map(k => m[k]));
+        const view = new DataView(this.mem.buffer, p, 16);
+        Object.assign(reply, {request:view.getUint32(0,true), revision:view.getUint32(4,true),
+          ticket:view.getUint32(8,true), result:view.getInt32(12,true)});
+      }
+      this.port.postMessage(reply);
+      return;
+    }
+    if (m.type === 'variant-select') {
+      if (Number.isInteger(m.strip) && m.strip >= 0 && m.strip < 25) this.variantStrip = m.strip;
+      return;
+    }
     if (m.type === "load") {
       const now = () => BigInt(Math.round(currentTime * 1e9));
       const wasi = {
@@ -103,6 +123,15 @@ class X0X extends AudioWorkletProcessor {
     const ex = this.ex;
     const blits = ex.web_blits();
     const msg = { type: "frame", buttons: ex.web_lit_buttons() >>> 0, keys: ex.web_lit_keys() >>> 0, dim: ex.web_dim_keys() >>> 0 };
+    if (ex.web_variant_snapshot) {
+      const read = (section,target) => {
+        const p = ex.web_variant_snapshot(section,target,0);
+        if (!p) return null;
+        const v = new Uint32Array(this.mem.buffer,p,20);
+        return {abi:v[0],section:v[1],revision:v[2],values:Array.from(v.subarray(4,4+Math.min(v[3],16)))};
+      };
+      msg.variant = {info:read(0,0),strip:this.variantStrip ?? 0,settings:read(2,this.variantStrip ?? 0)};
+    }
     msg.sync={state:ex.web_sync_state(),bpm:ex.web_seq_bpm(),playing:!!ex.web_seq_playing(),beat:ex.web_seq_beat()};
     if(ex.web_marked_cursor)msg.marked={cursor:ex.web_marked_cursor(),triggers:ex.web_marked_triggers(),slice:ex.web_marked_last(),playing:!!ex.web_marked_playing()||(ex.web_sync_state()===2&&!!ex.web_seq_playing())};
     if (this.frames >= 44100) {                       // the share of real time spent running the device

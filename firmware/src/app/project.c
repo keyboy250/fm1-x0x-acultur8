@@ -20,17 +20,23 @@
 project_t proj;
 
 #define PROJ_STREAM 2u                  /* the format word of the packed objects */
+#define PROJ_VARIANT_STREAM 3u
 static const uint8_t STREAM_OBJ[] = {OBJ_PAT0, OBJ_PAT1, OBJ_SONG, OBJ_MOTION};
 #define NSTREAM ((int)sizeof STREAM_OBJ)
 #define STREAM_HDR 16u                  /* in the first object: format, raw length, raw CRC, packed length */
 #define STREAM_CAP (NSTREAM * (PLAT_STORE_MAX - 4u) - (STREAM_HDR - 4u))
 #define RAW_OFF __builtin_offsetof(project_t, pat)
 #define RAW_LEN (sizeof(project_t) - RAW_OFF)   /* the patterns and the arrangement, contiguous */
+#define LEGACY_RAW_LEN (__builtin_offsetof(project_t, variant) - RAW_OFF)
 typedef char raw_fits[(RAW_LEN < 0xFFFFu) ? 1 : -1];
 typedef char raw_contiguous[(__builtin_offsetof(project_t, arr) == RAW_OFF + sizeof proj.pat) ? 1 : -1];
+typedef char legacy_prefix_fixed[(__builtin_offsetof(project_t, variant) == 30944u && RAW_OFF == 1372u) ? 1 : -1];
 
 static void arrange_defaults(void);
 static uint32_t packed_len;             /* the last save's (or load's) packed stream, bytes */
+static uint8_t rejected_save;
+int project_write_protected(void) { return rejected_save != 0; }
+void project_discard_rejected(void) { rejected_save = 0; }
 
 void project_defaults(void)
 {
@@ -48,6 +54,7 @@ void project_defaults(void)
     proj.set.stereo = PROJ_STEREO;
     proj.set.snd_rev = PROJ_SND_REV;
     engine_sound_defaults(&proj.sound);
+    variant_defaults(&proj.variant);
     arrange_defaults();
     /* the 303 lines start empty, like the drums: OCT+ on TB-3PO (or keyboard mode) writes one */
     for (i = 0; i < NPAT; i++)
@@ -167,7 +174,7 @@ static void arrange_defaults(void)
 /* the writer: fills io_buf after the object's header and writes it when full (measure: counts only) */
 typedef struct {
     int measure, k, err;
-    uint32_t fill, total;
+    uint32_t fill, total, format;
 } st_out_t;
 
 static int st_flush(st_out_t *o)
@@ -175,7 +182,7 @@ static int st_flush(st_out_t *o)
     int rc = save_buf(STREAM_OBJ[o->k], o->fill);
     o->k++;
     o->fill = 4u;
-    put32(io_buf, PROJ_STREAM);
+    put32(io_buf, o->format);
     return rc;
 }
 
@@ -198,23 +205,27 @@ static int st_put(void *ctx, const uint8_t *p, uint32_t n)
     return 0;
 }
 
-static int save_stream(void)
+static int stream_measure(uint32_t raw_len, uint32_t *packed)
+{
+    st_out_t o = {1, 0, 0, 0, 0, 0};
+    lz_sink_t sink = {st_put, &o};
+    if (lz_compress((const uint8_t *)&proj + RAW_OFF, raw_len, &sink)) return -7;
+    *packed = o.total;
+    return 0;
+}
+
+static int save_stream(uint32_t raw_len, uint32_t format, uint32_t measured)
 {
     const uint8_t *raw = (const uint8_t *)&proj + RAW_OFF;
-    uint32_t crc = crc32_of(raw, RAW_LEN);
-    st_out_t o = {1, 0, 0, 0, 0};
+    uint32_t crc = crc32_of(raw, raw_len);
+    st_out_t o = {0, 0, 0, STREAM_HDR, 0, format};
     lz_sink_t sink = {st_put, &o};
-    if (lz_compress(raw, RAW_LEN, &sink))
-        return -7;                                    /* would not fit: nothing written */
-    packed_len = o.total;
-    o.measure = 0;
-    o.total = 0;
-    o.fill = STREAM_HDR;
-    put32(io_buf, PROJ_STREAM);
-    put32(io_buf + 4, RAW_LEN);
+    packed_len = measured;                            /* preflight already ran before any object write */
+    put32(io_buf, format);
+    put32(io_buf + 4, raw_len);
     put32(io_buf + 8, crc);
     put32(io_buf + 12, packed_len);
-    if (lz_compress(raw, RAW_LEN, &sink) || o.err || st_flush(&o))
+    if (lz_compress(raw, raw_len, &sink) || o.err || st_flush(&o))
         return -3;
     while (o.k < NSTREAM)                             /* the objects past the stream: empty */
         if (st_flush(&o))
@@ -225,7 +236,7 @@ static int save_stream(void)
 /* the reader: the objects in turn, from io_buf */
 typedef struct {
     int k, n;
-    uint32_t pos, left;
+    uint32_t pos, left, format;
 } st_in_t;
 
 static int st_get(void *ctx)
@@ -237,7 +248,7 @@ static int st_get(void *ctx)
         if (++s->k >= NSTREAM)
             return -1;
         s->n = plat_store_load(STREAM_OBJ[s->k], io_buf, sizeof io_buf);
-        if (s->n < 4 || get32(io_buf) != PROJ_STREAM)
+        if (s->n < 4 || get32(io_buf) != s->format)
             return -1;
         stored_known[STREAM_OBJ[s->k]] = 1;
         stored_hash[STREAM_OBJ[s->k]] = hash_of(io_buf, (uint32_t)s->n);
@@ -247,18 +258,17 @@ static int st_get(void *ctx)
     return io_buf[s->pos++];
 }
 
-/* 0 = loaded; -1 = not there or not good (proj's patterns and arrangement then hold garbage) */
-static int load_stream(int n)
+/* Decode into borrowed staging memory: live project bytes are untouched until fully validated. */
+static int load_stream(int n, uint32_t format, uint8_t *raw, uint32_t raw_len)
 {
-    uint8_t *raw = (uint8_t *)&proj + RAW_OFF;
     uint32_t crc = get32(io_buf + 8), plen = get32(io_buf + 12);
-    st_in_t s = {0, n, STREAM_HDR, plen};
+    st_in_t s = {0, n, STREAM_HDR, plen, format};
     lz_src_t src = {st_get, &s};
-    if (n < (int)STREAM_HDR || get32(io_buf + 4) != RAW_LEN || plen > STREAM_CAP)
+    if (n < (int)STREAM_HDR || get32(io_buf + 4) != raw_len || !plen || plen > STREAM_CAP)
         return -1;
     stored_known[STREAM_OBJ[0]] = 1;
     stored_hash[STREAM_OBJ[0]] = hash_of(io_buf, (uint32_t)n);
-    if (lz_decompress(&src, raw, RAW_LEN) || crc32_of(raw, RAW_LEN) != crc)
+    if (lz_decompress(&src, raw, raw_len) || s.left || crc32_of(raw, raw_len) != crc)
         return -1;
     packed_len = plen;
     return 0;
@@ -425,13 +435,44 @@ static void patterns_defaults(void)
         pattern_init(&proj.pat[i], 0x3B0u + (uint32_t)i * 977u, 0x5A1u + (uint32_t)i * 613u);
 }
 
-/* each object is read straight into its place in proj: a load copies only a valid payload */
+/* Packed streams are validated in synchronized canvas scratch before changing the live project. */
 int project_load(void)
 {
     int bad = 0, i, sound_ok, n;
+    uint32_t format = 0, raw_len = 0, loaded_packed = 0;
+    uint8_t *stage = 0;
     settings_t set;
+    if (seq.playing || seq.req_stop) return -9;
+    n = plat_store_load(OBJ_PAT0, io_buf, sizeof io_buf);
+    if (n >= 4) format = get32(io_buf);
+    if (n < 0) {
+        /* A lost first sector must not turn a remaining packed save into fresh defaults. */
+        for (i = 1; i < NSTREAM; i++) {
+            int tail = plat_store_load(STREAM_OBJ[i], io_buf, sizeof io_buf);
+            if (tail >= 4 && get32(io_buf) != PROJ_FORMAT) {
+                rejected_save = 1;
+                return -8;
+            }
+        }
+    }
+    if (n >= 0 && (n < 4 || (format != PROJ_FORMAT && format != PROJ_STREAM && format != PROJ_VARIANT_STREAM))) {
+        rejected_save = 1;
+        return -8;
+    }
+    if (format == PROJ_STREAM || format == PROJ_VARIANT_STREAM) {
+        raw_len = format == PROJ_STREAM ? LEGACY_RAW_LEN : RAW_LEN;
+        stage = ui_project_stage(raw_len);
+        if (!stage) return -9;
+        if (load_stream(n, format, stage, raw_len) ||
+            (format == PROJ_VARIANT_STREAM && !variant_valid((const variant_settings_t *)(stage + LEGACY_RAW_LEN)))) {
+            ui_project_stage_finish(0);
+            rejected_save = 1;
+            return -8;
+        }
+        loaded_packed = packed_len;
+    }
     project_defaults();
-    packed_len = 0;
+    packed_len = loaded_packed;
     set = proj.set;
     if (load_settings(&set) == 0 && set.magic == PROJ_MAGIC)
         proj.set = set;
@@ -450,13 +491,9 @@ int project_load(void)
     if (proj.set.stereo < 2)                          /* saved before the drum voices had pans */
         engine_sound_centre_drum_pans(&proj.sound);
     proj.set.stereo = PROJ_STEREO;
-    n = plat_store_load(OBJ_PAT0, io_buf, sizeof io_buf);
-    if (n >= 4 && get32(io_buf) == PROJ_STREAM) {
-        if (load_stream(n)) {                         /* torn or broken: the defaults, not garbage */
-            patterns_defaults();
-            arrange_defaults();
-            bad = 1;
-        }
+    if (stage) {
+        uint32_t b;
+        for (b = 0; b < raw_len; b++) ((uint8_t *)&proj)[RAW_OFF + b] = stage[b];
     } else {
         if (load_patterns1()) {                       /* half a set is no set: the defaults */
             patterns_defaults();
@@ -474,6 +511,8 @@ int project_load(void)
     if (sound_ok && proj.set.snd_rev < 2)             /* before the one-knob COMP, FILTER, TAPE */
         sound_rev2();
     proj.set.snd_rev = PROJ_SND_REV;
+    rejected_save = 0;
+    ui_project_stage_finish(1);
     return bad ? -1 : 0;
 }
 
@@ -495,6 +534,12 @@ void project_apply_io(void)
 int project_save(void)
 {
     int p;
+    uint32_t raw_len, format, measured;
+    if (rejected_save || !variant_valid(&proj.variant)) return -8;
+    format = variant_is_default(&proj.variant) ? PROJ_STREAM : PROJ_VARIANT_STREAM;
+    raw_len = format == PROJ_STREAM ? LEGACY_RAW_LEN : RAW_LEN;
+    /* Preflight before settings/sound writes, so a full project cannot partly replace a save. */
+    if (stream_measure(raw_len, &measured)) return -7;
     for (p = 0; p < 5; p++)
         proj.set.midi_ch[p] = (uint8_t)(seq.ch[p] == SEQ_CH_OFF ? 17 : seq.ch[p] + 1);
     proj.set.bpm_x10 = (uint16_t)(seq.bpm * 10.0f + 0.5f);
@@ -505,5 +550,5 @@ int project_save(void)
         return -1;
     if (save_obj(OBJ_SOUND, &proj.sound, sizeof proj.sound))
         return -2;
-    return save_stream();
+    return save_stream(raw_len, format, measured);
 }

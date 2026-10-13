@@ -100,20 +100,36 @@ static float mix_pl[NPARTS] = {1, 1, 1, 1, 1}, mix_pr[NPARTS] = {1, 1, 1, 1, 1};
 /* ------------------------------------------------------- command queue --- */
 /* uint32 commands, single producer (main loop) / single consumer (audio ISR):
  * type:4 | a:8 | b:8 | c:12 */
-enum { C_PARAM_T0 = 0, C_DRUM = 8, C_BON, C_BOFF, C_BRK, C_NOP };
+enum { C_PARAM_T0 = 0, C_DRUM = 8, C_BON, C_BOFF, C_BRK, C_NOP, C_STRIP };
 #define CQ 1024u
 static uint32_t cq[CQ];
 static volatile uint32_t cq_w, cq_r;
+static sound_strip_config_t strip_cfg[25];
 
-static void cq_put(uint32_t type, uint32_t a, uint32_t b, uint32_t c)
+static int cq_put(uint32_t type, uint32_t a, uint32_t b, uint32_t c)
 {
     uint32_t w = cq_w;
     if (w - cq_r >= CQ)
-        return;                        /* full: drop (a param flood; the mirror still has it) */
+        return 0;                      /* new control API checks capacity before mirror mutation */
     cq[w % CQ] = (type << 28) | ((a & 0xFFu) << 20) | ((b & 0xFFu) << 12) | (c & 0xFFFu);
     __asm__ volatile("" ::: "memory");
     cq_w = w + 1;
+    return 1;
 }
+
+uint32_t engine_queue_space(void) { return CQ - (cq_w - cq_r); }
+uint32_t engine_queue_written(void) { return cq_w; }
+uint32_t engine_queue_read(void) { return cq_r; }
+int engine_strip_set(int strip, int index, int value)
+{
+    if (strip < 0 || strip >= 25 || index < 0 || index >= 6) return 0;
+    if (index < 2 ? value < 20 || value > 20000 :
+        index == 2 ? value < 0 || value > 24 :
+        index == 3 ? value < 0 || value > 48 :
+        index == 4 ? value < 10 || value > 250 : value < 0 || value > SOUND_STRIP_FLAGS) return 0;
+    return cq_put(C_STRIP, (uint32_t)strip, (uint32_t)((index << 4) | (value >> 12)), (uint32_t)value);
+}
+const sound_strip_config_t *engine_strip_config(int strip) { return strip >= 0 && strip < 25 ? &strip_cfg[strip] : 0; }
 
 /* ------------------------------------------------------------ params --- */
 int engine_nvoices(int t)
@@ -498,6 +514,17 @@ static void drain(void)
             bass303_note_off(&b303[a]);
         else if (type == C_BRK && !brk_hold)
             breaks_live(&brk, (int)a, (int)b);
+        else if (type == C_STRIP && a < 25u) {
+            uint32_t val = v | ((b & 15u) << 12);
+            switch (b >> 4) {
+            case 0: strip_cfg[a].highpass_hz = (uint16_t)val; break;
+            case 1: strip_cfg[a].lowpass_hz = (uint16_t)val; break;
+            case 2: strip_cfg[a].boost_db = (uint8_t)val; break;
+            case 3: strip_cfg[a].ceiling_db = (uint8_t)val; break;
+            case 4: strip_cfg[a].release_ms = (uint8_t)val; break;
+            case 5: strip_cfg[a].flags = (uint8_t)val; break;
+            }
+        }
     }
     cq_r = r;
     while (guard-- && plat_midi_in(&pkt))
@@ -945,6 +972,8 @@ void engine_brk_loops(void)
 void engine_init(pattern_t *patterns, song_t *song, lane_t *lanes, const sound_t *base)
 {
     int p;
+    cq_w = cq_r = 0;
+    for (p = 0; p < 25; p++) sound_strip_config_default(&strip_cfg[p]);
     for (p = 0; p < NPARTS * NDRUM; p++)
         prob[p / NDRUM][p % NDRUM] = 100;             /* every step plays, until a lane says */
     drum909_init(&d909);

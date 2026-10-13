@@ -10,8 +10,34 @@
 
 static void web_audio(const int32_t *blk, uint32_t n);
 #include "../../host/x0x_host.c"
+#include "../../firmware/src/app/variant.h"
 
 #undef __attribute__
+
+/* Fixed-size, shared-engine editor bridge. Never expose live project memory. */
+static variant_reply_t web_variant_reply;
+static variant_snapshot_t web_variant_view;
+__attribute__((used, visibility("default"))) variant_reply_t *web_variant_command(
+    int abi, int op, uint32_t request, int target, int voice, int index, int32_t value)
+{
+    web_variant_reply = (variant_reply_t){request, 0, 0, VR_INVALID};
+    /* Rejected transport fields still acknowledge current progress. */
+    if (variant_snapshot(VS_INFO, 0, 0, &web_variant_view) == VR_OK) {
+        web_variant_reply.revision = web_variant_view.revision;
+        web_variant_reply.ticket = web_variant_view.value[3];
+    }
+    if (abi < 0 || abi > 65535 || op < 0 || op > 65535 ||
+        target < 0 || target > 255 || voice < 0 || voice > 255 || index < 0 || index > 255)
+        return &web_variant_reply;
+    variant_command_t command = {(uint16_t)abi, (uint16_t)op, request,
+        (uint8_t)target, (uint8_t)voice, (uint8_t)index, 0, value};
+    variant_command(&command, &web_variant_reply);
+    return &web_variant_reply;
+}
+__attribute__((used, visibility("default"))) variant_snapshot_t *web_variant_snapshot(int section, int target, int voice)
+{
+    return variant_snapshot(section, target, voice, &web_variant_view) == VR_OK ? &web_variant_view : 0;
+}
 
 /* output ring, stereo float, filled by run_ms, drained by web_render */
 #define RING 4096u
