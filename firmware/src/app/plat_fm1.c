@@ -3,6 +3,8 @@
  * Part of the unity build (x0x.c), after the HAL, usb.c, storage.c and panel.c. */
 
 uint32_t plat_ms(void) { return fm1_ms; }
+uint32_t plat_control_enter(void) { return irq_save(); }
+void plat_control_leave(uint32_t saved) { irq_restore(saved); }
 
 uint32_t plat_buttons(void)
 {

@@ -23,7 +23,10 @@ class BuildPackagingTest(unittest.TestCase):
             self.assertEqual(page.count('id="variant-title"'), 1)
             self.assertEqual(page.count('src="variant-ui.js"'), 1)
             self.assertIn('href="variant-ui.css"', page)
-            for name in ('variant-ui.js', 'variant-ui.css'):
+            self.assertEqual(page.count('id="arrangement-title"'), 1)
+            self.assertEqual(page.count('src="arrangement-ui.js"'), 1)
+            self.assertIn('href="arrangement-ui.css"', page)
+            for name in ('variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css'):
                 self.assertEqual((output / name).read_bytes(), (WORK / 'web/emu' / name).read_bytes())
             self.assertIn('href="manual.txt"', page)
             self.assertIn('window.fm1SliceSend = send', script)
@@ -41,6 +44,7 @@ class BuildPackagingTest(unittest.TestCase):
             package_page(WORK, output, home_url='../', storage_namespace='acultur8-fm1-alpha')
             self.assertIn('href="../" target="_top"', (output / 'index.html').read_text('utf-8'))
             self.assertIn('src="variant-ui.js"', (output / 'index.html').read_text('utf-8'))
+            self.assertIn('src="arrangement-ui.js"', (output / 'index.html').read_text('utf-8'))
             self.assertEqual((output / 'variant-ui.js').read_bytes(), (WORK / 'web/emu/variant-ui.js').read_bytes())
             script = (output / 'emu.js').read_text('utf-8')
             self.assertIn('acultur8-fm1-alpha-store-v1', script)

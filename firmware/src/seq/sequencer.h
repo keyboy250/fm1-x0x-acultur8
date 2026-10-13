@@ -33,6 +33,7 @@
 #pragma once
 #include <stdint.h>
 #include "pattern.h"
+#include "harmony.h"
 
 #define FS 44100u
 #define TRK_DRUM 0                    /* + kit: 0 = 909, 1 = 808 */
@@ -50,6 +51,21 @@ static inline uint32_t seq_part_mask(int p)
 }
 
 #define NSONG 192
+#define ARR_ENABLED 1u
+typedef struct {
+    uint8_t flags, key, mode, parent;
+    uint8_t bass_low[2], bass_high[2];
+    uint8_t pad_channel, pad_root, pad_low, pad_high;
+    uint8_t degree[NSONG];
+} arrangement_settings_t;
+typedef char arrangement_settings_size_204[(sizeof(arrangement_settings_t) == 204) ? 1 : -1];
+/* Current block/global intent is latched on musical boundaries; never a second song table. */
+typedef struct {
+    const arrangement_settings_t *intent;
+    uint8_t flags, key, mode, parent;
+    uint8_t pat[NTRACKS], mute, degree, tick;
+    uint8_t queued, editing, clock_started, reserved;
+} arrangement_runtime_t;
 #define SEQ_CH_OFF 0xFFu
 /* a step's chance (the T_PROB lanes): 1-100 = that percentage, PROB_COND + k = the cycle k in the order
  * 1:2 2:2 1:3 2:3 3:3 1:4 ... 8:8 (A:B: on the A-th of every B passes of the part's pattern) */
@@ -130,11 +146,38 @@ typedef struct {
     volatile uint8_t req_start, req_stop, req_cont; /* transport requests from the UI / MIDI */
     uint32_t mut_rng[NBASS];          /* auto-mutate random streams */
     uint8_t bass_notes_out[NBASS];    /* note echoed on MIDI, for the note off */
+    volatile uint8_t transport_hold, transport_stage; /* main-only nested count; audio defers requests while nonzero */
+    volatile arrangement_runtime_t arrangement; /* 20 bytes on target 32-bit ABI; ISR/main snapshots */
 } seq_t;
+
+/* Audio owner: a single effective flag proves pointer/nonempty-song prerequisites. */
+static inline __attribute__((always_inline)) void seq_arrangement_apply_flags(seq_t *s)
+{
+    const arrangement_settings_t *intent = s->arrangement.intent;
+    s->arrangement.flags = intent && s->song && s->song->len ? intent->flags : 0;
+    if (!s->playing && intent) {
+        if (s->song && s->song_start >= s->song->len) s->song_start = 0;
+        s->arrangement.queued = 255;
+    }
+}
+static inline __attribute__((always_inline)) void seq_arrangement_apply(seq_t *s, const arrangement_settings_t *intent)
+{
+    s->arrangement.intent = intent; seq_arrangement_apply_flags(s);
+}
+static inline __attribute__((always_inline)) void seq_arrangement_queue(seq_t *s, uint8_t block)
+{
+    if (!(s->arrangement.flags & ARR_ENABLED) || block >= s->song->len) return;
+    if (s->playing) s->arrangement.queued = block;
+    else { s->song_start = block; s->arrangement.queued = 255; }
+}
 
 void seq_init(seq_t *s, pattern_t *patterns);
 uint32_t seq_until_event(seq_t *s, uint32_t n);
 void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o);
+/* Legacy functions above retain their measured gate; engine selects these feature
+ * specializations once per block from the applied audio-owned flag after drain. */
+uint32_t seq_until_event_arrangement(seq_t *s, uint32_t n);
+void seq_advance_arrangement(seq_t *s, uint32_t k, const seq_sink_t *o);
 
 /* main loop / MIDI side (all are flag writes picked up at the next block) */
 void seq_start(seq_t *s);             /* from step 1 of the current (or cued) pattern */

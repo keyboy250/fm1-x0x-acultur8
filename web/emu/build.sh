@@ -4,6 +4,9 @@
 #   [X0X_VERSION=0.4-beta] web/emu/build.sh  ->  build/emu/{index.html, worklet.js, x0x.wasm}
 # Same sources and flags as host/build_host.sh (-ffp-contract=off, like the device).
 set -e
+# Binaryen default parallel optimization repeatedly SIGSEGVs on the arrangement build.
+# One supported worker is reproducible; callers may explicitly override it.
+export BINARYEN_CORES="${BINARYEN_CORES:-1}"
 cd "$(dirname "$0")/../.."
 mkdir -p build/gen build/emu
 python3 tools/gen_font.py build/gen/felucca_font.h >/dev/null
@@ -12,7 +15,7 @@ sh tools/gen_builtin_break.sh build/gen >/dev/null
 U="firmware/src/dsp/drum909.c firmware/src/dsp/drum808.c firmware/src/dsp/bass303.c firmware/src/dsp/breaks.c
    firmware/src/dsp/fxbus.c firmware/src/dsp/master.c firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c
    firmware/src/seq/pattern.c firmware/src/seq/motion.c firmware/src/app/engine.c
-   firmware/src/app/variant.c firmware/src/dsp/sound_strip.c"
+   firmware/src/app/variant.c firmware/src/dsp/sound_strip.c firmware/src/seq/harmony.c"
 # shellcheck disable=SC2086
 emcc -O2 -ffp-contract=off -std=gnu99 -Wall -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable \
     -DX0X_HOST -DX0X_WEB "-DX0X_VERSION=\"$(printf %s "${X0X_VERSION:-DEV}" | tr a-z A-Z)\"" -Ifirmware/src -Ifirmware/src/dsp -Ibuild/gen \

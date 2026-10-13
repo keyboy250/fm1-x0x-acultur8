@@ -100,11 +100,12 @@ static float mix_pl[NPARTS] = {1, 1, 1, 1, 1}, mix_pr[NPARTS] = {1, 1, 1, 1, 1};
 /* ------------------------------------------------------- command queue --- */
 /* uint32 commands, single producer (main loop) / single consumer (audio ISR):
  * type:4 | a:8 | b:8 | c:12 */
-enum { C_PARAM_T0 = 0, C_DRUM = 8, C_BON, C_BOFF, C_BRK, C_NOP, C_STRIP };
+enum { C_PARAM_T0 = 0, C_DRUM = 8, C_BON, C_BOFF, C_BRK, C_NOP, C_STRIP, C_ARR, C_ARR_QUEUE };
 #define CQ 1024u
 static uint32_t cq[CQ];
 static volatile uint32_t cq_w, cq_r;
 static sound_strip_config_t strip_cfg[25];
+typedef char arrangement_block_has_six_bytes[(NTRACKS == 5 && sizeof(song_bar_t) == 6) ? 1 : -1];
 
 static int cq_put(uint32_t type, uint32_t a, uint32_t b, uint32_t c)
 {
@@ -120,6 +121,66 @@ static int cq_put(uint32_t type, uint32_t a, uint32_t b, uint32_t c)
 uint32_t engine_queue_space(void) { return CQ - (cq_w - cq_r); }
 uint32_t engine_queue_written(void) { return cq_w; }
 uint32_t engine_queue_read(void) { return cq_r; }
+int engine_transport_reserve(void)
+{
+    uint32_t saved = plat_control_enter();
+    if ((!seq.transport_hold && (seq.playing || seq.req_stop || seq.req_start || seq.req_cont)) ||
+        seq.transport_hold == UINT8_MAX) {
+        plat_control_leave(saved); return 0;
+    }
+    seq.transport_hold++;
+    plat_control_leave(saved); return 1;
+}
+void engine_transport_release(void)
+{
+    uint32_t saved = plat_control_enter();
+    if (seq.transport_hold) seq.transport_hold--;
+    plat_control_leave(saved);
+}
+int engine_arrangement_block(song_bar_t *dst, uint8_t *degree, const song_bar_t *src, uint8_t chord)
+{
+    uint32_t saved;
+    int i;
+    if (!engine_queue_space()) return 0;
+    saved = plat_control_enter();
+    /* Exactly seven canonical bytes. The ISR cannot observe them before publication. */
+    for (i = 0; i < NTRACKS; i++) dst->pat[i] = src->pat[i];
+    dst->mute = src->mute; *degree = chord;
+    cq_put(C_ARR, 0, 0, 0);
+    plat_control_leave(saved);
+    return 1;
+}
+int engine_arrangement_global(uint8_t *dst, uint8_t value, int stopped_only)
+{
+    uint32_t saved;
+    if (!engine_queue_space()) return 0;
+    saved = plat_control_enter();
+    if (stopped_only && (seq.playing || seq.req_stop || seq.req_start || seq.req_cont)) {
+        plat_control_leave(saved); return 0;
+    }
+    *dst = value; cq_put(C_ARR, 0, 0, 0); plat_control_leave(saved);
+    return 1;
+}
+int engine_arrangement_length(uint16_t *dst, uint16_t value)
+{
+    uint32_t saved;
+    if (!engine_queue_space()) return 0;
+    saved = plat_control_enter();
+    if (seq.playing || seq.req_stop || seq.req_start || seq.req_cont) {
+        plat_control_leave(saved); return 0;
+    }
+    *dst = value; cq_put(C_ARR, 0, 0, 0); plat_control_leave(saved);
+    return 1;
+}
+int engine_arrangement_refresh(const arrangement_settings_t *intent)
+{
+    uint32_t saved;
+    if (!engine_queue_space()) return 0;
+    saved = plat_control_enter(); seq.arrangement.intent = intent;
+    cq_put(C_ARR, 0, 0, 0); plat_control_leave(saved);
+    return 1;
+}
+int engine_arrangement_queue(uint8_t block) { return cq_put(C_ARR_QUEUE, block, 0, 0); }
 int engine_strip_set(int strip, int index, int value)
 {
     if (strip < 0 || strip >= 25 || index < 0 || index >= 6) return 0;
@@ -519,6 +580,8 @@ static void drain(void)
             bass303_note_off(&b303[a]);
         else if (type == C_BRK && !brk_hold)
             breaks_live(&brk, (int)a, (int)b);
+        else if (type == C_ARR) seq_arrangement_apply_flags(&seq);
+        else if (type == C_ARR_QUEUE) seq_arrangement_queue(&seq, (uint8_t)a);
         else if (type == C_STRIP && a < 25u) {
             uint32_t val = v | ((b & 15u) << 12);
             switch (b >> 4) {
@@ -760,6 +823,8 @@ void engine_render(int32_t *out_lr, uint32_t n)
     uint32_t done = 0, i;
     float vol = usb_full ? 1.0f : (float)plat_master() / 4096.0f;   /* (FULL: engine_volume) */
     int p;
+    uint32_t (*until_event)(seq_t *,uint32_t);
+    void (*advance)(seq_t *,uint32_t,const seq_sink_t *);
     if (n > 256u)
         n = 256u;
     eng_prof_frames += n;
@@ -772,21 +837,28 @@ void engine_render(int32_t *out_lr, uint32_t n)
     {
         PROF_T(pt);
         drain();
+        /* Only the applied audio-owned flag chooses the mode; one indirect call
+         * at each existing callsite, never a desired-project read in this loop. */
+        if (seq.arrangement.flags & ARR_ENABLED) {
+            until_event = seq_until_event_arrangement; advance = seq_advance_arrangement;
+        } else {
+            until_event = seq_until_event; advance = seq_advance;
+        }
         if (mot_on)
             motion_tick(&mot, n);
         fxbus_set_bpm(&fx, seq_tempo(&seq));
-        seq_advance(&seq, 0, &SINK);
+        advance(&seq, 0, &SINK);
         PROF_ADD(7, pt);
     }
     while (done < n) {
-        uint32_t k = seq_until_event(&seq, n - done);
+        uint32_t k = until_event(&seq, n - done);
         render_sub(out_l + done, out_r + done, k);
 #ifdef X0X_WEB
         web_slice_audio(k);
 #endif
         {
             PROF_T(pt);
-            seq_advance(&seq, k, &SINK);
+            advance(&seq, k, &SINK);
             PROF_ADD(7, pt);
         }
         done += k;

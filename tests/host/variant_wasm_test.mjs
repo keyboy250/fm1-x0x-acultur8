@@ -44,9 +44,9 @@ const objects = p => Object.fromEntries(Array.from({length:p.ex.web_nobj()}, (_,
 const p = await open(); render(p,30);
 const info = snap(p);
 assert.equal(info.abi,1);
-assert.equal(info.values[0],31,'kick processing capability advertised separately');
+assert.equal(info.values[0],127,'kick processing capability advertised separately');
 assert.equal(info.values[7],1,'only the first 909 kick processes audio');
-assert.equal(info.values[5],1); assert.equal(info.values[6],25);
+assert.equal(info.values[5],2); assert.equal(info.values[6],25);
 assert.deepEqual(snap(p,2).values,[20,20000,0,1,80,0]);
 assert.equal(snap(p,1,0,0).values.length > 0,true);
 for (const args of [[1,-1,0],[1,0,255],[2,25,0],[2,0,1],[99,0,0]]) assert.equal(snap(p,...args),null);
@@ -129,7 +129,7 @@ await reopened.onMessage({type:'variant-select',strip:256}); reopened.publish();
 assert.equal(reopened.messages.at(-1).variant.strip,24);
 // Corrupt an actual packed format header; reopen protects stored data from editor/save writes.
 const corrupt = objects(reopened);
-const packed = Object.values(corrupt).find(b => b.length >= 16 && new DataView(b.buffer,b.byteOffset,b.byteLength).getUint32(0,true) === 3);
+const packed = Object.values(corrupt).find(b => b.length >= 16 && new DataView(b.buffer,b.byteOffset,b.byteLength).getUint32(0,true) === 4);
 assert.ok(packed); packed[8] ^= 1;
 const rejected = await open(corrupt); render(rejected,30);
 assert.equal(snap(rejected).values[2],1);
@@ -139,4 +139,4 @@ assert.equal((await command(rejected,7)).result,-4);
 render(rejected,1900); assert.equal(rejected.ex.web_store_writes(),rejectedWrites);
 assert.deepEqual(objects(rejected),corrupt);
 console.log(JSON.stringify({realWasm:true,transportBounds:true,acceptedQueueCommands:accepted,
-  appliedTickets:true,gestureUndoRedo:true,saveReopen:true,playingStopBusy:true,corruptProtection:true,capabilities:31}));
+  appliedTickets:true,gestureUndoRedo:true,saveReopen:true,playingStopBusy:true,corruptProtection:true,capabilities:127}));

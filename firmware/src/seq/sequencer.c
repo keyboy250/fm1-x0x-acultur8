@@ -43,8 +43,13 @@ void seq_init(seq_t *s, pattern_t *patterns)
         s->t[i].rng = 0x1234567u * (i + 1);
     }
     s->clk_to_next = NEVER;
+    s->arrangement.queued = 255;
 }
 
+static int arrangement_active(const seq_t *s)
+{
+    return (s->arrangement.flags & ARR_ENABLED) != 0;
+}
 float seq_tempo(const seq_t *s) { return s->ext ? s->ext_bpm : s->bpm; }
 
 uint32_t seq_step_q8(const seq_t *s, int rate)
@@ -216,6 +221,44 @@ static void song_read(seq_t *s, int k, uint8_t *next)
     s->mute = mute;
 }
 
+static void arrangement_latch(seq_t *s, uint16_t block)
+{
+    volatile arrangement_runtime_t *a = &s->arrangement;
+    uint8_t next[NTRACKS];
+    int t;
+    if (block >= s->song->len) block = 0;
+    s->song_pos = block;
+    song_read(s, block, next);
+    a->mute = s->song->bar[block].mute;
+    a->degree = a->intent->degree[block];
+    a->key = a->intent->key; a->mode = a->intent->mode; a->parent = a->intent->parent;
+    s->song_rep = (uint8_t)SONG_REP(&s->song->bar[block]);
+    for (t = 0; t < NTRACKS; t++) {
+        a->pat[t] = next[t];
+        if (next[t] != s->ppat[t]) {
+            seq_track_t *tr = &s->t[t];
+            s->ppat[t] = next[t]; tr->started = 0; tr->bars = 0; tr->pp_dir = 1;
+            tr->to_next = s->ext ? NEVER : 0;
+            tr->ext_ticks = (uint8_t)(TICKS_PER_STEP[part_rate(s,t)] - 1);
+        }
+        s->pcue[t] = 255;
+    }
+}
+
+static void arrangement_tick(seq_t *s)
+{
+    volatile arrangement_runtime_t *a = &s->arrangement;
+    if (!arrangement_active(s) || !s->playing) return;
+    if (!a->clock_started) { a->clock_started = 1; return; }
+    if (++a->tick < 96) return;
+    a->tick = 0;
+    if (a->queued < s->song->len) {
+        uint8_t block = a->queued;
+        a->queued = 255; arrangement_latch(s,block);
+    } else if (s->song_rep <= 1) arrangement_latch(s,(uint16_t)(s->song_pos + 1));
+    else s->song_rep--;
+}
+
 /* the live state (next[], the mutes) into the song's bar k, growing it */
 static void song_write(seq_t *s, int k, const uint8_t *next)
 {
@@ -300,7 +343,7 @@ static void auto_mutate(seq_t *s, int b)
 }
 
 /* fire track t's next step now; returns the parts whose pattern changed (the 909 wrapping) */
-static uint32_t fire_step(seq_t *s, int t, const seq_sink_t *o)
+static uint32_t fire_step(seq_t *s, int t, const seq_sink_t *o, int arrangement)
 {
     seq_track_t *tr = &s->t[t];
     int rate = part_rate(s, t), p, wrapped;
@@ -316,7 +359,7 @@ static uint32_t fire_step(seq_t *s, int t, const seq_sink_t *o)
         p = next_pos(s, t, tr->pos, 1);
         wrapped = !bass ? p == 0 : p == 0 || (bpart(s, t - TRK_BASS0)->dir == DIR_REV && p == seq_part_len(s, t) - 1);
     }
-    if (wrapped && t == TRK_DRUM && (changed = bar_end(s, 0)) != 0) {
+    if (wrapped && t == TRK_DRUM && !arrangement && (changed = bar_end(s, 0)) != 0) {
         rate = part_rate(s, t);                       /* the 909's new pattern */
         L = seq_step_q8(s, rate);
         p = 0;
@@ -365,11 +408,16 @@ static void restart(seq_t *s, uint32_t parts)  /* parts whose pattern switched: 
     }
 }
 
-static void do_start(seq_t *s, int from_top, const seq_sink_t *o)
+static void do_start(seq_t *s, int from_top, const seq_sink_t *o, int arrangement)
 {
     int t;
-    if (from_top)
-        bar_end(s, 1);                                /* cues, or the song's start bar */
+    if (from_top) {
+        if (arrangement) {
+            s->arrangement.tick = s->arrangement.clock_started = 0;
+            s->arrangement.queued = 255;
+            arrangement_latch(s,s->song_start);
+        } else bar_end(s, 1);                         /* legacy 909 cycle semantics */
+    }
     for (t = 0; t < NTRACKS; t++) {
         seq_track_t *tr = &s->t[t];
         if (from_top) {
@@ -390,10 +438,11 @@ static void do_start(seq_t *s, int from_top, const seq_sink_t *o)
         midi(o, from_top ? 0xFA : 0xFB, 0, 0);
 }
 
-static void do_stop(seq_t *s, const seq_sink_t *o)
+static void do_stop(seq_t *s, const seq_sink_t *o, int arrangement)
 {
     int b, t;
     s->playing = 0;
+    if (arrangement) s->arrangement.queued = 255;
 #ifdef X0X_WEB
     web_seq_transport(0, 0);
 #endif
@@ -408,7 +457,7 @@ static void do_stop(seq_t *s, const seq_sink_t *o)
 }
 
 /* external clock ticks: arm the steps they complete */
-static void ext_ticks(seq_t *s)
+static void ext_ticks(seq_t *s, int arrangement)
 {
     int t;
     uint32_t n = s->ext_pending;
@@ -422,6 +471,8 @@ static void ext_ticks(seq_t *s)
         s->ext_since = 0;
         if (!s->playing)
             continue;
+        /* Musical block changes precede track arming on the same incoming clock. */
+        if (arrangement) arrangement_tick(s);
         for (t = 0; t < NTRACKS; t++) {
             seq_track_t *tr = &s->t[t];
             int rate = part_rate(s, t), tps = TICKS_PER_STEP[rate];
@@ -437,32 +488,44 @@ static void ext_ticks(seq_t *s)
     }
 }
 
-uint32_t seq_until_event(seq_t *s, uint32_t n)
+static inline __attribute__((always_inline)) uint32_t until_event_common(seq_t *s, uint32_t n, int arrangement)
 {
     uint32_t m = n, e;
     int t;
     if (!s->playing)
         return n;
+    if (s->ext && arrangement) {
+        e = s->ext_since > FS / 2u ? 1u : FS / 2u + 1u - s->ext_since;
+        if (e < m) m = e;
+    }
     for (t = 0; t < NTRACKS; t++) {
         if (s->t[t].to_next != NEVER && (e = s->t[t].to_next >> 8) < m)
             m = e;
         if (s->t[t].to_off && (e = s->t[t].to_off >> 8) < m)
             m = e;
     }
-    if (!s->ext && (s->send_clock || WEB_CLOCK) && (e = s->clk_to_next >> 8) < m)
+    if (!s->ext && (s->send_clock || WEB_CLOCK || arrangement) && (e = s->clk_to_next >> 8) < m)
         m = e;
     return m ? m : 1;
 }
 
-void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o)
+static inline __attribute__((always_inline)) void advance_common(seq_t *s, uint32_t k, const seq_sink_t *o, int arrangement)
 {
-    int t, guard;
+    int t, guard, clock_rebased = 0;
     uint32_t dq = k << 8;
     s->ext_since += k;
+    if (s->transport_hold) { /* stopped: retain elapsed clock time, discard pre-start clock ticks */
+        s->ext_pending = 0; /* Start/Continue/Stop requests remain pending until release */
+        return;
+    }
     if (s->ext_pending)
         s->ext = 1;
     else if (s->ext && s->ext_since > FS / 2u) {    /* clock gone for 0.5 s: back to internal */
         s->ext = 0;
+        if (arrangement) {
+            s->clk_to_next = seq_step_q8(s,RATE_16) / 6u; /* resume next tick, without duplicating the last one */
+            clock_rebased = 1;
+        }
         for (t = 0; t < NTRACKS; t++)
             if (s->playing && s->t[t].to_next == NEVER)
                 s->t[t].to_next = 0;
@@ -471,18 +534,18 @@ void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o)
         s->req_stop = 0;
         s->req_start = s->req_cont = 0;
         if (s->playing)
-            do_stop(s, o);
+            do_stop(s, o, arrangement);
     }
     if (s->req_start) {
         s->req_start = 0;
-        do_start(s, 1, o);
+        do_start(s, 1, o, arrangement);
     }
     if (s->req_cont) {
         s->req_cont = 0;
-        do_start(s, 0, o);
+        do_start(s, 0, o, arrangement);
     }
     if (s->ext_pending)
-        ext_ticks(s);
+        ext_ticks(s, arrangement);
     if (!s->playing) {
         if (!s->ext)
             s->clk_to_next = 0;
@@ -500,8 +563,10 @@ void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o)
         if (tr->to_off)
             tr->to_off = tr->to_off > dq ? tr->to_off - dq : 1;   /* 1: due, still "set" */
     }
-    if (!s->ext && (s->send_clock || WEB_CLOCK))
+    if (!clock_rebased && !s->ext && (s->send_clock || WEB_CLOCK || arrangement))
         s->clk_to_next = s->clk_to_next > dq ? s->clk_to_next - dq : 0;
+    if (!s->ext && arrangement && s->clk_to_next < 256u)
+        arrangement_tick(s); /* before any same-sample notes/steps */
     /* fire what is due; the drum part first, since its wrap may switch the pattern */
     for (guard = 0; guard < 8; guard++) {
         int fired = 0;
@@ -512,7 +577,7 @@ void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o)
                 fired = 1;
             }
             if (tr->to_next < 256u) {
-                uint32_t ch = fire_step(s, t, o);
+                uint32_t ch = fire_step(s, t, o, arrangement);
                 if (ch)
                     restart(s, ch);                   /* a part's new pattern starts on step 1 */
                 fired = 1;
@@ -521,7 +586,7 @@ void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o)
         if (!fired)
             break;
     }
-    if (!s->ext && (s->send_clock || WEB_CLOCK) && s->clk_to_next < 256u) {
+    if (!s->ext && (s->send_clock || WEB_CLOCK || arrangement) && s->clk_to_next < 256u) {
         uint32_t period = seq_step_q8(s, RATE_16) / 6u;
         if (s->send_clock) midi(o, 0xF8, 0, 0);
 #ifdef X0X_WEB
@@ -530,6 +595,11 @@ void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o)
         s->clk_to_next += period;           /* 24 ppqn */
     }
 }
+
+uint32_t seq_until_event(seq_t *s, uint32_t n) { return until_event_common(s,n,0); }
+uint32_t seq_until_event_arrangement(seq_t *s, uint32_t n) { return until_event_common(s,n,1); }
+void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o) { advance_common(s,k,o,0); }
+void seq_advance_arrangement(seq_t *s, uint32_t k, const seq_sink_t *o) { advance_common(s,k,o,1); }
 
 void seq_start(seq_t *s) { s->req_start = 1; }
 void seq_stop(seq_t *s) { s->req_stop = 1; }

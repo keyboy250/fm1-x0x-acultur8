@@ -17,6 +17,8 @@ OUT=build/host
 W='-O2 -ffp-contract=off -Wall -Wextra -Wdouble-promotion -Werror'
 run() { name="$1"; shift; printf '\nRequired check: %s\n' "$name"; "$@"; }
 compile() { name="$1"; shift; cc "$@" -o "$OUT/$name"; run "$name" "$OUT/$name"; }
+run arrangement sh tests/host/run_arrangement.sh
+run arrangement_wasm node tests/host/arrangement_wasm_test.mjs build/emu/x0x.wasm build/host/arrangement_schema1_store.bin
 run variant sh tests/host/run_variant.sh
 run variant_wasm node tests/host/variant_wasm_test.mjs build/emu/x0x.wasm
 run kick_wasm node tests/host/kick_wasm_test.mjs build/emu/x0x.wasm
