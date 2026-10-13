@@ -1,0 +1,75 @@
+name: Acultur8 browser alpha
+on:
+  pull_request:
+    branches: [acultur8/main]
+  push:
+    branches: [acultur8/main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Cancel superseded builds before they can publish an older integration commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  required-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    outputs:
+      site: ${{ steps.artifact.outputs.site }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and run every required browser-alpha check
+        run: python tools/acultur8_check.py --bootstrap
+      - name: Locate the tested site
+        id: artifact
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          report = json.loads(Path('build/acultur8-checks.json').read_text())
+          assert report['status'] == 'pass'
+          manifest = json.loads((Path(report['site']) / 'release-manifest.json').read_text())
+          assert not manifest['workingTreeDirty'], 'Publish only an exact committed source tree'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              print('site=' + report['site'], file=out)
+          PY
+      - name: Upload regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-alpha-checks
+          path: |
+            build/acultur8-checks.json
+            build/emu/manifest.json
+          if-no-files-found: error
+      - name: Upload tested Pages artifact
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/acultur8/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ steps.artifact.outputs.site }}
+  publish:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/acultur8/main'
+    needs: required-checks
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: acultur8-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy tested browser alpha
+        id: deployment
+        uses: actions/deploy-pages@v4

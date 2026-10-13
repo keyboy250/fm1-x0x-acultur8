@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "compiler_id": "JieLi clang 4.0.1; jieli-linux-toolchains-20260730.1 sha256 a1545cddbc451a06bac43eb5cd96d831470c42a97c5c0b1f98879a20fc7647bd; pi32v2 -mcpu=r3 -mfprev1 -ffp-contract=off -O2 DSP/engine -Os platform; objdump --mcpu=r3",
+  "disassembly_sha256": "e9894ad211ceb92dfe2a1a2be91847005f39001830592b982d19d7d958221ff8",
+  "model": {
+    "nest_weight": 4,
+    "divide_extra_weight": 8,
+    "max_depth": 4
+  },
+  "functions": {
+    "d9_render": {
+      "insns": 2766,
+      "loop": 1988,
+      "div": 6,
+      "call": 10,
+      "cost": 3911
+    },
+    "d8_render": {
+      "insns": 3311,
+      "loop": 3228,
+      "div": 21,
+      "call": 8,
+      "cost": 181074
+    },
+    "hat_tick": {
+      "insns": 174,
+      "loop": 8,
+      "div": 0,
+      "call": 0,
+      "cost": 8
+    },
+    "bass303_render": {
+      "insns": 1907,
+      "loop": 1113,
+      "div": 8,
+      "call": 0,
+      "cost": 5500
+    },
+    "breaks_render": {
+      "insns": 674,
+      "loop": 566,
+      "div": 6,
+      "call": 5,
+      "cost": 1844
+    },
+    "fx_reverb": {
+      "insns": 298,
+      "loop": 243,
+      "div": 0,
+      "call": 0,
+      "cost": 243
+    },
+    "fx_delay": {
+      "insns": 551,
+      "loop": 383,
+      "div": 0,
+      "call": 0,
+      "cost": 407
+    },
+    "fxbus_process_st": {
+      "insns": 308,
+      "loop": 227,
+      "div": 1,
+      "call": 2,
+      "cost": 235
+    },
+    "master_process_st": {
+      "insns": 895,
+      "loop": 855,
+      "div": 9,
+      "call": 0,
+      "cost": 927
+    },
+    "core2_job": {
+      "insns": 63,
+      "loop": 6,
+      "div": 0,
+      "call": 0,
+      "cost": 6
+    },
+    "engine_render": {
+      "insns": 867,
+      "loop": 695,
+      "div": 2,
+      "call": 65,
+      "cost": 1116
+    },
+    "seq_until_event": {
+      "insns": 56,
+      "loop": 0,
+      "div": 0,
+      "call": 0,
+      "cost": 0
+    },
+    "seq_advance": {
+      "insns": 1204,
+      "loop": 1185,
+      "div": 14,
+      "call": 27,
+      "cost": 58459
+    },
+    "motion_tick": {
+      "insns": 53,
+      "loop": 39,
+      "div": 1,
+      "call": 1,
+      "cost": 47
+    },
+    "fm1_alnk0_irq": {
+      "insns": 78,
+      "loop": 11,
+      "div": 0,
+      "call": 3,
+      "cost": 11
+    }
+  }
+}
