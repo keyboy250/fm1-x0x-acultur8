@@ -20,6 +20,12 @@ def run(args):
     print('Running: ' + ' '.join(args), flush=True)
     subprocess.run(args, check=True)
 
+
+def docker_identity():
+    # Linux bind mounts retain the checkout owner's UID/GID. With capabilities
+    # dropped, container root cannot write another user's non-world-writable tree.
+    return ['--user', f'{os.getuid()}:{os.getgid()}'] if hasattr(os, 'getuid') else []
+
 def source_hash(root=WORK):
     root = Path(root).resolve()
     h = hashlib.sha256()
@@ -130,7 +136,7 @@ X0X_HOST_DEFS=-D_POSIX_C_SOURCE=200809L sh host/build_host.sh
         compiler = subprocess.check_output(['emcc', '--version'], text=True).splitlines()[0]
         image_id = None
     else:
-        run(['docker', 'run', '--rm', '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges', '-v', str(work) + ':/src', '-w', '/src', args.image, 'sh', '/src/build/build-emulator-container.sh'])
+        run(['docker', 'run', '--rm', '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges', *docker_identity(), '-v', str(work) + ':/src', '-w', '/src', args.image, 'sh', '/src/build/build-emulator-container.sh'])
         compiler = subprocess.check_output(['docker', 'run', '--rm', '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges', args.image, 'emcc', '--version'], text=True).splitlines()[0]
         image_id = subprocess.check_output(['docker', 'image', 'inspect', args.image, '--format', '{{.Id}}'], text=True).strip()
     if source_hash(work) != initial:

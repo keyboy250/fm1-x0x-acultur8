@@ -16,6 +16,8 @@ import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'lab'))
+from build_emulator import docker_identity
 
 
 def main():
@@ -48,7 +50,7 @@ def main():
             command.append('--bootstrap')
         run('fresh-host-and-wasm-build', command)
         docker = ['docker', 'run', '--rm', '--network=none', '--cap-drop=ALL',
-                  '--security-opt=no-new-privileges', '-v', str(ROOT) + ':/src', '-w', '/src', args.image]
+                  '--security-opt=no-new-privileges', *docker_identity(), '-v', str(ROOT) + ':/src', '-w', '/src', args.image]
         run('required-engine-regressions', docker + ['sh', 'tools/acultur8_checks.sh'])
         run('portable-dashboard', [sys.executable, 'lab/test_dashboard.py'])
         run('emulator-page-bridge', [sys.executable, 'lab/test_build_emulator.py'])
