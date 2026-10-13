@@ -1,5 +1,6 @@
 """Browser packaging smoke checks without a compiler, audio device or decoder."""
 from pathlib import Path
+import hashlib
 import shutil
 import subprocess
 import tempfile
@@ -45,6 +46,18 @@ class BuildPackagingTest(unittest.TestCase):
             self.assertIn('acultur8-fm1-alpha-store-v1', script)
             self.assertNotIn('acultur8-fm1-lab-store-v1', script)
             self.assertIn('acultur8-fm1-alpha-marked-imports-v1', (output / 'slice-ui.js').read_text('utf-8'))
+
+    def test_source_fingerprint_uses_portable_case_sensitive_order(self):
+        with tempfile.TemporaryDirectory(prefix='fm1-hash-order-') as folder:
+            root = Path(folder)
+            (root / 'firmware').mkdir()
+            entries = [('firmware/Z.c', b'last upper'), ('firmware/b.c', b'lower'), ('firmware/A.c', b'first upper')]
+            for name, content in entries:
+                (root / name).write_bytes(content)
+            expected = hashlib.sha256()
+            for name, content in sorted(entries):
+                expected.update(name.encode() + b'\0' + content)
+            self.assertEqual(source_hash(root), expected.hexdigest())
 
     def test_source_hash_ignores_runtime_but_tracks_packager(self):
         with tempfile.TemporaryDirectory(prefix='fm1-hash-test-') as folder:
