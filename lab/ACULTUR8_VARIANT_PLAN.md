@@ -4,7 +4,7 @@ Execution checkpoint: 13 October 2026 UTC. The user authorized an active impleme
 
 ## Current expedited execution plan — 13 October 2026
 
-This checkpoint supersedes earlier proposed PR numbering and first-alpha estimates. The public variant already exists at https://github.com/keyboy250/fm1-x0x-acultur8 with integration branch `acultur8/main`. Reviewed PRs #1–#4 are merged. Browser alpha.1 remains the known-good tag; the current Pages site additionally includes the About page linked to Acultur8.com and Traxsource. About publication passed local checks, independent review, merged CI and hosted verification at commit `84d924660522f275baff6c3cd1741479bbe898b1`.
+This checkpoint supersedes all earlier priority orders, delivery estimates, proposed PR numbering and pre-publication status snapshots. Historical sections below are retained for provenance and are not the current execution queue or forecast. The public variant already exists at https://github.com/keyboy250/fm1-x0x-acultur8 with integration branch `acultur8/main`. Reviewed PRs #1–#4 are merged. Browser alpha.1 remains the known-good tag; the current Pages site additionally includes the About page linked to Acultur8.com and Traxsource. About publication passed local checks, independent review, merged CI and hosted verification at commit `84d924660522f275baff6c3cd1741479bbe898b1`.
 
 The remaining local font, command/save and DSP candidates are unmerged. Standing authorization covers ordinary implementation, official free dependencies, independent agents, tested/reviewed merges and Pages releases. The persistent app goal is currently paused; this planning update does not reactivate it. Website publication to Acultur8.com is a separate deployment task awaiting its hosting connection.
 
@@ -78,7 +78,9 @@ Variant: **Acultur8 X0X**, an experimental variant of Charles Vestal's X0X for t
 - Firmware resource baseline: image 581,444 / 581,564 bytes; general RAM 97,216 / 98,304 bytes; pool 334,324 / 344,064 bytes. This leaves only 120 image bytes, 1,088 RAM bytes and 1,548 pool bytes beyond the required 8 KiB reserve. New features require measured size reductions before device qualification. Physical processor timing is still pending.
 - Restricted decoder SDK, converter source with unresolved distribution permission, private loops, imports and credentials stay outside the public checkout/package.
 
-## What we can reuse
+## Historical pre-publication capability snapshot
+
+This earlier snapshot is superseded by the current execution plan and accepted alpha checkpoint above.
 
 | Capability | Current evidence | Remaining release work |
 | --- | --- | --- |
@@ -102,7 +104,7 @@ Existing accepted browser rows FM1-18 through FM1-21 remain complete within thei
 - Dashboard and converter changes live outside that firmware tree and need explicit packaging.
 - Converter archive comment: `c720804d6a56730ccbc3042fd4338e3db3b5af24`; archive SHA-256: `e2c5c814f6dd55ffcdd82ea406270ecf2b9ca7468d3401748f00e3766c20263d`. This identifies the supplied archive; matching it against upstream remains a converter publication task.
 
-## Top ten development targets
+## Historical initial target order (superseded)
 
 Order is the default implementation sequence. Each row becomes a GitHub issue with dependencies, a demonstrable result and a test record.
 
@@ -119,7 +121,7 @@ Order is the default implementation sequence. Each row becomes a GitHub issue wi
 | 9 | Pad accompaniment | Dedicated external MIDI chord lane first; simple internal three-voice prototype behind a feature switch | Correct note-off/channel/transport behavior; browser monitor proves events; real MIDI recipient proves sound; internal version requires measured headroom |
 | 10 | Integrated device candidate | Run complete arrangement + sound + harmony workload; establish recovery and hardware acceptance; assess sample-slot limits separately | Target budgets, prolonged audio/MIDI/control/save tests and recovery proof pass before an installable public beta is promoted |
 
-## Milestones and effort
+## Historical initial milestone estimates (superseded)
 
 These are planning ranges in focused engineering days, not delivery dates. Re-estimate after the first sound-processing prototype. Hardware access, toolchain availability and distribution permissions can change elapsed time.
 
@@ -150,7 +152,7 @@ flowchart LR
 
 The sound and harmony paths can proceed independently after their shared interfaces are defined. Integration and tests stay incremental; this diagram does not assume additional agents or developers are available.
 
-## Expedited execution strategy
+## Historical initial execution strategy (superseded)
 
 The first useful delivery is the existing emulator and slice workflow running from a clean public checkout. The second is one audible, editable and persistent sound strip. Avoid making the entire firmware feature set a prerequisite for either delivery.
 
@@ -287,7 +289,7 @@ Repair `tests/target_budget.py` before relying on it: its default `build/felucca
 
 No installable Acultur8 firmware asset or automatic installer promotion belongs in the browser alpha. Hardware qualification includes the device/recovery action when its identity, backups and procedure are concrete and installation is authorized.
 
-## First execution batch
+## Historical initial launch batch (completed; superseded)
 
 1. Resolve GitHub owner/repository, then make a separate clean clone anchored to the recovered upstream commit; produce a reviewed import diff and file manifest.
 2. Make the local lab runnable from that clone; keep the live workspace and user imports untouched.
@@ -310,7 +312,7 @@ Use the current branch/dependency table above. Historical PRs #1–#4 are alread
 - [GitHub fork model](https://docs.github.com/en/pull-requests/reference/forks).
 - [GitHub Pages static hosting](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages).
 
-Outstanding environment or distribution checks: device/recovery availability; representative user loops for musical acceptance; converter distribution permission. The native converter remains an optional external local integration and is excluded from publication. The first two engineering outputs remain the portable browser-alpha package and the measured one-sound prototype.
+Outstanding environment or distribution checks: device/recovery availability; representative user loops for musical acceptance; converter distribution permission. The native converter remains an optional external local integration and is excluded from publication. The portable browser alpha is published. The next engineering outputs are the reviewed font/resource and command/save foundations, followed by one complete kick strip.
 
 ## Accepted alpha.1 checkpoint — 13 October 2026
 
