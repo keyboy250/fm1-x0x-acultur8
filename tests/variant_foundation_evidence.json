@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "kind": "variant-foundation-config-only",
+  "measured_at": "2026-10-13T08:33:41.745267+00:00",
+  "source_sha256": "cc2ae27ec23d2bb5e4c4b1ceb9328a9d81b3c9c886fb21a19c48e0caa647af63",
+  "hardware_tested": false,
+  "audible_strip_processing": false,
+  "toolchain_reference": "docs/ACULTUR8_TARGET_BUILD.md",
+  "resources": {
+    "image": 565204,
+    "image_limit": 581564,
+    "image_spare": 16360,
+    "ram": 97636,
+    "ram_limit": 98304,
+    "ram_spare": 668,
+    "pool": 334532,
+    "pool_limit": 344064,
+    "pool_spare": 9532,
+    "pool_required_reserve": 8192,
+    "pool_above_reserve": 1340
+  },
+  "delta_from_font_only": {
+    "image": 2128,
+    "ram": 420,
+    "pool": 208
+  },
+  "standalone_strip_object": {
+    "function_text": 2564,
+    "undefined_symbols": [],
+    "process_text": 1156,
+    "process_instructions": 349,
+    "process_frame": 84,
+    "unknown_instructions": 0,
+    "runtime_state": 68,
+    "config": 8,
+    "object_sha256": "6a662b1da3374e9f319923223784dc09e9ea4e672eb2b3f4dceb5bb8878059bc"
+  },
+  "checks": {
+    "native_variant": "pass",
+    "real_worklet_wasm_bridge": "pass",
+    "standalone_dsp_rapid_toggles": "pass",
+    "glyph_parity": "pass",
+    "required_host_wasm_dashboard_publication": "pass",
+    "official_target_image_ram_pool": "pass",
+    "all_15_static_target_budgets": "pass"
+  },
+  "pending": [
+    "Audible kick integration and browser controls",
+    "Physical DMA/audio deadlines and stack watermark",
+    "Physical flash interruption, save/reboot and recovery",
+    "Combined arrangement/harmony/all-strip resources"
+  ]
+}

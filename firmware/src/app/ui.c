@@ -86,7 +86,7 @@ static uint8_t any_button;             /* a button has been pressed since power-
 static uint16_t footer_text(const char **a, const char **b, const char **c);
 
 /* something the project keeps changed: SAVE (or the autosave) has work to do */
-static void mark_dirty(void) { ui.dirty = 1; }
+static void mark_dirty(void) { ui.dirty = 1; variant_changed(); }
 
 /* the encoders, read for the UI: a turn counts as being touched (the autosave waits for quiet) */
 static int32_t enc(int role)
@@ -1209,13 +1209,39 @@ static void help_tick(uint32_t btn, uint32_t keys)
 #define UNDO_QUIET 400u
 #define UNDO_OFF __builtin_offsetof(project_t, sound)
 static undo_t undo X0X_POOL;
-static uint8_t undo_shadow[sizeof(project_t) - UNDO_OFF] X0X_POOL;
+static uint8_t undo_shadow[sizeof(project_t) - UNDO_OFF] X0X_POOL __attribute__((aligned(4)));
 static uint8_t undo_lanes;             /* the last undo / redo touched the knob motion */
+static uint8_t undo_ready, external_edit;
+static void ui_draw_invalidate(void);
 
-static void undo_start(void) { undo_init(&undo, (uint8_t *)&proj + UNDO_OFF, undo_shadow, sizeof undo_shadow); }
+static void undo_start(void) { undo_init(&undo, (uint8_t *)&proj + UNDO_OFF, undo_shadow, sizeof undo_shadow); undo_ready = 1; external_edit = 0; }
+
+uint8_t *ui_project_stage(uint32_t bytes)
+{
+    if (seq.playing || seq.req_stop) return 0;
+    return cv_stage(bytes);
+}
+void ui_project_stage_finish(int loaded)
+{
+    ui_draw_invalidate();
+    if (loaded && undo_ready) { undo_reset(&undo); external_edit = 0; }
+}
+void ui_external_edit(int begin)
+{
+    if (begin && external_edit) return;
+    if (undo_ready) undo_commit(&undo);
+    external_edit = (uint8_t)(begin != 0); ui.act_t = plat_ms();
+}
+void ui_external_changed(void) { mark_dirty(); ui.act_t = plat_ms(); }
+void ui_external_sound(int target, int voice, int index, int value)
+{
+    pref_set(PR(R_ENG, target, voice, index), value); ui.act_t = plat_ms();
+}
+void ui_external_saved(void) { ui.dirty = 0; }
 
 static void undo_tick(void)
 {
+    if (external_edit) return;
     if (perf_testing() || (ui.rec && seq.playing) || ui.btn || ui.keys || plat_ms() - ui.act_t < UNDO_QUIET ||
         (ui.frame & 3u))
         return;
@@ -1227,6 +1253,7 @@ static void undo_changed(uint32_t off, uint32_t len)
 {
     const uint32_t s0 = __builtin_offsetof(project_t, sound), s1 = s0 + sizeof(sound_t);
     const uint32_t l0 = __builtin_offsetof(project_t, arr) + __builtin_offsetof(arrange_t, lane);
+    const uint32_t l1 = l0 + sizeof proj.arr.lane, v0 = __builtin_offsetof(project_t, variant) + __builtin_offsetof(variant_settings_t, strip);
     uint32_t a = off + UNDO_OFF, k;
     for (k = a; k < a + len; k++) {
         if (k >= s0 && k < s1) {
@@ -1234,9 +1261,14 @@ static void undo_changed(uint32_t off, uint32_t len)
                      i = x % NPARAMS_MAX;
             if ((int)v < engine_nvoices((int)t) && (int)i < engine_nparams((int)t, (int)v))
                 engine_set((int)t, (int)v, (int)i, proj.sound.v[t][v][i]);
-        } else if (k >= l0) {
+        } else if (k >= l0 && k < l1) {
             undo_lanes = 1;
         }
+    }
+    for (k = 0; k < VARIANT_STRIPS; k++) {
+        uint32_t lo = v0 + k * sizeof(sound_strip_config_t); int i;
+        if (a < lo + sizeof(sound_strip_config_t) && a + len > lo)
+            for (i = 0; i < VP_COUNT; i++) engine_strip_set((int)k, i, variant_field_get(&proj.variant.strip[k],i));
     }
 }
 
@@ -1262,6 +1294,8 @@ static void undo_name(uint32_t lo, uint32_t hi, char *t)
         put_s(t, "PATTERNS");
     } else if (a >= a0 && b < l0) {
         put_s(t, "SONG");
+    } else if (a >= __builtin_offsetof(project_t, variant)) {
+        put_s(t, "SOUND STRIPS");
     } else if (a >= l0) {
         put_s(t, "MOTION");
     } else {
@@ -1273,6 +1307,8 @@ static void do_undo(int redo)
 {
     uint32_t lo, hi;
     char t[24];
+    if (engine_queue_space() < 768u) { say("AUDIO BUSY", "TRY UNDO AGAIN"); return; }
+    external_edit = 0;
     undo_commit(&undo);                              /* what was just done is a step too */
     undo_lanes = 0;
     if (!(redo ? undo_redo : undo_undo)(&undo, undo_changed, &lo, &hi)) {
@@ -1290,6 +1326,7 @@ static void do_undo(int redo)
     undo_name(lo, hi, t);
     say(redo ? "REDO " : "UNDO ", t);
 }
+int ui_external_undo(int redo) { int before = undo.cur; do_undo(redo); return before != undo.cur; }
 
 /* SAVE while playing waits for the stop: writing the flash stops the audio (the code and the samples
  * are read from it, and a 4 KB erase takes tens of ms) */
@@ -1303,8 +1340,9 @@ static void save_project(void)
         return;
     }
     save_wait = 0;
+    ui_external_edit(0);
     rc = project_save();
-    say(rc == -7 ? "MEMORY FULL: NOT SAVED" : rc ? "SAVE FAILED" : "SAVED", 0);
+    say(rc == -8 ? "SAVE PROTECTED" : rc == -7 ? "MEMORY FULL: NOT SAVED" : rc ? "SAVE FAILED" : "SAVED", 0);
     if (!rc)
         ui.dirty = 0;
 }
@@ -1587,8 +1625,11 @@ static void run_action(int act, int arg)
         say("SONG CLEARED", 0);
         break;
     case ACT_RESET:
+        external_edit = 0;
+        project_discard_rejected();
         project_defaults();
         engine_apply_sound(&proj.sound);
+        variant_apply();
         engine_brk_loops();
         palette_set(proj.set.palette);
         mark_dirty();
@@ -2535,6 +2576,12 @@ static void input(void)
 #define KNOB_H 82
 
 static uint32_t blit_hash[4];
+static void ui_draw_invalidate(void)
+{
+    int i;
+    ui.outline_ok = 0;
+    for (i = 0; i < 4; i++) blit_hash[i] = 0;
+}
 static uint32_t cv_hash(void)
 {
     uint32_t i, h = 2166136261u, n = cv_w * cv_h;
@@ -4109,6 +4156,7 @@ void ui_init(void)
         blit_hash[i] = 0;
     build_pages();
     undo_start();                                   /* the project as loaded is where undo stops */
+    variant_apply();
 }
 
 /* AUTOSAVE: changes are saved by themselves while the pattern is stopped and nothing has been touched
@@ -4123,7 +4171,7 @@ static void autosave(void)
         save_project();
         return;
     }
-    if (!ui.dirty || (proj.set.autosave_off && !ui.last_autosave) || seq.playing || seq.req_stop || ui.rec || perf_testing() ||
+    if (!ui.dirty || external_edit || (proj.set.autosave_off && !ui.last_autosave) || seq.playing || seq.req_stop || ui.rec || perf_testing() ||
         ui.overlay == O_ASK || now - ui.act_t < AUTOSAVE_QUIET || (ui.saved_t && now - ui.saved_t < AUTOSAVE_GAP))
         return;
     ui.saved_t = now;

@@ -11,7 +11,8 @@ python3 tools/gen_font.py build/gen/felucca_font.h >/dev/null
 sh tools/gen_builtin_break.sh build/gen >/dev/null
 U="firmware/src/dsp/drum909.c firmware/src/dsp/drum808.c firmware/src/dsp/bass303.c firmware/src/dsp/breaks.c
    firmware/src/dsp/fxbus.c firmware/src/dsp/master.c firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c
-   firmware/src/seq/pattern.c firmware/src/seq/motion.c firmware/src/app/engine.c"
+   firmware/src/seq/pattern.c firmware/src/seq/motion.c firmware/src/app/engine.c
+   firmware/src/app/variant.c firmware/src/dsp/sound_strip.c"
 # shellcheck disable=SC2086
 emcc -O2 -ffp-contract=off -std=gnu99 -Wall -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable \
     -DX0X_HOST -DX0X_WEB "-DX0X_VERSION=\"$(printf %s "${X0X_VERSION:-DEV}" | tr a-z A-Z)\"" -Ifirmware/src -Ifirmware/src/dsp -Ibuild/gen \

@@ -48,10 +48,34 @@ static uint32_t font_next(font_reader_t *r)
 #endif
 
 #define CV_MAX (240u * 144u)      /* X0X: the main area, both bands, is 240 x 144 */
-static uint16_t cv_px[CV_MAX] __attribute__((section(".pool")));
+static uint16_t cv_px[CV_MAX] __attribute__((section(".pool"), aligned(4)));
 static uint32_t cv_w, cv_h;
 static int32_t cv_oy;            /* y offset for graph drawing */
 static int32_t cv_y0, cv_y1;     /* X0X: the rows drawing may touch (cv_band) */
+
+/* Main-loop-only scratch while drawing is suspended. Finish outstanding source
+ * DMA first; a hardware timeout cannot establish that the source is released.
+ * No interrupt/audio/core-2 path owns the canvas. The next draw uses cv_begin. */
+#ifndef CV_STAGE_SYNC
+#define CV_STAGE_SYNC lcd_sync
+#endif
+#ifndef CV_STAGE_DMA_TIMEOUTS
+#ifdef X0X_HOST
+#define CV_STAGE_DMA_TIMEOUTS 0u
+#else
+#define CV_STAGE_DMA_TIMEOUTS fm1_lcd_timeouts
+#endif
+#endif
+static uint8_t *cv_stage(uint32_t bytes)
+{
+    if (bytes > sizeof cv_px) return 0;
+    if (CV_STAGE_DMA_TIMEOUTS) return 0;
+    CV_STAGE_SYNC();
+    if (CV_STAGE_DMA_TIMEOUTS) return 0;
+    cv_w = cv_h = 0;
+    cv_oy = cv_y0 = cv_y1 = 0;
+    return (uint8_t *)cv_px;
+}
 
 #define RGB(r, g, b) ((uint16_t)((((r) >> 3) << 11) | (((g) >> 2) << 5) | ((b) >> 3)))
 #define C_BLACK 0x0000u

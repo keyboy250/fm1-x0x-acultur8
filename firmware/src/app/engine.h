@@ -18,6 +18,7 @@
 #include "../dsp/x0x_param.h"
 #include "../seq/sequencer.h"
 #include "../seq/motion.h"
+#include "../dsp/sound_strip.h"
 
 enum { T_909, T_808, T_303, T_BRK, T_FX, T_MIX, T_MST, NTARGETS };
 #define T_PROB NTARGETS                /* a lane's pseudo-target: a step's chance, 5..100 % (not in sound_t);
@@ -62,6 +63,11 @@ const char *engine_voice_name(int target, int voice);
 
 /* main loop -> ISR */
 void engine_set(int target, int voice, int i, int value);   /* queued; the sound_t mirror is the caller's */
+uint32_t engine_queue_space(void);
+uint32_t engine_queue_written(void);
+uint32_t engine_queue_read(void);
+int engine_strip_set(int strip, int index, int value);     /* 1 queued, 0 full/invalid */
+const sound_strip_config_t *engine_strip_config(int strip); /* audio context only */
 void engine_out_loud(int on);          /* 1: the output at the codec's full scale (6 dB hotter than Felucca's) */
 void engine_usb_full(int on);          /* 1: engine_render at full level, engine_volume the MASTER knob after */
 void engine_volume(int32_t *out_lr, uint32_t n);   /* ISR, after engine_render (and the USB tap) */

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "plat.h"
 #include "engine.h"
+#include "variant.h"
 #include "../seq/pattern.h"
 #include "../seq/sequencer.h"
 #include "../seq/tb3po.h"
@@ -51,18 +52,28 @@ typedef struct {
     sound_t sound;
     pattern_t pat[NPAT];
     arrange_t arr;
+    variant_settings_t variant;       /* appended: legacy project prefix offsets stay fixed */
 } project_t;
 
 extern project_t proj;
 
 void project_defaults(void);
-int project_load(void);                  /* 0 = loaded; else defaults are in place */
+int project_load(void);                  /* 0 loaded; -8 rejected packed save leaves live project intact */
 int project_save(void);                  /* 0 = saved and verified; -7 = too much to fit (nothing written) */
 void project_apply_io(void);             /* the settings into the sequencer and the engine: MIDI, the output */
 int project_mem_pct(void);               /* how full the room for patterns, song and motion is, % */
+int project_write_protected(void);
+void project_discard_rejected(void);     /* explicit factory reset only */
 
 void ui_init(void);
 void ui_frame(void);
 void ui_input_only(void);
 int ui_dirty(void);
+void ui_external_edit(int begin);        /* 1 starts a gesture; 0 commits it */
+void ui_external_changed(void);
+void ui_external_sound(int target, int voice, int index, int value);
+int ui_external_undo(int redo);
+void ui_external_saved(void);
+uint8_t *ui_project_stage(uint32_t bytes);
+void ui_project_stage_finish(int loaded);
 void ui_say(const char *a, const char *b);

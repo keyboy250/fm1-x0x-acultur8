@@ -17,6 +17,9 @@ OUT=build/host
 W='-O2 -ffp-contract=off -Wall -Wextra -Wdouble-promotion -Werror'
 run() { name="$1"; shift; printf '\nRequired check: %s\n' "$name"; "$@"; }
 compile() { name="$1"; shift; cc "$@" -o "$OUT/$name"; run "$name" "$OUT/$name"; }
+run variant sh tests/host/run_variant.sh
+run variant_wasm node tests/host/variant_wasm_test.mjs build/emu/x0x.wasm
+run sound_strip sh tests/host/run_sound_strip.sh
 run font_packing python3 tests/test_font_packing.py
 compile fastmath -O2 -ffp-contract=off -Wall -Wextra -Werror tests/host/fastmath_test.c -lm
 compile sequencer -O2 -ffp-contract=off -Wall -Wextra tests/host/seq_test.c firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c firmware/src/seq/pattern.c
