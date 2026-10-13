@@ -27,7 +27,9 @@ static void web_audio(const int32_t *blk, uint32_t n)
     }
 }
 
-static float out_l[1024], out_r[1024];
+static float out_l[1024], out_r[1024], sync_l[1024], sync_r[1024];
+static float sync_ring[RING * 2];
+static uint32_t sync_w;
 __attribute__((used, visibility("default"))) float *web_out_l(void) { return out_l; }
 __attribute__((used, visibility("default"))) float *web_out_r(void) { return out_r; }
 
@@ -43,6 +45,7 @@ __attribute__((used, visibility("default"))) void web_render(uint32_t n)
         uint32_t i = (ring_r++ % RING) * 2u;
         out_l[k] = ring[i];
         out_r[k] = ring[i + 1];
+        sync_l[k] = sync_ring[i]; sync_r[k] = sync_ring[i + 1];
     }
 }
 
@@ -119,3 +122,87 @@ __attribute__((used, visibility("default"))) int web_slot_zone(int k, int z, uin
 }
 /* the slots changed: the break part reloads its loops (and the LOOPS page's names) */
 __attribute__((used, visibility("default"))) void web_slots_changed(void) { engine_brk_loops(); }
+
+/* Marker lane is independent of the legacy 8-slice BREAK bank and physical flash layout. */
+#include "../../firmware/src/dsp/marked_player.c"
+static marked_player_t marked;
+static float marked_pcm[MARKED_MAX_FRAMES * 2u], marked_l[1024], marked_r[1024];
+static marked_slice_t marked_meta[MARKED_MAX_SLICES];
+__attribute__((used, visibility("default"))) float *web_marked_pcm(void) { return marked_pcm; }
+__attribute__((used, visibility("default"))) marked_slice_t *web_marked_meta(void) { return marked_meta; }
+__attribute__((used, visibility("default"))) float *web_marked_l(void) { return marked_l; }
+__attribute__((used, visibility("default"))) float *web_marked_r(void) { return marked_r; }
+__attribute__((used, visibility("default"))) int web_marked_load(uint32_t frames, uint32_t rate, int channels, int count, uint32_t length)
+{ return marked_load(&marked, marked_pcm, frames, rate, channels, marked_meta, count, length); }
+__attribute__((used, visibility("default"))) void web_marked_play(int repeat) { marked_play(&marked, repeat); }
+__attribute__((used, visibility("default"))) void web_marked_stop(void) { marked_stop(&marked); }
+__attribute__((used, visibility("default"))) int web_marked_pad(int i) { marked_stop(&marked); return marked_trigger(&marked, i); }
+__attribute__((used, visibility("default"))) void web_marked_render(uint32_t n) { marked_render(&marked, marked_l, marked_r, n > 1024 ? 1024 : n); }
+__attribute__((used, visibility("default"))) uint32_t web_marked_cursor(void) { return marked.cursor; }
+__attribute__((used, visibility("default"))) uint32_t web_marked_triggers(void) { return marked.triggers; }
+__attribute__((used, visibility("default"))) int web_marked_last(void) { return marked.last_slice; }
+__attribute__((used, visibility("default"))) int web_marked_playing(void) { return marked.playing; }
+
+/* Browser audition follows the sequencer clock at its exact audio event boundaries.
+ * Only trigger intervals change: PCM playback increments remain rate/44100. */
+static int sync_enabled, sync_waiting, sync_error;
+static uint64_t sync_ticks;
+static double sync_offset, sync_period = 44100.0 * 60.0 / (125.0 * 24.0);
+static double sync_origin, sync_source_bpm, sync_cycle = -1;
+static uint32_t sync_tick_seen;
+static double sync_beat(void) { return (double)sync_ticks / 24.0 + sync_offset / sync_period / 24.0; }
+void web_seq_transport(int playing, int from_top) {
+    if(from_top) { sync_ticks=0;sync_tick_seen=0;sync_offset=0; }
+    if(sync_enabled) {
+        marked_stop(&marked);
+        if(playing) sync_waiting=1;
+    }
+}
+void web_seq_tick(uint32_t period_q8) {
+    if(sync_tick_seen) sync_ticks++; else sync_tick_seen=1;
+    sync_offset=0;sync_period=(double)period_q8/256.0;
+    if(sync_enabled && sync_waiting && sync_ticks%96u==0) {
+        sync_waiting=0;sync_origin=sync_beat();sync_cycle=-1;
+        marked.triggers=0;marked.next=0;marked.last_slice=255;
+    }
+}
+void web_slice_audio(uint32_t n) {
+    uint32_t i;
+    for(i=0;i<n;i++) {
+        float l=0,r=0;
+        if(sync_enabled && seq.playing && !sync_waiting) {
+            double loop_beats=(double)marked.length/44100.0*sync_source_bpm/60.0;
+            double beat=sync_beat()-sync_origin;
+            double cycle=floor((beat+1e-10)/loop_beats);
+            double phase=beat-cycle*loop_beats;
+            if(phase<0)phase=0;
+            if(cycle!=sync_cycle) { sync_cycle=cycle;marked.next=0; }
+            marked.cursor=(uint32_t)(phase*60.0/sync_source_bpm*44100.0);
+            while(marked.next<marked.count && (double)marked.slices[marked.next].time/44100.0*sync_source_bpm/60.0<=phase+1e-10) {
+                if(marked_trigger(&marked,marked.next)) {
+                    sync_error=1;sync_enabled=0;marked_stop(&marked);break;
+                }
+                marked.next++;
+            }
+            marked.playing=0; /* voices advance normally; musical scheduling is above */
+            marked_render(&marked,&l,&r,1);
+        }
+        sync_ring[(sync_w%RING)*2]=l;sync_ring[(sync_w%RING)*2+1]=r;sync_w++;
+        if(seq.playing) sync_offset++;
+    }
+}
+__attribute__((used, visibility("default"))) int web_sync_arm(float source_bpm) {
+    if(!marked.count || !isfinite(source_bpm) || source_bpm<20 || source_bpm>300 || seq.ext)return -1;
+    marked_stop(&marked);sync_source_bpm=source_bpm;sync_enabled=sync_waiting=1;sync_error=0;
+    if(!seq.playing)seq_start(&seq);
+    return 0;
+}
+__attribute__((used, visibility("default"))) void web_sync_off(void) { sync_enabled=sync_waiting=sync_error=0;marked_stop(&marked); }
+__attribute__((used, visibility("default"))) float *web_sync_l(void) { return sync_l; }
+__attribute__((used, visibility("default"))) float *web_sync_r(void) { return sync_r; }
+__attribute__((used, visibility("default"))) int web_sync_state(void) { return sync_error?-1:sync_enabled?(sync_waiting?1:2):0; }
+__attribute__((used, visibility("default"))) float web_seq_bpm(void) { return seq_tempo(&seq); }
+__attribute__((used, visibility("default"))) int web_seq_playing(void) { return seq.playing; }
+__attribute__((used, visibility("default"))) float web_seq_beat(void) { return (float)sync_beat(); }
+__attribute__((used, visibility("default"))) void web_seq_set_bpm(float bpm) { if(isfinite(bpm)&&bpm>=20&&bpm<=275)seq.bpm=bpm; }
+__attribute__((used, visibility("default"))) void web_seq_play(int on) { if(on)seq_start(&seq);else seq_stop(&seq); }

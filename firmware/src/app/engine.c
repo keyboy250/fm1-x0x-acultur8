@@ -716,6 +716,10 @@ static void render_sub(float *out_l, float *out_r, uint32_t n)
     }
 }
 
+#ifdef X0X_WEB
+extern void web_slice_audio(uint32_t n);
+#endif
+
 void engine_render(int32_t *out_lr, uint32_t n)
 {
     static float out_l[256], out_r[256];
@@ -743,6 +747,9 @@ void engine_render(int32_t *out_lr, uint32_t n)
     while (done < n) {
         uint32_t k = seq_until_event(&seq, n - done);
         render_sub(out_l + done, out_r + done, k);
+#ifdef X0X_WEB
+        web_slice_audio(k);
+#endif
         {
             PROF_T(pt);
             seq_advance(&seq, k, &SINK);

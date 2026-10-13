@@ -55,6 +55,32 @@ class X0X extends AudioWorkletProcessor {
       this.ex.web_enc(m.role, m.n | 0);
     } else if (m.type === "master") {
       this.ex.web_master(m.value | 0);
+    } else if (m.type === "marked-load") {
+      try {
+        const ex=this.ex;
+        if(m.frames<1||m.frames>1440000||m.channels<1||m.channels>2||m.pcm.length!==m.frames*m.channels||m.slices.length<1||m.slices.length>64)throw Error('Invalid slice audio.');
+        ex.web_sync_off();ex.web_marked_stop();this.markedOn=false;this.syncOn=false;
+        new Float32Array(this.mem.buffer,ex.web_marked_pcm(),m.pcm.length).set(m.pcm);
+        const meta=new Uint32Array(this.mem.buffer,ex.web_marked_meta(),m.slices.length*3);
+        m.slices.forEach((s,i)=>meta.set([s.start,s.end,s.time],i*3));
+        const rc=ex.web_marked_load(m.frames,m.rate,m.channels,m.slices.length,m.length);
+        if(rc)throw Error('Firmware marker validation failed: '+rc);
+        this.port.postMessage({type:'marked-ready'});
+      }catch(err){this.port.postMessage({type:'marked-error',message:err.message});}
+    } else if (m.type === "marked-sync") {
+      const rc=this.ex.web_sync_arm(Number(m.bpm));
+      if(rc)this.port.postMessage({type:'marked-error',message:'Enter the original loop BPM (20–300). Sync supports the internal sequencer clock.'});
+      else {this.syncOn=true;this.markedOn=false;this.markedLayer=true;}
+    } else if (m.type === "seq-tempo") {
+      this.ex.web_seq_set_bpm(Number(m.bpm));
+    } else if (m.type === "marked-play") {
+      this.ex.web_sync_off();this.syncOn=false;this.ex.web_marked_play(m.repeat?1:0);this.markedOn=true;
+    } else if (m.type === "marked-pad") {
+      this.ex.web_sync_off();this.syncOn=false;this.ex.web_marked_pad(m.slice);this.markedOn=true;
+    } else if (m.type === "marked-stop") {
+      this.ex.web_sync_off();this.ex.web_marked_stop();this.markedOn=false;this.syncOn=false;
+    } else if (m.type === "marked-level") {
+      this.markedGain=Math.max(0,Math.min(1,m.gain));this.markedLayer=!!m.layer;
     } else if (m.type === "slot") {                // a user break slot: {k, name, zones: [{pcm, rate}]}
       const ex = this.ex, name = new Uint8Array(this.mem.buffer, ex.web_slot_namebuf(), 9);
       name.fill(0);
@@ -77,6 +103,8 @@ class X0X extends AudioWorkletProcessor {
     const ex = this.ex;
     const blits = ex.web_blits();
     const msg = { type: "frame", buttons: ex.web_lit_buttons() >>> 0, keys: ex.web_lit_keys() >>> 0, dim: ex.web_dim_keys() >>> 0 };
+    msg.sync={state:ex.web_sync_state(),bpm:ex.web_seq_bpm(),playing:!!ex.web_seq_playing(),beat:ex.web_seq_beat()};
+    if(ex.web_marked_cursor)msg.marked={cursor:ex.web_marked_cursor(),triggers:ex.web_marked_triggers(),slice:ex.web_marked_last(),playing:!!ex.web_marked_playing()||(ex.web_sync_state()===2&&!!ex.web_seq_playing())};
     if (this.frames >= 44100) {                       // the share of real time spent running the device
       msg.load = Math.round(100 * this.busy / (this.frames / 44.1));
       this.busy = this.frames = 0;
@@ -109,6 +137,11 @@ class X0X extends AudioWorkletProcessor {
     this.frames += n;
     out[0].set(new Float32Array(this.mem.buffer, this.ex.web_out_l(), n));
     if (out[1]) out[1].set(new Float32Array(this.mem.buffer, this.ex.web_out_r(), n));
+    if(this.markedOn||this.syncOn){
+      if(this.markedOn)this.ex.web_marked_render(n);
+      const l=new Float32Array(this.mem.buffer,this.syncOn?this.ex.web_sync_l():this.ex.web_marked_l(),n),r=new Float32Array(this.mem.buffer,this.syncOn?this.ex.web_sync_r():this.ex.web_marked_r(),n),g=this.markedGain??0.5;
+      for(let i=0;i<n;i++){out[0][i]=Math.max(-1,Math.min(1,(this.markedLayer?out[0][i]:0)+l[i]*g));if(out[1])out[1][i]=Math.max(-1,Math.min(1,(this.markedLayer?out[1][i]:0)+r[i]*g));}
+    }
     if (currentTime - this.lastFrame >= 1 / 30) {
       this.lastFrame = currentTime;
       this.publish();

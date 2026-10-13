@@ -3,6 +3,14 @@
 #include "sequencer.h"
 #include "tb3po.h"
 
+#ifdef X0X_WEB
+extern void web_seq_transport(int playing, int from_top);
+extern void web_seq_tick(uint32_t period_q8);
+#define WEB_CLOCK 1
+#else
+#define WEB_CLOCK 0
+#endif
+
 #define NEVER 0xFFFFFFFFu
 
 static const uint8_t TICKS_PER_STEP[NRATES] = {6, 4, 3, 8};     /* 24 ppqn: 1/16, 1/16T, 1/32, 1/8T */
@@ -375,6 +383,9 @@ static void do_start(seq_t *s, int from_top, const seq_sink_t *o)
     }
     s->clk_to_next = 0;
     s->playing = 1;
+#ifdef X0X_WEB
+    web_seq_transport(1, from_top);
+#endif
     if (!s->ext && s->send_clock)
         midi(o, from_top ? 0xFA : 0xFB, 0, 0);
 }
@@ -383,6 +394,9 @@ static void do_stop(seq_t *s, const seq_sink_t *o)
 {
     int b, t;
     s->playing = 0;
+#ifdef X0X_WEB
+    web_seq_transport(0, 0);
+#endif
     for (b = 0; b < NBASS; b++)
         bass_release(s, b, o);
     if (o->brk_stop)
@@ -435,7 +449,7 @@ uint32_t seq_until_event(seq_t *s, uint32_t n)
         if (s->t[t].to_off && (e = s->t[t].to_off >> 8) < m)
             m = e;
     }
-    if (!s->ext && s->send_clock && (e = s->clk_to_next >> 8) < m)
+    if (!s->ext && (s->send_clock || WEB_CLOCK) && (e = s->clk_to_next >> 8) < m)
         m = e;
     return m ? m : 1;
 }
@@ -486,7 +500,7 @@ void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o)
         if (tr->to_off)
             tr->to_off = tr->to_off > dq ? tr->to_off - dq : 1;   /* 1: due, still "set" */
     }
-    if (!s->ext && s->send_clock)
+    if (!s->ext && (s->send_clock || WEB_CLOCK))
         s->clk_to_next = s->clk_to_next > dq ? s->clk_to_next - dq : 0;
     /* fire what is due; the drum part first, since its wrap may switch the pattern */
     for (guard = 0; guard < 8; guard++) {
@@ -507,9 +521,13 @@ void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o)
         if (!fired)
             break;
     }
-    if (!s->ext && s->send_clock && s->clk_to_next < 256u) {
-        midi(o, 0xF8, 0, 0);
-        s->clk_to_next += seq_step_q8(s, RATE_16) / 6u;           /* 24 ppqn */
+    if (!s->ext && (s->send_clock || WEB_CLOCK) && s->clk_to_next < 256u) {
+        uint32_t period = seq_step_q8(s, RATE_16) / 6u;
+        if (s->send_clock) midi(o, 0xF8, 0, 0);
+#ifdef X0X_WEB
+        web_seq_tick(period);
+#endif
+        s->clk_to_next += period;           /* 24 ppqn */
     }
 }
 
