@@ -24,7 +24,8 @@ static double bench(int reference,void *old)
             if(reference)legacy_drum909_trigger(old,v,1.0f);else drum909_trigger(&d,v,1.0f);
         }
         memset(l,0,sizeof(l));memset(r,0,sizeof(r));memset(rev,0,sizeof(rev));memset(dly,0,sizeof(dly));
-        if(reference)legacy_drum909_render_st(old,l,r,rev,dly,256);else drum909_render_st(&d,l,r,rev,dly,256);
+        if(reference)legacy_drum909_render_st(old,l,r,rev,dly,256);
+        else { drum909_strip_meter_clear(&d); drum909_render_st(&d,l,r,rev,dly,256); }
     }
     return (double)(clock()-start)/(double)CLOCKS_PER_SEC;
 }
@@ -60,14 +61,17 @@ int main(void)
                 drum909_bd_strip_set(&d,&config);legacy_drum909_bd_strip_set(old,&config);
             }
             memset(a,0,sizeof(a));memset(b,0,sizeof(b));
+            drum909_strip_meter_clear(&d);
             drum909_render_st(&d,a[0],a[1],a[2],a[3],n);
             legacy_drum909_render_st(old,b[0],b[1],b[2],b[3],n);
             check(memcmp(a,b,sizeof(a))==0,"audio/pan/sends",block);
             check(memcmp(drum909_bd_strip_meter(&d),legacy_drum909_bd_strip_meter(old),sizeof(sound_strip_meter_t))==0,"meter",block);
         }
     }
-    check(noise_reference_size()-sizeof(drum909_t)==1024,"state reduction",0);
-    printf("noise history: %d failures; original=%zu compact=%zu savings=%zu B; history=%d current block=256\n",failures,noise_reference_size(),sizeof(drum909_t),noise_reference_size()-sizeof(drum909_t),DR_NZ_HIST);
+    const size_t additional_strips=10u*(sizeof(sound_strip_t)+sizeof(sound_strip_meter_t));
+    check(noise_reference_size()+additional_strips-sizeof(drum909_t)==1024,"noise state reduction accounting for 10 extra strip/meter pairs",0);
+    check(sizeof(((drum909_t *)0)->nz_buf)==2048,"complete 512-float noise arena",0);
+    printf("noise history: %d failures; original=%zu compact+11strips=%zu noise savings=%zu B; history=%d current block=256\n",failures,noise_reference_size(),sizeof(drum909_t),noise_reference_size()+additional_strips-sizeof(drum909_t),DR_NZ_HIST);
     const char *skip_bench=getenv("NOISE_SKIP_BENCH");
     for(int run=0;run<((skip_bench && !strcmp(skip_bench,"1"))?0:3);++run) {
         double before,after;

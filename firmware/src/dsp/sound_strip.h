@@ -53,3 +53,15 @@ int sound_strip_set(sound_strip_t *strip, const sound_strip_config_t *config);
 void sound_strip_process(sound_strip_t *strip, float *l, float *r, uint32_t count,
                          sound_strip_meter_t *meter);
 int sound_strip_bypassed(const sound_strip_t *strip);
+/* Pure audio-owner activity query for a silent source: clock fades/guard/release
+ * and filter tails until below 1e-8 (-160 dBFS); limiter release stops within 1e-6.
+ * Enabled settled silence is inactive. This never changes raw-source activity. */
+int sound_strip_active(const sound_strip_t *strip);
+static inline void sound_strip_meter_clear(sound_strip_meter_t *m)
+{ m->input_peak = m->output_peak = 0.0f; m->gain_min = 1.0f; }
+static inline void sound_strip_meter_merge(sound_strip_meter_t *m, const sound_strip_meter_t *v)
+{
+    if (v->input_peak > m->input_peak) m->input_peak = v->input_peak;
+    if (v->output_peak > m->output_peak) m->output_peak = v->output_peak;
+    if (v->gain_min < m->gain_min) m->gain_min = v->gain_min;
+}

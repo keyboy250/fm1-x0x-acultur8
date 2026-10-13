@@ -2781,7 +2781,7 @@ static const capm_t *caps(const felucca_font_t *f)
         const uint8_t *gd = f->data + f->off[gi];
         int top = -1, bot = 0;
 #if FONT_RLE
-        font_reader_t reader = {gd, f->data + f->off[gi + 1u], 0, 0, 0};
+        font_reader_t reader = {.p = gd, .end = f->data + f->off[gi + 1u]};
         uint32_t packed = 0;
         (void)bpr;
 #endif

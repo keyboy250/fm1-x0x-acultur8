@@ -8,6 +8,33 @@
 #include "drum909.h"
 #include "x0x_drum_samples.h"
 
+static sound_strip_t *d9_strip_state(drum909_t *d, int voice)
+{
+    return voice == 0 ? &d->bd_strip : &d->strip_extra[voice - 1];
+}
+
+int drum909_strip_set(drum909_t *d, int voice, const sound_strip_config_t *config)
+{
+    return d && voice >= 0 && voice < DR_NUM ? sound_strip_set(d9_strip_state(d, voice), config) : -1;
+}
+
+const sound_strip_meter_t *drum909_strip_meter(const drum909_t *d, int voice)
+{
+    if (!d || voice < 0 || voice >= DR_NUM) return 0;
+    return voice == 0 ? &d->bd_strip_meter : &d->strip_meter_extra[voice - 1];
+}
+
+void drum909_strip_meter_clear(drum909_t *d)
+{
+    if (!d) return;
+    d->bd_strip_meter.input_peak = d->bd_strip_meter.output_peak = 0.0f;
+    d->bd_strip_meter.gain_min = 1.0f;
+    for (int v = 0; v < DR_NUM - 1; ++v) {
+        d->strip_meter_extra[v].input_peak = d->strip_meter_extra[v].output_peak = 0.0f;
+        d->strip_meter_extra[v].gain_min = 1.0f;
+    }
+}
+
 #define D9_VCA_VT 0.0002f
 #define D9_VCA_NORM (1.0f / (1.0f - D9_VCA_VT))
 #define D9_SNAPPY_MIX 1.95f
@@ -265,8 +292,8 @@ void drum909_init(drum909_t *d)
         d->pan_l[v] = d->pan_r[v] = d->pan_lc[v] = d->pan_rc[v] = 1.0f;   /* centre */
     d->noise = 0xC0FFEEu;
     d->nz_pos = DR_NZ_HIST;
-    sound_strip_init(&d->bd_strip);
-    d->bd_strip_meter.gain_min = 1.0f;
+    for (int v = 0; v < DR_NUM; ++v) sound_strip_init(d9_strip_state(d, v));
+    drum909_strip_meter_clear(d);
 
     for (int i = 0; i < 5; ++i) {
         d9_bt_t *b = &d->bt[i];
@@ -510,10 +537,17 @@ typedef struct {
     float srev, sdly;
     float *dry_r, pl, pr;     /* X0X stereo: dry_r 0 = mono (dry gets y as 9W9's) */
     float dpl, dpr;           /* the pans' glide per sample this block (0 settled) */
+    sound_strip_t *strip;     /* NULL in the original renderer: compiled-out bypass work */
+    sound_strip_meter_t *meter;
 } d9_bus_t;
 
 static inline void d9_emit(const d9_bus_t *b, int i, float y)
 {
+    if (b->strip) {
+        sound_strip_meter_t sample;
+        sound_strip_process(b->strip, &y, &y, 1, &sample);
+        sound_strip_meter_merge(b->meter, &sample);
+    }
     if (b->dry_r) {
         b->dry[i] += y * (b->pl + b->dpl * (float)i);
         b->dry_r[i] += y * (b->pr + b->dpr * (float)i);
@@ -537,7 +571,7 @@ static void d9_warm(d9_biquad_t *f, const float *end)
 }
 
 /* Kick (er99_bt_render with the stock sweep, one shell) */
-static void d9_render_bd(d9_bt_t *v, const float *nz, const d9_bus_t *bus, int n)
+D9_INLINE void d9_render_bd(d9_bt_t *v, const float *nz, const d9_bus_t *bus, int n)
 {
     const int m = n < v->mute ? n : v->mute;
     v->mute -= m;
@@ -582,97 +616,19 @@ static void d9_render_bd(d9_bt_t *v, const float *nz, const d9_bus_t *bus, int n
     }
 }
 
-/* Enabled/transition path only; settled bypass uses the original loop above.
- * Keep its cost separate in target disassembly: d9_render's legacy budget still
- * applies, AND this callee + its per-sample sound_strip_process call need review. */
-D9_NOINLINE void d9_render_bd_strip(d9_bt_t *v, const float *nz, const d9_bus_t *bus, int n,
-                         sound_strip_t *strip, sound_strip_meter_t *meter)
-{
-    const int m = n < v->mute ? n : v->mute;
-    v->mute -= m;
-    d9_env_anchor(&v->amp);
-    d9_env_anchor(&v->click_env);
-    const float attack = v->attack;
-    if (v->click_warm) {                 /* retriggered while its click filter was skipped */
-        d9_warm(&v->click_lp, nz);
-        v->click_warm = 0;
-    }
-    for (int i = 0; i < n; ++i) {
-        float y = 0.0f;
-        if (i < m) {
-            const float f = v->bd_base + v->bd_df;
-            if (v->bd_phold > 0)
-                --v->bd_phold;
-            else
-                v->bd_df *= v->bd_mult;
-            if (v->amp_hold_left > 0 && --v->amp_hold_left == 0)
-                d9_env_exp(&v->amp, 0.00001f, v->decay * 0.001f * D9_SR);
-            const float amp = d9_env_tick(&v->amp);
-
-            v->ph += d9_inc(f);
-            float o = d9_diode16(d9_tri(v->ph));
-            o += 0.05f * o * o;
-            o = d9_biquad_tick(&v->dc_block, o);
-            const float body = d9_shape(&v->shape, o, v->crush_st) * amp;
-
-            /* the beater click; once its 3 ms envelope has run out it sits at -100 dB
-             * for the rest of the note, and is skipped */
-            float click = 0.0f;
-            if (v->impulse > 0 || v->click_env.left) {
-                if (v->impulse > 0) { click += 1.0f; v->impulse--; }
-                click += d9_biquad_tick(&v->click_lp, nz[i]);
-                click *= d9_env_tick(&v->click_env) * attack;
-            }
-            y = (body + click) * v->out_gain;
-        }
-        {
-            sound_strip_meter_t sample;
-            sound_strip_process(strip, &y, &y, 1, &sample);
-            if (sample.input_peak > meter->input_peak) meter->input_peak = sample.input_peak;
-            if (sample.output_peak > meter->output_peak) meter->output_peak = sample.output_peak;
-            if (sample.gain_min < meter->gain_min) meter->gain_min = sample.gain_min;
-        }
-        d9_emit(bus, i, y);
-    }
-    if (m > 0 && !(v->impulse > 0 || v->click_env.left))
-        v->click_stale = 1;
-    if (m > 0 && v->click_stale && v->mute == 0) {  /* note over: freeze where 9W9's froze */
-        d9_warm(&v->click_lp, nz + m);
-        v->click_stale = 0;
-    }
-}
-
+/* Compatibility aliases for the first kick prototype. */
 int drum909_bd_strip_set(drum909_t *d, const sound_strip_config_t *config)
 {
-    return d ? sound_strip_set(&d->bd_strip, config) : -1;
+    return drum909_strip_set(d, DR_BD, config);
 }
 
 const sound_strip_meter_t *drum909_bd_strip_meter(const drum909_t *d)
 {
-    return d ? &d->bd_strip_meter : 0;
+    return drum909_strip_meter(d, DR_BD);
 }
-
-/* Stop inaudible filter ringing below -160 dBFS. State is retained through
- * retriggers and parameter changes; only a fully silent voice is eligible. */
-static int d9_bd_strip_tail(const sound_strip_t *s)
-{
-    if (sound_strip_bypassed(s)) return 0;
-    if ((s->flags >> 16) || s->guard_gain != 1.0f) return 1;
-    if ((s->flags & (SOUND_STRIP_HIGHPASS | SOUND_STRIP_LOWPASS | SOUND_STRIP_LIMITER)) !=
-        ((s->flags >> 8) & (SOUND_STRIP_HIGHPASS | SOUND_STRIP_LOWPASS | SOUND_STRIP_LIMITER))) return 1;
-    if (!((s->flags >> 8) & SOUND_STRIP_ENABLED) && s->mix > 0.0f) return 1;
-    if (s->mix > 0.0f && s->mix < 1.0f) return 1;
-    if ((s->flags >> 8) & SOUND_STRIP_ENABLED && s->mix == 0.0f) return 1;
-    for (int i = 0; i < 2; ++i) {
-        if (s->hp_z[i] > 1e-8f || s->hp_z[i] < -1e-8f ||
-            s->lp_z[i] > 1e-8f || s->lp_z[i] < -1e-8f) return 1;
-    }
-    return 0;
-}
-
 /* Snare (er99_bt_render, two shells + ENV4 noise). Its click path is pinned
  * off (attack 0 at every trigger), so it is not computed: 0 either way. */
-static void d9_render_sd(d9_bt_t *v, const float *nz, const d9_bus_t *bus, int n)
+D9_INLINE void d9_render_sd(d9_bt_t *v, const float *nz, const d9_bus_t *bus, int n)
 {
     const int m = n < v->mute ? n : v->mute;
     v->mute -= m;
@@ -713,7 +669,7 @@ static void d9_render_sd(d9_bt_t *v, const float *nz, const d9_bus_t *bus, int n
 /* Toms (er99_tom909_render): three VCOs on their own envelopes + stick noise.
  * The two upper partials and the stick are attack features (110 / 70 / 8 ms);
  * once their envelopes have run out (-100 dB) they are skipped. */
-static void d9_render_tom(d9_tom_t *t, const d9_bt_t *p, const float *nz, const d9_bus_t *bus, int n)
+D9_INLINE void d9_render_tom(d9_tom_t *t, const d9_bt_t *p, const float *nz, const d9_bus_t *bus, int n)
 {
     const int m = n < t->mute ? n : t->mute;
     t->mute -= m;
@@ -757,7 +713,7 @@ static void d9_render_tom(d9_tom_t *t, const d9_bt_t *p, const float *nz, const 
 }
 
 /* Rim shot (er99_rim909_render) */
-static void d9_render_rim(d9_rim_t *v, const float *nz, const d9_bus_t *bus, int n)
+D9_INLINE void d9_render_rim(d9_rim_t *v, const float *nz, const d9_bus_t *bus, int n)
 {
     const int m = n < v->mute ? n : v->mute;
     v->mute -= m;
@@ -778,7 +734,7 @@ static void d9_render_rim(d9_rim_t *v, const float *nz, const d9_bus_t *bus, int
 }
 
 /* Hand clap (er99_clap909_render) */
-static void d9_render_clap(d9_clap_t *v, const float *nz, const d9_bus_t *bus, int n)
+D9_INLINE void d9_render_clap(d9_clap_t *v, const float *nz, const d9_bus_t *bus, int n)
 {
     static const float amp[4] = { 1.22f, 1.35f, 1.68f, 1.0f };
     const int m = n < v->mute ? n : v->mute;
@@ -808,7 +764,7 @@ static void d9_render_clap(d9_clap_t *v, const float *nz, const d9_bus_t *bus, i
 }
 
 /* Hats, ride, crash (render_sampler) */
-static void d9_render_smp(d9_smp_t *s, const d9_bus_t *bus, int n)
+D9_INLINE void d9_render_smp(d9_smp_t *s, const d9_bus_t *bus, int n)
 {
     if (!s->playing)
         return;
@@ -841,6 +797,8 @@ static float *d9_dry_r;         /* the render in progress: its right side (0: mo
 static float d9_pl0[DR_NUM], d9_pr0[DR_NUM];   /* each voice's pan where this block starts */
 static inline void d9_bus(d9_bus_t *b, drum909_t *d, int voice, float *dry, float *rev, float *dly)
 {
+    b->strip = 0;
+    b->meter = 0;
     b->dry = dry;
     b->dry_r = d9_dry_r;
     b->pl = d9_pl0[voice];                         /* the pan glides from here over this block */
@@ -853,11 +811,66 @@ static inline void d9_bus(d9_bus_t *b, drum909_t *d, int voice, float *dry, floa
     b->dly = b->sdly != 0.0f ? dly : 0;
 }
 
+static int d9_voice_count(const drum909_t *d, int voice, int n)
+{
+    int mute;
+    if (voice <= DR_SD) mute = d->bt[voice].mute;
+    else if (voice <= DR_HT) mute = d->tom[voice - DR_LT].mute;
+    else if (voice == DR_RS) mute = d->rim.mute;
+    else if (voice == DR_CP) mute = d->clap.mute;
+    else mute = d->smp[voice - DR_CH].playing ? d->smp[voice - DR_CH].mute : 0;
+    return mute > 0 ? (mute < n ? mute : n) : 0;
+}
+
+/* Forced inline keeps the known NULL/non-NULL emitter policy at each call site.
+ * The original synthesis and its filter warm-up run at the original block size. */
+D9_INLINE void d9_voice_render(drum909_t *d, int voice, const float *nz, const d9_bus_t *bus, int n)
+{
+    switch (voice) {
+    case DR_BD: d9_render_bd(&d->bt[DR_BD], nz, bus, n); break;
+    case DR_SD: d9_render_sd(&d->bt[DR_SD], nz, bus, n); break;
+    case DR_LT: case DR_MT: case DR_HT:
+        d9_render_tom(&d->tom[voice - DR_LT], &d->bt[voice], nz, bus, n); break;
+    case DR_RS: d9_render_rim(&d->rim, nz, bus, n); break;
+    case DR_CP: d9_render_clap(&d->clap, nz, bus, n); break;
+    default: d9_render_smp(&d->smp[voice - DR_CH], bus, n); break;
+    }
+}
+
+D9_NOINLINE int d9_strips_bypassed(const drum909_t *d)
+{
+    for (int v = 0; v < DR_NUM; ++v) {
+        const sound_strip_t *s = v == 0 ? &d->bd_strip : &d->strip_extra[v - 1];
+        if (!sound_strip_bypassed(s)) return 0;
+    }
+    return 1;
+}
+
+/* Additional active-kit cost is explicit, outside the unchanged legacy path.
+ * Mixed-kit bypass does only the bounded NULL check at its emitter. */
+D9_NOINLINE void d9_render_strips(drum909_t *d, const float *nz,
+                                 float *dry, float *rev, float *dly, int n)
+{
+    static const uint8_t order[DR_NUM] = {DR_BD, DR_SD, DR_LT, DR_MT, DR_HT, DR_RS, DR_CP, DR_OH, DR_RD, DR_CR, DR_CH};
+    for (int k = 0; k < DR_NUM; ++k) {
+        int voice = order[k], m = d9_voice_count(d, voice, n);
+        sound_strip_t *s = d9_strip_state(d, voice);
+        if (m > 0 || sound_strip_active(s)) {
+            d9_bus_t bus;
+            d9_bus(&bus, d, voice, dry, rev, dly);
+            if (!sound_strip_bypassed(s)) {
+                bus.strip = s;
+                bus.meter = voice == 0 ? &d->bd_strip_meter : &d->strip_meter_extra[voice - 1];
+            }
+            if (m > 0) d9_voice_render(d, voice, nz, &bus, n);
+            if (bus.strip) for (int i = m; i < n; ++i) d9_emit(&bus, i, 0.0f);
+        }
+    }
+}
+
 static void d9_render(drum909_t *d, float *dry, float *rev, float *dly, int n)
 {
     d9_bus_t bus;
-    d->bd_strip_meter.input_peak = d->bd_strip_meter.output_peak = 0.0f;
-    d->bd_strip_meter.gain_min = 1.0f;
     if (n > 256)
         n = 256;
     /* the shared noise, written on after the previous block so nz[-DR_NZ_HIST
@@ -874,17 +887,15 @@ static void d9_render(drum909_t *d, float *dry, float *rev, float *dly, int n)
     for (int i = 0; i < n; ++i)
         nz[i] = d9_noise(&d->noise);
 
+    if (!d9_strips_bypassed(d)) {
+        d9_render_strips(d, nz, dry, rev, dly, n);
+        return;
+    }
+
     /* 9W9's summing order: BD SD LT MT HT RS CP OH RD CR CH */
-    if (d->bt[DR_BD].mute > 0 || d9_bd_strip_tail(&d->bd_strip)) {
+    if (d->bt[DR_BD].mute > 0) {
         d9_bus(&bus, d, DR_BD, dry, rev, dly);
-        if (sound_strip_bypassed(&d->bd_strip))
-            d9_render_bd(&d->bt[DR_BD], nz, &bus, n);
-        else
-            d9_render_bd_strip(&d->bt[DR_BD], nz, &bus, n, &d->bd_strip, &d->bd_strip_meter);
-        if (d->bt[DR_BD].mute == 0 && !d9_bd_strip_tail(&d->bd_strip)) {
-            d->bd_strip.hp_z[0] = d->bd_strip.hp_z[1] = 0.0f;
-            d->bd_strip.lp_z[0] = d->bd_strip.lp_z[1] = 0.0f;
-        }
+        d9_render_bd(&d->bt[DR_BD], nz, &bus, n);
     }
     if (d->bt[DR_SD].mute > 0) {
         d9_bus(&bus, d, DR_SD, dry, rev, dly);
@@ -942,7 +953,10 @@ void drum909_pan_settle(drum909_t *d)
 
 int drum909_active(const drum909_t *d)
 {
-    if (d9_bd_strip_tail(&d->bd_strip)) return 1;
+    for (int v = 0; v < DR_NUM; ++v) {
+        const sound_strip_t *s = v == 0 ? &d->bd_strip : &d->strip_extra[v - 1];
+        if (sound_strip_active(s)) return 1;
+    }
     for (int i = 0; i < 5; ++i)
         if (i < 2 ? d->bt[i].mute > 0 : d->tom[i - 2].mute > 0)
             return 1;

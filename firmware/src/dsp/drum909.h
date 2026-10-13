@@ -106,10 +106,18 @@ struct drum909 {
     uint8_t pots[DR_NUM + 1][DR_MAX_PARAMS];
     sound_strip_t bd_strip;       /* one owner; summed BD body/click/tails, before pan/sends */
     sound_strip_meter_t bd_strip_meter; /* last active strip block; bypass = 0 peaks, unity gain */
+    sound_strip_t strip_extra[DR_NUM - 1];
+    sound_strip_meter_t strip_meter_extra[DR_NUM - 1];
 };
 typedef struct drum909 drum909_t;
 
 void drum909_init(drum909_t *d);
+/* Audio-owner boundary API. Eleven independent strips before each voice's pan/sends.
+ * Meters aggregate all render stretches until clear(), once per outer engine block.
+ * Settled bypass reports zero/unavailable peaks and unity gain, with no sample work. */
+int drum909_strip_set(drum909_t *d, int voice, const sound_strip_config_t *config);
+const sound_strip_meter_t *drum909_strip_meter(const drum909_t *d, int voice);
+void drum909_strip_meter_clear(drum909_t *d);
 /* Opt-in BD only. Call on the audio owner between blocks; invalid config is rejected.
  * Init defaults to bit-identical bypass. Meter pointer is valid until next render. */
 int drum909_bd_strip_set(drum909_t *d, const sound_strip_config_t *config);

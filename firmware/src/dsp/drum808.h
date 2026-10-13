@@ -21,6 +21,7 @@
 #pragma once
 #include <stdint.h>
 #include "x0x_param.h"
+#include "sound_strip.h"
 
 enum { D8_BD, D8_SD, D8_LT, D8_MT, D8_HT, D8_RS, D8_CP, D8_CB, D8_CY, D8_OH, D8_CH, D8_NUM, D8_KIT = D8_NUM };
 
@@ -192,6 +193,8 @@ struct drum808 {
     d8_hat_t ch, oh;
     d8_cy_t cy;
     d8_lane_t lane[13];
+    sound_strip_t strip[D8_NUM];
+    sound_strip_meter_t strip_meter[D8_NUM];
 };
 typedef struct drum808 drum808_t;
 
@@ -210,3 +213,8 @@ int drum808_get(const drum808_t *d, int track, int i);
 
 /* true while any voice is still sounding */
 int drum808_active(const drum808_t *d);
+
+/* Meter clear belongs to the outer engine block, never an event slice. */
+int drum808_strip_set(drum808_t *d, int track, const sound_strip_config_t *config);
+const sound_strip_meter_t *drum808_strip_meter(const drum808_t *d, int track);
+void drum808_strip_meter_clear(drum808_t *d);

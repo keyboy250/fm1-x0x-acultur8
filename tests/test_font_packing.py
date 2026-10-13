@@ -51,6 +51,29 @@ def arrays(path):
             for name, body in re.findall(r"FONT_(\w+)\[\d+\] = \{(.*?)\};", text, re.S)}
 
 
+def huffman_decode(data, tables, expected):
+    """Independent canonical reader, bounded by expected packet byte count."""
+    counts = tables["HUFFMAN_COUNT"]
+    first = tables["HUFFMAN_FIRST_CODE"]
+    offsets = tables["HUFFMAN_FIRST_SYMBOL"]
+    symbols = tables["HUFFMAN_SYMBOL"]
+    output = bytearray()
+    position = 0
+    for _ in range(expected):
+        code = 0
+        for length in range(1, len(counts)):
+            if position >= len(data) * 8:
+                raise ValueError("truncated code")
+            code = code * 2 + ((data[position // 8] >> (7 - position % 8)) & 1)
+            position += 1
+            if first[length] <= code < first[length] + counts[length]:
+                output.append(symbols[offsets[length] + code - first[length]])
+                break
+        else:
+            raise ValueError("invalid code")
+    return bytes(output)
+
+
 class FontPackingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -66,7 +89,7 @@ class FontPackingTests(unittest.TestCase):
         cls.env = dict(os.environ, X0X_FONTSET="barlow")
         cls.arrays = {}
         cls.results = {}
-        for mode in ("raw", "rle"):
+        for mode in ("raw", "rle", "huffman"):
             folder = cls.out / mode
             folder.mkdir(exist_ok=True)
             header = folder / "felucca_font.h"
@@ -119,8 +142,41 @@ class FontPackingTests(unittest.TestCase):
         (self.out / "font-packing-report.json").write_text(json.dumps(evidence, indent=2) + "\n")
         print(json.dumps(evidence, indent=2))
 
+    def test_huffman_every_glyph_and_metrics_match_old_packets(self):
+        old, new = self.arrays["rle"], self.arrays["huffman"]
+        glyphs = total = 0
+        for face in ("T", "XS", "S", "B", "M", "L"):
+            for metric in ("ADV", "BW"):
+                self.assertEqual(old[face + "_" + metric], new[face + "_" + metric])
+            oo, no = old[face + "_OFF"], new[face + "_OFF"]
+            od, nd = bytes(old[face + "_DATA"]), bytes(new[face + "_DATA"])
+            self.assertEqual(len(oo), len(no))
+            self.assertEqual(no[-1], len(nd))
+            total += len(nd)
+            for i in range(len(oo) - 1):
+                packet = od[oo[i]:oo[i + 1]]
+                self.assertEqual(huffman_decode(nd[no[i]:no[i + 1]], new, len(packet)), packet)
+                glyphs += 1
+        self.assertEqual(glyphs, 439)
+        # Tables are part of the flash cost; require useful savings after them.
+        table_bytes = len(new["HUFFMAN_SYMBOL"]) + 2 * len(new["HUFFMAN_PREFIX"]) + 2 * sum(
+            len(new["HUFFMAN_" + field]) for field in ("COUNT", "FIRST_CODE", "FIRST_SYMBOL"))
+        old_total = sum(len(old[face + "_DATA"]) for face in ("T", "XS", "S", "B", "M", "L"))
+        self.assertGreater(old_total - total - table_bytes, 6144)
+        report = {"glyphs": glyphs, "old_packet_bytes": old_total,
+                  "huffman_bytes": total, "table_bytes": table_bytes,
+                  "saved_before_decoder": old_total - total - table_bytes,
+                  "render_results": self.results}
+        (self.out / "font-huffman-report.json").write_text(json.dumps(report, indent=2) + "\n")
+        print(json.dumps(report, indent=2))
+
     def test_production_renderer_pixels_and_metrics_match(self):
         self.assertEqual(self.results["raw"], self.results["rle"])
+        self.assertEqual(self.results["raw"], self.results["huffman"])
+        # Frozen accepted raw-render result in font_packing_evidence.json, not
+        # recomputed from this candidate's generator or decoder.
+        self.assertEqual(self.results["huffman"]["pixels_sha256"],
+                         "e971afab542cff352576dc573b4459322a7e2bce477c4bcaa8589ec1c70290d8")
 
 
 if __name__ == "__main__":

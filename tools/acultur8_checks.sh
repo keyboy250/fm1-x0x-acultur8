@@ -22,10 +22,15 @@ run arrangement_wasm node tests/host/arrangement_wasm_test.mjs build/emu/x0x.was
 run variant sh tests/host/run_variant.sh
 run variant_wasm node tests/host/variant_wasm_test.mjs build/emu/x0x.wasm
 run kick_wasm node tests/host/kick_wasm_test.mjs build/emu/x0x.wasm
+run all909_strip sh tests/host/run_all909_strip.sh
+run drum808_strip sh tests/host/run_drum808_strip.sh
+run all_strip sh tests/host/run_all_strip.sh
+run all_strip_wasm sh tests/host/run_all_strip_wasm.sh
 run sound_strip sh tests/host/run_sound_strip.sh
 run kick_strip sh tests/host/run_kick_strip.sh
 run noise_history env NOISE_SKIP_BENCH=1 sh tests/host/run_noise_history.sh
 run font_packing python3 tests/test_font_packing.py
+run font_pinned_oracle python3 tests/test_font_pinned_oracle.py
 compile harmony $W -std=c99 -pedantic tests/host/harmony_test.c firmware/src/seq/harmony.c
 compile fastmath -O2 -ffp-contract=off -Wall -Wextra -Werror tests/host/fastmath_test.c -lm
 compile sequencer -O2 -ffp-contract=off -Wall -Wextra tests/host/seq_test.c firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c firmware/src/seq/pattern.c

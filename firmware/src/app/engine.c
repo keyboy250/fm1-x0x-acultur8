@@ -77,15 +77,19 @@ void engine_load(uint32_t pct, uint32_t frames)
         guard_on = 0;
     }
 }
-static void guard_apply(void)
+/* Rare state change stays outside the render caller; unchanged fast-path check
+ * remains inline. Report this callee separately from engine_render's static gate. */
+__attribute__((noinline)) static void guard_update(void)
 {
     int k;
-    if (guard_on == guard_applied)
-        return;
     guard_applied = guard_on;
     for (k = 0; k < NBASS; k++)
-        bass303_set_lite(&b303[k], guard_on);
+        bass303_set_lite(&b303[k],guard_on);
     drum808_quiet = guard_on ? 3.2e-3f : 3.2e-5f;
+}
+static inline void guard_apply(void)
+{
+    if (guard_on != guard_applied) guard_update();
 }
 
 /* mixer: per part Level, Rev send, Dly send (a drum machine's add to its voices' own sends) */
@@ -105,6 +109,29 @@ enum { C_PARAM_T0 = 0, C_DRUM = 8, C_BON, C_BOFF, C_BRK, C_NOP, C_STRIP, C_ARR, 
 static uint32_t cq[CQ];
 static volatile uint32_t cq_w, cq_r;
 static sound_strip_config_t strip_cfg[25];
+static sound_strip_t mono_strip[3] POOL; /* 303 A/B and BREAK; existing mono buffers */
+static sound_strip_meter_t mono_strip_meter[3] POOL;
+/* Once per outer block, after prior core2 job has joined, before its next dispatch. */
+__attribute__((noinline)) static void strip_block_begin(uint32_t dirty)
+{
+    int i;
+    for (i = 0; i < 11; i++) {
+        if (dirty & (1u << i)) drum909_strip_set(&d909,i,&strip_cfg[i]);
+        if (dirty & (1u << (i+11))) drum808_strip_set(&d808,i,&strip_cfg[i+11]);
+    }
+    for (i = 0; i < 3; i++) {
+        if (dirty & (1u << (i+22))) sound_strip_set(&mono_strip[i],&strip_cfg[i+22]);
+        sound_strip_meter_clear(&mono_strip_meter[i]);
+    }
+    drum909_strip_meter_clear(&d909); drum808_strip_meter_clear(&d808);
+}
+__attribute__((noinline)) static void mono_strip_process(int strip, float *buf, uint32_t n)
+{
+    sound_strip_meter_t m;
+    if (sound_strip_bypassed(&mono_strip[strip])) return;
+    sound_strip_process(&mono_strip[strip],buf,buf,n,&m);
+    sound_strip_meter_merge(&mono_strip_meter[strip],&m);
+}
 typedef char arrangement_block_has_six_bytes[(NTRACKS == 5 && sizeof(song_bar_t) == 6) ? 1 : -1];
 
 static int cq_put(uint32_t type, uint32_t a, uint32_t b, uint32_t c)
@@ -191,10 +218,12 @@ int engine_strip_set(int strip, int index, int value)
     return cq_put(C_STRIP, (uint32_t)strip, (uint32_t)((index << 4) | (value >> 12)), (uint32_t)value);
 }
 const sound_strip_config_t *engine_strip_config(int strip) { return strip >= 0 && strip < 25 ? &strip_cfg[strip] : 0; }
-uint32_t engine_strip_processing_mask(void) { return 1u; } /* first prototype: 909 BD only */
+uint32_t engine_strip_processing_mask(void) { return 0x01ffffffu; } /* all 25 production paths */
 const sound_strip_meter_t *engine_strip_meter(int strip)
 {
-    return strip == 0 ? drum909_bd_strip_meter(&d909) : 0;
+    if (strip >= 0 && strip < 11) return drum909_strip_meter(&d909,strip);
+    if (strip >= 11 && strip < 22) return drum808_strip_meter(&d808,strip-11);
+    return strip >= 22 && strip < 25 ? &mono_strip_meter[strip-22] : 0;
 }
 
 /* ------------------------------------------------------------ params --- */
@@ -566,7 +595,8 @@ static void midi_in(uint32_t pkt)
 static void drain(void)
 {
     uint32_t r = cq_r, pkt;
-    int guard = 64, kick_strip_dirty = 0;
+    int guard = 64;
+    uint32_t strip_dirty = 0;
     while (r != cq_w) {
         uint32_t c = cq[r % CQ], type = c >> 28, a = (c >> 20) & 0xFFu, b = (c >> 12) & 0xFFu, v = c & 0xFFFu;
         r++;
@@ -592,11 +622,11 @@ static void drain(void)
             case 4: strip_cfg[a].release_ms = (uint8_t)val; break;
             case 5: strip_cfg[a].flags = (uint8_t)val; break;
             }
-            if (a == 0) kick_strip_dirty = 1;
+            strip_dirty |= 1u << a;
         }
     }
     cq_r = r;
-    if (kick_strip_dirty) drum909_bd_strip_set(&d909, &strip_cfg[0]);
+    strip_block_begin(strip_dirty);
     while (guard-- && plat_midi_in(&pkt))
         midi_in(pkt);
 }
@@ -689,10 +719,33 @@ __attribute__((noinline)) static void scale_glide(float *buf, glide_t *g, uint32
     g->cur = c;
 }
 
+static int brk_silent_now = 1;
+/* New strip work stays in explicit measured callees, replacing the existing raw
+ * renderer call at each legacy site. No new loop callsites in engine_render. */
+__attribute__((noinline)) static int bass_strip_render(int b, float *buf, uint32_t n)
+{
+    int idle = b303[b].idle;
+    bass303_render(&b303[b],buf,(int)n);
+    if (!idle || sound_strip_active(&mono_strip[b])) {
+        mono_strip_process(b,buf,n);
+        idle = 0;
+    }
+    return idle;
+}
+__attribute__((noinline)) static void break_strip_render(uint32_t n)
+{
+    brk_silent_now = breaks_silent(&brk);
+    breaks_render(&brk,kbuf,(int)n);
+    if (!brk_silent_now || sound_strip_active(&mono_strip[2])) {
+        mono_strip_process(2,kbuf,n);
+        brk_silent_now = 0;
+    }
+}
+
 /* the second core's job (or the first's, after its own part, with one core): the 808 into t0..tr
  * and the break into kbuf; arg bit 8: not timed (the cycle counter is the first core's). Nothing
  * here is mixed: the first core does that afterwards, in one core's order */
-static int brk_silent_now = 1;
+
 static uint8_t d808_was_active;
 static void core2_job(uint32_t arg)
 {
@@ -709,8 +762,7 @@ static void core2_job(uint32_t arg)
         pt = plat_cycles();
     }
     if (!brk_hold) {
-        brk_silent_now = breaks_silent(&brk);             /* the render writes zeros: nothing to mix */
-        breaks_render(&brk, kbuf, (int)n);
+        break_strip_render(n);
     }
     if (timed)
         PROF_ADD(PR_BRK, pt);
@@ -755,8 +807,7 @@ static void render_sub(float *out_l, float *out_r, uint32_t n)
     }
     for (b = 0; b < NBASS; b++) {
         PROF_T(pb);
-        idle[b] = b303[b].idle;                           /* idle: the render writes zeros */
-        bass303_render(&b303[b], bb[b], (int)n);
+        idle[b] = bass_strip_render(b,bb[b],n);
         PROF_ADD(2 + b, pb);
     }
     pt = plat_cycles();
@@ -1053,6 +1104,7 @@ void engine_init(pattern_t *patterns, song_t *song, lane_t *lanes, const sound_t
     int p;
     cq_w = cq_r = 0;
     for (p = 0; p < 25; p++) sound_strip_config_default(&strip_cfg[p]);
+    for (p = 0; p < 3; p++) { sound_strip_init(&mono_strip[p]); sound_strip_meter_clear(&mono_strip_meter[p]); }
     for (p = 0; p < NPARTS * NDRUM; p++)
         prob[p / NDRUM][p % NDRUM] = 100;             /* every step plays, until a lane says */
     drum909_init(&d909);
