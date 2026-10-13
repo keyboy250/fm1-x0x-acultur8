@@ -32,7 +32,7 @@ def source_hash(root=WORK):
     paths = []
     for folder in ['firmware', 'host', 'tools', 'assets', 'web/emu']:
         paths += [p for p in (root / folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts]
-    for p in sorted(paths):
+    for p in sorted(paths, key=lambda p: p.relative_to(root).as_posix()):
         h.update(p.relative_to(root).as_posix().encode() + b'\0' + p.read_bytes())
     # Packaging changes affect the built browser even when firmware is unchanged.
     for name in ['build_emulator.py', 'emulator.Dockerfile', 'lab_paths.py']:

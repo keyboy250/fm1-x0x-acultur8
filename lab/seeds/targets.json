@@ -69,7 +69,7 @@
   {
     "id": "FM1-27",
     "title": "Prove one complete 909-kick processing strip",
-    "status": "doing",
+    "status": "done",
     "area": "sound",
     "priority": 4,
     "milestone": "B - Sound prototype",
@@ -79,8 +79,8 @@
       "FM1-07"
     ],
     "acceptance": "One kick has HPF, LPF, boost, ceiling, gain-reduction feedback and dashboard controls; prove measured response and summed-strip ceiling including overlapping hits/tails, smooth edits, bypass, save/reopen and undo. Record added memory and render cost before expanding to other sounds.",
-    "next_check": "Integrate and accept one complete 909 kick: summed sound/tails, filters, boost/ceiling, controls/meters, smooth changes, bypass, save/reopen, undo and integrated resource cost.",
-    "notes": "One audible 909 kick candidate integrates HPF/LPF, boost, linked sample ceiling and meters through the shared command/save bridge. Standalone and actual worklet/WASM tests pass bitwise bypass, response, summed tails/ceiling, save/reopen, audible undo/redo and snare isolation. State 68 + meter12 bytes. Original target static gates pass unchanged; new active callee has 499 instructions and one strip call/sample. Local browser numeric/stage edits, undo/redo, saved reload, busy-save guard, slice coexistence, 390px layout and prior-engine capability disabling passed without console errors. Hosted acceptance and physical timing remain pending."
+    "next_check": "Expand processing only after the combined state, meters, arrangement and harmony budget fits; physical FM1 timing remains a separate device check.",
+    "notes": "Reviewed PR #8 merged one audible 909 kick integrates HPF/LPF, boost, linked sample ceiling and meters through the shared command/save bridge. Standalone and actual worklet/WASM tests pass bitwise bypass, response, summed tails/ceiling, save/reopen, audible undo/redo and snare isolation. State 68 + meter12 bytes. Original target static gates pass unchanged; new active callee has 499 instructions and one strip call/sample. Local browser numeric/stage edits, undo/redo, saved reload, busy-save guard, slice coexistence, 390px layout and prior-engine capability disabling passed without console errors. Hosted numeric/filter/stage edits, undo/redo, saved reload, busy-save protection, 390px layout and slice transport passed. All 24 hosted file checksums and exact local/hosted WASM match. This completes the browser prototype; physical timing/audio remain pending under device targets."
   },
   {
     "id": "FM1-11",
@@ -129,9 +129,9 @@
     "id": "FM1-14",
     "title": "Key-aware chord progression lane",
     "acceptance": "Sequence degrees 1-7 with scale-derived triad qualities and chord durations; verify major/minor tables, progression loops and saved-project migration. Pentatonic mode must not invent seven diatonic degrees.",
-    "status": "todo",
+    "status": "doing",
     "area": "harmony",
-    "notes": "One chord per block initially; shared resolver feeds both basses and pad. Pentatonic requires a seven-note parent scale or disabled I–VII selection. Sevenths/inversions are later options.",
+    "notes": "Isolated seven-mode shared triad/root/chord resolver candidate passes 18,299,366 strict native and sanitizer checks with zero data/bss. Progression sequencing, saved block degrees, bass and pad integration remain pending; module not yet reviewed or merged.",
     "priority": 7,
     "milestone": "C · Arrangement and harmony",
     "depends_on": [
