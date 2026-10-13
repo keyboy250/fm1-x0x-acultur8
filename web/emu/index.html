@@ -247,6 +247,7 @@ function syncKeys() {
   keys.forEach((k, i) => k.g.classList.toggle("held", !!(m & (1 << i))));
 }
 
+const buttonPresses = new Map(); // Preserve short clicks through the firmware input scan.
 for (const b of Object.values(buttons)) {
   b.hit.addEventListener("contextmenu", (e) => e.preventDefault());
   b.hit.addEventListener("pointerdown", (e) => {
@@ -254,6 +255,7 @@ for (const b of Object.values(buttons)) {
     if (e.shiftKey || e.button === 2) { latched ^= 1 << b.bit; syncButtons(); return; }
     if (latched & (1 << b.bit)) { latched &= ~(1 << b.bit); syncButtons(); return; }
     b.hit.setPointerCapture(e.pointerId);
+    buttonPresses.set("p" + e.pointerId, {at: performance.now()});
     btnHeldBy.set("p" + e.pointerId, b.bit);
     syncButtons();
   });
@@ -268,7 +270,10 @@ keys.forEach((k, i) => {
 });
 function pointerUp(e) {
   const id = "p" + e.pointerId;
-  if (btnHeldBy.delete(id)) syncButtons();
+  const press=buttonPresses.get(id);
+  const release=()=>{if(buttonPresses.get(id)!==press)return;buttonPresses.delete(id);if(btnHeldBy.delete(id))syncButtons();};
+  if(press && e.type!=="pointercancel")setTimeout(release,Math.max(0,60-(performance.now()-press.at)));
+  else release();
   if (keyHeldBy.delete(id)) syncKeys();
 }
 device.addEventListener("pointerup", pointerUp);
