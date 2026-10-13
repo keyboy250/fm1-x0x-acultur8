@@ -6,7 +6,7 @@ The browser runs the shared C engine compiled to WebAssembly. It supports WAV sl
 
 ## Release status
 
-The first browser alpha is being prepared. Per-sound filters/limiting, arrangement blocks, chord progression, chord-following bass and MIDI accompaniment are planned increments. No Acultur8 device firmware has completed hardware qualification.
+[Browser alpha.1](https://keyboy250.github.io/fm1-x0x-acultur8/) is published; [release/source identity](https://github.com/keyboy250/fm1-x0x-acultur8/releases/tag/acultur8-v0.1.0-alpha.1) and [quick start](https://keyboy250.github.io/fm1-x0x-acultur8/manual/) are available. Per-sound filters/limiting, arrangement blocks, chord progression, chord-following bass and MIDI accompaniment are planned increments. No Acultur8 device firmware has completed hardware qualification.
 
 - Integration branch: `acultur8/main`.
 - Local lab: [setup and workflow](lab/README.md).
