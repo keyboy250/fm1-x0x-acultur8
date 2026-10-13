@@ -2643,9 +2643,20 @@ static const capm_t *caps(const felucca_font_t *f)
         uint32_t gi = ((uint32_t)'H' <= f->last ? 'H' : '0') - f->first, w = f->bw[gi], bpr = (w + 1u) / 2u, x, y;
         const uint8_t *gd = f->data + f->off[gi];
         int top = -1, bot = 0;
+#if FONT_RLE
+        font_reader_t reader = {gd, f->data + f->off[gi + 1u], 0, 0, 0};
+        uint32_t packed = 0;
+        (void)bpr;
+#endif
         for (y = 0; y < f->h; y++)
             for (x = 0; x < w; x++) {
+#if FONT_RLE
+                if (!(x & 1u))
+                    packed = font_next(&reader);
+                uint32_t a = packed;
+#else
                 uint32_t a = gd[y * bpr + x / 2u];
+#endif
                 a = (x & 1u) ? (a & 15u) : (a >> 4);
                 if (a >= 8u) {
                     if (top < 0)

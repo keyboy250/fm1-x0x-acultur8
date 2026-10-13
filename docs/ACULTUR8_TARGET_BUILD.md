@@ -119,15 +119,16 @@ breaks (55,125 B each), hi-hat (40,500 B), six font bitmaps (43,917 B combined),
 `draw_main` (14,354 B), `d8_render` (11,554 B), pot curves (9,728 B) and `d9_render`
 (9,496 B). The 909 samples plus generated breaks account for 331,348 B.
 
-Start with lossless bitmap packing and measured cold-code size reduction. Font
-bitmaps currently store two 4-bit pixels per byte, so lossless glyph compression
-with bounded per-glyph decoding could recover space while retaining screenshots.
-A read-only sizing probe encoded each glyph with byte RLE and round-tripped every
-glyph exactly: 43,917 bytes became 25,514 bytes, an **18,403-byte payload saving**
-before decoder code. The largest decoded glyph was 480 bytes. This is a candidate,
-not an implemented saving. Measure decoder code, draw cost, scratch/stack placement
-and screenshot parity before accepting it. Keep sample/tail changes and lossy audio
-formats separate because they change sound.
+Lossless glyph packing is now implemented and measured in an isolated build against
+the baseline above. All 439 glyphs retain their pixels and metrics: 43,917 bytes
+become 25,514 bytes of payload. Including decoder code, the app is **563,076 bytes**,
+saving **18,368 bytes** and leaving **18,488 bytes** in its slot. RAM and pool use are
+unchanged. Thirty full-screen comparisons and the browser audio/display comparison
+pass. See [font packing evidence](ACULTUR8_FONT_PACKING.md) for the bounded decoder,
+small measured stack increase, host draw cost, exact hashes and reproduction steps.
+These are font-only measurements; rebuild the integrated variant after additional
+features. Keep sample/tail changes and lossy audio formats separate because they
+change sound.
 
 Largest ordinary RAM items are the project (30,944 B), USB audio ring (8,192 B),
 audio double buffer (8,192 B), LZ hash workspace and command queue (4,096 B each),

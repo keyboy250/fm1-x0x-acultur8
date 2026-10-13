@@ -9,10 +9,43 @@ typedef struct {               /* proportional, see tools/gen_font.py */
     uint8_t first, last;
     const uint8_t *adv;        /* advance per glyph */
     const uint8_t *bw;         /* bitmap width per glyph (starts FONT_PAD left of the pen) */
-    const uint16_t *off;       /* byte offset of each glyph */
+    const uint16_t *off;       /* byte offset of each glyph, plus final end sentinel */
     const uint8_t *data;
 } felucca_font_t;
 #include "felucca_font.h"
+
+#if FONT_RLE
+/* Streaming decode: two pointers and four bytes of state, no glyph buffer or
+ * persistent RAM. Generated offsets bound every input read; the caller requests
+ * exactly h * ceil(width/2) output bytes. Truncated data draws transparent pixels. */
+typedef struct {
+    const uint8_t *p, *end;
+    uint8_t left, repeated, value;
+} font_reader_t;
+
+static uint32_t font_next(font_reader_t *r)
+{
+    if (!r->left) {
+        uint32_t control;
+        if (r->p == r->end)
+            return 0;
+        control = *r->p++;
+        r->left = (uint8_t)((control & 127u) + 1u);
+        r->repeated = (uint8_t)(control & 128u);
+        if (r->repeated) {
+            if (r->p == r->end) {
+                r->left = 0;
+                return 0;
+            }
+            r->value = *r->p++;
+        }
+    }
+    r->left--;
+    if (r->repeated)
+        return r->value;
+    return r->p == r->end ? 0 : *r->p++;
+}
+#endif
 
 #define CV_MAX (240u * 144u)      /* X0X: the main area, both bands, is 240 x 144 */
 static uint16_t cv_px[CV_MAX] __attribute__((section(".pool")));
@@ -156,9 +189,20 @@ static int32_t cv_text(int32_t x, int32_t y, const felucca_font_t *f, const char
         w = f->bw[gi];
         bpr = (w + 1u) / 2u;
         gd = f->data + f->off[gi];
+#if FONT_RLE
+        font_reader_t reader = {gd, f->data + f->off[gi + 1u], 0, 0, 0};
+        uint32_t packed = 0;
+        (void)bpr;
+#endif
         for (gy = 0; gy < f->h; gy++)
             for (gx = 0; gx < w; gx++) {
+#if FONT_RLE
+                if (!(gx & 1u))
+                    packed = font_next(&reader);
+                uint32_t a = packed;
+#else
                 uint32_t a = gd[gy * bpr + gx / 2u];
+#endif
                 int32_t px = x - f->pad + (int32_t)gx, py = y + (int32_t)gy + cv_oy;
                 a = (gx & 1u) ? (a & 15u) : (a >> 4);
                 if (!a || (uint32_t)px >= cv_w || py < cv_y0 || py >= cv_y1)
