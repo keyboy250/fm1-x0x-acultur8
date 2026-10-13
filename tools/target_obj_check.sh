@@ -18,7 +18,7 @@ run() { "$DOCKER" run --rm --platform linux/amd64 -v "$PWD:/work" -v "$TC:/opt/j
         debian:bookworm-slim "$@"; }
 run /opt/jieli/pi32v2/bin/clang -target pi32v2 -mcpu=r3 -mfprev1 -O2 -fno-builtin -ffp-contract=off \
     -Wall -Wdouble-promotion -Ifirmware/src -Ibuild/gen "$@" -c "$SRCF" -o "$OBJ"
-run sh -c "/opt/jieli/pi32v2/bin/nm -u $OBJ; echo ---; /opt/jieli/common/bin/objdump -d $OBJ" > "$OBJ.txt"
+run sh -c "/opt/jieli/pi32v2/bin/nm -u $OBJ; echo ---; /opt/jieli/common/bin/objdump -d --mcpu=r3 $OBJ" > "$OBJ.txt"
 UNDEF="$(awk '/^---$/{exit} {print $NF}' "$OBJ.txt")"
 BAD=""
 for s in $UNDEF; do
