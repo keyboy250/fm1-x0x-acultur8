@@ -25,6 +25,8 @@ run external_pad_wasm sh tests/host/run_pad_wasm.sh
 run midi_router node tests/host/midi_router_test.mjs
 run pad_ui node tests/host/pad_ui_test.mjs
 run pointer_keys node tests/host/pointer_keys_test.mjs build/emu/x0x.wasm
+run cc_inventory python3 tools/cc_inventory.py --check
+run cc_inventory_tests python3 tests/cc_inventory_test.py
 run arrangement sh tests/host/run_arrangement.sh
 run arrangement_wasm node tests/host/arrangement_wasm_test.mjs build/emu/x0x.wasm build/host/arrangement_schema1_store.bin
 run variant sh tests/host/run_variant.sh
