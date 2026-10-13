@@ -1,85 +1,15 @@
 [
   {
-    "id": "FM1-22",
-    "title": "Create the Acultur8 GitHub variant",
-    "status": "review",
-    "area": "release",
-    "acceptance": "Preserve upstream history/credits, import only reviewed source changes, retain upstream tracking and establish acultur8/main with a clean file manifest.",
-    "notes": "Public fork keyboy250/fm1-x0x-acultur8 created with upstream history, origin/upstream remotes and acultur8/main integration branch. Draft PR #1 contains the verified browser/slice delta. Independent review and fresh tests precede merge.",
-    "priority": 1,
-    "milestone": "A · Browser alpha",
-    "depends_on": [
-      "FM1-01"
-    ],
-    "next_check": "Complete independent source review and fresh host/WASM checks, then merge PR #1 into acultur8/main."
-  },
-  {
-    "id": "FM1-01",
-    "title": "Establish the baseline",
-    "acceptance": "Compare the archive, working copy and source map; retain a known-good source checkpoint.",
-    "status": "done",
-    "area": "foundation",
-    "notes": "Clean upstream checkout at 47f8e4c4ad602591b81c21bc5480db7a94f6d6af matches all 230 extracted baseline files exactly. Imported five modified files and eleven additions, with no removals. Originals remain intact. Evidence: variant-import-verification.json and draft PR #1.",
-    "priority": 1,
-    "milestone": "A · Browser alpha",
-    "depends_on": [],
-    "next_check": "Baseline accepted; compare future changes against the preserved upstream commit and reviewed variant checkpoints."
-  },
-  {
-    "id": "FM1-23",
-    "title": "Make the local dashboard portable",
+    "id": "FM1-06",
+    "title": "Establish firmware builds",
+    "acceptance": "Produce a valid x0x.fwsc using pinned pi32v2 and AC79 inputs; pass image, 96 KiB RAM, pool headroom and no-soft-double checks; report actual X0X render costs.",
     "status": "review",
     "area": "toolchain",
-    "acceptance": "A fresh checkout launches the local lab; optional converter/SDK paths are configurable; missing SDK does not prevent emulator or WAV/JSON import; runtime files remain outside published source.",
-    "notes": "Portable lab implementation prepared in lab/: configurable source/runtime paths, pinned local Git baseline cache and optional external converter. Eleven disposable clone HTTP checks and three packager checks passed. Review and complete fresh-clone launch are in progress.",
+    "notes": "Pinned official target baseline and corrected r3 instruction/resource gates pass. Baseline image 581444/581564, RAM 97216/98304, pool 334324/344064 bytes. Unmerged lossless-font candidate saves 18368 image bytes: image 563076, 18488 spare; RAM/pool unchanged. 439 glyphs and 30 screenshots exact; WASM audio parity passed. Device draw timing, stack watermark and physical render timing remain pending.",
     "priority": 1,
-    "milestone": "A · Browser alpha",
-    "depends_on": [
-      "FM1-22"
-    ],
-    "next_check": "Review the portable lab, commit it, and launch that committed checkout with no SDK configured."
-  },
-  {
-    "id": "FM1-25",
-    "title": "Publish the static browser alpha",
-    "status": "doing",
-    "area": "release",
-    "acceptance": "Publish a tested static demo and complete source with matching build checksums; verify paths and available-feature labels; no device installer is promoted before hardware acceptance.",
-    "notes": "Allowlisted static package, independently authored public FAQ/manual and synthetic WAV/marker demo are prepared. No hosted browser alpha yet; publication follows test/review and browser acceptance.",
-    "priority": 1,
-    "milestone": "A · Browser alpha",
-    "depends_on": [
-      "FM1-22",
-      "FM1-23",
-      "FM1-24"
-    ],
-    "next_check": "Verify packaged import, 90/120/180 BPM, stop/restart and save/reopen, then publish the exact tested commit through Pages."
-  },
-  {
-    "id": "FM1-24",
-    "title": "Automate required host, WASM and dashboard checks",
-    "status": "doing",
-    "area": "quality",
-    "acceptance": "Pinned build/reference inputs reproduce the emulator; host audio, slice parser/player/sync/worklet and dashboard checks pass; missing mandatory coverage fails rather than silently skipping.",
-    "notes": "Required host/WASM/dashboard/public-package runner and GitHub Actions are prepared. Self-contained engine scenarios and audio/slice tests have passed locally; final consolidated run and hosted CI remain open. SDK fixtures and external reference comparisons are explicitly separate.",
-    "priority": 2,
-    "milestone": "A · Browser alpha",
-    "depends_on": [
-      "FM1-23"
-    ],
-    "next_check": "Require a green consolidated run on the exact PR commit, including dashboard, parser/player/sync/worklet and packaging checks."
-  },
-  {
-    "id": "FM1-02",
-    "title": "Bring up the host simulator",
-    "acceptance": "Set up Linux/WSL, Python + Pillow and a host C compiler; build and run getting_started.x0x.",
-    "status": "review",
-    "area": "toolchain",
-    "notes": "Native host simulator compiled in the local Docker builder. Upstream emulator comparison: 168021 samples, peak 0.261, maximum difference 3.05e-5, screen and lights rendered. Sample-slot test passed. Broad scenario and physical hardware acceptance remain open.",
-    "priority": 2,
-    "milestone": "A · Browser alpha",
+    "milestone": "A–D · Target build",
     "depends_on": [],
-    "next_check": "Run the representative host scenarios from a fresh setup and report missing reference dependencies explicitly."
+    "next_check": "Review and merge font candidate with fresh integrated checks; then measure command/save and kick-strip resource deltas. Keep device timing pending."
   },
   {
     "id": "FM1-04",
@@ -91,47 +21,35 @@
     "priority": 2,
     "milestone": "A–D · Performance baseline",
     "depends_on": [],
-    "next_check": "First record host/WASM factory and dense-pattern bypass audio for the browser prototype. Record real target block timings separately before qualifying device processor budgets; keep missing device evidence pending."
-  },
-  {
-    "id": "FM1-06",
-    "title": "Establish firmware builds",
-    "acceptance": "Produce a valid x0x.fwsc using pinned pi32v2 and AC79 inputs; pass image, 96 KiB RAM, pool headroom and no-soft-double checks; report actual X0X render costs.",
-    "status": "review",
-    "area": "toolchain",
-    "notes": "Official pinned toolchain/SDK build completed without hardware access. Baseline image 581444/581564 bytes (120 spare), RAM 97216/98304 (1088 spare), pool 334324/344064 (9740 spare; 1548 beyond required reserve). Instruction decoding and coverage gates are being repaired; actual physical render timing remains unmeasured.",
-    "priority": 2,
-    "milestone": "A–D · Target build",
-    "depends_on": [],
-    "next_check": "Review corrected r3 disassembly/cost gates and preserved reports; reduce image/RAM usage before qualifying added features on-device. Keep physical timing pending."
+    "next_check": "Record reproducible synthetic factory/dense-pattern host/WASM bypass audio and cost; size the full proposed DSP/project/undo/arrangement/harmony workload by memory region. Keep real-device timing pending."
   },
   {
     "id": "FM1-05",
     "title": "Validate patterns and saves",
     "acceptance": "Define a versioned format for sound strips, arrangement/chords and bass/pad settings; prove old-project defaults, new save/reopen, undo, corrupt-format rejection, interrupted-save behavior and storage bounds.",
-    "status": "todo",
+    "status": "doing",
     "area": "quality",
-    "notes": "Shared dependency for sound, arrangement and harmony. Preserve upstream migrations and old-format backups; no claim that upstream firmware can load new variant saves.",
+    "notes": "Unmerged versioned extension/save foundation passes focused legacy/default roundtrip, new-format roundtrip, corrupt/truncated/future-format rejection, capacity/no-write, undo/redo and long-edit gesture checks. Earlier full host/WASM suite passed before final gesture fixes. Arrangement/harmony sections and complete interrupted-save acceptance remain open.",
     "priority": 3,
     "milestone": "B · Shared foundations",
     "depends_on": [
       "FM1-01"
     ],
-    "next_check": "Size all planned parameters/timelines and specify one versioned extension before changing persisted structs."
+    "next_check": "Close independent review; rerun real WASM and final gesture/save checks, interrupted-save behavior and target resource gates. Freeze compact full-feature schema/migration design before arrangement/harmony expansion."
   },
   {
     "id": "FM1-07",
     "title": "Define shared engine editing commands",
     "acceptance": "Use a versioned command/snapshot bridge for browser editing through normal engine ownership; define hardware capability negotiation separately and verify accepted values match controls.",
-    "status": "todo",
+    "status": "doing",
     "area": "protocol",
-    "notes": "Felucca SET/DUMP is not implemented in X0X. Hardware live editing remains pending until the physical device reports and applies those capabilities.",
+    "notes": "Unmerged bounded versioned command/snapshot bridge and queue acknowledgements pass focused backpressure and ownership tests. WASM/worklet wrappers are local candidates; integrated wrapper tests and visible browser controls remain pending. Hardware capability negotiation is separate.",
     "priority": 3,
     "milestone": "B · Shared foundations",
     "depends_on": [
       "FM1-01"
     ],
-    "next_check": "Define bounded parameter IDs, version/capability negotiation and browser command acknowledgement for one strip."
+    "next_check": "Verify real WASM replies and applied queue tickets, invalid input/backpressure and capability labels; connect one complete kick editor to acknowledged snapshots. Device live editing remains separate."
   },
   {
     "id": "FM1-03",
@@ -140,7 +58,7 @@
     "status": "todo",
     "area": "interface",
     "notes": "Expands the original first-label/UI exercise into the planned feature editor. No new musical controls are implemented yet. The first kick controls are accepted within FM1-27; this target covers the broader sound, arrangement and harmony editor.",
-    "priority": 3,
+    "priority": 4,
     "milestone": "B-C - Feature controls",
     "depends_on": [
       "FM1-07",
@@ -151,7 +69,7 @@
   {
     "id": "FM1-27",
     "title": "Prove one complete 909-kick processing strip",
-    "status": "todo",
+    "status": "doing",
     "area": "sound",
     "priority": 4,
     "milestone": "B - Sound prototype",
@@ -161,8 +79,8 @@
       "FM1-07"
     ],
     "acceptance": "One kick has HPF, LPF, boost, ceiling, gain-reduction feedback and dashboard controls; prove measured response and summed-strip ceiling including overlapping hits/tails, smooth edits, bypass, save/reopen and undo. Record added memory and render cost before expanding to other sounds.",
-    "next_check": "Deliver the complete kick prototype in the planned audio/kick-strip PR, including its controls and saved settings; compare it with the recorded bypass baseline.",
-    "notes": "Explicit checkpoint for planned PR 5. Build this single complete strip before the all-sound work in FM1-11 and FM1-12. The FM1-04 dependency requires its recorded browser baseline for browser review; device headroom remains a separate FM1-04/FM1-06 gate. Do not mark missing device evidence complete to unblock the prototype. No processor implementation is claimed by this roadmap update."
+    "next_check": "Integrate and accept one complete 909 kick: summed sound/tails, filters, boost/ceiling, controls/meters, smooth changes, bypass, save/reopen, undo and integrated resource cost.",
+    "notes": "Standalone unmerged HPF/LPF, boost and linked sample-ceiling processor passes host response/bypass/transition tests and official target object compilation. Object text 2280 bytes; runtime state 64 bytes per strip. Engine kick integration, controls/meters, saved settings, full cost and summed-strip acceptance remain pending."
   },
   {
     "id": "FM1-11",
@@ -171,7 +89,7 @@
     "status": "todo",
     "area": "sound",
     "notes": "Use independent strip parameters, appropriate per-voice filter state, smooth coefficients and bypass defaults. Cover both 808 render paths and second-core ownership. Expand only after measured cost.",
-    "priority": 4,
+    "priority": 5,
     "milestone": "B · Sound controls",
     "depends_on": [
       "FM1-27"
@@ -205,7 +123,7 @@
       "FM1-05",
       "FM1-07"
     ],
-    "next_check": "Add explicit block duration and editing/playing/queued states on the existing song model."
+    "next_check": "Reuse existing patterns/song entries; size compact block duration/chord intent first, then verify editing/playing/queued states, quantized transitions and persistence."
   },
   {
     "id": "FM1-14",
@@ -254,7 +172,7 @@
     "title": "Verify the complete musical scene in the browser",
     "status": "todo",
     "area": "quality",
-    "priority": 9,
+    "priority": 10,
     "milestone": "C - Integrated browser acceptance",
     "depends_on": [
       "FM1-11",
@@ -267,7 +185,7 @@
     ],
     "acceptance": "Run a synthetic four-block C-Am-F-G scene with drums, both chord-following basses, synced slices and MIDI pad events. Verify 90/120/180 BPM, summed-strip ceilings, edit/play/queue independence, save/reopen, MIDI cleanup and a recorded 30-minute browser soak. Attach the exact source/build identity and actual results.",
     "notes": "Combined browser checkpoint from the expedited plan. Dependencies require their browser behavior and evidence; physical headroom and real MIDI receiver checks remain separately pending under their own targets. Slide note targets obey the chord; intermediate glide pitches are intentional. No whole-song acceptance result is claimed yet.",
-    "next_check": "Build the redistributable synthetic demo project and WAV/marker pair; capture the complete planned scene on the feature-complete browser build before the arrangement alpha is promoted."
+    "next_check": "After individual browser checks pass, record the complete synthetic C-Am-F-G scene at 90/120/180 BPM, save/reopen, MIDI cleanup and a 30-minute soak before publishing the musical alpha."
   },
   {
     "id": "FM1-09",
@@ -344,6 +262,88 @@
     "milestone": "Separate · Converter publication",
     "depends_on": [],
     "next_check": "Establish converter reuse permission and SDK distribution terms before preparing a companion package."
+  },
+  {
+    "id": "FM1-22",
+    "title": "Create the Acultur8 GitHub variant",
+    "status": "done",
+    "area": "release",
+    "acceptance": "Preserve upstream history/credits, import only reviewed source changes, retain upstream tracking and establish acultur8/main with a clean file manifest.",
+    "notes": "Public fork preserves upstream history and credits; acultur8/main established. Reviewed PRs #1–#3 merged. Alpha source identity: 0487778bf76915c2312644791d92d30378f4ecb5. Reviewed PR #4 published the About page at commit 84d924660522f275baff6c3cd1741479bbe898b1; this is separate from the unchanged alpha.1 tag.",
+    "priority": 1,
+    "milestone": "A · Browser alpha",
+    "depends_on": [
+      "FM1-01"
+    ],
+    "next_check": "Accepted. Preserve upstream tracking and exact tested release identities for subsequent merges."
+  },
+  {
+    "id": "FM1-01",
+    "title": "Establish the baseline",
+    "acceptance": "Compare the archive, working copy and source map; retain a known-good source checkpoint.",
+    "status": "done",
+    "area": "foundation",
+    "notes": "Clean upstream checkout at 47f8e4c4ad602591b81c21bc5480db7a94f6d6af matches all 230 extracted baseline files exactly. Imported five modified files and eleven additions, with no removals. Originals remain intact. Evidence: variant-import-verification.json and merged PR #1.",
+    "priority": 1,
+    "milestone": "A · Browser alpha",
+    "depends_on": [],
+    "next_check": "Baseline accepted; compare future changes against the preserved upstream commit and reviewed variant checkpoints."
+  },
+  {
+    "id": "FM1-23",
+    "title": "Make the local dashboard portable",
+    "status": "done",
+    "area": "toolchain",
+    "acceptance": "A fresh checkout launches the local lab; optional converter/SDK paths are configurable; missing SDK does not prevent emulator or WAV/JSON import; runtime files remain outside published source.",
+    "notes": "Portable lab merged in PR #2. Eleven disposable-clone HTTP checks and three packager checks passed. Committed clean clone launched on port 8101 without a configured SDK; state reported runtime healthy and rex_ready=false.",
+    "priority": 1,
+    "milestone": "A · Browser alpha",
+    "depends_on": [
+      "FM1-22"
+    ],
+    "next_check": "Accepted for the local portable lab; optional converter configuration remains separate."
+  },
+  {
+    "id": "FM1-25",
+    "title": "Publish the static browser alpha",
+    "status": "done",
+    "area": "release",
+    "acceptance": "Publish a tested static demo and complete source with matching build checksums; verify paths and available-feature labels; no device installer is promoted before hardware acceptance.",
+    "notes": "Published acultur8-v0.1.0-alpha.1 from 0487778bf76915c2312644791d92d30378f4ecb5. All 21 deployed files matched build hashes. Hosted six-slice demo, audio startup, 90/120/180 BPM, shared stop/restart and saved-import reload/reopen passed with no console warnings/errors. Evidence: hosted-alpha-verification.json. Current Pages also includes the reviewed About page linking Acultur8.com and Traxsource; CI/deployment and hosted links passed (about-publication-verification.json).",
+    "priority": 1,
+    "milestone": "A · Browser alpha",
+    "depends_on": [
+      "FM1-22",
+      "FM1-23",
+      "FM1-24"
+    ],
+    "next_check": "Keep this accepted alpha available; publish the next candidate only after integrated checks and hosted acceptance."
+  },
+  {
+    "id": "FM1-24",
+    "title": "Automate required host, WASM and dashboard checks",
+    "status": "done",
+    "area": "quality",
+    "acceptance": "Pinned build/reference inputs reproduce the emulator; host audio, slice parser/player/sync/worklet and dashboard checks pass; missing mandatory coverage fails rather than silently skipping.",
+    "notes": "Required host/WASM/dashboard/public-package CI passed on the reviewed source and merged alpha. Includes 31 host scenarios, audio parity and slice/import/sync/worklet checks. Missing mandatory inputs fail. External reference engines, native decoder and device checks are explicitly separate. CI: https://github.com/keyboy250/fm1-x0x-acultur8/actions/runs/38361493563",
+    "priority": 2,
+    "milestone": "A · Browser alpha",
+    "depends_on": [
+      "FM1-23"
+    ],
+    "next_check": "Run required CI on each exact feature commit; add focused feature tests before merge."
+  },
+  {
+    "id": "FM1-02",
+    "title": "Bring up the host simulator",
+    "acceptance": "Set up Linux/WSL, Python + Pillow and a host C compiler; build and run getting_started.x0x.",
+    "status": "done",
+    "area": "toolchain",
+    "notes": "Fresh native host build and all 31 representative scenarios passed; host/WASM audio parity and sample-slot checks passed in mandatory CI. This accepts the host simulator, not physical hardware.",
+    "priority": 2,
+    "milestone": "A · Browser alpha",
+    "depends_on": [],
+    "next_check": "Accepted host setup. Device performance remains under FM1-04/FM1-06/FM1-10."
   },
   {
     "id": "FM1-18",
