@@ -45,6 +45,7 @@ void seq_init(seq_t *s, pattern_t *patterns)
     s->clk_to_next = NEVER;
     s->arrangement.queued = 255;
     s->midi_ready=1;
+    s->pad_channel_out=255;for(i=0;i<3;i++)s->pad_notes_out[i]=255;
     for(i=0;i<NBASS;i++)s->bass_notes_out[i]=s->bass_channels_out[i]=255;
 }
 
@@ -134,6 +135,52 @@ static void midi(const seq_sink_t *o, uint8_t st, uint8_t d1, uint8_t d2)
         o->midi(o->ctx, st, d1, d2);
 }
 
+enum { PAD_PENDING=64, PAD_ARMED=128 };
+int seq_pad_channel_available(const seq_t *s,int channel)
+{
+    int i;if(channel==255)return 1;
+    for(i=0;i<NTRACKS;i++)if(s->ch[i]==channel)return 0;
+    return channel>=0 && channel<16;
+}
+int seq_pad_desired(const seq_t *s,uint8_t notes[3])
+{
+    const arrangement_settings_t *a=s->arrangement.intent;harmony_triad_t chord;int i;
+    harmony_spec_t spec={s->arrangement.key,s->arrangement.mode,s->arrangement.degree,s->arrangement.parent};
+    for(i=0;i<3;i++)notes[i]=255;
+    if(!s->playing || !(s->arrangement.flags&ARR_ENABLED) || !a || a->pad_channel==255 || !spec.degree)return PAD_NO_CHORD;
+    if(!harmony_resolve(&spec,a->pad_root,a->pad_low,a->pad_high,&chord))return PAD_RANGE;
+    for(i=0;i<3;i++)notes[i]=chord.midi[i];
+    if(!seq_pad_channel_available(s,a->pad_channel))return PAD_COLLISION;
+    if(!s->send_notes)return PAD_OUTPUT_DISABLED;
+    if(!s->midi_ready)return PAD_DISCONNECTED;
+    return PAD_NONE;
+}
+int seq_pad_pending(const seq_t *s) {return (s->pad_status&PAD_PENDING)!=0;}
+static __attribute__((noinline)) int pad_publish(seq_t *s,const seq_sink_t *o,const uint8_t *notes,int channel)
+{
+    uint32_t packets[6],n=0;int i;
+    if(s->pad_channel_out<16)for(i=0;i<3;i++)
+        packets[n++]=8u|((uint32_t)(0x80|s->pad_channel_out)<<8)|((uint32_t)s->pad_notes_out[i]<<16);
+    if(notes)for(i=0;i<3;i++)
+        packets[n++]=9u|((uint32_t)(0x90|channel)<<8)|((uint32_t)notes[i]<<16)|(90u<<24);
+    if(n && (!o->midi_batch_try || !o->midi_batch_try(o->ctx,packets,n))) {s->pad_status|=PAD_PENDING;return 0;}
+    s->pad_channel_out=notes?(uint8_t)channel:255;
+    for(i=0;i<3;i++)s->pad_notes_out[i]=notes?notes[i]:255;
+    s->pad_status&=(uint8_t)~PAD_PENDING;return 1;
+}
+static void pad_release(seq_t *s,const seq_sink_t *o)
+{ s->pad_status&=(uint8_t)~PAD_ARMED;(void)pad_publish(s,o,0,255); }
+static __attribute__((noinline)) void pad_sync(seq_t *s,const seq_sink_t *o)
+{
+    uint8_t notes[3];int i,reason=seq_pad_desired(s,notes),same;
+    s->pad_status=(uint8_t)((s->pad_status&(PAD_PENDING|PAD_ARMED))|reason);
+    if(reason || !(s->pad_status&PAD_ARMED)) {pad_release(s,o);return;}
+    same=s->pad_channel_out==s->arrangement.intent->pad_channel;
+    for(i=0;i<3;i++)same=same && s->pad_notes_out[i]==notes[i];
+    if(same){s->pad_status&=(uint8_t)~PAD_PENDING;return;}
+    (void)pad_publish(s,o,notes,s->arrangement.intent->pad_channel);
+}
+
 enum { FOLLOW_BLOCKED_A=1, FOLLOW_ACCENT_A=4, FOLLOW_RETUNE_A=16, FOLLOW_MIDI_REFRESH_A=64 };
 static __attribute__((noinline)) int midi_try(const seq_sink_t *o,uint8_t st,uint8_t n,uint8_t v)
 {
@@ -168,6 +215,8 @@ static __attribute__((noinline)) void bass_release(seq_t *s,int b,const seq_sink
 void seq_notes_clear(seq_t *s,const seq_sink_t *o)
 {
     int b;
+    if(o->midi_cancel)o->midi_cancel(o->ctx);
+    pad_release(s,o);
     for(b=0;b<NBASS;b++) {
         int sounding=s->t[TRK_BASS0+b].sounding;
         bass_release(s,b,o);if(!sounding && o->bass_off)o->bass_off(o->ctx,b);
@@ -223,7 +272,10 @@ static void bass_midi_on(seq_t *s,int b,int note,int accent,int retrigger,const 
 }
 void seq_midi_prepare(seq_t *s,int connected,const seq_sink_t *o)
 {
-    int b;s->midi_ready=(uint8_t)(connected!=0);
+    int b;uint8_t notes[3];
+    if(s->midi_ready && !connected && o->midi_cancel)o->midi_cancel(o->ctx);
+    s->midi_ready=(uint8_t)(connected!=0);
+    if(seq_pad_desired(s,notes))pad_release(s,o);
     for(b=0;b<NBASS;b++) {
         seq_track_t *tr=&s->t[TRK_BASS0+b];
         if(s->mute & (1u<<(MUTE_BASS0+b))) {bass_release(s,b,o);continue;}
@@ -240,6 +292,7 @@ void seq_midi_sync(seq_t *s,int connected,const seq_sink_t *o)
         if(tr->sounding && !(s->mute&(1u<<(MUTE_BASS0+b))))
             bass_midi_on(s,b,tr->held_note&127u,(s->arrangement.reserved&(FOLLOW_ACCENT_A<<b))!=0,0,o);
     }
+    pad_sync(s,o);
 }
 static int bass_follow_note(seq_t *s,int b,int source,int transpose,uint8_t *note)
 {
@@ -350,6 +403,7 @@ static void song_read(seq_t *s, int k, uint8_t *next)
 
 static void arrangement_latch(seq_t *s, uint16_t block)
 {
+    s->pad_status|=PAD_ARMED;
     volatile arrangement_runtime_t *a = &s->arrangement;
     uint8_t next[NTRACKS];
     int t;
@@ -561,6 +615,7 @@ static void do_start(seq_t *s, int from_top, const seq_sink_t *o, int arrangemen
     }
     s->clk_to_next = 0;
     s->playing = 1;
+    s->pad_status|=PAD_ARMED;
 #ifdef X0X_WEB
     web_seq_transport(1, from_top);
 #endif
@@ -570,6 +625,8 @@ static void do_start(seq_t *s, int from_top, const seq_sink_t *o, int arrangemen
 
 static void do_stop(seq_t *s, const seq_sink_t *o, int arrangement)
 {
+    if(o->midi_cancel)o->midi_cancel(o->ctx);
+    pad_release(s,o);
     int b, t;
     s->playing = 0;
     if (arrangement) s->arrangement.queued = 255;

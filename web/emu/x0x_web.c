@@ -14,6 +14,15 @@ static void web_audio(const int32_t *blk, uint32_t n);
 
 #undef __attribute__
 
+/* Bounded browser MIDI FIFO. Host strips attributes; exports live here after undef. */
+__attribute__((used,visibility("default"))) int web_midi_ready(int ready) {return host_web_midi_ready(ready);}
+__attribute__((used,visibility("default"))) uint32_t web_midi_epoch(void) {return host_web_midi_epoch();}
+__attribute__((used,visibility("default"))) uint32_t web_midi_cancel(void) {return host_web_midi_cancel();}
+__attribute__((used,visibility("default"))) uint32_t web_midi_pending(void) {return host_web_midi_pending();}
+__attribute__((used,visibility("default"))) int web_midi_batch(int max) {return host_web_midi_batch(max);}
+__attribute__((used,visibility("default"))) uint32_t web_midi_packet(int index) {return host_web_midi_packet(index);}
+__attribute__((used,visibility("default"))) int web_midi_ack(int prefix) {return host_web_midi_ack(prefix);}
+
 /* Fixed-size, shared-engine editor bridge. Never expose live project memory. */
 static variant_reply_t web_variant_reply;
 static variant_snapshot_t web_variant_view;
@@ -77,6 +86,8 @@ __attribute__((used, visibility("default"))) void web_render(uint32_t n)
 
 __attribute__((used, visibility("default"))) void web_boot(void) { boot(); }
 __attribute__((used, visibility("default"))) void web_buttons(uint32_t m) { held_btn = m; }
+__attribute__((used, visibility("default"))) void web_buttons_tagged(uint32_t m,uint32_t ticket) {if(ticket){held_btn=m;web_input_pending=ticket;}}
+__attribute__((used, visibility("default"))) uint32_t web_input_ticket(void) {return web_input_applied;}
 __attribute__((used, visibility("default"))) void web_keys(uint32_t m) { held_keys = m; }
 __attribute__((used, visibility("default"))) void web_enc(int role, int32_t n)
 {

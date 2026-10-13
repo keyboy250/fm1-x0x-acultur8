@@ -3,6 +3,7 @@
 // quantum asks it for 128 frames, which runs the device's clock forward; between quanta the page's
 // input goes in and, about 30 times a second, the screen, the lights and any saved objects go out.
 
+import { MidiWorkletBridge } from './midi-worklet.mjs';
 const clock = globalThis.performance ? () => globalThis.performance.now() : () => Date.now();
 
 class X0X extends AudioWorkletProcessor {
@@ -17,11 +18,13 @@ class X0X extends AudioWorkletProcessor {
     this.frames = 0;
     this.variantStrip = 0;
     this.variantViewRevision = 0;
+    this.midi = new MidiWorkletBridge(() => this.ex, m => this.port.postMessage(m));
     this.port.onmessage = (e) => this.onMessage(e.data);
   }
 
   async onMessage(m) {
     if (!m || typeof m !== 'object') return;
+    if (this.midi.message(m)) return;
     if (m.type === 'variant-command') {
       const keys = ['abi', 'op', 'request', 'target', 'voice', 'index', 'value'];
       const valid = keys.every(k => Number.isInteger(m[k])) && m.request >= 0 && m.request <= 0xffffffff &&
@@ -74,7 +77,9 @@ class X0X extends AudioWorkletProcessor {
     } else if (!this.ex) {
       return;
     } else if (m.type === "buttons") {
-      this.ex.web_buttons(m.mask >>> 0);
+      if(this.ex.web_buttons_tagged&&Number.isInteger(m.inputTicket)&&m.inputTicket>=1&&m.inputTicket<=0xffffffff)
+        this.ex.web_buttons_tagged(m.mask>>>0,m.inputTicket>>>0);
+      else this.ex.web_buttons(m.mask >>> 0);
     } else if (m.type === "keys") {
       this.ex.web_keys(m.mask >>> 0);
     } else if (m.type === "enc") {
@@ -129,6 +134,7 @@ class X0X extends AudioWorkletProcessor {
     const ex = this.ex;
     const blits = ex.web_blits();
     const msg = { type: "frame", buttons: ex.web_lit_buttons() >>> 0, keys: ex.web_lit_keys() >>> 0, dim: ex.web_dim_keys() >>> 0 };
+    if(ex.web_input_ticket)msg.inputTicket=ex.web_input_ticket()>>>0;
     if (ex.web_variant_snapshot) {
       const read = (section,target) => {
         const p = ex.web_variant_snapshot(section,target,0);
@@ -138,7 +144,7 @@ class X0X extends AudioWorkletProcessor {
       };
       const arrangement = read(5,0);
       msg.variant = {info:read(0,0),strip:this.variantStrip ?? 0,viewRevision:this.variantViewRevision,settings:read(2,this.variantStrip ?? 0),meters:read(3,this.variantStrip ?? 0),
-        arrangement,block:arrangement ? read(4,arrangement.values[2]) : null,chord:read(6,0),bass:[read(7,0),read(7,1)]};
+        arrangement,block:arrangement ? read(4,arrangement.values[2]) : null,chord:read(6,0),bass:[read(7,0),read(7,1)],pad:read(8,0)};
     }
     msg.sync={state:ex.web_sync_state(),bpm:ex.web_seq_bpm(),playing:!!ex.web_seq_playing(),beat:ex.web_seq_beat()};
     if(ex.web_marked_cursor)msg.marked={cursor:ex.web_marked_cursor(),triggers:ex.web_marked_triggers(),slice:ex.web_marked_last(),playing:!!ex.web_marked_playing()||(ex.web_sync_state()===2&&!!ex.web_seq_playing())};
@@ -170,6 +176,7 @@ class X0X extends AudioWorkletProcessor {
     const n = out[0].length;
     const t0 = clock();
     this.ex.web_render(n);
+    this.midi.tick();
     this.busy += clock() - t0;
     this.frames += n;
     out[0].set(new Float32Array(this.mem.buffer, this.ex.web_out_l(), n));

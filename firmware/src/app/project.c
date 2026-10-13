@@ -489,10 +489,11 @@ static int project_load_impl(void)
     project_defaults();
     packed_len = loaded_packed;
     set = proj.set;
-    if (load_settings(&set) == 0 && set.magic == PROJ_MAGIC)
+    if (load_settings(&set) == 0 && set.magic == PROJ_MAGIC && set.notes_out<=1)
         proj.set = set;
     else
         bad = 1;
+    if(proj.set.notes_out)proj.variant.arrangement.flags|=ARR_NOTES_OUT;
     sound_ok = load_obj(OBJ_SOUND, &proj.sound, sizeof proj.sound) == 0;
     if (!sound_ok)
         bad = 1;
@@ -510,6 +511,8 @@ static int project_load_impl(void)
         uint32_t b;
         for (b = 0; b < raw_len; b++) ((uint8_t *)&proj)[RAW_OFF + b] = stage[b];
         if (format == PROJ_VARIANT_STREAM || format == PROJ_ARRANGEMENT_STREAM) {
+            if(proj.variant.schema<4){proj.variant.arrangement.pad_channel=255;
+                proj.variant.arrangement.flags=(uint8_t)((proj.variant.arrangement.flags&~ARR_NOTES_OUT)|(proj.set.notes_out?ARR_NOTES_OUT:0));}
             proj.variant.schema = VARIANT_SCHEMA; proj.variant.bytes = sizeof proj.variant;
         }
     } else {
@@ -549,6 +552,7 @@ void project_apply_io(void)
     static const uint8_t DEF[5] = {9, 10, 1, 2, 3};   /* 909 10, 808 11, 303s 2 / 3, break 4 */
     int p;
     seq.send_clock = proj.set.clk_out;
+    proj.set.notes_out=(uint8_t)((proj.variant.arrangement.flags&ARR_NOTES_OUT)!=0);
     seq.send_notes = proj.set.notes_out;
     for (p = 0; p < 5; p++) {
         int v = proj.set.midi_ch[p];
@@ -574,7 +578,7 @@ static int project_save_impl(void)
     proj.set.bpm_x10 = (uint16_t)(seq.bpm * 10.0f + 0.5f);
     proj.set.accent_q7 = seq.accent_q7;
     proj.set.clk_out = seq.send_clock;
-    proj.set.notes_out = seq.send_notes;
+    proj.set.notes_out=(uint8_t)((proj.variant.arrangement.flags&ARR_NOTES_OUT)!=0);
     if (save_obj(OBJ_SET, &proj.set, sizeof proj.set))
         return -1;
     if (save_obj(OBJ_SOUND, &proj.sound, sizeof proj.sound))

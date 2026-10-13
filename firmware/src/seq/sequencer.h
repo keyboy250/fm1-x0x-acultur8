@@ -52,7 +52,8 @@ static inline uint32_t seq_part_mask(int p)
 
 #define NSONG 192
 #define ARR_ENABLED 1u
-#define ARR_FLAGS 31u
+#define ARR_NOTES_OUT 32u /* schema4 tracked mirror; settings_t is outside undo journal */
+#define ARR_FLAGS 63u
 enum { BASS_FOLLOW_OFF, BASS_FOLLOW_ROOT, BASS_FOLLOW_CHORD };
 static inline unsigned arrangement_bass_mode(unsigned flags,int b) { return (flags >> (1+2*b)) & 3u; }
 typedef struct {
@@ -108,6 +109,8 @@ typedef struct {
     int (*bass_trigger)(void *ctx,int part,int note,int accent,int slide); /* optional actual trigger status */
     int (*midi_try)(void *ctx,uint8_t status,uint8_t d1,uint8_t d2);
     int (*midi_pair_try)(void *ctx,uint8_t st1,uint8_t n1,uint8_t v1,uint8_t st2,uint8_t n2,uint8_t v2);
+    int (*midi_batch_try)(void *ctx,const uint32_t *packets,uint32_t count); /* atomic <=6 USB-MIDI packets */
+    void (*midi_cancel)(void *ctx); /* browser-only stale queued attacks; physical sink leaves null */
 } seq_sink_t;
 
 typedef struct {                      /* one part's runtime */
@@ -154,6 +157,7 @@ typedef struct {
     volatile uint8_t req_start, req_stop, req_cont; /* transport requests from the UI / MIDI */
     uint32_t mut_rng[NBASS];          /* auto-mutate random streams */
     uint8_t bass_notes_out[NBASS], bass_channels_out[NBASS]; /* actually emitted ownership;255 inactive */
+    uint8_t pad_notes_out[3], pad_channel_out, pad_status; /* five runtime bytes;255 inactive */
     uint8_t midi_ready;                /* platform connection, not receiver-delivery proof */
     volatile uint8_t transport_hold, transport_stage; /* main-only nested count; audio defers requests while nonzero */
     volatile arrangement_runtime_t arrangement; /* 20 bytes on target 32-bit ABI; ISR/main snapshots */
@@ -194,6 +198,10 @@ void seq_stop(seq_t *s);
 void seq_notes_clear(seq_t *s,const seq_sink_t *sink);
 void seq_midi_prepare(seq_t *s,int connected,const seq_sink_t *sink); /* cleanup only; never retries On */
 void seq_midi_sync(seq_t *s,int connected,const seq_sink_t *sink);
+enum { PAD_NONE, PAD_NO_CHORD, PAD_RANGE, PAD_COLLISION, PAD_DISCONNECTED, PAD_OUTPUT_DISABLED };
+int seq_pad_channel_available(const seq_t *s,int channel);
+int seq_pad_desired(const seq_t *s,uint8_t notes[3]);
+int seq_pad_pending(const seq_t *s);
 void seq_continue(seq_t *s);
 void seq_ext_clock(seq_t *s);         /* one 24-ppqn tick (USB MIDI 0xF8) */
 void seq_cue(seq_t *s, int pattern);  /* every part, at the end of the bar (now, if stopped) */

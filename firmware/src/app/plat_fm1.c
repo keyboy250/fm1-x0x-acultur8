@@ -99,6 +99,8 @@ int plat_midi_in(uint32_t *pkt)
 }
 int plat_midi_out(uint32_t pkt) { return midi_out_event(pkt); }
 int plat_midi_pair(uint32_t first,uint32_t second) { return midi_out_pair(first,second); }
+int plat_midi_batch(const uint32_t *packets,uint32_t count) { return midi_out_batch(packets,count); }
+void plat_midi_cancel(void) {}
 
 int plat_store_load(uint32_t obj, void *dst, uint32_t max) { return flash_ok ? st_load(obj, dst, max) : -1; }
 int plat_store_save(uint32_t obj, const void *src, uint32_t len) { return flash_ok ? st_save(obj, src, len) : -9; }

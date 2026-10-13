@@ -4,11 +4,13 @@
 #define PLAT_CONTROL_TEST
 #define plat_midi_out host_midi_out
 #define plat_midi_pair host_midi_pair
+#define plat_midi_batch host_midi_batch
 #define main host_scenario_main
 #include "../../host/x0x_host.c"
 #undef main
 #undef plat_midi_out
 #undef plat_midi_pair
+#undef plat_midi_batch
 #include <assert.h>
 #include "../../firmware/src/midi_ring.h"
 static uint32_t trace[8192];static int trace_n,use_real_ring;
@@ -24,7 +26,15 @@ int plat_midi_pair(uint32_t first,uint32_t second) {
     if(use_real_ring && !midi_ring_try_pair(out_ring,&out_write,&out_read,64,first,second,midi_connected))return 0;
     accepted_packet(first);accepted_packet(second);return 1;
 }
+int plat_midi_batch(const uint32_t *packets,uint32_t count);
 #include "../../firmware/src/app/engine.c"
+int plat_midi_batch(const uint32_t *packets,uint32_t count) {
+    uint32_t i;
+    if(!midi_connected || !count || count>6)return 0;
+    if(use_real_ring && !midi_ring_try_batch(out_ring,&out_write,&out_read,64,packets,count,midi_connected))return 0;
+    for(i=0;i<count;i++)accepted_packet(packets[i]);
+    return 1;
+}
 static int locked,irq_start;
 uint32_t plat_control_enter(void) {
     assert(!locked);
@@ -54,10 +64,10 @@ static void storage_commands(void) {
     project_t before;undo_t journal;uint8_t shadow[sizeof undo_shadow];uint32_t packed,writes,revision,queued;
     variant_snapshot_t view;
     fresh();assert(sizeof(variant_settings_t)==412 && sizeof(arrangement_settings_t)==204);app_config();
-    assert(proj.variant.schema==3 && proj.variant.arrangement.flags==19);
+    assert(proj.variant.schema==4 && proj.variant.arrangement.flags==19);
     assert(command(VC_SET_ARR_GLOBAL,0,0,0,0)==VR_QUEUED && proj.variant.arrangement.flags==18);
     assert(command(VC_SET_ARR_GLOBAL,0,0,0,1)==VR_QUEUED && proj.variant.arrangement.flags==19);
-    assert(variant_snapshot(VS_INFO,0,0,&view)==VR_OK && view.value[0]==255 && view.value[5]==3);
+    assert(variant_snapshot(VS_INFO,0,0,&view)==VR_OK && view.value[0]==511 && view.value[5]==4);
     assert(variant_snapshot(VS_BASS_FOLLOW,0,0,&view)==VR_OK && view.count==10 && view.value[0]==1 && view.value[5]==255 && view.value[6]==255 && view.value[7]==255);
     assert(variant_snapshot(VS_BASS_FOLLOW,2,0,&view)==VR_INVALID);
     before=proj;journal=undo;memcpy(shadow,undo_shadow,sizeof shadow);revision=ui_revision();queued=engine_queue_written();
@@ -75,25 +85,26 @@ static void storage_commands(void) {
     seq.req_stop=1;assert(command(13,1,0,2,100)==VR_BUSY);seq.req_stop=0;
     irq_start=1;assert(command(13,0,0,0,2)==VR_BUSY && !memcmp(&before,&proj,sizeof proj));seq_stop(&seq);render_block();
     assert(command(VC_SAVE,0,0,0,0)==VR_OK);project_defaults();assert(project_load()==0);render_block();
-    assert(proj.variant.schema==3 && proj.variant.arrangement.flags==19);
+    assert(proj.variant.schema==4 && proj.variant.arrangement.flags==19);
     /* Independently encode old schema2/format4 with its old flags contract. */
     proj.variant.schema=2;proj.variant.arrangement.flags=1;proj.variant.strip[22].boost_db=7;
     assert(stream_measure(RAW_LEN,&packed)==0 && save_stream(RAW_LEN,4,packed)==0);
-    assert(project_load()==0 && proj.variant.schema==3 && proj.variant.arrangement.flags==1 && proj.variant.strip[22].boost_db==7);
+    assert(project_load()==0 && proj.variant.schema==4 && proj.variant.arrangement.flags==1 && proj.variant.strip[22].boost_db==7);
     /* Old raw schema1 prefix still appends default Off ranges, without rewriting its notes. */
     proj.variant.schema=1;proj.variant.bytes=208;assert(stream_measure(SCHEMA1_RAW_LEN,&packed)==0 && save_stream(SCHEMA1_RAW_LEN,3,packed)==0);
-    assert(project_load()==0 && proj.variant.schema==3 && proj.variant.arrangement.flags==0 && proj.variant.arrangement.bass_low[0]==24);
+    assert(project_load()==0 && proj.variant.schema==4 && proj.variant.arrangement.flags==0 && proj.variant.arrangement.bass_low[0]==24);
     fresh();assert(project_save()==0 && get32(store[OBJ_PAT0])==2); /* canonical default stays legacy byte format */
-    for(int kind=0;kind<8;kind++) {
+    for(int kind=0;kind<9;kind++) {
         fresh();app_config();before=proj;
-        if(kind==0)proj.variant.arrangement.flags|=32;
+        if(kind==0)proj.variant.arrangement.flags|=64;
         if(kind==1)proj.variant.arrangement.flags=(uint8_t)((19&~6)|6);
         if(kind==2)proj.variant.arrangement.flags=(uint8_t)((19&~24)|24);
         if(kind==3)proj.variant.arrangement.bass_high[0]=128;
         if(kind==4)proj.variant.arrangement.bass_low[1]=73;
-        if(kind==5)proj.variant.schema=4;
+        if(kind==5)proj.variant.schema=5;
         if(kind==6){proj.variant.schema=2;proj.variant.arrangement.flags=3;} /* invalid old flags cannot masquerade as migration */
         if(kind==7)proj.variant.bytes=411;
+        if(kind==8){proj.variant.schema=3;proj.variant.arrangement.flags|=32;} /* old schema cannot smuggle the new output bit */
         assert(stream_measure(RAW_LEN,&packed)==0 && save_stream(RAW_LEN,4,packed)==0);proj=before;
         journal=undo;memcpy(shadow,undo_shadow,sizeof shadow);writes=store_writes;revision=ui_revision();
         seq.bass_notes_out[0]=0;seq.bass_channels_out[0]=7;trace_n=0;
@@ -102,7 +113,7 @@ static void storage_commands(void) {
         assert(writes==store_writes && ui_revision()==revision && !seq.transport_hold && !seq.transport_stage);
         assert(seq.bass_notes_out[0]==0 && seq.bass_channels_out[0]==7 && trace_n==0); /* rejected load retains actual ownership */
     }
-    puts("bass storage: same412B schema3, explicit schema2/schema1/default migrations, bounded/IRQ-safe stopped commands, queue pressure and8 CRC-valid protected rejection cases PASS");
+    puts("bass storage: same412B schema4, explicit schema2/schema1/default migrations, bounded/IRQ-safe stopped commands, queue pressure and9 CRC-valid protected rejection cases PASS");
 }
 static pattern_t ptn[NPAT];static song_t song_fixture;static arrangement_settings_t intent;static seq_t player;
 static int actual[2],ons[2],offs[2],last_accent[2],last_slide[2],retunes[2],reject_trigger;
@@ -346,4 +357,7 @@ static void generator_parity(void) {
     for(int b=0;b<2;b++)assert(gen_player[0].mut_rng[b]==gen_player[1].mut_rng[b] && gen_player[0].t[TRK_BASS0+b].rng==gen_player[1].t[TRK_BASS0+b].rng && gen_player[0].t[TRK_BASS0+b].pos==gen_player[1].t[TRK_BASS0+b].pos);
     (void)flags;puts("bass generator: Off versus strict output projection leaves random direction, mutation RNG, positions and all pattern bytes identical over8000 stretches PASS");
 }
+#ifndef BASS_TEST_NO_MAIN
 int main(void){storage_commands();matrix();tie_and_midi();actual_engine();fifo_feedback();shared_channel();boundary_recovery();generator_parity();printf("host layout seq_t=%u variant=%u arrangement=%u; target/resource costs not yet measured\n",(unsigned)sizeof(seq_t),(unsigned)sizeof(variant_settings_t),(unsigned)sizeof(arrangement_settings_t));return 0;}
+
+#endif

@@ -41,7 +41,9 @@ void plat_play_red(int red);           /* PLAY lights green; red (its other LED)
 /* USB MIDI, 4-byte USB-MIDI event packets (cable 0) */
 int plat_midi_connected(void);
 int plat_midi_in(uint32_t *pkt);       /* 1 = got one (called from the audio ISR) */
-int plat_midi_pair(uint32_t first,uint32_t second); /* atomic two-slot transaction */
+int plat_midi_pair(uint32_t first,uint32_t second);
+int plat_midi_batch(const uint32_t *packets,uint32_t count);
+void plat_midi_cancel(void); /* browser pending attacks only; physical no-op */ /* atomic two-slot transaction */
 int plat_midi_out(uint32_t pkt);      /* queue one (audio ISR or main loop) */
 
 /* persistent storage (Felucca storage.c objects: A/B sectors, CRC, torn-write safe) */

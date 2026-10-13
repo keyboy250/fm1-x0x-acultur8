@@ -418,7 +418,14 @@ static void pref_set(pref_t r, int v)
     case R_TEMPO: seq.bpm = (float)(v + 20); break;
     case R_ACCENT: seq.accent_q7 = (uint8_t)v; break;
     case R_CLKOUT: seq.send_clock = (uint8_t)v; break;
-    case R_NOTEOUT: seq.send_notes = (uint8_t)v; break;
+    case R_NOTEOUT: {
+        uint32_t saved=plat_control_enter();
+        if(proj.variant.arrangement.pad_channel!=255 && (seq.playing || seq.req_stop || seq.req_start || seq.req_cont)) {
+            plat_control_leave(saved);say("STOP TO CHANGE MIDI",0);break;
+        }
+        proj.variant.arrangement.flags=(uint8_t)((proj.variant.arrangement.flags&~ARR_NOTES_OUT)|(v?ARR_NOTES_OUT:0));
+        proj.set.notes_out=seq.send_notes=(uint8_t)(v!=0);plat_control_leave(saved);break;
+    }
     case R_PALETTE: proj.set.palette = (uint8_t)v; palette_set((uint32_t)v); break;
     case R_KEYLED: proj.set.keyled = (uint8_t)v; break;
     case R_KEYSOUND: proj.set.keysound = (uint8_t)v; break;
@@ -428,7 +435,10 @@ static void pref_set(pref_t r, int v)
         song_fill(ui.song_sel);
         song()->bar[ui.song_sel].pat[r.a] = (uint8_t)v;
         break;
-    case R_MIDICH: seq.ch[r.a % NPARTS] = (uint8_t)(v ? v - 1 : SEQ_CH_OFF); break;
+    case R_MIDICH:
+        if (engine_midi_channel_allowed(v ? v - 1 : SEQ_CH_OFF))seq.ch[r.a % NPARTS] = (uint8_t)(v ? v - 1 : SEQ_CH_OFF);
+        else say("PAD CHANNEL BUSY",0);
+        break;
     case R_OUTLOUD: proj.set.out_loud = (uint8_t)v; engine_out_loud(v); break;
     case R_USBFULL: proj.set.usb_full = (uint8_t)v; engine_usb_full(v); break;
     case R_FREEPLAY:
@@ -1314,7 +1324,8 @@ static int undo_arrangement_intent(int redo)
      * discards old redo entries. Inspect before commit: a rejected operation
      * must retain the entire pool, shadow, cursor and open gesture. */
     for (i = 0; i < undo.len; i++) if (undo.region[i] != undo.shadow[i]) { pending = 1; break; }
-    if (pending) return !redo && (undo.shadow[flag_offset] & ARR_ENABLED) ? 1 : 0;
+    if (pending) return !redo && ((undo.shadow[flag_offset]&ARR_ENABLED) ||
+        ((undo.shadow[flag_offset]^prospective)&ARR_NOTES_OUT)) ? 1 : 0;
     k = redo ? undo.cur : undo.cur - 1;
     if (k < 0 || k >= undo.n) return 0;
     if (undo.at[k] > undo.at[k+1] || undo.at[k+1] > undo.used || undo.at[k+1] - undo.at[k] < 8u) return 1;
@@ -1328,7 +1339,7 @@ static int undo_arrangement_intent(int redo)
         if (flag_offset >= off && flag_offset-off < n) prospective = entry[flag_offset-off];
         entry += padded;
     }
-    return prospective & ARR_ENABLED ? 1 : 0;
+    return (prospective&ARR_ENABLED) || ((prospective^undo.region[flag_offset])&ARR_NOTES_OUT) ? 1 : 0;
 }
 
 int ui_undo_preflight(int redo)

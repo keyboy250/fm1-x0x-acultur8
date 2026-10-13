@@ -54,8 +54,15 @@ int variant_schema2_valid(const variant_settings_t *v)
     for (i=0;i<VARIANT_STRIPS;i++) if (!sound_strip_config_valid(&v->strip[i])) return 0;
     return arrangement_valid(&v->arrangement);
 }
+int variant_schema3_valid(const variant_settings_t *v)
+{
+    uint32_t i;
+    if(v->magic!=VARIANT_MAGIC || v->schema!=3 || v->bytes!=sizeof *v || (v->arrangement.flags & ~31u))return 0;
+    for(i=0;i<VARIANT_STRIPS;i++)if(!sound_strip_config_valid(&v->strip[i]))return 0;
+    return arrangement_valid(&v->arrangement);
+}
 int variant_saved_valid(const variant_settings_t *v)
-{ return variant_valid(v) || variant_schema2_valid(v); }
+{ return variant_valid(v) || variant_schema2_valid(v) || variant_schema3_valid(v); }
 
 int variant_schema1_valid(const variant_settings_t *v)
 {
@@ -77,7 +84,7 @@ int variant_is_default(const variant_settings_t *v)
             if (((const uint8_t *)&v->strip[i])[b] != ((const uint8_t *)&d)[b]) return 0;
     arrangement_defaults(&a);
     for (b = 0; b < sizeof a; b++)
-        if (((const uint8_t *)&v->arrangement)[b] != ((const uint8_t *)&a)[b]) return 0;
+        if ((b ? ((const uint8_t *)&v->arrangement)[b] : v->arrangement.flags & ~ARR_NOTES_OUT) != ((const uint8_t *)&a)[b]) return 0;
     return 1;
 }
 
@@ -199,6 +206,23 @@ int variant_command(const variant_command_t *c, variant_reply_t *r)
         if (!engine_arrangement_global(dst,!c->index?candidate.flags:(uint8_t)c->value,1)) { result=VR_BUSY;break; }
         ui_external_changed();result=VR_QUEUED;break;
     }
+    case VC_SET_PAD: {
+        arrangement_settings_t a=proj.variant.arrangement;uint8_t *field=&a.pad_channel;
+        if(c->target || c->voice || c->index>3 || c->value<0 || c->value>255 ||
+            (c->index ? c->value>127 : c->value>15 && c->value!=255))break;
+        field[c->index]=(uint8_t)c->value;
+        if(!arrangement_valid(&a) || !seq_pad_channel_available(&seq,a.pad_channel))break;
+        if(!engine_transport_reserve()){result=VR_BUSY;break;}
+        result=engine_arrangement_global(&proj.variant.arrangement.pad_channel+c->index,(uint8_t)c->value,0)?VR_QUEUED:VR_BUSY;
+        if(result==VR_QUEUED)ui_external_changed();
+        engine_transport_release();break;
+    }
+    case VC_SET_MIDI_OUTPUT:
+        if(c->target || c->voice || c->index || c->value<0 || c->value>1)break;
+        if(!engine_transport_reserve()){result=VR_BUSY;break;}
+        result=engine_arrangement_global(&proj.variant.arrangement.flags,(uint8_t)((proj.variant.arrangement.flags&~ARR_NOTES_OUT)|(c->value?ARR_NOTES_OUT:0)),0)?VR_QUEUED:VR_BUSY;
+        if(result==VR_QUEUED)ui_external_changed();
+        engine_transport_release();break;
     case VC_SET_ARR_LENGTH:
         if (c->target || c->voice || c->index || c->value < 0 || c->value > NSONG) break;
         if (seq.playing || seq.req_stop || seq.req_start || seq.req_cont) { result = VR_BUSY; break; }
@@ -236,7 +260,7 @@ int variant_snapshot(int section, int target, int voice, variant_snapshot_t *s)
     if (section == VS_INFO) {
         s->count = 8;
         s->value[0] = VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE | VCAP_STRIP_AUDIO |
-            VCAP_ARRANGEMENT | VCAP_HARMONY_METADATA | VCAP_BASS_FOLLOW;
+            VCAP_ARRANGEMENT | VCAP_HARMONY_METADATA | VCAP_BASS_FOLLOW | VCAP_EXTERNAL_PAD;
         s->value[1] = (uint32_t)ui_dirty(); s->value[2] = (uint32_t)project_write_protected();
         s->value[3] = engine_queue_written(); s->value[4] = engine_queue_read();
         s->value[5] = VARIANT_SCHEMA; s->value[6] = VARIANT_STRIPS;
@@ -292,6 +316,15 @@ int variant_snapshot(int section, int target, int voice, variant_snapshot_t *s)
         s->value[5]=t->sounding?(t->held_note&127u):255;
         s->value[6]=seq.bass_notes_out[target];s->value[7]=seq.bass_channels_out[target];s->value[8]=seq.midi_ready;
         s->value[9]=(seq.arrangement.reserved&(1u<<target))?1:0;
+    } else if (section == VS_PAD) {
+        const arrangement_settings_t *a=&proj.variant.arrangement;uint8_t notes[3];int reason;
+        if(target || voice)return VR_INVALID;
+        reason=seq_pad_desired(&seq,notes);s->count=16;
+        s->value[0]=a->pad_channel;s->value[1]=a->pad_root;s->value[2]=a->pad_low;s->value[3]=a->pad_high;
+        s->value[4]=seq.send_notes;s->value[5]=reason==PAD_NONE && (seq.pad_status&128u);
+        s->value[6]=(uint32_t)reason;s->value[7]=seq.pad_channel_out;
+        for(i=0;i<3;i++){s->value[8+i]=seq.pad_notes_out[i];s->value[11+i]=notes[i];}
+        s->value[14]=seq_pad_pending(&seq);s->value[15]=seq.midi_ready;
     } else if (section == VS_CHORD) {
         const volatile arrangement_runtime_t *a = &seq.arrangement;
         harmony_spec_t spec = {a->key,a->mode,a->degree,a->parent};

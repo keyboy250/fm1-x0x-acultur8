@@ -44,9 +44,9 @@ const objects = p => Object.fromEntries(Array.from({length:p.ex.web_nobj()}, (_,
 const p = await open(); render(p,30);
 const info = snap(p);
 assert.equal(info.abi,1);
-assert.equal(info.values[0],255,'kick processing capability advertised separately');
+assert.equal(info.values[0],511,'kick processing capability advertised separately');
 assert.equal(info.values[7],0x01ffffff,'all 25 instrument sounds expose tested audio processing');
-assert.equal(info.values[5],3); assert.equal(info.values[6],25);
+assert.equal(info.values[5],4); assert.equal(info.values[6],25);
 assert.deepEqual(snap(p,2).values,[20,20000,0,1,80,0]);
 assert.equal(snap(p,1,0,0).values.length > 0,true);
 for (const args of [[1,-1,0],[1,0,255],[2,25,0],[2,0,1],[99,0,0]]) assert.equal(snap(p,...args),null);
@@ -139,4 +139,4 @@ assert.equal((await command(rejected,7)).result,-4);
 render(rejected,1900); assert.equal(rejected.ex.web_store_writes(),rejectedWrites);
 assert.deepEqual(objects(rejected),corrupt);
 console.log(JSON.stringify({realWasm:true,transportBounds:true,acceptedQueueCommands:accepted,
-  appliedTickets:true,gestureUndoRedo:true,saveReopen:true,playingStopBusy:true,corruptProtection:true,capabilities:255}));
+  appliedTickets:true,gestureUndoRedo:true,saveReopen:true,playingStopBusy:true,corruptProtection:true,capabilities:511}));

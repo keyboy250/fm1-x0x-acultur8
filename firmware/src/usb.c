@@ -140,6 +140,11 @@ static int midi_out_pair(uint32_t first,uint32_t second)
     return midi_ring_try_pair(midi_out_q,&mo_w,&mo_r,MQ,first,second,usb.config && !usb.suspended);
 }
 
+static int midi_out_batch(const uint32_t *packets,uint32_t count)
+{
+    return midi_ring_try_batch(midi_out_q,&mo_w,&mo_r,MQ,packets,count,usb.config && !usb.suspended);
+}
+
 /* ------------------------------------------------------- descriptors --- */
 /* interfaces: 0 audio control, 1 MIDI streaming, 2 audio streaming (FELUCCA_UAC), then CDC's two.
  * bcdDevice: 3.00 MIDI, +0.01 CDC, +0.10 the audio input (hosts cache descriptors per version) */

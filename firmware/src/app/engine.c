@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* X0X audio engine; see engine.h. */
 #include "engine.h"
+#include "x0x.h" /* canonical project declaration for bounded MIDI intent commits */
 #include "plat.h"
 #include "../dsp/drum909.h"
 #include "../dsp/drum808.h"
@@ -516,6 +517,15 @@ static void s_midi(void *x,uint8_t st,uint8_t d1,uint8_t d2)
 static int s_midi_pair(void *x,uint8_t st1,uint8_t n1,uint8_t v1,uint8_t st2,uint8_t n2,uint8_t v2)
 { (void)x;return plat_midi_pair(midi_packet(st1,n1,v1),midi_packet(st2,n2,v2)); }
 
+static int s_midi_batch(void *x,const uint32_t *packets,uint32_t count)
+{ (void)x;return plat_midi_batch(packets,count); }
+#ifdef X0X_WEB
+static void s_midi_cancel(void *x) { (void)x;plat_midi_cancel(); }
+#define MIDI_CANCEL_SINK s_midi_cancel
+#else
+#define MIDI_CANCEL_SINK 0
+#endif
+
 static void s_step(void *x, int t, int p)
 {
     (void)x;
@@ -557,14 +567,17 @@ int engine_motion_part(int t, int v)
 int engine_motion_value(int k) { return motion_value(&mot, k); }
 void engine_motion_rec(int k) { motion_req_rec(&mot, k); }
 void engine_motion_hold(int k) { motion_req_hold(&mot, k); }
-static const seq_sink_t SINK = {s_drum_seq, s_bon, s_boff, s_brk, s_brkstop, s_midi, s_step, 0, s_bretune, s_bon_checked, s_midi_try, s_midi_pair};
+static const seq_sink_t SINK = {s_drum_seq, s_bon, s_boff, s_brk, s_brkstop, s_midi, s_step, 0, s_bretune, s_bon_checked, s_midi_try, s_midi_pair, s_midi_batch, MIDI_CANCEL_SINK};
 
 /* ---------------------------------------------------------------- MIDI in --- */
 static uint8_t bass_held[NBASS];       /* note held from MIDI, for legato = slide */
+int engine_midi_channel_allowed(int channel)
+{ return channel==255 || proj.variant.arrangement.pad_channel==255 || channel!=proj.variant.arrangement.pad_channel; }
 void engine_notes_clear(void)
 {
     uint32_t saved=plat_control_enter();
-    seq_notes_clear(&seq,&SINK);bass_held[0]=bass_held[1]=255;
+    if(seq.pat)seq_notes_clear(&seq,&SINK);
+    bass_held[0]=bass_held[1]=255;
     plat_control_leave(saved);
 }
 
@@ -623,7 +636,7 @@ static void drain(void)
             bass303_note_off(&b303[a]);
         else if (type == C_BRK && !brk_hold)
             breaks_live(&brk, (int)a, (int)b);
-        else if (type == C_ARR) seq_arrangement_apply_flags(&seq);
+        else if (type == C_ARR) {seq_arrangement_apply_flags(&seq);seq.send_notes=(uint8_t)((proj.variant.arrangement.flags&ARR_NOTES_OUT)!=0);proj.set.notes_out=seq.send_notes;}
         else if (type == C_ARR_QUEUE) seq_arrangement_queue(&seq, (uint8_t)a);
         else if (type == C_STRIP && a < 25u) {
             uint32_t val = v | ((b & 15u) << 12);
@@ -1115,9 +1128,11 @@ void engine_brk_loops(void)
 
 void engine_init(pattern_t *patterns, song_t *song, lane_t *lanes, const sound_t *base)
 {
-    int p;uint8_t owned_note[NBASS],owned_channel[NBASS];
+    int p;uint8_t owned_note[NBASS],owned_channel[NBASS],pad_note[3],pad_channel;
     if(seq.pat)engine_notes_clear();
     for(p=0;p<NBASS;p++) {owned_note[p]=seq.pat?seq.bass_notes_out[p]:255;owned_channel[p]=seq.pat?seq.bass_channels_out[p]:255;}
+    pad_channel=seq.pat?seq.pad_channel_out:255;
+    for(p=0;p<3;p++)pad_note[p]=seq.pat?seq.pad_notes_out[p]:255;
     cq_w = cq_r = 0;
     for (p = 0; p < 25; p++) sound_strip_config_default(&strip_cfg[p]);
     for (p = 0; p < 3; p++) { sound_strip_init(&mono_strip[p]); sound_strip_meter_clear(&mono_strip_meter[p]); }
@@ -1130,8 +1145,10 @@ void engine_init(pattern_t *patterns, song_t *song, lane_t *lanes, const sound_t
     breaks_init(&brk);
     fxbus_init(&fx, dly_buf, DLY_LEN);
     master_init(&mst);
-    seq_init(&seq, patterns);
+    seq_init(&seq, patterns);seq.midi_ready=(uint8_t)plat_midi_connected();
     for(p=0;p<NBASS;p++){seq.bass_notes_out[p]=owned_note[p];seq.bass_channels_out[p]=owned_channel[p];}
+    seq.pad_channel_out=pad_channel;for(p=0;p<3;p++)seq.pad_notes_out[p]=pad_note[p];
+    if(pad_channel<16)seq.pad_status=64;
     bass_held[0]=bass_held[1]=255;
     seq.song = song;
     motion_init(&mot, lanes);

@@ -100,7 +100,44 @@ void plat_keys_dim(uint32_t k) { dim_keys = k; }      /* dim keys: "o" in the le
 #define MQ 256
 static uint32_t min_q[MQ], mi_w, mi_r;
 static FILE *midi_log;
+#ifdef X0X_WEB
+#include "../firmware/src/midi_ring.h"
+static int midi_connected; /* explicit browser route starts detached */
+static uint32_t web_midi_ring[64],web_midi_w,web_midi_r,web_midi_latched,web_midi_cancel_epoch;
+static uint32_t web_input_pending,web_input_scanned,web_input_applied;
+void plat_midi_cancel(void) {
+    uint32_t i;
+    for(i=web_midi_r;i!=web_midi_w;i++) {
+        uint32_t p=web_midi_ring[i%64];
+        if(((p>>8)&240)==144 && ((p>>24)&127))web_midi_ring[i%64]=p|0x80000000u;
+    }
+    web_midi_cancel_epoch++;
+}
+#define WEB_EXPORT __attribute__((used,visibility("default")))
+WEB_EXPORT int host_web_midi_ready(int ready) {
+    if(ready<0 || ready>1)return -1;
+    if(midi_connected && !ready)plat_midi_cancel();
+    midi_connected=ready;return 0;
+}
+WEB_EXPORT uint32_t host_web_midi_epoch(void) {return web_midi_cancel_epoch;}
+WEB_EXPORT uint32_t host_web_midi_cancel(void) {plat_midi_cancel();return web_midi_cancel_epoch;}
+WEB_EXPORT uint32_t host_web_midi_pending(void) {return web_midi_w-web_midi_r;}
+WEB_EXPORT int host_web_midi_batch(int max) {
+    uint32_t n=host_web_midi_pending();
+    if(max<1 || max>64 || web_midi_latched)return -1;
+    web_midi_latched=n<(uint32_t)max?n:(uint32_t)max;return (int)web_midi_latched;
+}
+WEB_EXPORT uint32_t host_web_midi_packet(int index) {
+    return index<0 || (uint32_t)index>=web_midi_latched?0:web_midi_ring[(web_midi_r+(uint32_t)index)%64];
+}
+WEB_EXPORT int host_web_midi_ack(int prefix) {
+    if(prefix<0 || (uint32_t)prefix>web_midi_latched)return -1;
+    web_midi_r+=(uint32_t)prefix;web_midi_latched-=(uint32_t)prefix;return 0;
+}
+#else
 static int midi_connected=1; /* synthetic host connection */
+void plat_midi_cancel(void) {}
+#endif
 int plat_midi_connected(void) { return midi_connected; }
 int plat_midi_in(uint32_t *pkt)
 {
@@ -113,6 +150,9 @@ static uint32_t midi_out_count, clock_out_count, note_ons;
 int plat_midi_out(uint32_t pkt)
 {
     if(!midi_connected)return 0;
+#ifdef X0X_WEB
+    if(!midi_ring_try_put(web_midi_ring,&web_midi_w,&web_midi_r,64,pkt,1))return 0;
+#endif
     midi_out_count++;
     if ((((pkt >> 8) & 0xF0) == 0x90) && ((pkt >> 24) & 0x7F))
         note_ons++;                                  /* the notes the sequence sent (expect noteons) */
@@ -126,7 +166,21 @@ int plat_midi_out(uint32_t pkt)
 int plat_midi_pair(uint32_t first,uint32_t second)
 {
     if(!midi_connected)return 0;
+#ifdef X0X_WEB
+    return midi_ring_try_pair(web_midi_ring,&web_midi_w,&web_midi_r,64,first,second,1);
+#else
     (void)plat_midi_out(first);(void)plat_midi_out(second);return 1;
+#endif
+}
+
+int plat_midi_batch(const uint32_t *packets,uint32_t count)
+{
+    if(!midi_connected || !count || count>6)return 0;
+#ifdef X0X_WEB
+    return midi_ring_try_batch(web_midi_ring,&web_midi_w,&web_midi_r,64,packets,count,1);
+#else
+    uint32_t i;for(i=0;i<count;i++)(void)plat_midi_out(packets[i]);return 1;
+#endif
 }
 
 /* flash: one buffer per object, kept across a simulated reboot */
@@ -436,6 +490,10 @@ static void run_ms(uint32_t ms)
             for (k = 0; k < ENG_PROF_N; k++)
                 pr0[k] = eng_prof[k];
             engine_render(blk, 256);
+#ifdef X0X_WEB
+            if(!seq.req_start && !seq.req_stop && !seq.req_cont && !seq.transport_hold && !seq.transport_stage)
+                web_input_applied=web_input_scanned;
+#endif
             engine_volume(blk, 256);
 #ifdef X0X_WEB
             web_audio(blk, 256);                         /* the browser build: to the AudioWorklet */
@@ -486,6 +544,9 @@ static void run_ms(uint32_t ms)
         } else {
             ui_input_only();
         }
+#ifdef X0X_WEB
+        web_input_scanned=web_input_pending;
+#endif
     }
 }
 

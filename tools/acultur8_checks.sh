@@ -19,6 +19,12 @@ run() { name="$1"; shift; printf '\nRequired check: %s\n' "$name"; "$@"; }
 compile() { name="$1"; shift; cc "$@" -o "$OUT/$name"; run "$name" "$OUT/$name"; }
 run bass_follow sh tests/host/run_bass_follow.sh
 run bass_follow_wasm sh tests/host/run_bass_follow_wasm.sh
+run external_pad sh tests/host/run_pad.sh
+run external_pad_bridge sh tests/host/run_pad_bridge.sh
+run external_pad_wasm sh tests/host/run_pad_wasm.sh
+run midi_router node tests/host/midi_router_test.mjs
+run pad_ui node tests/host/pad_ui_test.mjs
+run pointer_keys node tests/host/pointer_keys_test.mjs build/emu/x0x.wasm
 run arrangement sh tests/host/run_arrangement.sh
 run arrangement_wasm node tests/host/arrangement_wasm_test.mjs build/emu/x0x.wasm build/host/arrangement_schema1_store.bin
 run variant sh tests/host/run_variant.sh

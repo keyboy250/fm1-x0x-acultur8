@@ -248,6 +248,14 @@ function syncKeys() {
 }
 
 const buttonPresses = new Map(); // Preserve short clicks through the firmware input scan.
+const keyPresses = new Map();
+function releasePointerKey(id, press) {
+  if (!press) return;
+  if (keyPresses.get(id) === press) keyPresses.delete(id);
+  // Each press owns a separate hold: an older timer cannot release a newer
+  // press, and quick clicks on different keys with one mouse can overlap.
+  if (keyHeldBy.delete(press)) syncKeys();
+}
 for (const b of Object.values(buttons)) {
   b.hit.addEventListener("contextmenu", (e) => e.preventDefault());
   b.hit.addEventListener("pointerdown", (e) => {
@@ -264,7 +272,11 @@ keys.forEach((k, i) => {
   k.hit.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     k.hit.setPointerCapture(e.pointerId);
-    keyHeldBy.set("p" + e.pointerId, i);
+    const id = "p" + e.pointerId, old = keyPresses.get(id);
+    if (old && !old.released) releasePointerKey(id, old);
+    const press = {at: performance.now(), target: k.hit, released: false};
+    keyPresses.set(id, press);
+    keyHeldBy.set(press, i);
     syncKeys();
   });
 });
@@ -274,7 +286,14 @@ function pointerUp(e) {
   const release=()=>{if(buttonPresses.get(id)!==press)return;buttonPresses.delete(id);if(btnHeldBy.delete(id))syncButtons();};
   if(press && e.type!=="pointercancel")setTimeout(release,Math.max(0,60-(performance.now()-press.at)));
   else release();
-  if (keyHeldBy.delete(id)) syncKeys();
+  const keyPress = keyPresses.get(id);
+  if (!keyPress || keyPress.target !== e.target) return;
+  if (e.type === "lostpointercapture" && keyPress.target.hasPointerCapture(e.pointerId)) return;
+  if (e.type === "pointercancel") releasePointerKey(id, keyPress);
+  else if (!keyPress.released) {
+    keyPress.released = true;
+    setTimeout(() => releasePointerKey(id, keyPress), Math.max(0, 60 - (performance.now() - keyPress.at)));
+  }
 }
 device.addEventListener("pointerup", pointerUp);
 device.addEventListener("pointercancel", pointerUp);
@@ -353,8 +372,8 @@ addEventListener("keyup", (e) => {
   if (btnHeldBy.delete(id)) syncButtons();
 });
 addEventListener("blur", () => {
-  for (const id of [...btnHeldBy.keys()]) if (id[0] === "k") btnHeldBy.delete(id);
-  for (const id of [...keyHeldBy.keys()]) if (id[0] === "k") keyHeldBy.delete(id);
+  buttonPresses.clear(); keyPresses.clear();
+  btnHeldBy.clear(); keyHeldBy.clear();
   syncButtons(); syncKeys();
 });
 

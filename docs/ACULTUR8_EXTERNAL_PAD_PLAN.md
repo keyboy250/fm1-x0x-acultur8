@@ -1,6 +1,6 @@
 # External MIDI chord accompaniment plan
 
-Status: planned and unimplemented. This is a private local design contract, not
+Status: local implementation in progress; not accepted. This is a private design contract, not
 an accepted runtime feature or permission to publish. Public pushes, pull
 requests, Pages deployments and releases remain held for explicit user sign-off.
 
@@ -26,7 +26,17 @@ Initial velocity is fixed at 90. Root-position triads use the accepted
 lower voicing on ties. Do not substitute seventh chords, inversions, partial
 chords or silently widened ranges.
 
-Use schema 4 with the same format-4 stream and extension size. Validate schema 2
+Use schema 4 with the same format-4 stream and extension size. Schema4 flags bit5 (32)
+is the undo-tracked MIDI Notes Out mirror; bits0..4 retain enable/bass modes and
+bits6..7 are rejected. Schema2 must reject flags beyond1 and schema3 beyond31
+before migration. Successful old loads initialize the mirror only after validated
+legacy settings are read; schema4 mirror is authoritative. Command15 publishes
+that mirror atomically before the queue marker; C_ARR commit/undo refresh derives
+canonical settings and effective output from it. Save derives stored output intent
+from the published mirror even if the marker has not rendered yet. The legacy
+Notes Out setter synchronizes all three under its bounded lock. Default comparison
+ignores only this mirror bit, preserving legacy format2 saves when every variant
+feature is default. No journal, pool or saved-layout growth is introduced. Validate schema 2
 with its original enable-only flags contract and schema 3 with its original
 bass-mode flags contract before migration. Schema-2/3 migration sets
 `pad_channel=255`: previously reserved nondefault pad-channel bytes must not
