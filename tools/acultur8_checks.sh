@@ -23,6 +23,7 @@ run kick_wasm node tests/host/kick_wasm_test.mjs build/emu/x0x.wasm
 run sound_strip sh tests/host/run_sound_strip.sh
 run kick_strip sh tests/host/run_kick_strip.sh
 run font_packing python3 tests/test_font_packing.py
+compile harmony $W -std=c99 -pedantic tests/host/harmony_test.c firmware/src/seq/harmony.c
 compile fastmath -O2 -ffp-contract=off -Wall -Wextra -Werror tests/host/fastmath_test.c -lm
 compile sequencer -O2 -ffp-contract=off -Wall -Wextra tests/host/seq_test.c firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c firmware/src/seq/pattern.c
 compile encoder -O2 -w -Ifirmware/hal tests/host/encoder_test.c

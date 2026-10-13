@@ -131,13 +131,13 @@
     "acceptance": "Sequence degrees 1-7 with scale-derived triad qualities and chord durations; verify major/minor tables, progression loops and saved-project migration. Pentatonic mode must not invent seven diatonic degrees.",
     "status": "doing",
     "area": "harmony",
-    "notes": "Isolated seven-mode shared triad/root/chord resolver candidate passes 18,299,366 strict native and sanitizer checks with zero data/bss. Progression sequencing, saved block degrees, bass and pad integration remain pending; module not yet reviewed or merged.",
+    "notes": "Reviewed shared seven-mode triad/root/chord resolver passes 18,299,366 strict native and sanitizer checks with zero data/bss. Required legacy host/WASM/browser suite also passes. The resolver is a dependency only: progression sequencing, saved block degrees, bass/pad wiring, legacy mode mapping and browser controls remain pending.",
     "priority": 7,
     "milestone": "C · Arrangement and harmony",
     "depends_on": [
       "FM1-13"
     ],
-    "next_check": "Verify scale-derived triads in each supported seven-note mode and play a saved I–vi–IV–V progression."
+    "next_check": "Integrate a saved progression lane with the arrangement transport, explicit legacy scale mapping and visible key/degree controls; verify actual played notes at block transitions."
   },
   {
     "id": "FM1-15",

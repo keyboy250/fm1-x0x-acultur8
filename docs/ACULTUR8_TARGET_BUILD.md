@@ -160,6 +160,7 @@ candidate fits at image 570020/581564, ordinary RAM 97636/98304 and pool
 active kick/processor costs, including the per-sample call, are reported in
 [the kick integration notes](ACULTUR8_909_KICK_STRIP.md). Those gates do not
 establish enabled-device CPU headroom; physical timing/stack/DMA remain pending.
-Twenty-five current states plus meters need 2000 bytes, exceeding the current
-1260-byte pool allowance above the reserve before arrangement/harmony allocation.
+The remaining 24 current states plus meters need 1920 additional bytes, exceeding
+the current 1260-byte pool allowance above the reserve by 660 bytes before new
+arrangement/harmony allocation. The existing kick state is already in the ledger.
 Combined memory redesign must precede expansion; do not weaken the reserve.
