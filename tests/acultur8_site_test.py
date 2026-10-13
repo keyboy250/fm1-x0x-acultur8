@@ -7,6 +7,7 @@ from pathlib import Path
 import tempfile
 import unittest
 import wave
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('site_builder', ROOT / 'tools/acultur8_site.py')
@@ -71,6 +72,27 @@ class StaticSiteTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Output must be empty'):
             site.package(self.root)
         self.assertEqual(original.read_text(), 'user data')
+
+    def test_shared_kick_component_survives_static_allowlist(self):
+        # Packaging fixture only; no claim about executable WASM or audio.
+        sys.path.insert(0, str(ROOT / 'lab'))
+        from build_emulator import package_page, source_hash
+        emu = self.root / 'build'
+        package_page(ROOT, emu)
+        (emu / 'worklet.js').write_bytes((ROOT / 'web/emu/worklet.js').read_bytes())
+        (emu / 'x0x.wasm').write_bytes(b'packaging boundary fixture')
+        (emu / 'manifest.json').write_text(json.dumps({
+            'source_sha256': source_hash(ROOT), 'wasm_sha256': site.digest(emu / 'x0x.wasm')}))
+        out = self.root / 'public'
+        site.package(out, emu)
+        page = (out / 'emu/index.html').read_text('utf-8')
+        self.assertEqual(page.count('id="variant-title"'), 1)
+        self.assertIn('src="variant-ui.js"', page)
+        self.assertIn('href="variant-ui.css"', page)
+        for name in ('variant-ui.js', 'variant-ui.css'):
+            self.assertEqual((out / 'emu' / name).read_bytes(), (ROOT / 'web/emu' / name).read_bytes())
+        self.assertNotIn('/api/rex/', (out / 'emu/slice-ui.js').read_text('utf-8'))
+        site.validate_site(out)
 
 
 if __name__ == '__main__':

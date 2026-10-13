@@ -130,7 +130,7 @@ class X0X extends AudioWorkletProcessor {
         const v = new Uint32Array(this.mem.buffer,p,20);
         return {abi:v[0],section:v[1],revision:v[2],values:Array.from(v.subarray(4,4+Math.min(v[3],16)))};
       };
-      msg.variant = {info:read(0,0),strip:this.variantStrip ?? 0,settings:read(2,this.variantStrip ?? 0)};
+      msg.variant = {info:read(0,0),strip:this.variantStrip ?? 0,settings:read(2,this.variantStrip ?? 0),meters:read(3,this.variantStrip ?? 0)};
     }
     msg.sync={state:ex.web_sync_state(),bpm:ex.web_seq_bpm(),playing:!!ex.web_seq_playing(),beat:ex.web_seq_beat()};
     if(ex.web_marked_cursor)msg.marked={cursor:ex.web_marked_cursor(),triggers:ex.web_marked_triggers(),slice:ex.web_marked_last(),playing:!!ex.web_marked_playing()||(ex.web_sync_state()===2&&!!ex.web_seq_playing())};

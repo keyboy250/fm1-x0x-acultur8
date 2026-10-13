@@ -1,6 +1,6 @@
 # FM1 target build and resource baseline
 
-The 2026-10-13 baseline compiles and passes the package, loader and static target checks.
+The preserved pre-variant 2026-10-13 baseline compiles and passes the package, loader and static target checks.
 It has **120 bytes of firmware image space left**, **1,088 bytes of ordinary RAM left**,
 and **1,548 bytes of pool space above the existing 8 KiB reserve**. Reclaim space before
 qualifying new features for the physical FM1. These measurements do not establish device
@@ -150,3 +150,16 @@ replay behavior, invalid-package rejection, interrupted update simulation, and
 Python/JavaScript package interpretation. They do not perform real USB I/O.
 Physical playback deadlines, worst-case audio load, stack margins, actual flash,
 save/reboot and recovery remain untested. Preserve those pending statuses.
+
+
+## 2026-10-13 integrated kick candidate
+
+Lossless fonts and the shared command/save foundation are merged. The new kick
+candidate fits at image 570020/581564, ordinary RAM 97636/98304 and pool
+334612/344064 bytes. The original 15 static gates pass unchanged. Additional
+active kick/processor costs, including the per-sample call, are reported in
+[the kick integration notes](ACULTUR8_909_KICK_STRIP.md). Those gates do not
+establish enabled-device CPU headroom; physical timing/stack/DMA remain pending.
+Twenty-five current states plus meters need 2000 bytes, exceeding the current
+1260-byte pool allowance above the reserve before arrangement/harmony allocation.
+Combined memory redesign must precede expansion; do not weaken the reserve.

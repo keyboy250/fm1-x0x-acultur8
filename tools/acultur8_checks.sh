@@ -19,7 +19,9 @@ run() { name="$1"; shift; printf '\nRequired check: %s\n' "$name"; "$@"; }
 compile() { name="$1"; shift; cc "$@" -o "$OUT/$name"; run "$name" "$OUT/$name"; }
 run variant sh tests/host/run_variant.sh
 run variant_wasm node tests/host/variant_wasm_test.mjs build/emu/x0x.wasm
+run kick_wasm node tests/host/kick_wasm_test.mjs build/emu/x0x.wasm
 run sound_strip sh tests/host/run_sound_strip.sh
+run kick_strip sh tests/host/run_kick_strip.sh
 run font_packing python3 tests/test_font_packing.py
 compile fastmath -O2 -ffp-contract=off -Wall -Wextra -Werror tests/host/fastmath_test.c -lm
 compile sequencer -O2 -ffp-contract=off -Wall -Wextra tests/host/seq_test.c firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c firmware/src/seq/pattern.c
@@ -30,7 +32,7 @@ compile trs -O2 -w -Ifirmware/src tests/host/trs_test.c
 compile undo -O2 -Wall -Wextra -Wno-unused-function tests/host/undo_test.c
 compile lz $W tests/host/lz_test.c
 compile motion $W tests/host/motion_test.c firmware/src/seq/motion.c
-compile drum_pan -O2 -ffp-contract=off -w -Ifirmware/src/dsp -Ifirmware/src -Ibuild/gen tests/host/drum_pan_test.c firmware/src/dsp/drum909.c firmware/src/dsp/drum808.c -lm
+compile drum_pan -O2 -ffp-contract=off -w -Ifirmware/src/dsp -Ifirmware/src -Ibuild/gen tests/host/drum_pan_test.c firmware/src/dsp/drum909.c firmware/src/dsp/drum808.c firmware/src/dsp/sound_strip.c -lm
 compile stereo -O2 -ffp-contract=off -w -Ifirmware/src/dsp -Ifirmware/src -Ibuild/gen tests/host/stereo_test.c firmware/src/dsp/master.c firmware/src/dsp/fxbus.c -lm
 compile master $W -Wno-double-promotion tests/host/master_test.c firmware/src/dsp/master.c -lm
 compile storage -O2 tests/storage_test.c

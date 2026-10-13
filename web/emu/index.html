@@ -337,6 +337,8 @@ Object.assign(KEYMAP, { Space: { btn: BTN.PLAY }, Enter: { btn: BTN.REC }, Shift
                         Escape: { btn: BTN.HOME }, KeyZ: { btn: BTN["OCT-"] }, KeyX: { btn: BTN["OCT+"] } });
 addEventListener("keydown", (e) => {
   if (!node || e.metaKey || e.ctrlKey || e.altKey) return;
+  // Text/sliders and auxiliary editor controls keep their normal keyboard behavior.
+  if (e.target.closest?.("input, textarea, select, [contenteditable], .variant-lab, .slice-lab, .breaks")) return;
   if (e.code === "ArrowUp" || e.code === "ArrowDown") { turn(knobs.SELECT, e.code === "ArrowUp" ? 1 : -1); e.preventDefault(); return; }
   const m = KEYMAP[e.code];
   if (!m) return;

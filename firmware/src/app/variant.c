@@ -128,11 +128,12 @@ int variant_snapshot(int section, int target, int voice, variant_snapshot_t *s)
     for (i = 0; i < 16; i++) s->value[i] = 0;
     s->abi = VARIANT_ABI; s->section = (uint32_t)section; s->revision = variant_revision;
     if (section == VS_INFO) {
-        s->count = 7;
-        s->value[0] = VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE;
+        s->count = 8;
+        s->value[0] = VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE | VCAP_STRIP_AUDIO;
         s->value[1] = (uint32_t)ui_dirty(); s->value[2] = (uint32_t)project_write_protected();
         s->value[3] = engine_queue_written(); s->value[4] = engine_queue_read();
         s->value[5] = VARIANT_SCHEMA; s->value[6] = VARIANT_STRIPS;
+        s->value[7] = engine_strip_processing_mask();
     } else if (section == VS_SOUND) {
         if (target < 0 || target >= NTARGETS || voice < 0 || voice >= engine_nvoices(target)) return VR_INVALID;
         n = engine_nparams(target, voice);
@@ -143,6 +144,15 @@ int variant_snapshot(int section, int target, int voice, variant_snapshot_t *s)
         if (target < 0 || target >= (int)VARIANT_STRIPS || voice) return VR_INVALID;
         s->count = VP_COUNT;
         for (i = 0; i < VP_COUNT; i++) s->value[i] = (uint32_t)variant_field_get(&proj.variant.strip[target],i);
+    } else if (section == VS_METERS) {
+        const sound_strip_meter_t *m;
+        if (voice || target < 0 || target >= (int)VARIANT_STRIPS) return VR_INVALID;
+        m = engine_strip_meter(target);
+        if (!m) return VR_UNSUPPORTED;
+        s->count = 3;
+        s->value[0] = (uint32_t)(m->input_peak * 1000000.0f);
+        s->value[1] = (uint32_t)(m->output_peak * 1000000.0f);
+        s->value[2] = (uint32_t)(m->gain_min * 1000000.0f);
     } else return VR_UNSUPPORTED;
     return VR_OK;
 }

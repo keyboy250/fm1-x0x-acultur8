@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include "x0x_param.h"
 #include "drum909_dsp.h"
+#include "sound_strip.h"
 
 enum { DR_BD, DR_SD, DR_LT, DR_MT, DR_HT, DR_RS, DR_CP, DR_CH, DR_OH, DR_CR, DR_RD, DR_NUM, DR_KIT = DR_NUM };
 
@@ -103,10 +104,16 @@ struct drum909 {
     float nz_buf[DR_NZ_BUF];      /* noise, linear; the block plus >= DR_NZ_HIST before it */
     int32_t nz_pos;               /* where the next block's noise starts */
     uint8_t pots[DR_NUM + 1][DR_MAX_PARAMS];
+    sound_strip_t bd_strip;       /* one owner; summed BD body/click/tails, before pan/sends */
+    sound_strip_meter_t bd_strip_meter; /* last active strip block; bypass = 0 peaks, unity gain */
 };
 typedef struct drum909 drum909_t;
 
 void drum909_init(drum909_t *d);
+/* Opt-in BD only. Call on the audio owner between blocks; invalid config is rejected.
+ * Init defaults to bit-identical bypass. Meter pointer is valid until next render. */
+int drum909_bd_strip_set(drum909_t *d, const sound_strip_config_t *config);
+const sound_strip_meter_t *drum909_bd_strip_meter(const drum909_t *d);
 void drum909_trigger(drum909_t *d, int voice, float vel);
 void drum909_render(drum909_t *d, float *dry, float *rev, float *dly, int n);
 /* X0X stereo: each voice placed by its PAN into dry_l / dry_r (sends mono); all centred, both are

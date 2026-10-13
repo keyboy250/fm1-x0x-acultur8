@@ -20,7 +20,8 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 REPO = 'https://github.com/keyboy250/fm1-x0x-acultur8'
 EMU_FILES = ('index.html', 'emu.css', 'emu.js', 'worklet.js', 'x0x.wasm',
-             'slice-import.js', 'slice-ui.js', 'BarlowSemiCondensed-Medium.ttf', 'manifest.json')
+             'slice-import.js', 'slice-ui.js', 'variant-ui.js', 'variant-ui.css',
+             'BarlowSemiCondensed-Medium.ttf', 'manifest.json')
 
 
 def digest(path):

@@ -27,3 +27,10 @@ The plan now starts from the published alpha and merged About page. Priorities: 
 ## 2026-10-13 — Targets and FAQs synchronized
 
 Open targets now follow the expedited ten-priority sequence. Next checks cover full resource sizing, acknowledged editing/persistence, the complete kick and whole-scene acceptance. Local/public FAQ source records published alpha/About work, parallel delivery, conditional estimates and the unchanged RAM constraint. All target statuses are preserved; no unfinished feature or physical test was marked accepted. A recovery archive precedes the documentation changes.
+
+
+## 2026-10-13 — Active implementation: fonts and shared foundation merged
+
+The user resumed the autonomous implementation goal. Reviewed [PR #6](https://github.com/keyboy250/fm1-x0x-acultur8/pull/6) merged lossless fonts as `8bd6ebd18ca9b5a59b8207efa93498dda9e89506`; all 439 glyphs and 1,756 rendering cases match. Reviewed [PR #7](https://github.com/keyboy250/fm1-x0x-acultur8/pull/7) merged command/save and standalone DSP foundation as `0f3d1d53c91a4f2344bf076f254cea1f801eb649`. Required [CI](https://github.com/keyboy250/fm1-x0x-acultur8/actions/runs/38370228694) and [Pages deployment](https://github.com/keyboy250/fm1-x0x-acultur8/actions/runs/38371087924) passed. This supersedes the earlier paused/unmerged snapshot.
+
+The kick integration candidate passes required host/WASM/browser-package regressions and real worklet audible response, limiter/meter, save/reopen, undo/redo and unaffected-snare checks. An initial inlined active path failed the unchanged static cost gate; separating that measured active path restored all original 15 gates without modifying the baseline. Integrated target image is 570,020/581,564 bytes, general RAM 97,636/98,304, pool 334,612/344,064 (1,260 bytes above the 8,192 reserve). Additional active callee and per-sample costs are documented separately. Browser-control and hosted acceptance continue; no physical-device acceptance is claimed.

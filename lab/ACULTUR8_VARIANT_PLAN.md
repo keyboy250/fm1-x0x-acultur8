@@ -4,15 +4,15 @@ Execution checkpoint: 13 October 2026 UTC. The user authorized an active impleme
 
 ## Current expedited execution plan — 13 October 2026
 
-This checkpoint supersedes all earlier priority orders, delivery estimates, proposed PR numbering and pre-publication status snapshots. Historical sections below are retained for provenance and are not the current execution queue or forecast. The public variant already exists at https://github.com/keyboy250/fm1-x0x-acultur8 with integration branch `acultur8/main`. Reviewed PRs #1–#4 are merged. Browser alpha.1 remains the known-good tag; the current Pages site additionally includes the About page linked to Acultur8.com and Traxsource. About publication passed local checks, independent review, merged CI and hosted verification at commit `84d924660522f275baff6c3cd1741479bbe898b1`.
+This checkpoint supersedes all earlier priority orders, delivery estimates, proposed PR numbering and pre-publication status snapshots. Historical sections below are retained for provenance and are not the current execution queue or forecast. The public variant already exists at https://github.com/keyboy250/fm1-x0x-acultur8 with integration branch `acultur8/main`. Reviewed PRs #1–#7 are merged. Browser alpha.1 remains the known-good tag; the current Pages site additionally includes the About page linked to Acultur8.com and Traxsource. About publication passed local checks, independent review, merged CI and hosted verification at commit `84d924660522f275baff6c3cd1741479bbe898b1`.
 
-The remaining local font, command/save and DSP candidates are unmerged. Standing authorization covers ordinary implementation, official free dependencies, independent agents, tested/reviewed merges and Pages releases. The persistent app goal is currently paused; this planning update does not reactivate it. Website publication to Acultur8.com is a separate deployment task awaiting its hosting connection.
+Lossless fonts and the shared command/save/DSP foundation are merged after review and required CI. The audible kick and its browser controls are in acceptance. Standing authorization covers ordinary implementation, official free dependencies, independent agents, tested/reviewed merges and Pages releases. The persistent implementation goal is active under the user's renewed authorization. Website publication to Acultur8.com is a separate deployment task awaiting its hosting connection.
 
 ### Ranked next ten targets
 
 | Rank | Development targets | Next deliverable and acceptance |
 | --- | --- | --- |
-| 1 | FM1-06 | Review/merge lossless fonts; regenerate headers reliably; repeat exact glyph/display/audio checks and target size gates. Candidate saves 18,368 image bytes; RAM is unchanged. Record device draw/stack timing as pending. |
+| 1 | FM1-06 | Merged lossless fonts save 18,368 image bytes; regeneration and exact glyph/display/audio checks pass. Current integrated kick target image is 570,020 bytes, general RAM 97,636 and pool 334,612; original static gates pass. Record device draw/stack timing as pending. |
 | 2 | FM1-04 | Record synthetic factory/dense-pattern bypass audio, output/clipping and reproducible host/WASM costs. Create one resource ledger for the full intended configuration before allocating every processor/timeline. |
 | 3 | FM1-05, FM1-07 | Close shared-command/versioned-save review; test actual WASM replies, applied queue tickets, invalid commands, backpressure, one-gesture undo, legacy defaults, new save/reopen, corruption/capacity rejection and interrupted-save behavior. Measure integrated target image/RAM/pool. |
 | 4 | FM1-27, first slice of FM1-03 | Complete one 909 kick from engine to browser controls: HPF, LPF, boost, ceiling, bypass and gain-reduction feedback. Verify response, summed tails/ceiling, smooth edits, save/reopen and undo against bypass references. |
@@ -318,4 +318,4 @@ Outstanding environment or distribution checks: device/recovery availability; re
 
 [Play browser alpha](https://keyboy250.github.io/fm1-x0x-acultur8/) · [Release](https://github.com/keyboy250/fm1-x0x-acultur8/releases/tag/acultur8-v0.1.0-alpha.1) · [Passing CI](https://github.com/keyboy250/fm1-x0x-acultur8/actions/runs/38361493563). Source: `0487778bf76915c2312644791d92d30378f4ecb5`. All 21 deployed files matched build hashes. Hosted synthetic import, audio startup, 90/120/180 BPM, shared transport and browser save/reopen passed.
 
-Next: review lossless font compression, finish shared commands/versioned saves, integrate and accept one 909 kick strip, then expand sound processing and arrangement/harmony. Local candidates remain unmerged; device measurements and physical acceptance remain pending.
+Current: fonts and command/save foundation are merged. Complete browser/hosted acceptance for one audible 909 kick, then expand sound processing and arrangement/harmony within the measured resource budget. Device measurements and physical acceptance remain pending.

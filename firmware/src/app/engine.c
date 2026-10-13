@@ -130,6 +130,11 @@ int engine_strip_set(int strip, int index, int value)
     return cq_put(C_STRIP, (uint32_t)strip, (uint32_t)((index << 4) | (value >> 12)), (uint32_t)value);
 }
 const sound_strip_config_t *engine_strip_config(int strip) { return strip >= 0 && strip < 25 ? &strip_cfg[strip] : 0; }
+uint32_t engine_strip_processing_mask(void) { return 1u; } /* first prototype: 909 BD only */
+const sound_strip_meter_t *engine_strip_meter(int strip)
+{
+    return strip == 0 ? drum909_bd_strip_meter(&d909) : 0;
+}
 
 /* ------------------------------------------------------------ params --- */
 int engine_nvoices(int t)
@@ -500,7 +505,7 @@ static void midi_in(uint32_t pkt)
 static void drain(void)
 {
     uint32_t r = cq_r, pkt;
-    int guard = 64;
+    int guard = 64, kick_strip_dirty = 0;
     while (r != cq_w) {
         uint32_t c = cq[r % CQ], type = c >> 28, a = (c >> 20) & 0xFFu, b = (c >> 12) & 0xFFu, v = c & 0xFFFu;
         r++;
@@ -524,9 +529,11 @@ static void drain(void)
             case 4: strip_cfg[a].release_ms = (uint8_t)val; break;
             case 5: strip_cfg[a].flags = (uint8_t)val; break;
             }
+            if (a == 0) kick_strip_dirty = 1;
         }
     }
     cq_r = r;
+    if (kick_strip_dirty) drum909_bd_strip_set(&d909, &strip_cfg[0]);
     while (guard-- && plat_midi_in(&pkt))
         midi_in(pkt);
 }

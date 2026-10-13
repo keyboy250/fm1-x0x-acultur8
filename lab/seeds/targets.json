@@ -5,7 +5,7 @@
     "acceptance": "Produce a valid x0x.fwsc using pinned pi32v2 and AC79 inputs; pass image, 96 KiB RAM, pool headroom and no-soft-double checks; report actual X0X render costs.",
     "status": "review",
     "area": "toolchain",
-    "notes": "Pinned official target baseline and corrected r3 instruction/resource gates pass. Baseline image 581444/581564, RAM 97216/98304, pool 334324/344064 bytes. Unmerged lossless-font candidate saves 18368 image bytes: image 563076, 18488 spare; RAM/pool unchanged. 439 glyphs and 30 screenshots exact; WASM audio parity passed. Device draw timing, stack watermark and physical render timing remain pending.",
+    "notes": "Lossless fonts merged in reviewed PR #6; saves 18368 image bytes with 439 glyphs and 1756 rendering cases exact. Shared foundation merged in PR #7. Current kick candidate target image 570020/581564, RAM 97636/98304, pool 334612/344064; original 15 static gates pass unchanged. Active kick callee and per-sample strip costs measured separately. Device draw timing, stack watermark and physical render timing remain pending.",
     "priority": 1,
     "milestone": "A–D · Target build",
     "depends_on": [],
@@ -15,9 +15,9 @@
     "id": "FM1-04",
     "title": "Measure representative sound and performance baselines",
     "acceptance": "Record representative and stressed patterns, clipping, output level and resource use; preserve a bypass reference for new DSP and compare each feature against it.",
-    "status": "todo",
+    "status": "doing",
     "area": "sound",
-    "notes": "Expands the original sound-default experiment into the baseline needed for per-sound processing. Host timing cannot establish physical FM1 headroom.",
+    "notes": "Integrated kick resource ledger measured: image spare 11544 bytes, general RAM spare 668, pool spare 9452 (1260 above 8192 reserve). Active kick processor + meter uses 80 pool bytes. Expanding all 25 processors requires a combined memory design before activation; host timing does not establish physical headroom.",
     "priority": 2,
     "milestone": "A–D · Performance baseline",
     "depends_on": [],
@@ -29,7 +29,7 @@
     "acceptance": "Define a versioned format for sound strips, arrangement/chords and bass/pad settings; prove old-project defaults, new save/reopen, undo, corrupt-format rejection, interrupted-save behavior and storage bounds.",
     "status": "doing",
     "area": "quality",
-    "notes": "Unmerged versioned extension/save foundation passes focused legacy/default roundtrip, new-format roundtrip, corrupt/truncated/future-format rejection, capacity/no-write, undo/redo and long-edit gesture checks. Earlier full host/WASM suite passed before final gesture fixes. Arrangement/harmony sections and complete interrupted-save acceptance remain open.",
+    "notes": "Reviewed PR #7 merged versioned extension/save foundation with required native and actual WASM tests: legacy/default bytes, new-format save/reopen, corrupt/truncated/future-format rejection, capacity/no-write, long-gesture undo/redo and protected-load preservation. Arrangement/harmony sections and complete interrupted-save acceptance remain open.",
     "priority": 3,
     "milestone": "B · Shared foundations",
     "depends_on": [
@@ -43,7 +43,7 @@
     "acceptance": "Use a versioned command/snapshot bridge for browser editing through normal engine ownership; define hardware capability negotiation separately and verify accepted values match controls.",
     "status": "doing",
     "area": "protocol",
-    "notes": "Unmerged bounded versioned command/snapshot bridge and queue acknowledgements pass focused backpressure and ownership tests. WASM/worklet wrappers are local candidates; integrated wrapper tests and visible browser controls remain pending. Hardware capability negotiation is separate.",
+    "notes": "Reviewed PR #7 merged bounded versioned command/snapshot bridge; production WASM/worklet tests pass bounds, queue backpressure, desired-versus-applied tickets and protected saves. Kick audio capability and editor are in integration acceptance. Hardware capability negotiation is separate.",
     "priority": 3,
     "milestone": "B · Shared foundations",
     "depends_on": [
@@ -55,9 +55,9 @@
     "id": "FM1-03",
     "title": "Build dashboard controls for the new features",
     "acceptance": "Add sound-strip, arrangement and chord controls using shared engine state and acknowledged commands; preserve editing while playback continues; verify desktop and narrow layouts.",
-    "status": "todo",
+    "status": "doing",
     "area": "interface",
-    "notes": "Expands the original first-label/UI exercise into the planned feature editor. No new musical controls are implemented yet. The first kick controls are accepted within FM1-27; this target covers the broader sound, arrangement and harmony editor.",
+    "notes": "First kick editor in browser acceptance under FM1-27. Broader sound, arrangement and harmony editor remains planned.",
     "priority": 4,
     "milestone": "B-C - Feature controls",
     "depends_on": [
@@ -80,7 +80,7 @@
     ],
     "acceptance": "One kick has HPF, LPF, boost, ceiling, gain-reduction feedback and dashboard controls; prove measured response and summed-strip ceiling including overlapping hits/tails, smooth edits, bypass, save/reopen and undo. Record added memory and render cost before expanding to other sounds.",
     "next_check": "Integrate and accept one complete 909 kick: summed sound/tails, filters, boost/ceiling, controls/meters, smooth changes, bypass, save/reopen, undo and integrated resource cost.",
-    "notes": "Standalone unmerged HPF/LPF, boost and linked sample-ceiling processor passes host response/bypass/transition tests and official target object compilation. Object text 2280 bytes; runtime state 64 bytes per strip. Engine kick integration, controls/meters, saved settings, full cost and summed-strip acceptance remain pending."
+    "notes": "One audible 909 kick candidate integrates HPF/LPF, boost, linked sample ceiling and meters through the shared command/save bridge. Standalone and actual worklet/WASM tests pass bitwise bypass, response, summed tails/ceiling, save/reopen, audible undo/redo and snare isolation. State 68 + meter12 bytes. Original target static gates pass unchanged; new active callee has 499 instructions and one strip call/sample. Local browser numeric/stage edits, undo/redo, saved reload, busy-save guard, slice coexistence, 390px layout and prior-engine capability disabling passed without console errors. Hosted acceptance and physical timing remain pending."
   },
   {
     "id": "FM1-11",
