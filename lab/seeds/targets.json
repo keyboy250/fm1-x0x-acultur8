@@ -5,11 +5,11 @@
     "acceptance": "Produce a valid x0x.fwsc using pinned pi32v2 and AC79 inputs; pass image, 96 KiB RAM, pool headroom and no-soft-double checks; report actual X0X render costs.",
     "status": "review",
     "area": "toolchain",
-    "notes": "All-25 strip candidate plus lossless Huffman fonts passes all 15 unchanged original target gates: image 579636/581564, RAM 97860/98304, pool 335712/344064; pool free 8352 with required reserve 8192. Independent source review, complete fresh mandatory suite and actual local browser GUI acceptance pass. Hosted publication and physical draw/audio/stack/DMA acceptance remain pending.",
+    "notes": "All-25 strip candidate plus lossless Huffman fonts passes all 15 unchanged original target gates: image 579636/581564, RAM 97860/98304, pool 335712/344064; pool free 8352 with required reserve 8192. Independent source review, complete fresh mandatory suite and actual local/hosted browser GUI acceptance pass. alpha.strips.1 at c081d63 is published with exact26 hosted hashes. Physical draw/audio/stack/DMA and device acceptance remain pending;15 static gates do not prove worst-case CPU.",
     "priority": 1,
-    "milestone": "Aâ€“D Â· Target build",
+    "milestone": "A–D · Target build",
     "depends_on": [],
-    "next_check": "Publish the exact locally accepted candidate and verify hosted files/browser behavior; preserve unchanged limits and the 160-byte pool margin above reserve, then measure physical timing separately."
+    "next_check": "Preserve the accepted publication and unchanged resource limits, including 160 bytes above pool reserve; measure physical draw/audio, stack/DMA and worst-case deadlines separately."
   },
   {
     "id": "FM1-04",
@@ -17,11 +17,11 @@
     "acceptance": "Record representative and stressed patterns, clipping, output level and resource use; preserve a bypass reference for new DSP and compare each feature against it.",
     "status": "doing",
     "area": "sound",
-    "notes": "Reviewed noise-arena saving and accepted basic arrangement remain preserved. All 25 sound strips pass native/actual WASM, independent review, complete fresh mandatory suite and actual local browser GUI acceptance. Combined target: image 579636, RAM 97860, pool 335712; 15 original gates unchanged. Additional helper instruction/stack costs are recorded in tests/all_sound_feature_costs.json and caller costs in tests/all_sound_target_costs.json; these are static estimates, not cycles. Huffman glyph/display parity passes; native draw is about 49.6% slower than packet fonts. Hosted publication and physical timing remain pending.",
+    "notes": "Reviewed noise-arena saving and accepted basic arrangement remain preserved. All 25 sound strips pass native/actual WASM, independent review, complete fresh mandatory suite and actual local/hosted browser GUI acceptance. Combined target: image 579636, RAM 97860, pool 335712; 15 original gates unchanged. Additional helper instruction/stack costs are recorded in tests/all_sound_feature_costs.json and caller costs in tests/all_sound_target_costs.json; these are static estimates, not cycles. Huffman glyph/display parity passes; native draw is about 49.6% slower than packet fonts. Publication alpha.strips.1 is accepted; physical worst-case CPU and timing remain pending.",
     "priority": 2,
-    "milestone": "Aâ€“D Â· Performance baseline",
+    "milestone": "A–D · Performance baseline",
     "depends_on": [],
-    "next_check": "Verify hosted publication of the accepted candidate, then record dense physical workload, 808 paired tails/core2 stack and timing without changing limits."
+    "next_check": "Preserve accepted browser publication; record dense physical workload, 808 paired tails/core2 stack and worst-case timing without changing limits."
   },
   {
     "id": "FM1-05",
@@ -29,13 +29,13 @@
     "acceptance": "Define a versioned format for sound strips, arrangement/chords and bass/pad settings; prove old-project defaults, new save/reopen, undo, corrupt-format rejection, interrupted-save behavior and storage bounds.",
     "status": "doing",
     "area": "quality",
-    "notes": "Shared save foundation and arrangement schema 2/format 4 pass native and actual worklet migration, roundtrip, corrupt/future-format rejection, protected history, queue and transport reservation tests. Save may commit an open edit gesture before a later I/O failure. Final hosted integration, future bass/pad schema and physical interrupted-save acceptance remain open.",
+    "notes": "Shared save foundation and arrangement schema 2/format 4 pass native and actual worklet migration, roundtrip, corrupt/future-format rejection, protected history, queue and transport reservation tests. Published all-25 local/hosted save, undo/redo, old-project migration and reopen acceptance are preserved at alpha.strips.1. Save may commit an open gesture before a later I/O failure. Future bass/pad schema and physical interrupted-save acceptance remain open.",
     "priority": 3,
-    "milestone": "B Â· Shared foundations",
+    "milestone": "B · Shared foundations",
     "depends_on": [
       "FM1-01"
     ],
-    "next_check": "Verify final integrated format 4/schema 2 and old migrations on hosted save/reopen; keep future bass/pad schema and physical interrupted-save checks open."
+    "next_check": "Preserve accepted format4/schema2 hosted save/reopen and old migrations; validate new bass/pad schema and cleanup without regressions, then perform physical interrupted-save checks separately."
   },
   {
     "id": "FM1-07",
@@ -43,13 +43,13 @@
     "acceptance": "Use a versioned command/snapshot bridge for browser editing through normal engine ownership; define hardware capability negotiation separately and verify accepted values match controls.",
     "status": "doing",
     "area": "protocol",
-    "notes": "Reviewed PR #7 merged bounded versioned command/snapshot bridge; production WASM/worklet tests pass bounds, queue backpressure, desired-versus-applied tickets and protected saves. Kick audio capability and editor are in integration acceptance. Hardware capability negotiation is separate.",
+    "notes": "Reviewed bounded command/snapshot bridge passes production WASM/worklet bounds, queue backpressure, desired-versus-applied tickets and protected saves. Published local/hosted all-25 and arrangement editor acknowledgements, isolated selected views, draft locks and unsupported mask-1 gating pass. New bass/pad commands and hardware capability negotiation remain open.",
     "priority": 3,
-    "milestone": "B Â· Shared foundations",
+    "milestone": "B · Shared foundations",
     "depends_on": [
       "FM1-01"
     ],
-    "next_check": "Verify hosted arrangement acknowledgements, applied queue tickets and unsupported-engine gating; hardware editing remains separate."
+    "next_check": "Preserve accepted editor acknowledgements, applied tickets and unsupported-engine gating; add bounded bass/pad commands and snapshots, with hardware editing separate."
   },
   {
     "id": "FM1-03",
@@ -57,14 +57,14 @@
     "acceptance": "Add sound-strip, arrangement and chord controls using shared engine state and acknowledged commands; preserve editing while playback continues; verify desktop and narrow layouts.",
     "status": "doing",
     "area": "interface",
-    "notes": "Accepted kick editor plus basic arrangement/chord metadata controls share acknowledged C state. Candidate desktop/mobile, twelve pages covering 192 rows, live editing, busy-save, undo/redo and saved reload checks pass locally. Final integrated/hosted checks remain open.",
+    "notes": "Accepted all 25 sound editor and public basic arrangement/chord metadata share acknowledged C state. Native/actual WASM, complete mandatory suite, local/hosted all 25 selection, isolated edits, undo/redo, saved reload, busy-save guard and 390px layout pass. The old mask-1 engine disables 24 options while keeping kick usable without errors. Broader arrangement and actual bass/MIDI/pad controls remain pending.",
     "priority": 4,
     "milestone": "B-C - Feature controls",
     "depends_on": [
       "FM1-07",
       "FM1-05"
     ],
-    "next_check": "Verify combined candidate on desktop/narrow hosted layouts and original slice workflow; then add remaining sound/bass/MIDI controls."
+    "next_check": "Preserve accepted all 25/arrangement controls and original slice workflow; add broader order/loop and actual bass/MIDI controls with independent acceptance."
   },
   {
     "id": "FM1-27",
@@ -86,29 +86,29 @@
     "id": "FM1-11",
     "title": "Per-sound high-pass and low-pass filters",
     "acceptance": "Independent HPF/LPF per 808/909 sound, 303 part and break part; bypass preserves baseline audio; smooth cutoff changes, bounded output and worst-case CPU checks pass.",
-    "status": "doing",
+    "status": "review",
     "area": "sound",
-    "notes": "All 25 independent 909/808 sound, 303 A/B and instrument mono BREAK strips implement HPF/LPF with exact bypass defaults. Native/actual WASM focused checks, independent review, complete fresh mandatory suite and local browser GUI acceptance pass. All 25 options, isolated 808/BREAK edits, persistence, original slice transport and narrow layout pass. All 15 unchanged target gates pass; hosted publication and physical performance remain pending. Marked-WAV preview is a separate lane.",
+    "notes": "All 25 independent 909/808, 303 A/B and instrument mono BREAK HPF/LPF paths pass native/actual WASM, independent review, complete mandatory suite and local/hostedGUI acceptance. alpha.strips.1 at c081d63 preserves exact bypass, meters, persistence, tails and isolation. All 15 original static target gates pass unchanged, but the explicit worst-case CPU and physical deadline criterion remains pending; static gates do not establish physical CPU headroom. Marked-WAV preview is separate.",
     "priority": 5,
-    "milestone": "B Â· Sound controls",
+    "milestone": "B · Sound controls",
     "depends_on": [
       "FM1-27"
     ],
-    "next_check": "Publish the exact locally accepted candidate and verify hosted all-strip selection, edits, persistence and original workflow; retain hardware deadlines as pending."
+    "next_check": "Measure dense worst-case CPU/deadline behavior, 808 paired tails/core2 stack and physical timing without weakening resource limits; preserve accepted all 25 browser functionality."
   },
   {
     "id": "FM1-12",
     "title": "Per-sound boost and ceiling limiter",
     "acceptance": "Start with one 909 kick, then extend to individual sounds; verify the summed-strip ceiling including overlapping hits/tails, gain reduction, release, aligned timing, effect sends and unchanged bypass sound.",
-    "status": "doing",
+    "status": "done",
     "area": "sound",
-    "notes": "All 25 instrument strips implement input boost and a summed-sound sample-peak ceiling, with no lookahead or true-peak claim. Native/actual WASM, independent review, complete fresh mandatory suite and local browser GUI acceptance pass. 808 boost12/ceiling-18, isolated303 A defaults, BREAK boost6/undo0/redo6, saved reload, live-save rejection and stopped-save acknowledgement pass. Unchanged target gates pass. Hosted publication and physical timing remain pending; master protection and the separate Marked-WAV preview remain relevant.",
+    "notes": "All 25 instrument strips have accepted browser functional HPF/LPF, input boost and summed-sound sample-peak ceiling behavior, including tails, meters, exact bypass, save/reopen, undo/redo and isolation. PR #13 independent review and CI run 38395393049 passed; merged CI/Pages run 38395769684 and all 26 hosted hashes match. alpha.strips.1 identifies c081d63. Hosted 808 boost 12/ceiling -18 and BREAK 6/undo 0/redo 6 survive reload; arrangement 4 and public six-slice sync retain120BPM source with FM1 at 125 BPM, PLAY stop and live-save rejection/stopped-save acknowledgement. No lookahead or true-peak claim. Physical timing remains pending under FM1-11/06/10; Marked-WAV preview stays separate.",
     "priority": 5,
-    "milestone": "B Â· Sound controls",
+    "milestone": "B · Sound controls",
     "depends_on": [
       "FM1-27"
     ],
-    "next_check": "Verify hosted boost/ceiling controls, saved state and undo/redo against the exact local accepted candidate; retain physical timing as pending."
+    "next_check": "Browser functional acceptance complete. Preserve release alpha.strips.1 and existing saves; continue actual bass/MIDI and broader arrangement controls. Physical worst-case timing remains separate."
   },
   {
     "id": "FM1-13",
@@ -116,14 +116,14 @@
     "acceptance": "Show pattern step pages separately from arrangement blocks; edit block order, repeat count and quantized transitions; verify internal/external clock, save/load and playback while editing.",
     "status": "doing",
     "area": "sequencer",
-    "notes": "Basic arrangement is already publicly accepted at e78ee13: twelve pages/192 rows, five pattern assignments and mutes, independent 1-8 musical-bar durations, next-bar queue and latched chord intent. Preserve timing, migration, transport and undo acceptance. Local all-25 coexistence now passes with four-block arrangement and six synthetic slices synchronized at120BPM, PLAY stop and protected live-save behavior. Hosted all-25 publication remains pending. Broader insert/duplicate/delete, row order and loop-range controls remain pending.",
+    "notes": "Basic arrangement is already publicly accepted at e78ee13: twelve pages/192 rows, five pattern assignments and mutes, independent 1-8 musical-bar durations, next-bar queue and latched chord intent. Preserve timing, migration, transport and undo acceptance. Local and hosted all-25 coexistence now passes with four-block arrangement and six synthetic slices using 120 BPM source synchronized to FM1 at 125 BPM, PLAY stop and protected live-save behavior. alpha.arrangement.1 at e78ee13 and alpha.strips.1 at c081d63 are published and accepted. Broader insert/duplicate/delete, row order and loop-range controls remain pending.",
     "priority": 6,
-    "milestone": "C Â· Arrangement and harmony",
+    "milestone": "C · Arrangement and harmony",
     "depends_on": [
       "FM1-05",
       "FM1-07"
     ],
-    "next_check": "Preserve accepted public basic arrangement and verify hosted all-25 coexistence; then implement broader insertion/order/loop controls without disturbing playback."
+    "next_check": "Preserve published basic arrangement and all 25 coexistence; implement broader insertion/order/loop controls without disturbing playback."
   },
   {
     "id": "FM1-14",
@@ -133,7 +133,7 @@
     "area": "harmony",
     "notes": "Shared C triad resolver and saved progression metadata are accepted with public basic arrangement at e78ee13: twelve keys, seven modes, I-VII and an explicit pentatonic parent. Metadata acceptance does not establish actual bass-follow, MIDI events or pad audio; those remain separate pending targets.",
     "priority": 7,
-    "milestone": "C Â· Arrangement and harmony",
+    "milestone": "C · Arrangement and harmony",
     "depends_on": [
       "FM1-13"
     ],
@@ -147,7 +147,7 @@
     "area": "harmony",
     "notes": "Retain old absolute-note behavior. Scale, Chord only and Root only modes resolve final notes at playback from saved harmonic intent; strict mode must not leak passing tones.",
     "priority": 8,
-    "milestone": "C Â· Arrangement and harmony",
+    "milestone": "C · Arrangement and harmony",
     "depends_on": [
       "FM1-14"
     ],
@@ -161,7 +161,7 @@
     "area": "accompaniment",
     "notes": "External MIDI triads first on a dedicated channel. Track actual held notes; release on chord/transport/project/channel changes and disconnect. Avoid unnecessary repeated-chord retriggers.",
     "priority": 9,
-    "milestone": "C Â· MIDI accompaniment",
+    "milestone": "C · MIDI accompaniment",
     "depends_on": [
       "FM1-14"
     ],
@@ -195,7 +195,7 @@
     "area": "hardware",
     "notes": "",
     "priority": 10,
-    "milestone": "D Â· Device qualification",
+    "milestone": "D · Device qualification",
     "depends_on": [],
     "next_check": "Record the physical unit identity, installed version, recoverable backups and applicable stock recovery procedure."
   },
@@ -207,7 +207,7 @@
     "area": "hardware",
     "notes": "Browser releases can precede this gate. No Acultur8 hardware release or device installation has been accepted.",
     "priority": 10,
-    "milestone": "D Â· Device candidate",
+    "milestone": "D · Device candidate",
     "depends_on": [
       "FM1-06",
       "FM1-09",
@@ -229,7 +229,7 @@
     "area": "accompaniment",
     "notes": "Optional sine/triangle pad with smooth envelopes, conservative gain and capped release tails. Disabled by default; browser preview does not prove device CPU capacity. Does not hold up browser alpha or external MIDI accompaniment.",
     "priority": null,
-    "milestone": "Later Â· Internal pad experiment",
+    "milestone": "Later · Internal pad experiment",
     "depends_on": [
       "FM1-06",
       "FM1-10"
@@ -244,7 +244,7 @@
     "area": "samples",
     "notes": "Browser WAV/marker import and REX sync are accepted under FM1-19 through FM1-21. Exact-slice transfer to physical FM1 is a separate resource/design task.",
     "priority": null,
-    "milestone": "Later Â· Hardware samples",
+    "milestone": "Later · Hardware samples",
     "depends_on": [
       "FM1-06",
       "FM1-09"
@@ -259,7 +259,7 @@
     "acceptance": "Document permitted converter-source distribution and required notices/dependencies; exclude SDK binaries/headers/fixtures from firmware and browser releases; publish a companion only after the boundary is resolved.",
     "notes": "Current Windows converter remains usable locally. The initial public FM1 alpha can ship the marker format, importer and synthetic examples independently. Process separation alone does not establish license compatibility.",
     "priority": null,
-    "milestone": "Separate Â· Converter publication",
+    "milestone": "Separate · Converter publication",
     "depends_on": [],
     "next_check": "Establish converter reuse permission and SDK distribution terms before preparing a companion package."
   },
@@ -269,9 +269,9 @@
     "status": "done",
     "area": "release",
     "acceptance": "Preserve upstream history/credits, import only reviewed source changes, retain upstream tracking and establish acultur8/main with a clean file manifest.",
-    "notes": "Public fork preserves upstream history and credits; acultur8/main established. Reviewed PRs #1â€“#3 merged. Alpha source identity: 0487778bf76915c2312644791d92d30378f4ecb5. Reviewed PR #4 published the About page at commit 84d924660522f275baff6c3cd1741479bbe898b1; this is separate from the unchanged alpha.1 tag.",
+    "notes": "Public fork preserves upstream history and credits; acultur8/main established. Reviewed PRs #1–#3 merged. Alpha source identity: 0487778bf76915c2312644791d92d30378f4ecb5. Reviewed PR #4 published the About page at commit 84d924660522f275baff6c3cd1741479bbe898b1; this is separate from the unchanged alpha.1 tag.",
     "priority": 1,
-    "milestone": "A Â· Browser alpha",
+    "milestone": "A · Browser alpha",
     "depends_on": [
       "FM1-01"
     ],
@@ -285,7 +285,7 @@
     "area": "foundation",
     "notes": "Clean upstream checkout at 47f8e4c4ad602591b81c21bc5480db7a94f6d6af matches all 230 extracted baseline files exactly. Imported five modified files and eleven additions, with no removals. Originals remain intact. Evidence: variant-import-verification.json and merged PR #1.",
     "priority": 1,
-    "milestone": "A Â· Browser alpha",
+    "milestone": "A · Browser alpha",
     "depends_on": [],
     "next_check": "Baseline accepted; compare future changes against the preserved upstream commit and reviewed variant checkpoints."
   },
@@ -297,7 +297,7 @@
     "acceptance": "A fresh checkout launches the local lab; optional converter/SDK paths are configurable; missing SDK does not prevent emulator or WAV/JSON import; runtime files remain outside published source.",
     "notes": "Portable lab merged in PR #2. Eleven disposable-clone HTTP checks and three packager checks passed. Committed clean clone launched on port 8101 without a configured SDK; state reported runtime healthy and rex_ready=false.",
     "priority": 1,
-    "milestone": "A Â· Browser alpha",
+    "milestone": "A · Browser alpha",
     "depends_on": [
       "FM1-22"
     ],
@@ -311,7 +311,7 @@
     "acceptance": "Publish a tested static demo and complete source with matching build checksums; verify paths and available-feature labels; no device installer is promoted before hardware acceptance.",
     "notes": "Published acultur8-v0.1.0-alpha.1 from 0487778bf76915c2312644791d92d30378f4ecb5. All 21 deployed files matched build hashes. Hosted six-slice demo, audio startup, 90/120/180 BPM, shared stop/restart and saved-import reload/reopen passed with no console warnings/errors. Evidence: hosted-alpha-verification.json. Current Pages also includes the reviewed About page linking Acultur8.com and Traxsource; CI/deployment and hosted links passed (about-publication-verification.json).",
     "priority": 1,
-    "milestone": "A Â· Browser alpha",
+    "milestone": "A · Browser alpha",
     "depends_on": [
       "FM1-22",
       "FM1-23",
@@ -327,7 +327,7 @@
     "acceptance": "Pinned build/reference inputs reproduce the emulator; host audio, slice parser/player/sync/worklet and dashboard checks pass; missing mandatory coverage fails rather than silently skipping.",
     "notes": "Required host/WASM/dashboard/public-package CI passed on the reviewed source and merged alpha. Includes 31 host scenarios, audio parity and slice/import/sync/worklet checks. Missing mandatory inputs fail. External reference engines, native decoder and device checks are explicitly separate. CI: https://github.com/keyboy250/fm1-x0x-acultur8/actions/runs/38361493563",
     "priority": 2,
-    "milestone": "A Â· Browser alpha",
+    "milestone": "A · Browser alpha",
     "depends_on": [
       "FM1-23"
     ],
@@ -341,7 +341,7 @@
     "area": "toolchain",
     "notes": "Fresh native host build and all 31 representative scenarios passed; host/WASM audio parity and sample-slot checks passed in mandatory CI. This accepts the host simulator, not physical hardware.",
     "priority": 2,
-    "milestone": "A Â· Browser alpha",
+    "milestone": "A · Browser alpha",
     "depends_on": [],
     "next_check": "Accepted host setup. Device performance remains under FM1-04/FM1-06/FM1-10."
   },

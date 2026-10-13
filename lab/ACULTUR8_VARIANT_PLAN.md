@@ -1,34 +1,36 @@
 # Acultur8 X0X: implementation and GitHub variant plan
 
-Execution checkpoint: 13 October 2026 UTC. The user authorized an active implementation goal, dependency setup, independent agents, reviewed GitHub merges and browser-alpha publication. The public fork and integration branch now exist; browser alpha.1 is published; device qualification remains pending.
+Execution checkpoint: 13 October 2026 UTC. The user authorized an active implementation goal, dependency setup, independent agents, reviewed GitHub merges and browser-alpha publication. Accepted public main is `c081d63`; alpha.strips.1 and alpha.arrangement.1 are published after local/hosted browser acceptance. Original alpha.1 remains recoverable; physical device qualification remains pending.
 
-## Current expedited execution plan â€” 13 October 2026
+## Current expedited execution plan — 13 October 2026
 
-This checkpoint supersedes all earlier priority orders, delivery estimates, proposed PR numbering and pre-publication status snapshots. Historical sections below are retained for provenance and are not the current execution queue or forecast. The public variant already exists at https://github.com/keyboy250/fm1-x0x-acultur8 with integration branch `acultur8/main`. Reviewed PRs #1â€“#8 are merged. Browser alpha.1 remains the known-good tag; the current Pages site additionally includes the About page linked to Acultur8.com and Traxsource. About publication passed local checks, independent review, merged CI and hosted verification at commit `84d924660522f275baff6c3cd1741479bbe898b1`.
+This checkpoint supersedes all earlier priority orders, delivery estimates, proposed PR numbering and pre-publication status snapshots. Historical sections below are retained for provenance and are not the current execution queue or forecast. The public variant already exists at https://github.com/keyboy250/fm1-x0x-acultur8 with integration branch `acultur8/main`. Reviewed PRs #1–#13 are merged; accepted main is `c081d63` with published alpha.strips.1 and alpha.arrangement.1 releases. Browser alpha.1 remains recoverable; the current Pages site additionally includes the About page linked to Acultur8.com and Traxsource. About publication passed local checks, independent review, merged CI and hosted verification at commit `84d924660522f275baff6c3cd1741479bbe898b1`.
 
 Lossless fonts and the shared command/save/DSP foundation are merged after review and required CI. The audible kick and its browser controls passed local and hosted acceptance. Standing authorization covers ordinary implementation, official free dependencies, independent agents, tested/reviewed merges and Pages releases. The persistent implementation goal is active under the user's renewed authorization. Website publication to Acultur8.com is a separate deployment task awaiting its hosting connection.
 
 ### Current all-25 integration boundary
 
-Focused native and actual WASM tests plus independent source review pass for all 25 strips: eleven sounds each in 909/808, 303 A/B and instrument mono BREAK. Each has HPF, LPF, input boost and a summed-sound sample-peak ceiling with no lookahead or true-peak claim. Marked-WAV preview is a separate lane. The complete fresh mandatory suite and actual local browser GUI acceptance pass. Hosted publication acceptance remains pending, so all-sound targets remain in progress.
+Focused native and actual WASM tests plus independent source review pass for all 25 strips: eleven sounds each in 909/808, 303 A/B and instrument mono BREAK. Each has HPF, LPF, input boost and a summed-sound sample-peak ceiling with no lookahead or true-peak claim. Marked-WAV preview is a separate lane. The complete fresh mandatory suite and actual local browser GUI acceptance pass. Hosted publication acceptance now passes at alpha.strips.1 (`c081d63`). FM1-12 is done within browser functional acceptance; FM1-11 remains in review because its explicit worst-case CPU/physical deadline criterion is pending. FM1-06 retains its physical qualification boundary.
 
 All 15 original target gates pass unchanged: image 579636/581564 bytes, RAM 97860/98304, pool 335712/344064. Pool free space is 8352 bytes with an unchanged 8192-byte reserve, leaving 160 bytes above reserve. New helper instruction/call/stack estimates are available in `tests/all_sound_feature_costs.json` and caller estimates in `tests/all_sound_target_costs.json`; they do not measure physical cycles or deadline headroom.
 
 Additional lossless Huffman packing passes parity for all 439 glyphs and 1756 render cases against the pinned original renderer. It saves 6773 payload/table bytes before incremental decoder code; native focused draw is approximately 49.6% slower than the prior packet format. Physical draw/audio timing and stack watermark remain pending. Basic arrangement and harmony metadata are already publicly accepted at `e78ee13`; broader insertion/order/loop controls and actual bass-follow, MIDI and pad behavior remain pending. Preserve accepted rows and the existing save format.
 
-Local GUI acceptance includes all 25 options, 808 boost 12 dB/ceiling -18 dBFS, isolated 303 A defaults, BREAK boost 6 dB with undo to 0 and redo to 6, saved reload, four-block arrangement and six synthetic slices synchronized to FM1 at 125 BPM using a 120 BPM source, PLAY stop, live-save rejection and stopped-save acknowledgement. Selected-view checking clears after the valid engine snapshot. At a 390px viewport the document is 375px and editor panel 343px wide. The older accepted mask-1 engine disables the other 24 options, keeps kick controls usable and reports no console errors. Local evidence is recorded in `data/all-sound-local-acceptance.json`; the complete suite record is `build/acultur8-checks.json`. Hosted acceptance remains the next boundary.
+Local GUI acceptance includes all 25 options, 808 boost 12 dB/ceiling -18 dBFS, isolated 303 A defaults, BREAK boost 6 dB with undo to 0 and redo to 6, saved reload, four-block arrangement and six synthetic slices synchronized to FM1 at 125 BPM using a 120 BPM source, PLAY stop, live-save rejection and stopped-save acknowledgement. Selected-view checking clears after the valid engine snapshot. At a 390px viewport the document is 375px and editor panel 343px wide. The older accepted mask-1 engine disables the other 24 options, keeps kick controls usable and reports no console errors. Local evidence is recorded in `data/all-sound-local-acceptance.json`; the complete suite record is `build/acultur8-checks.json`. Hosted acceptance passes with all 26 file hashes matching source `10533c9fa817a6df5d64b09afcd47c8f75f14da165f9bf1c5c8df8a73e4b5503` and WASM `e765fd3c65b1ba22f311b425cd5bc964462ee0a783a5222069c2d50a3f78d8a0`. PR #13 independent review and CI run 38395393049 passed, followed by merged CI/Pages run 38395769684. Published checkpoints are alpha.strips.1 at `c081d63` and alpha.arrangement.1 at `e78ee13`.
+
+The next implementation work is actual chord-following bass, dedicated MIDI accompaniment, broader arrangement insertion/order/loop controls and the complete musical scene. Preserve accepted sound and metadata behavior. The 15 unchanged static target gates are resource/static-cost evidence; they do not prove worst-case physical CPU or device readiness.
 
 ### Ranked next ten targets
 
 | Rank | Development targets | Next deliverable and acceptance |
 | --- | --- | --- |
-| 1 | FM1-06 | Combined all-25 target passes all 15 unchanged gates: image 579636, RAM 97860, pool 335712; reserve margin 160 bytes. Huffman parity, fresh mandatory and local browser GUI acceptance pass; verify hosted publication next. Physical timing remains pending. |
-| 2 | FM1-04 | Retain the combined all-25 resource ledger and additional helper estimates; local complete mandatory/browser GUI checks pass; verify hosted publication and measure physical draw/audio/stack deadlines separately. |
-| 3 | FM1-05, FM1-07 | Preserve reviewed shared commands/versioned saves and existing migration/undo acceptance; all-25 local GUI acknowledgements, save/reopen and protected state pass; verify the exact candidate after hosted publication. Physical interrupted-save acceptance remains pending. |
-| 4 | FM1-27, first slice of FM1-03 | Preserve the accepted local/hosted 909-kick prototype; local controls, meters, persistence and original slice transport coexistence pass with all-25 integration; verify hosted publication next. |
-| 5 | FM1-11, FM1-12 | All-25 native/actual WASM, independent review, whole fresh mandatory suite and actual local browser GUI acceptance pass. Verify hosted publication next; retain separate physical timing and Marked-WAV preview boundaries. |
-| 6 | FM1-13 | Preserve public accepted basic arrangement at e78ee13; next add broader insertion/order/loop controls and verify coexistence with all-25 processing. |
-| 7 | FM1-14 | Preserve accepted saved key/mode/Iâ€“VII harmony metadata and explicit pentatonic parent; connect actual bass/MIDI/pad behavior under the next separate targets. |
+| 1 | FM1-06 | Combined all-25 target passes all 15 unchanged gates: image 579636, RAM 97860, pool 335712; reserve margin 160 bytes. Huffman parity, fresh mandatory and local browser GUI acceptance pass; hosted publication also passes; retain physical qualification as pending. Physical timing remains pending. |
+| 2 | FM1-04 | Retain the combined all-25 resource ledger and additional helper estimates; local complete mandatory/browser GUI checks pass; hosted publication passes; measure physical draw/audio/stack deadlines separately. |
+| 3 | FM1-05, FM1-07 | Preserve reviewed shared commands/versioned saves and existing migration/undo acceptance; all-25 local GUI acknowledgements, save/reopen and protected state pass; the exact hosted candidate passes migration/save/transport acceptance. Physical interrupted-save acceptance remains pending. |
+| 4 | FM1-27, first slice of FM1-03 | Preserve the accepted local/hosted 909-kick prototype; local controls, meters, persistence and original slice transport coexistence pass with all-25 integration; hosted publication also passes; retain physical qualification as pending. |
+| 5 | FM1-11, FM1-12 | All-25 native/actual WASM, independent review, whole fresh mandatory suite and actual local browser GUI acceptance pass. Hosted publication passes; retain separate physical timing and Marked-WAV preview boundaries. |
+| 6 | FM1-13 | Preserve public accepted basic arrangement at e78ee13; all 25 hosted coexistence passes; next add broader insertion/order/loop controls. |
+| 7 | FM1-14 | Preserve accepted saved key/mode/I–VII harmony metadata and explicit pentatonic parent; connect actual bass/MIDI/pad behavior under the next separate targets. |
 | 8 | FM1-15 | Both bass generators and mutation follow the current chord. Preserve rhythm, accents/slides and legacy absolute notes; test chord/root modes, octave bounds, ties, transpose, block changes and actual played/MIDI note agreement. |
 | 9 | FM1-16 | External MIDI pad triads first, configurable dedicated channel and event monitor. Track actual held notes and test cleanup on chord/channel/project/transport changes and disconnect. Real receiver acceptance remains pending until performed. |
 | 10 | FM1-28 | Accept the synthetic four-block musical scene with both basses, drums, synced slices and MIDI events at 90/120/180 BPM, edit/queue independence, save/reopen and a recorded 30-minute browser soak. Publish the tested arrangement alpha. |
@@ -41,7 +43,7 @@ Reuse the existing 32 patterns, 64-step patterns, 16-step pages and 192 song ent
 
 Baseline general RAM has only 1,088 bytes spare; the pool has 1,548 bytes beyond its required 8 KiB reserve. Font compression frees flash, not RAM. Standalone DSP uses 64 bytes of runtime state per strip, plus configuration storage; 25 runtime states alone cost 1,600 bytes before the save/undo and harmony additions. These quantities are different memory regions and cannot simply be added to one generic free-memory number. Measure actual linker/pool placement after each integrated candidate. Reduce duplicate/cache storage and pack bounded intent where needed; do not weaken established limits or reserve gates to make a build pass. Any feature that cannot fit remains explicitly browser-experimental while target integration is redesigned.
 
-The first sound chain is summed sound/tails â†’ nonresonant HPF â†’ LPF â†’ input boost â†’ stereo-linked sample-peak ceiling â†’ pan/effect sends. New processing defaults to exact bypass. Existing master protection remains necessary when sounds and effect returns combine. No first-release claim of true-peak limiting, IK algorithm equivalence or continuous pitch-preserving stretch of sustained slices.
+The first sound chain is summed sound/tails → nonresonant HPF → LPF → input boost → stereo-linked sample-peak ceiling → pan/effect sends. New processing defaults to exact bypass. Existing master protection remains necessary when sounds and effect returns combine. No first-release claim of true-peak limiting, IK algorithm equivalence or continuous pitch-preserving stretch of sustained slices.
 
 ### Parallel work and review sequence
 
@@ -63,7 +65,7 @@ These are proposed branch scopes; GitHub assigns actual PR numbers. Avoid unrela
 
 ### Expedited delivery forecast
 
-Allow roughly 1â€“2 focused engineering days to integrate/review fonts and the shared foundation; 1â€“2 more for the complete kick prototype; 2â€“3 for all-sound integration while arrangement proceeds; and 3â€“5 for progression, bass/MIDI and combined browser acceptance. With independent lanes, a sound-controls alpha is a reasonable 4â€“7-day planning window and a musical browser alpha 8â€“12 days from active implementation. These are forecasts, not completed work or deadlines. Memory redesign or a failed musical/soak check extends the estimate. Device qualification has no defensible date until hardware testing is possible.
+Allow roughly 1–2 focused engineering days to integrate/review fonts and the shared foundation; 1–2 more for the complete kick prototype; 2–3 for all-sound integration while arrangement proceeds; and 3–5 for progression, bass/MIDI and combined browser acceptance. With independent lanes, a sound-controls alpha is a reasonable 4–7-day planning window and a musical browser alpha 8–12 days from active implementation. These are forecasts, not completed work or deadlines. Memory redesign or a failed musical/soak check extends the estimate. Device qualification has no defensible date until hardware testing is possible.
 
 Publish an early kick prototype prerelease only after its complete vertical acceptance. Promote proposed `acultur8-v0.1.0-alpha.2` after all-sound browser acceptance, then `alpha.3` after the complete musical scene. Each release identifies exact source, builder and artifact hashes, supported features, persistence impact and remaining device limits. Keep alpha.1 and prior working artifacts recoverable. Require hosted subpath/link/import checks after Pages deployment, not only a green build.
 
@@ -77,13 +79,13 @@ Hardware recovery, flashing, real CPU deadlines, audio/USB/MIDI/external-clock b
 
 Extend the published browser alpha with the new musical features in small, tested increments. Develop the DSP, sequencer and harmony in shared C code so the emulator exercises the same implementation intended for the FM1. Qualify the physical firmware separately once its toolchain, resource measurements and recovery path work.
 
-Variant: **Acultur8 X0X**, an experimental variant of Charles Vestal's X0X for the M-VAVE FM-1. Repository: [keyboy250/fm1-x0x-acultur8](https://github.com/keyboy250/fm1-x0x-acultur8), forked from `charlesvestal/fm1-x0x`. Integration branch: `acultur8/main`. Merged [PR #1](https://github.com/keyboy250/fm1-x0x-acultur8/pull/1) contains the initial verified source delta; PRs #1â€“#3 passed relevant checks and independent review before merging.
+Variant: **Acultur8 X0X**, an experimental variant of Charles Vestal's X0X for the M-VAVE FM-1. Repository: [keyboy250/fm1-x0x-acultur8](https://github.com/keyboy250/fm1-x0x-acultur8), forked from `charlesvestal/fm1-x0x`. Integration branch: `acultur8/main`. Merged [PR #1](https://github.com/keyboy250/fm1-x0x-acultur8/pull/1) contains the initial verified source delta; PRs #1–#3 passed relevant checks and independent review before merging.
 
 
 ## Current execution evidence
 
 - Source provenance: 230 of 230 upstream baseline files match the supplied archive; original files remain preserved. FM1-01 is accepted.
-- Release work: the public fork and `acultur8/main` exist; reviewed PRs #1â€“#3 are merged; alpha.1 identifies exact commit `0487778bf76915c2312644791d92d30378f4ecb5`.
+- Release work: the public fork and `acultur8/main` exist; reviewed PRs #1–#3 are merged; alpha.1 identifies exact commit `0487778bf76915c2312644791d92d30378f4ecb5`.
 - Portable setup: eleven disposable-clone dashboard checks and three browser packager checks passed. Committed clean-clone launch without an SDK passed; the browser alpha is published.
 - Firmware resource baseline: image 581,444 / 581,564 bytes; general RAM 97,216 / 98,304 bytes; pool 334,324 / 344,064 bytes. This leaves only 120 image bytes, 1,088 RAM bytes and 1,548 pool bytes beyond the required 8 KiB reserve. New features require measured size reductions before device qualification. Physical processor timing is still pending.
 - Restricted decoder SDK, converter source with unresolved distribution permission, private loops, imports and credentials stay outside the public checkout/package.
@@ -100,7 +102,7 @@ This earlier snapshot is superseded by the current execution plan and accepted a
 | REX original timing conversion | Seven official SDK fixtures checked; Windows dashboard handoff checked | Separate converter distribution decision; portable local configuration |
 | REX pitch-preserving tempo sync | Recorded 90/120/180 BPM, unchanged PCM, bar join, live tempo and shared transport tests | Public browser smoke checks; external-clock scope remains separate |
 | Illustrated FAQ | Served/standalone styling, readable diagrams and narrow layout checked | Published-path links and release-specific wording |
-| Pattern paging and song playback | Existing 32 patterns, 64 steps, 16-step pages, 192 song entries and 1â€“8 repeats | Clear arrangement block editing and explicit musical duration |
+| Pattern paging and song playback | Existing 32 patterns, 64 steps, 16-step pages, 192 song entries and 1–8 repeats | Clear arrangement block editing and explicit musical duration |
 | Per-sound filters/limiter, chord lane, chord bass and pad | Requirements captured in `FM1_MOD_SPEC.md` | Implementation and acceptance |
 
 Existing accepted browser rows FM1-18 through FM1-21 remain complete within their recorded scope. This plan adds release gates; it does not revoke those results. The recorded sync build's source and WASM hashes were rechecked during this planning pass and still match. The audio/browser test suites were not rerun for this documentation-only change.
@@ -126,7 +128,7 @@ Order is the default implementation sequence. Each row becomes a GitHub issue wi
 | 4 | Independent HPF/LPF | One reusable processor, first on 909 kick, then all 25 sound strips | Individual control, measured cutoff response, smooth automation, silent/bypass stability and acceptable cumulative cost |
 | 5 | Boost and ceiling limiter | Add input gain and linked output ceiling to each strip; retain master protection | Test impulses, sustained tones and dense patterns; measured ceiling, bounded gain reduction, aligned timing and clean bypass |
 | 6 | Paged arrangement and block transitions | Extend existing song/pattern model; distinguish edit page, playing block and queued block | Blocks play the intended patterns/duration; editing does not jump playback; wrap, repeats, unequal part lengths and transport behave deterministically |
-| 7 | Key/scale chord progression | One chord per block initially; degrees Iâ€“VII derived from a seven-note scale | Correct notes/qualities in every supported key/scale; exact boundaries; saved progression and active-chord display agree |
+| 7 | Key/scale chord progression | One chord per block initially; degrees I–VII derived from a seven-note scale | Correct notes/qualities in every supported key/scale; exact boundaries; saved progression and active-chord display agree |
 | 8 | Chord-following bass | Both 303 generators and mutation use shared harmonic intent; resolve final notes at playback | Strict mode emits only current chord tones, including after transpose/mutation; accents/slides/rhythm persist; MIDI agrees with audio |
 | 9 | Pad accompaniment | Dedicated external MIDI chord lane first; simple internal three-voice prototype behind a feature switch | Correct note-off/channel/transport behavior; browser monitor proves events; real MIDI recipient proves sound; internal version requires measured headroom |
 | 10 | Integrated device candidate | Run complete arrangement + sound + harmony workload; establish recovery and hardware acceptance; assess sample-slot limits separately | Target budgets, prolonged audio/MIDI/control/save tests and recovery proof pass before an installable public beta is promoted |
@@ -137,13 +139,13 @@ These are planning ranges in focused engineering days, not delivery dates. Re-es
 
 | Milestone | Scope | Indicative effort | Deliverable |
 | --- | --- | --- | --- |
-| A â€” Browser alpha | Targets 1 and browser portion of 2; complete current REX/FAQ packaging | 2â€“3 days | Proposed tag `acultur8-v0.1.0-alpha.1`, source, playable demo, local dashboard setup |
-| B â€” Sound controls | Shared command/save foundations, one complete sound strip, then all strips | 3â€“5 days | `alpha.2`: per-sound filters, boost/ceiling and meters in emulator |
-| C â€” Musical arrangement | Block clock, progression, both chord-following bass parts, MIDI pad | 5â€“8 days | `alpha.3`: end-to-end song with chord changes and accompaniment events |
-| D â€” Device candidate | Target build and resource work begun during A; integration, migration and hardware acceptance | 3â€“5 days plus device/SDK dependencies | Firmware release candidate; public beta only after device acceptance |
-| Optional follow-up | Minimal internal pad; hardware REX slice transfer; richer chords/time-stretch | Estimate from measurements | Separate feature releases; do not hold Aâ€“C for these |
+| A — Browser alpha | Targets 1 and browser portion of 2; complete current REX/FAQ packaging | 2–3 days | Proposed tag `acultur8-v0.1.0-alpha.1`, source, playable demo, local dashboard setup |
+| B — Sound controls | Shared command/save foundations, one complete sound strip, then all strips | 3–5 days | `alpha.2`: per-sound filters, boost/ceiling and meters in emulator |
+| C — Musical arrangement | Block clock, progression, both chord-following bass parts, MIDI pad | 5–8 days | `alpha.3`: end-to-end song with chord changes and accompaniment events |
+| D — Device candidate | Target build and resource work begun during A; integration, migration and hardware acceptance | 3–5 days plus device/SDK dependencies | Firmware release candidate; public beta only after device acceptance |
+| Optional follow-up | Minimal internal pad; hardware REX slice transfer; richer chords/time-stretch | Estimate from measurements | Separate feature releases; do not hold A–C for these |
 
-The core route is approximately 13â€“21 focused engineering days, with a useful first public demo after the initial 2â€“3-day milestone if the repository and publication checks are resolved. Hardware qualification is conditional, not a promised deadline.
+The core route is approximately 13–21 focused engineering days, with a useful first public demo after the initial 2–3-day milestone if the repository and publication checks are resolved. Hardware qualification is conditional, not a promised deadline.
 
 ```mermaid
 flowchart LR
@@ -190,7 +192,7 @@ Begin target toolchain discovery and RAM/image baseline collection during this b
 
 Create a redistributable synthetic demo project and matching WAV/marker pair. Reuse it across host/WASM checks, browser demonstrations and later hardware qualification; browser-only imports remain explicitly labeled on the device checklist.
 
-1. Load four four-bar blocks in C major: **C â†’ Am â†’ F â†’ G**. Show the editing, playing and queued block independently; include a part whose pattern length differs from the arrangement bar.
+1. Load four four-bar blocks in C major: **C → Am → F → G**. Show the editing, playing and queued block independently; include a part whose pattern length differs from the arrangement bar.
 2. Run dense drums, both bass parts and a synced slice loop at 120 BPM. Change to 90 and 180 BPM; the imported slice PCM rate remains unchanged and block/chord events stay aligned to the musical clock.
 3. Enable **Chord only** for both basses. Capture each resolved note-on and prove its pitch class belongs to the chord active at that event, including after mutation and transposition. Slides interpolate pitch between notes; strict mode constrains note targets, not every instantaneous pitch during a glide. Check held-note handling at each chord boundary.
 4. Change one sound's filters, boost and ceiling. Measure that strip before the master stage, including overlapping tails; verify other strips' parameters and bypass reference remain unchanged. Compare objective peaks with audible pumping, distortion and tonal changes.
@@ -214,7 +216,7 @@ The authorized destination is `keyboy250/fm1-x0x-acultur8` with `acultur8/main` 
 
 Use 25 parameter strips: 11 for each drum engine, two 303 parts and the break part. Switched 808 instruments use their lane's controls. Define one coherent signal stream per strip: sum its overlapping voices/tails before strip processing, or retain deliberate per-voice filter state and sum before the strip limiter. Never interleave separate voice samples through a filter state as if they were consecutive samples of one stream. Select the placement from measured cost and sound in the kick prototype.
 
-Proposed chain: existing synthesis/distortion and chosen voice-level stage â†’ HPF â†’ LPF â†’ BOOST â†’ CEILING â†’ pan/dry/send routing. Finalize the existing LEVEL insertion point in the first prototype and apply it consistently. Both the 808 fast and shaped paths must pass through the processor; bass/break processing goes before their engine mix additions. Preserve second-core ownership and send changes through the existing command queue.
+Proposed chain: existing synthesis/distortion and chosen voice-level stage → HPF → LPF → BOOST → CEILING → pan/dry/send routing. Finalize the existing LEVEL insertion point in the first prototype and apply it consistently. Both the 808 fast and shaped paths must pass through the processor; bass/break processing goes before their engine mix additions. Preserve second-core ownership and send changes through the existing command queue.
 
 For the first prototype, use non-resonant filters and compare first-order versus 12 dB/octave cost/response. Start with filters bypassed, boost 0 dB and limiter bypassed for old projects. Calculate coefficients when controls change and smooth changes; avoid transcendental functions and allocation in the sample loop.
 
@@ -228,7 +230,7 @@ The ceiling applies to the combined output of a sound strip, including any overl
 
 Reuse patterns and song editing rather than adding a second sequencer. Add block pages with visible **Editing**, **Playing** and **Queued** states; pattern assignment per part; mute state; duration/repeat; optional chord degree; insert, duplicate and delete; next-block cue; loop range. Keep step pages visibly distinct from arrangement pages.
 
-Version-one arrangement blocks use an explicit duration of 1â€“8 four-quarter-note bars. Maintain beat/tick duration independently of the 909 pattern length. Preserve current 909-wrap song behavior for legacy mode. Odd-length drum/bass patterns continue inside a block; imported 7/8 REX loops retain their own 3.5-beat cycle and are not silently stretched to four beats. Broader arrangement time signatures can follow later.
+Version-one arrangement blocks use an explicit duration of 1–8 four-quarter-note bars. Maintain beat/tick duration independently of the 909 pattern length. Preserve current 909-wrap song behavior for legacy mode. Odd-length drum/bass patterns continue inside a block; imported 7/8 REX loops retain their own 3.5-beat cycle and are not silently stretched to four beats. Broader arrangement time signatures can follow later.
 
 Queue transitions to the declared block/bar boundary. At a boundary: retire/retarget held notes according to the selected policy, activate the next chord/block, then resolve and trigger new steps. Tests must establish that event order for audio, MIDI and the visible playhead. Editing a different page must never change the currently playing block.
 
@@ -236,9 +238,9 @@ Use the sequencer's existing audio-clock timing and external-clock infrastructur
 
 ### 3. Harmony and bass
 
-Initial chord vocabulary: diatonic triads, degrees Iâ€“VII, derived by stacking scale thirds. Support the existing seven-note modes, including major, natural minor, harmonic minor, Dorian and Phrygian, with displayed chord names and qualities. Pentatonic mode must request a seven-note parent scale or disable Iâ€“VII progression editing. Do not silently fabricate two degrees. Sevenths, inversions, borrowed chords and passing tones are later options.
+Initial chord vocabulary: diatonic triads, degrees I–VII, derived by stacking scale thirds. Support the existing seven-note modes, including major, natural minor, harmonic minor, Dorian and Phrygian, with displayed chord names and qualities. Pentatonic mode must request a seven-note parent scale or disable I–VII progression editing. Do not silently fabricate two degrees. Sevenths, inversions, borrowed chords and passing tones are later options.
 
-One chord entry belongs to each arrangement block initially; its duration is the block duration. A four-block C-major example is I â†’ vi â†’ IV â†’ V, with C, Am, F and G displayed. One shared resolver provides current chord notes to both bass parts and the pad.
+One chord entry belongs to each arrangement block initially; its duration is the block duration. A four-block C-major example is I → vi → IV → V, with C, Am, F and G displayed. One shared resolver provides current chord notes to both bass parts and the pad.
 
 Keep old absolute MIDI-note patterns valid. New follow mode stores bounded harmonic intent (chord-tone selection and octave) separately from legacy notes, after storage sizing. Resolve pitch when each note sounds so the same rhythm can follow different chords without rewriting the pattern. Support **Scale**, **Chord only** and **Root only** modes. Generation, mutation, transposition and playback must all respect the final allowed-note set; rhythm, accents and slides remain intact. Default chord-boundary policy releases/retargets held notes; repeat chords need not retrigger them unnecessarily.
 
@@ -310,7 +312,7 @@ No installable Acultur8 firmware asset or automatic installer promotion belongs 
 
 ## Pull-request sequencing
 
-Use the current branch/dependency table above. Historical PRs #1â€“#4 are already merged; planned branch scopes are not fixed PR numbers.
+Use the current branch/dependency table above. Historical PRs #1–#4 are already merged; planned branch scopes are not fixed PR numbers.
 
 ## Evidence and references
 
@@ -324,9 +326,9 @@ Use the current branch/dependency table above. Historical PRs #1â€“#4 are a
 
 Outstanding environment or distribution checks: device/recovery availability; representative user loops for musical acceptance; converter distribution permission. The native converter remains an optional external local integration and is excluded from publication. The portable browser alpha is published. The next engineering outputs are the reviewed font/resource and command/save foundations, followed by one complete kick strip.
 
-## Accepted alpha.1 checkpoint â€” 13 October 2026
+## Accepted alpha.1 checkpoint — 13 October 2026
 
-[Play browser alpha](https://keyboy250.github.io/fm1-x0x-acultur8/) Â· [Release](https://github.com/keyboy250/fm1-x0x-acultur8/releases/tag/acultur8-v0.1.0-alpha.1) Â· [Passing CI](https://github.com/keyboy250/fm1-x0x-acultur8/actions/runs/38361493563). Source: `0487778bf76915c2312644791d92d30378f4ecb5`. All 21 deployed files matched build hashes. Hosted synthetic import, audio startup, 90/120/180 BPM, shared transport and browser save/reopen passed.
+[Play browser alpha](https://keyboy250.github.io/fm1-x0x-acultur8/) · [Release](https://github.com/keyboy250/fm1-x0x-acultur8/releases/tag/acultur8-v0.1.0-alpha.1) · [Passing CI](https://github.com/keyboy250/fm1-x0x-acultur8/actions/runs/38361493563). Source: `0487778bf76915c2312644791d92d30378f4ecb5`. All 21 deployed files matched build hashes. Hosted synthetic import, audio startup, 90/120/180 BPM, shared transport and browser save/reopen passed.
 
 Current: fonts and command/save foundation are merged. The audible 909 kick passed browser/hosted acceptance; now expand sound processing and arrangement/harmony within the measured resource budget. Device measurements and physical acceptance remain pending.
 
@@ -335,4 +337,4 @@ Current: fonts and command/save foundation are merged. The audible 909 kick pass
 
 Reviewed PR #11 merged at `d7c63f5ecee490e275d377fd68005d3328ddcb24`; required CI and Pages passed and 24 hosted hashes match. Noise history remains 256 samples; exact pool saving 1,024 bytes and 33,600 bitwise comparison blocks pass.
 
-Basic arrangement adds 192 paged rows, 1â€“8 musical-bar durations, next-bar queue and shared C triad metadata. Independent review closed the IRQ-start race through bounded locks and nested long-operation reservations. Combined official target: image 576180/581564, RAM 97860/98304, pool 333792/344064; 15 original static gates pass unchanged. New active callee costs are recorded in `lab/ARRANGEMENT.md`. Final integrated browser/hosted checks are pending before this candidate is promoted. Broader row-order/loop controls, all 25 processing paths, both bass followers, MIDI accompaniment and physical qualification remain pending.
+Basic arrangement adds 192 paged rows, 1–8 musical-bar durations, next-bar queue and shared C triad metadata. Independent review closed the IRQ-start race through bounded locks and nested long-operation reservations. Combined official target: image 576180/581564, RAM 97860/98304, pool 333792/344064; 15 original static gates pass unchanged. New active callee costs are recorded in `lab/ARRANGEMENT.md`. Final integrated browser/hosted checks are pending before this candidate is promoted. Broader row-order/loop controls, all 25 processing paths, both bass followers, MIDI accompaniment and physical qualification remain pending.
