@@ -87,12 +87,12 @@ static void persistence_commands(void) {
     }
     for(int pending=0;pending<3;pending++) {seq.req_start=pending==0;seq.req_cont=pending==1;seq.req_stop=pending==2;assert(command(14,0,0,0,8)==VR_BUSY && command(15,0,0,0,1)==VR_BUSY && !memcmp(&before,&proj,sizeof proj));seq.req_start=seq.req_cont=seq.req_stop=0;}
     irq_start=1;assert(command(14,0,0,0,8)==VR_BUSY && !memcmp(&before,&proj,sizeof proj));seq.req_start=0;seq.playing=0;
-    assert(command(14,0,0,0,8)==VR_QUEUED);assert(command(15,0,0,0,1)==VR_QUEUED);render_block();assert(proj.set.notes_out && seq.send_notes);assert(project_save()==0);assert(project_load()==0 && proj.variant.schema==4 && proj.variant.arrangement.pad_channel==8);
+    assert(command(14,0,0,0,8)==VR_QUEUED);assert(command(15,0,0,0,1)==VR_QUEUED);render_block();assert(proj.set.notes_out && seq.send_notes);assert(project_save()==0);assert(project_load()==0 && proj.variant.schema==5 && proj.variant.arrangement.pad_channel==8);
     for(int old=2;old<=3;old++) {proj.variant.schema=(uint16_t)old;proj.variant.arrangement.flags=old==2?1:19;proj.variant.arrangement.pad_channel=8;proj.variant.arrangement.pad_root=72;
-        uint32_t packed;assert(stream_measure(RAW_LEN,&packed)==0 && save_stream(RAW_LEN,4,packed)==0);assert(project_load()==0 && proj.variant.schema==4 && proj.variant.arrangement.pad_channel==255 && proj.variant.arrangement.pad_root==72 && proj.variant.arrangement.flags==((old==2?1:19)|32));}
+        uint32_t packed;assert(stream_measure(RAW_LEN,RAW_OFF,&packed)==0 && save_stream(RAW_LEN,RAW_OFF,4,packed)==0);assert(project_load()==0 && proj.variant.schema==5 && proj.variant.arrangement.pad_channel==255 && proj.variant.arrangement.pad_root==72 && proj.variant.arrangement.flags==((old==2?1:19)|32));}
     for(int bad=0;bad<5;bad++) {
-        fresh();app_config();if(bad==0)proj.variant.arrangement.pad_channel=16;else if(bad==1)proj.variant.arrangement.pad_root=128;else if(bad==2)proj.variant.arrangement.pad_low=85;else if(bad==3)proj.variant.schema=5;else proj.variant.bytes=411;
-        uint32_t packed;assert(stream_measure(RAW_LEN,&packed)==0 && save_stream(RAW_LEN,4,packed)==0);variant_defaults(&proj.variant);before=proj;undo_t journal=undo;uint32_t writes=store_writes;seq.pad_channel_out=8;seq.pad_notes_out[0]=0;seq.pad_notes_out[1]=4;seq.pad_notes_out[2]=7;
+        fresh();app_config();if(bad==0)proj.variant.arrangement.pad_channel=16;else if(bad==1)proj.variant.arrangement.pad_root=128;else if(bad==2)proj.variant.arrangement.pad_low=85;else if(bad==3)proj.variant.schema=6;else proj.variant.bytes=411;
+        uint32_t packed;assert(stream_measure(RAW_LEN,RAW_OFF,&packed)==0 && save_stream(RAW_LEN,RAW_OFF,4,packed)==0);variant_defaults(&proj.variant);before=proj;undo_t journal=undo;uint32_t writes=store_writes;seq.pad_channel_out=8;seq.pad_notes_out[0]=0;seq.pad_notes_out[1]=4;seq.pad_notes_out[2]=7;
         assert(project_load()==-8 && !memcmp(&before,&proj,sizeof proj) && !memcmp(&journal,&undo,sizeof undo) && store_writes==writes && seq.pad_channel_out==8 && seq.pad_notes_out[0]==0 && project_write_protected());
         seq.pad_channel_out=255;for(int i=0;i<3;i++)seq.pad_notes_out[i]=255;
     }
@@ -112,6 +112,6 @@ static void persistence_commands(void) {
     before=proj;rev=ui_revision();while(engine_strip_set(0,VP_BOOST,0)){};q=engine_queue_written();
     assert(command(15,0,0,0,1)==VR_BUSY && !memcmp(&before,&proj,sizeof proj) && ui_revision()==rev && engine_queue_written()==q && !seq.send_notes);
     render_block();
-    puts("pad command/storage: schema4 same412B, migration2/3 disables old channel, bounded validation/IRQ/pending transport, protected malformed saves and physical channel collision PASS");
+    puts("pad command/storage: schema5 same412B, migration2/3 disables old channel, bounded validation/IRQ/pending transport, protected malformed saves and physical channel collision PASS");
 }
 int main(void) {theory();atomic_cleanup();persistence_commands();printf("pad runtime host seq_t=%u savedvariant=%u pool allocations=0; target measurements pending\n",(unsigned)sizeof(seq_t),(unsigned)sizeof(variant_settings_t));return 0;}

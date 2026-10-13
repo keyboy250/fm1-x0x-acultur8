@@ -39,7 +39,7 @@ void variant_defaults(variant_settings_t *v)
     arrangement_defaults(&v->arrangement);
 }
 
-int variant_valid(const variant_settings_t *v)
+POLY_COLD int variant_valid(const variant_settings_t *v)
 {
     uint32_t i;
     if (v->magic != VARIANT_MAGIC || v->schema != VARIANT_SCHEMA || v->bytes != sizeof *v) return 0;
@@ -47,24 +47,26 @@ int variant_valid(const variant_settings_t *v)
     return arrangement_valid(&v->arrangement);
 }
 
-int variant_schema2_valid(const variant_settings_t *v)
+POLY_COLD int variant_schema2_valid(const variant_settings_t *v)
 {
     uint32_t i;
     if (v->magic != VARIANT_MAGIC || v->schema != 2 || v->bytes != sizeof *v || v->arrangement.flags & ~ARR_ENABLED) return 0;
     for (i=0;i<VARIANT_STRIPS;i++) if (!sound_strip_config_valid(&v->strip[i])) return 0;
     return arrangement_valid(&v->arrangement);
 }
-int variant_schema3_valid(const variant_settings_t *v)
+POLY_COLD int variant_schema3_valid(const variant_settings_t *v)
 {
     uint32_t i;
     if(v->magic!=VARIANT_MAGIC || v->schema!=3 || v->bytes!=sizeof *v || (v->arrangement.flags & ~31u))return 0;
     for(i=0;i<VARIANT_STRIPS;i++)if(!sound_strip_config_valid(&v->strip[i]))return 0;
     return arrangement_valid(&v->arrangement);
 }
-int variant_saved_valid(const variant_settings_t *v)
-{ return variant_valid(v) || variant_schema2_valid(v) || variant_schema3_valid(v); }
+POLY_COLD int variant_schema4_valid(const variant_settings_t *v)
+{unsigned i;if(v->magic!=VARIANT_MAGIC || v->schema!=4 || v->bytes!=sizeof *v || v->arrangement.flags&~63u)return 0;for(i=0;i<VARIANT_STRIPS;i++)if(!sound_strip_config_valid(&v->strip[i]))return 0;return arrangement_valid(&v->arrangement);}
+POLY_COLD int variant_saved_valid(const variant_settings_t *v)
+{ return variant_valid(v) || variant_schema2_valid(v) || variant_schema3_valid(v) || variant_schema4_valid(v); }
 
-int variant_schema1_valid(const variant_settings_t *v)
+POLY_COLD int variant_schema1_valid(const variant_settings_t *v)
 {
     uint32_t i;
     if (v->magic != VARIANT_MAGIC || v->schema != 1 || v->bytes != 208) return 0;
@@ -72,7 +74,7 @@ int variant_schema1_valid(const variant_settings_t *v)
     return 1;
 }
 
-int variant_is_default(const variant_settings_t *v)
+POLY_COLD int variant_is_default(const variant_settings_t *v)
 {
     sound_strip_config_t d;
     arrangement_settings_t a;
@@ -128,7 +130,7 @@ void variant_apply(void)
     engine_arrangement_refresh(&proj.variant.arrangement);
 }
 
-int variant_command(const variant_command_t *c, variant_reply_t *r)
+POLY_COLD int variant_command(const variant_command_t *c, variant_reply_t *r)
 {
     int result = VR_INVALID;
     if (!r) return VR_INVALID;
@@ -235,6 +237,16 @@ int variant_command(const variant_command_t *c, variant_reply_t *r)
         if (c->target >= proj.arr.song.len || c->voice || c->index || c->value ||
             !(proj.variant.arrangement.flags & ARR_ENABLED)) break;
         result = engine_arrangement_queue(c->target) ? VR_QUEUED : VR_BUSY; break;
+    case VC_SET_LANE:
+        if(c->target>=NPAT || c->voice>=POLY_LANES || c->index>2 || (c->index==2 ? (c->voice!=24 || c->value<0 || c->value>1151 || ((unsigned)c->value>>7)>8) : (c->value<(c->index?0:1) || c->value>(c->index?7:64))) || !(proj.variant.arrangement.flags&POLY_FLAG))break;
+        result=(c->index==2?engine_lane_break_step(c->target,c->value&63,(c->value>>6)&1,(c->value>>7)&15):engine_lane_set(c->target,c->voice,c->index,c->value))?VR_QUEUED:VR_BUSY;
+        if(result==VR_QUEUED)ui_external_changed();
+        break;
+    case VC_SET_LANE_MODE:
+        if(c->target || c->voice || c->index || c->value<0 || c->value>1)break;
+        result=engine_lane_mode(c->value)?VR_QUEUED:VR_BUSY;
+        if(result==VR_QUEUED)ui_external_changed();
+        break;
     case VC_SAVE:
         if (!engine_transport_reserve()) { result = VR_BUSY; break; }
         ui_external_edit(0);
@@ -250,7 +262,7 @@ done:
     return result;
 }
 
-int variant_snapshot(int section, int target, int voice, variant_snapshot_t *s)
+POLY_COLD int variant_snapshot(int section, int target, int voice, variant_snapshot_t *s)
 {
     int i, n;
     if (!s) return VR_INVALID;
@@ -260,11 +272,24 @@ int variant_snapshot(int section, int target, int voice, variant_snapshot_t *s)
     if (section == VS_INFO) {
         s->count = 8;
         s->value[0] = VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE | VCAP_STRIP_AUDIO |
-            VCAP_ARRANGEMENT | VCAP_HARMONY_METADATA | VCAP_BASS_FOLLOW | VCAP_EXTERNAL_PAD;
+            VCAP_ARRANGEMENT | VCAP_HARMONY_METADATA | VCAP_BASS_FOLLOW | VCAP_EXTERNAL_PAD | VCAP_LANE_CLOCKS;
         s->value[1] = (uint32_t)ui_dirty(); s->value[2] = (uint32_t)project_write_protected();
         s->value[3] = engine_queue_written(); s->value[4] = engine_queue_read();
         s->value[5] = VARIANT_SCHEMA; s->value[6] = VARIANT_STRIPS;
         s->value[7] = engine_strip_processing_mask();
+    } else if(section==VS_LANE_MODE) {
+        if(target || voice)return VR_INVALID;
+        s->count=7;s->value[0]=(proj.variant.arrangement.flags&POLY_FLAG)!=0;
+        s->value[1]=s->value[0]?poly_mode((const uint8_t *)&proj.sound):0;s->value[2]=seq.lane_enabled;s->value[3]=s->value[1]!=s->value[2];s->value[4]=25;s->value[5]=8;s->value[6]=64;
+    } else if(section==VS_LANE_BREAK){
+        if(target<0 || target>=NPAT || voice<0 || voice>1 || !(proj.variant.arrangement.flags&POLY_FLAG))return VR_INVALID;
+        s->count=5;for(i=0;i<32;i++){int step=voice*32+i;s->value[0]|=(unsigned)poly_break_gate(proj.pat,(const uint8_t *)&proj.sound,target,step)<<i;s->value[1+i/8]|=(unsigned)poly_break_slice(proj.pat,(const uint8_t *)&proj.sound,target,step)<<((i%8)*4);}
+    } else if(section==VS_LANE) {
+        int part;if(target<0 || target>=NPAT || voice<0 || voice>=POLY_LANES)return VR_INVALID;
+        part=poly_part(voice);s->count=9;s->value[0]=(proj.variant.arrangement.flags&POLY_FLAG)!=0;
+        if(s->value[0]){s->value[1]=poly_length(proj.pat,(const uint8_t *)&proj.sound,target,voice);s->value[2]=poly_rate(proj.pat,(const uint8_t *)&proj.sound,target,voice);}
+        else {s->value[1]=part<NKIT?proj.pat[target].drum[part].len:part==TRK_BRK?16:proj.pat[target].bass[part-NKIT].len;s->value[2]=part<NKIT?proj.pat[target].drum[part].rate:part==TRK_BRK?RATE_16:proj.pat[target].bass[part-NKIT].rate;}
+        s->value[3]=seq.ppat[part];s->value[4]=seq.lane_sound && seq.playing?seq_lane_position(&seq,voice):255;s->value[5]=seq.lane_sound?seq_lane_cycles(&seq,voice):seq.t[part].bars;s->value[6]=seq.lane_sound?(uint32_t)seq_lane_latched_rate(&seq,voice):s->value[2];s->value[7]=seq.lane_enabled;s->value[8]=seq.lane_sound && seq.playing && seq.ppat[part]==target && (seq.lane_pending&(1u<<voice));
     } else if (section == VS_SOUND) {
         if (target < 0 || target >= NTARGETS || voice < 0 || voice >= engine_nvoices(target)) return VR_INVALID;
         n = engine_nparams(target, voice);

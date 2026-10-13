@@ -13,7 +13,11 @@ extern void web_seq_tick(uint32_t period_q8);
 
 #define NEVER 0xFFFFFFFFu
 
-static const uint8_t TICKS_PER_STEP[NRATES] = {6, 4, 3, 8};     /* 24 ppqn: 1/16, 1/16T, 1/32, 1/8T */
+/* Shared step/clock helpers are outlined to prevent playback paths from
+ * cloning their bodies. This trades local
+ * instruction duplication for explicit calls; target/physical cost is measured
+ * separately and no legacy limit is weakened. */
+static const uint8_t TICKS_PER_STEP[NRATES] = {6, 4, 3, 8, 24, 12, 16, 2};     /* 24 ppqn: 1/16, 1/16T, 1/32, 1/8T */
 static const uint8_t GM_DRUM[NKIT][NDRUM] = {
     {36, 38, 41, 45, 50, 37, 39, 42, 46, 49, 51},   /* 909: BD SD LT MT HT RS CP CH OH CR RD */
     {36, 38, 41, 45, 50, 37, 39, 56, 49, 46, 42},   /* 808: BD SD LT MT HT RS CP CB CY OH CH */
@@ -63,7 +67,7 @@ uint32_t seq_step_q8(const seq_t *s, int rate)
     if (bpm > 300.0f)
         bpm = 300.0f;
     q = (float)FS * 60.0f / bpm;                    /* samples per quarter */
-    return (uint32_t)(q * 256.0f * (float)TICKS_PER_STEP[rate & 3] / 24.0f);
+    return (uint32_t)(q * 256.0f * (float)TICKS_PER_STEP[rate & 7] / 24.0f);
 }
 
 static const dpart_t *dpart(const seq_t *s, int k) { return &s->pat[s->ppat[k]].drum[k]; }
@@ -73,20 +77,20 @@ static bpart_t *bpart(const seq_t *s, int b) { return &s->pat[s->ppat[TRK_BASS0 
 
 int seq_part_len(const seq_t *s, int t)
 {
-    int n = is_drum(t) ? dpart(s, t)->len : t == TRK_BRK ? 16 : bpart(s, t - TRK_BASS0)->len;
+    int n = s->lane_sound ? seq_lane_length(s,t<NKIT?t*11:t+20) : is_drum(t) ? dpart(s, t)->len : t == TRK_BRK ? 16 : bpart(s, t - TRK_BASS0)->len;
     return n < 1 ? 1 : n > NSTEPS ? NSTEPS : n;
 }
 
-static int part_rate(const seq_t *s, int t)
+static __attribute__((noinline)) int part_rate(const seq_t *s, int t)
 {
-    return (is_drum(t) ? dpart(s, t)->rate : t == TRK_BRK ? RATE_16 : bpart(s, t - TRK_BASS0)->rate) & 3;
+    return s->lane_sound ? seq_lane_rate(s,t<NKIT?t*11:t+20) : (is_drum(t) ? dpart(s, t)->rate : t == TRK_BRK ? RATE_16 : bpart(s, t - TRK_BASS0)->rate) & 3;
 }
 
 /* swing offset of a step, Q8: odd 16ths / 32nds come late; triplets are never swung */
-static uint32_t swing_q8(const seq_t *s, int rate, uint32_t step_q8)
+static __attribute__((noinline)) uint32_t swing_q8(const seq_t *s, int rate, uint32_t step_q8)
 {
     uint32_t sw = s->pat[s->ppat[TRK_DRUM]].swing;   /* the 909 is the bar: its pattern's groove */
-    if (rate == RATE_16T || rate == RATE_8T || !sw)
+    if (rate == RATE_16T || rate == RATE_8T || rate == RATE_4T || rate == RATE_32T || !sw)
         return 0;
     if (sw > 100u)
         sw = 100u;
@@ -103,10 +107,11 @@ static uint32_t rng_next(uint32_t *r)
 }
 
 /* the step after p in this part's direction (also used to look ahead for TIEs) */
-static int next_pos(seq_t *s, int t, int p, int commit)
+static __attribute__((noinline)) int next_pos(seq_t *s, int t, int p, int commit)
 {
     seq_track_t *tr = &s->t[t];
     int len = seq_part_len(s, t), dir = is_bass(t) ? bpart(s, t - TRK_BASS0)->dir : DIR_FWD, n;
+    if(s->lane_sound && p>=len)p%=len;
     switch (dir & 3) {
     case DIR_REV:
         return (p - 1 + len) % len;
@@ -328,14 +333,14 @@ static void bass_retune_held(seq_t *s,int b,const seq_sink_t *o)
     }
 }
 
-static void fire_drum(seq_t *s, int k, int p, const seq_sink_t *o)
+static void fire_drum_range(seq_t *s, int k, int p, const seq_sink_t *o,int first,int end)
 {
     const dpart_t *d = dpart(s, k);
     uint32_t bit = 1u << (p & 31);
     int w = p >> 5;
     float vel = (d->accent[w] & bit) ? 1.0f : (float)s->accent_q7 / 127.0f;
     int v;
-    for (v = 0; v < NDRUM; v++) {
+    for (v = first; v < end; v++) {
         if (!(d->hit[v][w] & bit) || ((s->mute | s->vmute) & (1u << (k * NDRUM + v))))
             continue;
         if (!o->drum(o->ctx, k, v, vel))
@@ -347,6 +352,8 @@ static void fire_drum(seq_t *s, int k, int p, const seq_sink_t *o)
         }
     }
 }
+
+static void fire_drum(seq_t *s,int k,int p,const seq_sink_t *o) { fire_drum_range(s,k,p,o,0,NDRUM); }
 
 static __attribute__((noinline)) void fire_bass(seq_t *s,int b,int p,uint32_t step_q8,uint32_t carry,const seq_sink_t *o)
 {
@@ -401,6 +408,57 @@ static void song_read(seq_t *s, int k, uint8_t *next)
     s->mute = mute;
 }
 
+static __attribute__((noinline)) void row_reset(seq_t *s,int kit,int from_top);
+static int latched_rate(const seq_t *s,int lane);
+static void latch_rate(seq_t *s,int lane,int rate);
+
+/* Compact per-row clocks. Existing five tracks retain gate/RNG/motion state. */
+static seq_lane_clock_t *row_clock(seq_t *s,int lane)
+{return &s->lane[(lane/11)*10+lane%11-1];}
+int seq_lane_length(const seq_t *s,int lane)
+{int part=poly_part(lane);return poly_length(s->pat,s->lane_sound,s->ppat[part],lane);}
+int seq_lane_rate(const seq_t *s,int lane)
+{int part=poly_part(lane);return poly_rate(s->pat,s->lane_sound,s->ppat[part],lane);}
+unsigned seq_lane_cycles(const seq_t *s,int lane)
+{return s->lane_enabled && lane<22 && lane%11 ? row_clock((seq_t *)s,lane)->bars : s->t[poly_part(lane)].bars;}
+int seq_lane_position(const seq_t *s,int lane)
+{return s->lane_enabled && lane<22 && lane%11 ? row_clock((seq_t *)s,lane)->pos : s->t[poly_part(lane)].started?s->t[poly_part(lane)].pos:255;}
+int seq_lane_latched_rate(const seq_t *s,int lane);
+static int latched_rate(const seq_t *s,int lane) {return seq_lane_latched_rate(s,lane);}
+int seq_lane_latched_rate(const seq_t *s,int lane)
+{
+ unsigned bit=(unsigned)lane*3,n=bit/8,sh=bit%8,x=s->lane_rate[n];
+ if(n+1<sizeof s->lane_rate)x|=(unsigned)s->lane_rate[n+1]<<8;
+ return (x>>sh)&7;
+}
+static void latch_rate(seq_t *s,int lane,int rate)
+{
+ unsigned bit=(unsigned)lane*3,n=bit/8,sh=bit%8,x=s->lane_rate[n],mask=7u<<sh;
+ if(n+1<sizeof s->lane_rate)x|=(unsigned)s->lane_rate[n+1]<<8;
+ x=(x&~mask)|((unsigned)rate<<sh);s->lane_rate[n]=(uint8_t)x;
+ if(n+1<sizeof s->lane_rate)s->lane_rate[n+1]=(uint8_t)(x>>8);
+}
+static __attribute__((noinline)) void row_reset(seq_t *s,int kit,int from_top)
+{
+ int v;for(v=1;v<NDRUM;v++){
+  int lane=kit*11+v,rate=seq_lane_rate(s,lane);seq_lane_clock_t *c=row_clock(s,lane);
+  if(from_top){c->pos=255;c->bars=0;}
+  latch_rate(s,lane,rate);c->ext_ticks=(uint8_t)(TICKS_PER_STEP[rate]-1);
+  c->to_next=s->ext?NEVER:0;
+ }
+}
+static __attribute__((noinline)) void row_fire(seq_t *s,int lane,const seq_sink_t *o)
+{
+ seq_lane_clock_t *c=row_clock(s,lane);int rate=seq_lane_rate(s,lane),len=seq_lane_length(s,lane);
+ int p=c->pos==255?0:(c->pos+1>=len?0:c->pos+1),np=p+1>=len?0:p+1;
+ uint32_t carry=c->to_next<256u?c->to_next:0,L=seq_step_q8(s,rate),sw=swing_q8(s,rate,L);
+ if(c->pos!=255 && !p)c->bars++;
+ c->pos=(uint8_t)p;latch_rate(s,lane,rate);s->lane_pending&=~(1u<<lane);
+ fire_drum_range(s,lane/11,p,o,lane%11,lane%11+1);
+ c->to_next=s->ext?NEVER:carry+((np&1)?L+sw:L-sw);
+ if(!s->ext && !(np&1) && !(p&1))c->to_next=carry+L;
+}
+
 static void arrangement_latch(seq_t *s, uint16_t block)
 {
     s->pad_status|=PAD_ARMED;
@@ -419,7 +477,7 @@ static void arrangement_latch(seq_t *s, uint16_t block)
         a->pat[t] = next[t];
         if (next[t] != s->ppat[t]) {
             seq_track_t *tr = &s->t[t];
-            s->ppat[t] = next[t]; tr->started = 0; tr->bars = 0; tr->pp_dir = 1;
+            s->ppat[t] = next[t]; if(s->lane_sound){latch_rate(s,t<NKIT?t*11:t+20,part_rate(s,t));if(t<NKIT)row_reset(s,t,1);} tr->started = 0; tr->bars = 0; tr->pp_dir = 1;
             tr->to_next = s->ext ? NEVER : 0;
             tr->ext_ticks = (uint8_t)(TICKS_PER_STEP[part_rate(s,t)] - 1);
         }
@@ -427,13 +485,22 @@ static void arrangement_latch(seq_t *s, uint16_t block)
     }
 }
 
+static __attribute__((noinline)) void poly_mode_boundary(seq_t *s)
+{
+ if(s->lane_sound){int enabled=poly_mode(s->lane_sound);if(enabled!=s->lane_enabled){s->lane_enabled=(uint8_t)enabled;if(enabled){row_reset(s,0,1);row_reset(s,1,1);}}}
+}
+
+static __attribute__((noinline)) void poly_musical_tick(seq_t *s);
+
 static void arrangement_tick(seq_t *s)
 {
     volatile arrangement_runtime_t *a = &s->arrangement;
-    if (!arrangement_active(s) || !s->playing) return;
+    if(!arrangement_active(s)){if(s->lane_sound)poly_musical_tick(s);return;}
+    if(!s->playing)return;
     if (!a->clock_started) { a->clock_started = 1; return; }
     if (++a->tick < 96) return;
     a->tick = 0;
+    poly_mode_boundary(s);
     if (a->queued < s->song->len) {
         uint8_t block = a->queued;
         a->queued = 255; arrangement_latch(s,block);
@@ -525,10 +592,11 @@ static void auto_mutate(seq_t *s, int b)
 }
 
 /* fire track t's next step now; returns the parts whose pattern changed (the 909 wrapping) */
-static uint32_t fire_step(seq_t *s, int t, const seq_sink_t *o, int arrangement)
+static __attribute__((noinline)) uint32_t fire_step(seq_t *s, int t, const seq_sink_t *o, int arrangement)
 {
     seq_track_t *tr = &s->t[t];
     int rate = part_rate(s, t), p, wrapped;
+    if(s->lane_sound){int lane=t<NKIT?t*11:t+20;latch_rate(s,lane,rate);s->lane_pending&=~(1u<<lane);}
     uint32_t changed = 0;
     uint32_t L = seq_step_q8(s, rate);
     uint32_t carry = tr->to_next < 256u ? tr->to_next : 0;   /* the step was due this far into the sample: keep it */
@@ -541,7 +609,7 @@ static uint32_t fire_step(seq_t *s, int t, const seq_sink_t *o, int arrangement)
         p = next_pos(s, t, tr->pos, 1);
         wrapped = !bass ? p == 0 : p == 0 || (bpart(s, t - TRK_BASS0)->dir == DIR_REV && p == seq_part_len(s, t) - 1);
     }
-    if (wrapped && t == TRK_DRUM && !arrangement && (changed = bar_end(s, 0)) != 0) {
+    if (wrapped && t == TRK_DRUM && !arrangement && !s->lane_sound && (changed = bar_end(s, 0)) != 0) {
         rate = part_rate(s, t);                       /* the 909's new pattern */
         L = seq_step_q8(s, rate);
         p = 0;
@@ -556,11 +624,11 @@ static uint32_t fire_step(seq_t *s, int t, const seq_sink_t *o, int arrangement)
     if (o->step)                                     /* first: the step's motion and p-locks, which the hit */
         o->step(o->ctx, t, p);                       /* below must hear (a drum takes its tune as it fires) */
     if (is_drum(t))
-        fire_drum(s, t, p, o);
+        { if(s->lane_enabled)fire_drum_range(s,t,p,o,0,1);else fire_drum(s,t,p,o); }
     else if (t == TRK_BRK) {
         if (o->brk)
             o->brk(o->ctx, p, tr->bars, (float)L / 256.0f,
-                   (s->pat[s->ppat[TRK_BRK]].brk.steps >> p & 1u) && !(s->mute & (1u << MUTE_BRK)));
+                   (s->lane_sound ? poly_break_gate(s->pat,s->lane_sound,s->ppat[TRK_BRK],p) : (int)(s->pat[s->ppat[TRK_BRK]].brk.steps >> p & 1u)) && !(s->mute & (1u << MUTE_BRK)));
     } else
         fire_bass(s, t - TRK_BASS0, p, L, carry, o);
     if (s->ext) {
@@ -587,14 +655,16 @@ static void restart(seq_t *s, uint32_t parts)  /* parts whose pattern switched: 
         s->t[t].ext_ticks = (uint8_t)(TICKS_PER_STEP[part_rate(s, t)] - 1);
         s->t[t].bars = 0;
         s->t[t].pp_dir = 1;
+        if(s->lane_sound && t<NKIT)row_reset(s,t,1);
     }
 }
 
-static void do_start(seq_t *s, int from_top, const seq_sink_t *o, int arrangement)
+static __attribute__((noinline)) void do_start(seq_t *s, int from_top, const seq_sink_t *o, int arrangement)
 {
     int t;
     if (from_top) {
         s->arrangement.reserved=0;
+        if(s->lane_sound)s->arrangement.tick=s->arrangement.clock_started=0;
         if (arrangement) {
             s->arrangement.tick = s->arrangement.clock_started = 0;
             s->arrangement.queued = 255;
@@ -609,6 +679,7 @@ static void do_start(seq_t *s, int from_top, const seq_sink_t *o, int arrangemen
             tr->bars = 0;
             tr->pp_dir = 1;
         }
+        if(s->lane_sound){latch_rate(s,t<NKIT?t*11:t+20,part_rate(s,t));if(t<NKIT)row_reset(s,t,from_top);}
         tr->to_off = 0;
         tr->to_next = s->ext ? NEVER : 0;
         tr->ext_ticks = (uint8_t)(TICKS_PER_STEP[part_rate(s, t)] - 1);   /* the first clock is the downbeat */
@@ -643,11 +714,26 @@ static void do_stop(seq_t *s, const seq_sink_t *o, int arrangement)
         midi(o, 0xFC, 0, 0);
 }
 
+static __attribute__((noinline)) void poly_musical_tick(seq_t *s)
+{
+    volatile arrangement_runtime_t *a=&s->arrangement;uint32_t changed;int t;
+    if(!s->playing)return;
+    if(!a->clock_started){a->clock_started=1;return;}
+    if(++a->tick<96)return;
+    a->tick=0;poly_mode_boundary(s);changed=bar_end(s,0);
+    for(t=0;t<NTRACKS;t++)if(changed&(1u<<t)){
+        seq_track_t *tr=&s->t[t];tr->started=0;tr->bars=0;tr->pp_dir=1;
+        latch_rate(s,t<NKIT?t*11:t+20,part_rate(s,t));tr->ext_ticks=(uint8_t)(TICKS_PER_STEP[part_rate(s,t)]-1);
+        tr->to_next=s->ext?NEVER:0;if(t<NKIT)row_reset(s,t,1);
+    }
+}
+
 /* external clock ticks: arm the steps they complete */
-static void ext_ticks(seq_t *s, int arrangement)
+static __attribute__((noinline)) void ext_ticks(seq_t *s, int arrangement,const seq_sink_t *o)
 {
     int t;
     uint32_t n = s->ext_pending;
+    int late=s->lane_sound && n>1;
     s->ext_pending = 0;
     for (; n; n--) {
         if (s->ext_since > 0 && s->ext_since < FS) {  /* tempo: smoothed tick period */
@@ -659,29 +745,45 @@ static void ext_ticks(seq_t *s, int arrangement)
         if (!s->playing)
             continue;
         /* Musical block changes precede track arming on the same incoming clock. */
-        if (arrangement) arrangement_tick(s);
+        if (arrangement) arrangement_tick(s);else if(s->lane_sound)poly_musical_tick(s);
+        if(s->lane_enabled) { int lane;
+            for(lane=0;lane<22;lane++)if(lane%11) {
+                seq_lane_clock_t *c=&s->lane[(lane/11)*10+lane%11-1];
+                int rate=latched_rate(s,lane),tps=TICKS_PER_STEP[rate];
+                if(++c->ext_ticks>=tps){int len=seq_lane_length(s,lane),np=c->pos==255?0:c->pos+1>=len?0:c->pos+1;
+                    uint32_t L=s->ext_period?s->ext_period*(uint32_t)tps:seq_step_q8(s,rate);
+                    c->ext_ticks=0;c->to_next=late?0:(np&1)?swing_q8(s,rate,L):0;}
+            }
+        }
         for (t = 0; t < NTRACKS; t++) {
             seq_track_t *tr = &s->t[t];
-            int rate = part_rate(s, t), tps = TICKS_PER_STEP[rate];
+            int rate = s->lane_sound?latched_rate(s,t<NKIT?t*11:t+20):part_rate(s,t), tps = TICKS_PER_STEP[rate];
             if (++tr->ext_ticks < tps)
                 continue;
             tr->ext_ticks = 0;
             {
                 int np = tr->started ? next_pos(s, t, tr->pos, 0) : 0;
                 uint32_t L = s->ext_period ? s->ext_period * (uint32_t)tps : seq_step_q8(s, rate);
-                tr->to_next = (np & 1) ? swing_q8(s, rate, L) : 0;
+                tr->to_next = late?0:(np & 1) ? swing_q8(s, rate, L) : 0;
             }
+        }
+        /* Queued clock ticks have no sample timestamps. Preserve every logical
+         * event in clock order; overdue swing is collapsed rather than replayed
+         * as fabricated historical audio. A single fresh tick retains swing. */
+        if(s->lane_sound)for(t=0;t<NTRACKS;t++){
+            if(s->t[t].to_next<256u)(void)fire_step(s,t,o,arrangement);
+            if(s->lane_enabled && t<NKIT){int v;for(v=1;v<NDRUM;v++)if(s->lane[t*10+v-1].to_next<256u)row_fire(s,t*11+v,o);}
         }
     }
 }
 
-static inline __attribute__((always_inline)) uint32_t until_event_common(seq_t *s, uint32_t n, int arrangement)
+static inline __attribute__((always_inline)) uint32_t until_event_common(seq_t *s, uint32_t n, int arrangement,int poly)
 {
     uint32_t m = n, e;
     int t;
     if (!s->playing)
         return n;
-    if (s->ext && arrangement) {
+    if (s->ext && (arrangement || poly)) {
         e = s->ext_since > FS / 2u ? 1u : FS / 2u + 1u - s->ext_since;
         if (e < m) m = e;
     }
@@ -691,12 +793,13 @@ static inline __attribute__((always_inline)) uint32_t until_event_common(seq_t *
         if (s->t[t].to_off && (e = s->t[t].to_off >> 8) < m)
             m = e;
     }
-    if (!s->ext && (s->send_clock || WEB_CLOCK || arrangement) && (e = s->clk_to_next >> 8) < m)
+    if(poly && s->lane_enabled)for(t=0;t<20;t++)if(s->lane[t].to_next!=NEVER && (e=s->lane[t].to_next>>8)<m)m=e;
+    if (!s->ext && (s->send_clock || WEB_CLOCK || arrangement || poly) && (e = s->clk_to_next >> 8) < m)
         m = e;
     return m ? m : 1;
 }
 
-static inline __attribute__((always_inline)) void advance_common(seq_t *s, uint32_t k, const seq_sink_t *o, int arrangement)
+static inline __attribute__((always_inline)) void advance_common(seq_t *s, uint32_t k, const seq_sink_t *o, int arrangement,int poly)
 {
     int t, guard, clock_rebased = 0;
     uint32_t dq = k << 8;
@@ -709,30 +812,31 @@ static inline __attribute__((always_inline)) void advance_common(seq_t *s, uint3
         s->ext = 1;
     else if (s->ext && s->ext_since > FS / 2u) {    /* clock gone for 0.5 s: back to internal */
         s->ext = 0;
-        if (arrangement) {
+        if (arrangement || poly) {
             s->clk_to_next = seq_step_q8(s,RATE_16) / 6u; /* resume next tick, without duplicating the last one */
             clock_rebased = 1;
         }
         for (t = 0; t < NTRACKS; t++)
             if (s->playing && s->t[t].to_next == NEVER)
-                s->t[t].to_next = 0;
+                s->t[t].to_next = poly ? seq_step_q8(s,latched_rate(s,t<NKIT?t*11:t+20))/TICKS_PER_STEP[latched_rate(s,t<NKIT?t*11:t+20)] * (TICKS_PER_STEP[latched_rate(s,t<NKIT?t*11:t+20)]-s->t[t].ext_ticks) : 0;
+        if(poly && s->lane_enabled)for(t=0;t<20;t++)if(s->playing && s->lane[t].to_next==NEVER){int lane=(t/10)*11+t%10+1,rate=latched_rate(s,lane);s->lane[t].to_next=seq_step_q8(s,rate)/TICKS_PER_STEP[rate]*(TICKS_PER_STEP[rate]-s->lane[t].ext_ticks);}
     }
     if (s->req_stop) {
         s->req_stop = 0;
         s->req_start = s->req_cont = 0;
         if (s->playing)
-            do_stop(s, o, arrangement);
+            do_stop(s, o, arrangement && arrangement_active(s));
     }
     if (s->req_start) {
         s->req_start = 0;
-        do_start(s, 1, o, arrangement);
+        do_start(s, 1, o, arrangement && arrangement_active(s));
     }
     if (s->req_cont) {
         s->req_cont = 0;
-        do_start(s, 0, o, arrangement);
+        do_start(s, 0, o, arrangement && arrangement_active(s));
     }
     if (s->ext_pending)
-        ext_ticks(s, arrangement);
+        ext_ticks(s, arrangement,o);
     if (!s->playing) {
         seq_midi_prepare(s,s->midi_ready,o);
         if (!s->ext)
@@ -751,8 +855,10 @@ static inline __attribute__((always_inline)) void advance_common(seq_t *s, uint3
         if (tr->to_off)
             tr->to_off = tr->to_off > dq ? tr->to_off - dq : 1;   /* 1: due, still "set" */
     }
-    if (!clock_rebased && !s->ext && (s->send_clock || WEB_CLOCK || arrangement))
+    if(poly && s->lane_enabled)for(t=0;t<20;t++){seq_lane_clock_t *c=&s->lane[t];if(c->to_next!=NEVER)c->to_next=c->to_next>dq?c->to_next-dq:0;}
+    if (!clock_rebased && !s->ext && (s->send_clock || WEB_CLOCK || arrangement || poly))
         s->clk_to_next = s->clk_to_next > dq ? s->clk_to_next - dq : 0;
+    if(!s->ext && poly && !arrangement && s->clk_to_next<256u)poly_musical_tick(s);
     if (!s->ext && arrangement && s->clk_to_next < 256u)
         arrangement_tick(s); /* before any same-sample notes/steps */
     /* fire what is due; the drum part first, since its wrap may switch the pattern */
@@ -770,13 +876,14 @@ static inline __attribute__((always_inline)) void advance_common(seq_t *s, uint3
                     restart(s, ch);                   /* a part's new pattern starts on step 1 */
                 fired = 1;
             }
+            if(poly && s->lane_enabled && t<NKIT){int v;for(v=1;v<NDRUM;v++)if(s->lane[t*10+v-1].to_next<256u){row_fire(s,t*11+v,o);fired=1;}}
         }
         if (!fired)
             break;
     }
     if (arrangement) for(t=0;t<NBASS;t++)bass_retune_held(s,t,o);
     seq_midi_sync(s,s->midi_ready,o); /* retry only FINAL played pitches, after boundary/NOTE/TIE */
-    if (!s->ext && (s->send_clock || WEB_CLOCK || arrangement) && s->clk_to_next < 256u) {
+    if (!s->ext && (s->send_clock || WEB_CLOCK || arrangement || poly) && s->clk_to_next < 256u) {
         uint32_t period = seq_step_q8(s, RATE_16) / 6u;
         if (s->send_clock) midi(o, 0xF8, 0, 0);
 #ifdef X0X_WEB
@@ -786,10 +893,10 @@ static inline __attribute__((always_inline)) void advance_common(seq_t *s, uint3
     }
 }
 
-uint32_t seq_until_event(seq_t *s, uint32_t n) { return until_event_common(s,n,0); }
-uint32_t seq_until_event_arrangement(seq_t *s, uint32_t n) { return until_event_common(s,n,1); }
-void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o) { advance_common(s,k,o,0); }
-void seq_advance_arrangement(seq_t *s, uint32_t k, const seq_sink_t *o) { advance_common(s,k,o,1); }
+uint32_t seq_until_event(seq_t *s, uint32_t n) { return until_event_common(s,n,0,0); }
+uint32_t seq_until_event_arrangement(seq_t *s, uint32_t n) { return until_event_common(s,n,1,s->lane_sound!=0); }
+void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o) { advance_common(s,k,o,0,0); }
+void seq_advance_arrangement(seq_t *s, uint32_t k, const seq_sink_t *o) { advance_common(s,k,o,1,s->lane_sound!=0); }
 
 void seq_start(seq_t *s) { s->req_start = 1; }
 void seq_stop(seq_t *s) { s->req_stop = 1; }
@@ -814,3 +921,9 @@ void seq_chain(seq_t *s, int a, int b)
     s->chain_a = (uint8_t)a;
     s->chain_b = (uint8_t)b;
 }
+
+/* Initialized lane storage shares the arrangement-capable transport loop.
+ * The raw legacy specialization remains constant0 and unchanged in behavior;
+ * arrangement_tick selects chord arrangement versus plain96-tick progression. */
+uint32_t seq_until_event_poly(seq_t *s,uint32_t n) {return seq_until_event_arrangement(s,n);}
+void seq_advance_poly(seq_t *s,uint32_t k,const seq_sink_t *o) {seq_advance_arrangement(s,k,o);}

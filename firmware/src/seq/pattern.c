@@ -2,6 +2,7 @@
 /* X0X pattern defaults. */
 #include "pattern.h"
 #include "tb3po.h"
+#include "lanes.c" /* shared bounded model; all existing pattern link lists include it */
 
 static const uint8_t BRK_DEFAULTS[BRK_NSET] = {
     25, 60, 20, 50,                   /* complexity, anchor, roll, fill */

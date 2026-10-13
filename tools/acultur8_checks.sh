@@ -25,6 +25,11 @@ run external_pad_wasm sh tests/host/run_pad_wasm.sh
 run midi_router node tests/host/midi_router_test.mjs
 run pad_ui node tests/host/pad_ui_test.mjs
 run pointer_keys node tests/host/pointer_keys_test.mjs build/emu/x0x.wasm
+run individual_lanes sh tests/host/run_lane.sh
+run individual_lanes_off_pcm sh tests/host/run_lane_off_pcm.sh
+run individual_lanes_wasm sh tests/host/run_lane_wasm.sh
+run lane_ui node tests/host/lane_ui_test.mjs
+run worklet_gesture node tests/host/worklet_gesture_test.mjs build/emu/x0x.wasm
 run arrangement sh tests/host/run_arrangement.sh
 run arrangement_wasm node tests/host/arrangement_wasm_test.mjs build/emu/x0x.wasm build/host/arrangement_schema1_store.bin
 run variant sh tests/host/run_variant.sh

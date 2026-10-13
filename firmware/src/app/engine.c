@@ -105,7 +105,7 @@ static float mix_pl[NPARTS] = {1, 1, 1, 1, 1}, mix_pr[NPARTS] = {1, 1, 1, 1, 1};
 /* ------------------------------------------------------- command queue --- */
 /* uint32 commands, single producer (main loop) / single consumer (audio ISR):
  * type:4 | a:8 | b:8 | c:12 */
-enum { C_PARAM_T0 = 0, C_DRUM = 8, C_BON, C_BOFF, C_BRK, C_NOP, C_STRIP, C_ARR, C_ARR_QUEUE };
+enum { C_PARAM_T0 = 0, C_DRUM = 8, C_BON, C_BOFF, C_BRK, C_LANE, C_STRIP, C_ARR, C_ARR_QUEUE };
 #define CQ 1024u
 static uint32_t cq[CQ];
 static volatile uint32_t cq_w, cq_r;
@@ -209,6 +209,43 @@ int engine_arrangement_refresh(const arrangement_settings_t *intent)
     return 1;
 }
 int engine_arrangement_queue(uint8_t block) { return cq_put(C_ARR_QUEUE, block, 0, 0); }
+POLY_COLD int engine_lane_set(int pattern,int lane,int index,int value)
+{
+    uint32_t saved;int len,rate;
+    if(pattern<0 || pattern>=NPAT || lane<0 || lane>=POLY_LANES || index<0 || index>1 || value<(index?0:1) || value>(index?7:64) || !engine_queue_space())return 0;
+    saved=plat_control_enter();
+    if(!(proj.variant.arrangement.flags&POLY_FLAG)){plat_control_leave(saved);return 0;}
+    len=poly_length(proj.pat,(const uint8_t *)&proj.sound,pattern,lane);
+    rate=poly_rate(proj.pat,(const uint8_t *)&proj.sound,pattern,lane);
+    poly_set(proj.pat,(uint8_t *)&proj.sound,pattern,lane,index?len:value,index?value:rate);
+    cq_put(C_LANE,(uint32_t)pattern,(uint32_t)lane,(uint32_t)index);plat_control_leave(saved);return 1;
+}
+POLY_COLD int engine_lane_mode(int enabled)
+{
+    uint32_t saved;int reserved=0;
+    if(enabled<0 || enabled>1 || !engine_queue_space())return 0;
+    if(!(proj.variant.arrangement.flags&POLY_FLAG) && enabled){
+        if(!engine_transport_reserve())return 0;
+        reserved=1;
+        poly_enable(proj.pat,(uint8_t *)&proj.sound);
+    }
+    saved=plat_control_enter();
+    if(enabled || (proj.variant.arrangement.flags&POLY_FLAG)){
+        proj.variant.arrangement.flags|=POLY_FLAG;poly_mode_set((uint8_t *)&proj.sound,enabled);
+    }
+    cq_put(C_LANE,0,255,0);plat_control_leave(saved);
+    if(reserved)engine_transport_release();
+    return 1;
+}
+POLY_COLD int engine_lane_break_step(int pattern,int step,int gate,int slice)
+{
+    uint32_t saved;
+    if(pattern<0 || pattern>=NPAT || step<0 || step>63 || gate<0 || gate>1 || slice<0 || slice>8 || !engine_queue_space())return 0;
+    saved=plat_control_enter();
+    if(!(proj.variant.arrangement.flags&POLY_FLAG)){plat_control_leave(saved);return 0;}
+    poly_break_set(proj.pat,(uint8_t *)&proj.sound,pattern,step,gate,slice);
+    cq_put(C_LANE,(uint32_t)pattern,24,2);plat_control_leave(saved);return 1;
+}
 int engine_strip_set(int strip, int index, int value)
 {
     if (strip < 0 || strip >= 25 || index < 0 || index >= 6) return 0;
@@ -347,7 +384,7 @@ void engine_volume(int32_t *out_lr, uint32_t n)
     vol_after = v;
 }
 
-void engine_sound_defaults(sound_t *s)
+POLY_COLD void engine_sound_defaults(sound_t *s)
 {
     int t, v, i;
     uint8_t *z = (uint8_t *)s;
@@ -400,7 +437,7 @@ void engine_sound_defaults(sound_t *s)
     s->v[T_FX][1][0] = (uint8_t)(16 + s->v[T_FX][0][FX_DL_WEAR] * 111 / 127);   /* TAPE (ui.c R_TAPE): on, its wear */
 }
 
-void engine_sound_centre_drum_pans(sound_t *s)
+POLY_COLD void engine_sound_centre_drum_pans(sound_t *s)
 {
     int t, v;
     for (t = T_909; t <= T_808; t++)
@@ -412,7 +449,7 @@ void engine_sound_centre_drum_pans(sound_t *s)
         }
 }
 
-void engine_apply_sound(const sound_t *s)
+POLY_COLD void engine_apply_sound(const sound_t *s)
 {
     int t, v, i;
     engine_set(T_MST, 0, MST_COMP1, s->v[T_MST][0][MST_COMP1]);   /* the macros first: the pots they set */
@@ -446,7 +483,7 @@ static int prob_skip(int part, int v)                 /* ISR: 1 = this hit does 
     if (p > 100u && p < PROB_COND + PROB_NCOND) {      /* A:B: the A-th of every B passes (seq_track_t.bars) */
         int a, b;
         prob_cond((int)p - PROB_COND, &a, &b);
-        return (int)(seq.t[part].bars % (uint32_t)b) != a - 1;
+        return (int)((seq.lane_sound ? seq_lane_cycles(&seq,part<NKIT?part*11+v:part+20) : seq.t[part].bars) % (uint32_t)b) != a - 1;
     }
     if (p >= 100u)
         return 0;
@@ -495,14 +532,14 @@ static void s_brk(void *x, int s16, int bar, float spb, int en)
     (void)x;
     if (brk_hold)
         return;
-    breaks_set_quiet(&brk, bp->steps == 0 || (seq.mute & (1u << MUTE_BRK)));   /* unheard: stop decoding */
+    breaks_set_quiet(&brk, (!seq.lane_sound && bp->steps == 0) || (seq.mute & (1u << MUTE_BRK)));   /* unheard: stop decoding */
     for (i = 0; i < BRK_NSET; i++)       /* follow the playing pattern's settings (12 compares) */
         if (bp->set[i] != brk_applied[i]) {
             brk_applied[i] = bp->set[i];
             breaks_set(&brk, i, bp->set[i]);
         }
-    breaks_pin(&brk, (int)bp->slice[s16 & 15] - 1);   /* the step's own slice, if it has one */
-    breaks_step(&brk, s16, bar, spb, en);
+    breaks_pin(&brk, (seq.lane_sound?poly_break_slice(seq.pat,seq.lane_sound,seq.ppat[TRK_BRK],s16):(int)bp->slice[s16 & 15]) - 1);   /* the step's own slice, if it has one */
+    breaks_step(&brk, s16 & 15, bar, spb, en);
 }
 static void s_brkstop(void *x) { (void)x; breaks_stop(&brk); }
 static uint32_t midi_packet(uint8_t st,uint8_t d1,uint8_t d2)
@@ -618,7 +655,9 @@ static void midi_in(uint32_t pkt)
 }
 
 /* ---------------------------------------------------------------- render --- */
-static void drain(void)
+/* One outer-block transaction drain: keep queue/MIDI work in an explicit
+ * measured callee, before render dispatch; no event-loop or ownership change. */
+static __attribute__((noinline)) void drain(void)
 {
     uint32_t r = cq_r, pkt;
     int guard = 64;
@@ -636,7 +675,8 @@ static void drain(void)
             bass303_note_off(&b303[a]);
         else if (type == C_BRK && !brk_hold)
             breaks_live(&brk, (int)a, (int)b);
-        else if (type == C_ARR) {seq_arrangement_apply_flags(&seq);seq.send_notes=(uint8_t)((proj.variant.arrangement.flags&ARR_NOTES_OUT)!=0);proj.set.notes_out=seq.send_notes;}
+        else if (type == C_LANE) {if(b<25 && v<2 && seq.playing && seq.ppat[poly_part((int)b)]==a)seq.lane_pending|=1u<<b;seq.lane_sound=(proj.variant.arrangement.flags&POLY_FLAG)?(uint8_t *)&proj.sound:0;if(!seq.playing)seq.lane_enabled=(uint8_t)(seq.lane_sound && poly_mode(seq.lane_sound));}
+        else if (type == C_ARR) {seq.lane_sound=(proj.variant.arrangement.flags&POLY_FLAG)?(uint8_t *)&proj.sound:0;if(!seq.playing)seq.lane_enabled=(uint8_t)(seq.lane_sound && poly_mode(seq.lane_sound));seq_arrangement_apply_flags(&seq);seq.send_notes=(uint8_t)((proj.variant.arrangement.flags&ARR_NOTES_OUT)!=0);proj.set.notes_out=seq.send_notes;}
         else if (type == C_ARR_QUEUE) seq_arrangement_queue(&seq, (uint8_t)a);
         else if (type == C_STRIP && a < 25u) {
             uint32_t val = v | ((b & 15u) << 12);
@@ -917,7 +957,8 @@ void engine_render(int32_t *out_lr, uint32_t n)
         drain();
         /* Only the applied audio-owned flag chooses the mode; one indirect call
          * at each existing callsite, never a desired-project read in this loop. */
-        if (seq.arrangement.flags & ARR_ENABLED) {
+        if(seq.lane_sound){until_event=seq_until_event_poly;advance=seq_advance_poly;}
+        else if (seq.arrangement.flags & ARR_ENABLED) {
             until_event = seq_until_event_arrangement; advance = seq_advance_arrangement;
         } else {
             until_event = seq_until_event; advance = seq_advance;
@@ -1126,7 +1167,7 @@ void engine_brk_loops(void)
     brk_hold = 0;
 }
 
-void engine_init(pattern_t *patterns, song_t *song, lane_t *lanes, const sound_t *base)
+POLY_COLD void engine_init(pattern_t *patterns, song_t *song, lane_t *lanes, const sound_t *base)
 {
     int p;uint8_t owned_note[NBASS],owned_channel[NBASS],pad_note[3],pad_channel;
     if(seq.pat)engine_notes_clear();

@@ -25,6 +25,9 @@ int engine_arrangement_global(uint8_t *dst, uint8_t value, int stopped_only);
 int engine_arrangement_length(uint16_t *dst, uint16_t value);
 int engine_arrangement_refresh(const arrangement_settings_t *intent);
 int engine_arrangement_queue(uint8_t block);
+int engine_lane_set(int pattern,int lane,int index,int value);
+int engine_lane_mode(int enabled);
+int engine_lane_break_step(int pattern,int step,int gate,int slice);
 /* Main context only. Nested holds permit helper calls after incoming requests defer. */
 int engine_transport_reserve(void);
 void engine_notes_clear(void);

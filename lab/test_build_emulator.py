@@ -29,8 +29,11 @@ class BuildPackagingTest(unittest.TestCase):
             self.assertEqual(page.count('id="pad-title"'), 1)
             self.assertEqual(page.count('src="pad-ui.js"'), 1)
             self.assertIn('href="pad-ui.css"', page)
+            self.assertEqual(page.count('id="lane-title"'), 1)
+            self.assertEqual(page.count('src="lane-ui.js"'), 1)
+            self.assertIn('href="lane-ui.css"', page)
             for name in ('variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css',
-                         'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'midi-router.mjs', 'midi-worklet.mjs'):
+                         'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css', 'midi-router.mjs', 'midi-worklet.mjs'):
                 self.assertEqual((output / name).read_bytes(), (WORK / 'web/emu' / name).read_bytes())
             self.assertIn('href="manual.txt"', page)
             self.assertIn('window.fm1SliceSend = send', script)

@@ -34,7 +34,7 @@ for(let strip=0;strip<25;strip++){
  assert.ok(energy(active.audio)<energy(dry.audio)*.5,`strip ${strip} audible limiting`);
 }
 // Every meter is exposed only after the complete audio job; current schema/caps persist.
-const p=await open();assert.equal(snap(p,0)[7],0x01ffffff);assert.equal(snap(p,0)[5],4);
+const p=await open();assert.equal(snap(p,0)[7],0x01ffffff);assert.equal(snap(p,0)[5],5);
 for(let i=0;i<25;i++)assert.deepEqual(snap(p,3,i),[0,0,1000000]);
 await cmd(p,3);for(const strip of [11,22,24])await configure(p,strip,9);await cmd(p,4);await cmd(p,7);
 const objects=Object.fromEntries(Array.from({length:p.ex.web_nobj()},(_,i)=>{const n=p.ex.web_store_len(i);return[i,n<0?null:new Uint8Array(p.mem.buffer,p.ex.web_store(i),n).slice()];}).filter(([,v])=>v));
@@ -45,7 +45,7 @@ for(const schema of [2,3]) {
  const raw=unpack(bufferObjects);assert.equal(raw.length,LEGACY+412);raw.writeUInt16LE(schema,VARIANT+4);
  raw[ARR]=schema===2?0:18;raw[ARR+8]=8;
  const old=encode(bufferObjects,raw),migrated=await open(current,old);
- assert.equal(snap(migrated,0)[5],4);assert.equal(snap(migrated,0)[0],511);
+ assert.equal(snap(migrated,0)[5],5);assert.equal(snap(migrated,0)[0],1535);
  assert.equal(snap(migrated,8)[0],255,'reserved old pad channel disabled');
  assert.equal(snap(migrated,5)[0],schema===2?0:18,'validated old bass flags preserved');
  for(const strip of [11,22,24])assert.equal(snap(migrated,2,strip)[5],9);

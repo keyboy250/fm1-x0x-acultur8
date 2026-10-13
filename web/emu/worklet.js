@@ -18,6 +18,13 @@ class X0X extends AudioWorkletProcessor {
     this.frames = 0;
     this.variantStrip = 0;
     this.variantViewRevision = 0;
+    this.laneView = {pattern:0,lane:0,page:0,viewRevision:0};
+    // C has one external undo gesture. Browser panels must not join or finish
+    // another panel's gesture; their request namespaces identify the caller.
+    this.editOwner = null;
+    this.rejectedGestures = new Set();
+    this.loadGeneration = 0;
+    this.loading = false;
     this.midi = new MidiWorkletBridge(() => this.ex, m => this.port.postMessage(m));
     this.port.onmessage = (e) => this.onMessage(e.data);
   }
@@ -25,19 +32,46 @@ class X0X extends AudioWorkletProcessor {
   async onMessage(m) {
     if (!m || typeof m !== 'object') return;
     if (this.midi.message(m)) return;
-    if (m.type === 'variant-command') {
+    if (m.type === 'variant-command' || m.type === 'lane-command') {
       const keys = ['abi', 'op', 'request', 'target', 'voice', 'index', 'value'];
       const valid = keys.every(k => Number.isInteger(m[k])) && m.request >= 0 && m.request <= 0xffffffff &&
         m.value >= -0x80000000 && m.value <= 0x7fffffff && m.abi >= 0 && m.abi <= 65535 &&
         m.op >= 0 && m.op <= 65535 && ['target','voice','index'].every(k => m[k] >= 0 && m[k] <= 255);
-      const reply = {type:'variant-reply', request:m.request, result:valid ? -2 : -1, revision:0, ticket:0};
-      if (valid && this.ex?.web_variant_command) {
-        const p = this.ex.web_variant_command(...keys.map(k => m[k]));
-        const view = new DataView(this.mem.buffer, p, 16);
-        Object.assign(reply, {request:view.getUint32(0,true), revision:view.getUint32(4,true),
-          ticket:view.getUint32(8,true), result:view.getInt32(12,true)});
+      const reply = {type:m.type === 'lane-command' ? 'lane-reply' : 'variant-reply', request:m.request, result:valid ? -2 : -1, revision:0, ticket:0};
+      if (valid) {
+        const owner = m.type === 'lane-command' ? 'lane' : `variant-${m.request >>> 30}`;
+        if (this.loading || this.rejectedGestures.has(owner) || (this.editOwner !== null && (this.editOwner !== owner || m.op === 7))) {
+          reply.result = -3;
+          // Legacy panels post BEGIN/value/END without waiting for BEGIN's
+          // reply. Reject the whole refused gesture, even if its value arrives
+          // after the original owner has ended. Foreign END never reaches C.
+          // The lane panel waits for BEGIN ACK and sends no value/END after a
+          // refusal. Only the four legacy variant panels need suffix quarantine.
+          if (m.op === 3 && m.type === 'variant-command') this.rejectedGestures.add(owner);
+          if (m.op === 4) this.rejectedGestures.delete(owner);
+          // SAVE closes C's external gesture before storage can fail. Require
+          // the owner to END first, keeping C and browser ownership consistent.
+        } else if (this.ex?.web_variant_command) {
+          const p = this.ex.web_variant_command(...keys.map(k => m[k]));
+          const view = new DataView(this.mem.buffer, p, 16);
+          Object.assign(reply, {request:view.getUint32(0,true), revision:view.getUint32(4,true),
+            ticket:view.getUint32(8,true), result:view.getInt32(12,true)});
+          if (reply.result >= 0) {
+            if (m.op === 3) this.editOwner = owner;
+            else if ([4,5,6].includes(m.op)) this.editOwner = null;
+          }
+        }
       }
       this.port.postMessage(reply);
+      return;
+    }
+    if (m.type === 'lane-select') {
+      if (Number.isInteger(m.pattern) && m.pattern >= 0 && m.pattern < 32 &&
+          Number.isInteger(m.lane) && m.lane >= 0 && m.lane < 25 &&
+          Number.isInteger(m.page) && m.page >= 0 && m.page < 2 &&
+          Number.isInteger(m.viewRevision) && m.viewRevision >= 0 && m.viewRevision <= 0xffffffff) {
+        this.laneView = {pattern:m.pattern,lane:m.lane,page:m.page,viewRevision:m.viewRevision};
+      }
       return;
     }
     if (m.type === 'variant-select') {
@@ -49,31 +83,49 @@ class X0X extends AudioWorkletProcessor {
       return;
     }
     if (m.type === "load") {
+      const generation = ++this.loadGeneration;
+      this.loading = true;
+      let memory;
       const now = () => BigInt(Math.round(currentTime * 1e9));
       const wasi = {
         clock_time_get: (id, prec, out) => {
-          new DataView(this.mem.buffer).setBigUint64(out, now(), true);
+          new DataView(memory.buffer).setBigUint64(out, now(), true);
           return 0;
         },
-        fd_write: (fd, iov, n, out) => { new DataView(this.mem.buffer).setUint32(out, 0, true); return 0; },
+        fd_write: (fd, iov, n, out) => { new DataView(memory.buffer).setUint32(out, 0, true); return 0; },
         proc_exit: () => {},
       };
       const stub = new Proxy(wasi, { get: (t, k) => (k in t ? t[k] : () => 0) });
       const env = new Proxy({}, { get: () => () => 0 });
-      const { instance } = await WebAssembly.instantiate(m.wasm, { wasi_snapshot_preview1: stub, env });
-      this.ex = instance.exports;
-      this.mem = this.ex.memory;
-      if (this.ex._initialize) this.ex._initialize();
-      const max = this.ex.web_store_max();
-      for (const [obj, bytes] of Object.entries(m.store || {})) {
-        const b = new Uint8Array(bytes).subarray(0, max);
-        new Uint8Array(this.mem.buffer, this.ex.web_store(+obj), b.length).set(b);
-        this.ex.web_store_set_len(+obj, b.length);
+      try {
+        const { instance } = await WebAssembly.instantiate(m.wasm, { wasi_snapshot_preview1: stub, env });
+        if (generation !== this.loadGeneration) return;
+        const ex = instance.exports;
+        memory = ex.memory;
+        if (ex._initialize) ex._initialize();
+        const max = ex.web_store_max();
+        for (const [obj, bytes] of Object.entries(m.store || {})) {
+          const b = new Uint8Array(bytes).subarray(0, max);
+          new Uint8Array(memory.buffer, ex.web_store(+obj), b.length).set(b);
+          ex.web_store_set_len(+obj, b.length);
+        }
+        const writes = ex.web_store_writes();
+        ex.web_master(m.master ?? 2800);
+        ex.web_boot();
+        this.ex = ex;
+        this.mem = memory;
+        this.sentWrites = writes;
+        this.editOwner = null;
+        // Refused legacy BEGIN suffixes belong to their original callers even
+        // across replacement. Only their refused END drains the quarantine.
+        this.loading = false;
+        this.port.postMessage({ type: "ready" });
+      } catch (error) {
+        if (generation !== this.loadGeneration) return;
+        // Failed replacement keeps the old engine and its gesture ownership.
+        this.loading = false;
+        throw error;
       }
-      this.sentWrites = this.ex.web_store_writes();
-      this.ex.web_master(m.master ?? 2800);
-      this.ex.web_boot();
-      this.port.postMessage({ type: "ready" });
     } else if (!this.ex) {
       return;
     } else if (m.type === "buttons") {
@@ -136,8 +188,8 @@ class X0X extends AudioWorkletProcessor {
     const msg = { type: "frame", buttons: ex.web_lit_buttons() >>> 0, keys: ex.web_lit_keys() >>> 0, dim: ex.web_dim_keys() >>> 0 };
     if(ex.web_input_ticket)msg.inputTicket=ex.web_input_ticket()>>>0;
     if (ex.web_variant_snapshot) {
-      const read = (section,target) => {
-        const p = ex.web_variant_snapshot(section,target,0);
+      const read = (section,target,voice=0) => {
+        const p = ex.web_variant_snapshot(section,target,voice);
         if (!p) return null;
         const v = new Uint32Array(this.mem.buffer,p,20);
         return {abi:v[0],section:v[1],revision:v[2],values:Array.from(v.subarray(4,4+Math.min(v[3],16)))};
@@ -145,6 +197,11 @@ class X0X extends AudioWorkletProcessor {
       const arrangement = read(5,0);
       msg.variant = {info:read(0,0),strip:this.variantStrip ?? 0,viewRevision:this.variantViewRevision,settings:read(2,this.variantStrip ?? 0),meters:read(3,this.variantStrip ?? 0),
         arrangement,block:arrangement ? read(4,arrangement.values[2]) : null,chord:read(6,0),bass:[read(7,0),read(7,1)],pad:read(8,0)};
+      if (msg.variant.info?.values[0] & 1024) {
+        const view = this.laneView;
+        msg.variant.laneView = {...view,mode:read(11,0),settings:read(10,view.pattern,view.lane),
+          breaks:view.lane === 24 ? read(12,view.pattern,view.page) : null};
+      }
     }
     msg.sync={state:ex.web_sync_state(),bpm:ex.web_seq_bpm(),playing:!!ex.web_seq_playing(),beat:ex.web_seq_beat()};
     if(ex.web_marked_cursor)msg.marked={cursor:ex.web_marked_cursor(),triggers:ex.web_marked_triggers(),slice:ex.web_marked_last(),playing:!!ex.web_marked_playing()||(ex.web_sync_state()===2&&!!ex.web_seq_playing())};

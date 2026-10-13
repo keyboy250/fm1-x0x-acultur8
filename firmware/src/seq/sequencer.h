@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include "pattern.h"
 #include "harmony.h"
+#include "lanes.h"
 
 #define FS 44100u
 #define TRK_DRUM 0                    /* + kit: 0 = 909, 1 = 808 */
@@ -53,7 +54,7 @@ static inline uint32_t seq_part_mask(int p)
 #define NSONG 192
 #define ARR_ENABLED 1u
 #define ARR_NOTES_OUT 32u /* schema4 tracked mirror; settings_t is outside undo journal */
-#define ARR_FLAGS 63u
+#define ARR_FLAGS (63u | POLY_FLAG)
 enum { BASS_FOLLOW_OFF, BASS_FOLLOW_ROOT, BASS_FOLLOW_CHORD };
 static inline unsigned arrangement_bass_mode(unsigned flags,int b) { return (flags >> (1+2*b)) & 3u; }
 typedef struct {
@@ -127,7 +128,14 @@ typedef struct {                      /* one part's runtime */
     uint8_t ext_ticks;                /* external clock: ticks into this step */
 } seq_track_t;
 
+typedef struct { uint32_t to_next; uint16_t bars; uint8_t pos,ext_ticks; } seq_lane_clock_t;
+typedef char lane_clock_size_8[(sizeof(seq_lane_clock_t)==8)?1:-1];
 typedef struct {
+    uint8_t *lane_sound; /* audio-owned published metadata view; null retains old algorithm */
+    seq_lane_clock_t lane[20]; /* voices1..10; voice0 and pitched lanes reuse t[] */
+    uint32_t lane_pending; /* applied intent awaits a local step, one bit per lane */
+    uint8_t lane_enabled; /* effective musical-boundary clock mode; uses alignment padding */
+    uint8_t lane_rate[10]; /* 25 x 3 bits, latched through current interval */
     pattern_t *pat;                   /* NPAT patterns (the project's) */
     song_t *song;                     /* the project's song (may be 0) */
     volatile uint8_t playing;         /* 1 = running */
@@ -191,6 +199,13 @@ void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o);
  * specializations once per block from the applied audio-owned flag after drain. */
 uint32_t seq_until_event_arrangement(seq_t *s, uint32_t n);
 void seq_advance_arrangement(seq_t *s, uint32_t k, const seq_sink_t *o);
+uint32_t seq_until_event_poly(seq_t *s,uint32_t n);
+void seq_advance_poly(seq_t *s,uint32_t k,const seq_sink_t *o);
+int seq_lane_length(const seq_t *s,int lane);
+int seq_lane_rate(const seq_t *s,int lane);
+unsigned seq_lane_cycles(const seq_t *s,int lane);
+int seq_lane_position(const seq_t *s,int lane);
+int seq_lane_latched_rate(const seq_t *s,int lane);
 
 /* main loop / MIDI side (all are flag writes picked up at the next block) */
 void seq_start(seq_t *s);             /* from step 1 of the current (or cued) pattern */
