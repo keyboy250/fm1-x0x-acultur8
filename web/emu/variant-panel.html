@@ -1,0 +1,25 @@
+<section class="variant-lab" aria-labelledby="variant-title">
+  <h2 id="variant-title">909 kick · sound strip</h2>
+  <p>Shape the 909 bass drum before the mix. Other voices keep their existing sound. Use the instrument pads or PLAY to audition.</p>
+  <p id="variant-availability">Switch on the FM1 panel to check sound-strip support.</p>
+  <fieldset id="variant-controls" disabled>
+    <legend>Kick processing</legend>
+    <div class="variant-stages">
+      <label><input id="variant-enabled" type="checkbox" data-flag="1"> Enable strip (off = bypass)</label>
+      <label><input type="checkbox" data-flag="2"> High-pass filter</label>
+      <label><input type="checkbox" data-flag="4"> Low-pass filter</label>
+      <label><input type="checkbox" data-flag="8"> Limiter</label>
+    </div>
+    <div class="variant-parameters">
+      <div><label for="variant-hp-range">High-pass cutoff</label><input id="variant-hp-range" type="range" min="0" max="1000" step="1" data-index="0" aria-label="High-pass cutoff"><label class="variant-number"><input id="variant-hp-number" type="number" min="20" max="20000" step="1" data-index="0" aria-label="High-pass cutoff in Hz"> Hz</label></div>
+      <div><label for="variant-lp-range">Low-pass cutoff</label><input id="variant-lp-range" type="range" min="0" max="1000" step="1" data-index="1" aria-label="Low-pass cutoff"><label class="variant-number"><input id="variant-lp-number" type="number" min="20" max="20000" step="1" data-index="1" aria-label="Low-pass cutoff in Hz"> Hz</label></div>
+      <div><label for="variant-boost-range">Boost</label><input id="variant-boost-range" type="range" min="0" max="24" step="1" data-index="2" aria-label="Boost"><label class="variant-number"><input id="variant-boost-number" type="number" min="0" max="24" step="1" data-index="2" aria-label="Boost in dB"> dB</label></div>
+      <div><label for="variant-ceiling-range">Limiter ceiling</label><input id="variant-ceiling-range" type="range" min="-48" max="0" step="1" data-index="3" aria-label="Limiter ceiling"><label class="variant-number"><input id="variant-ceiling-number" type="number" min="-48" max="0" step="1" data-index="3" aria-label="Limiter ceiling in dBFS"> dBFS</label></div>
+    </div>
+    <p>Limiter release: 80 ms while editing this strip. Boost applies when the strip is enabled.</p>
+    <div class="variant-actions"><button id="variant-undo" type="button">Undo</button><button id="variant-redo" type="button">Redo</button><button id="variant-save" type="button">Save project</button></div>
+  </fieldset>
+  <p id="variant-meter">Gain reduction unavailable.</p>
+  <p id="variant-project"></p>
+  <p id="variant-status" role="status" aria-live="polite">Waiting for the engine.</p>
+</section>

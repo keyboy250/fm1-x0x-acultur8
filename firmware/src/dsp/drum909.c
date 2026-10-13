@@ -265,6 +265,8 @@ void drum909_init(drum909_t *d)
         d->pan_l[v] = d->pan_r[v] = d->pan_lc[v] = d->pan_rc[v] = 1.0f;   /* centre */
     d->noise = 0xC0FFEEu;
     d->nz_pos = DR_NZ_HIST;
+    sound_strip_init(&d->bd_strip);
+    d->bd_strip_meter.gain_min = 1.0f;
 
     for (int i = 0; i < 5; ++i) {
         d9_bt_t *b = &d->bt[i];
@@ -580,6 +582,94 @@ static void d9_render_bd(d9_bt_t *v, const float *nz, const d9_bus_t *bus, int n
     }
 }
 
+/* Enabled/transition path only; settled bypass uses the original loop above.
+ * Keep its cost separate in target disassembly: d9_render's legacy budget still
+ * applies, AND this callee + its per-sample sound_strip_process call need review. */
+D9_NOINLINE void d9_render_bd_strip(d9_bt_t *v, const float *nz, const d9_bus_t *bus, int n,
+                         sound_strip_t *strip, sound_strip_meter_t *meter)
+{
+    const int m = n < v->mute ? n : v->mute;
+    v->mute -= m;
+    d9_env_anchor(&v->amp);
+    d9_env_anchor(&v->click_env);
+    const float attack = v->attack;
+    if (v->click_warm) {                 /* retriggered while its click filter was skipped */
+        d9_warm(&v->click_lp, nz);
+        v->click_warm = 0;
+    }
+    for (int i = 0; i < n; ++i) {
+        float y = 0.0f;
+        if (i < m) {
+            const float f = v->bd_base + v->bd_df;
+            if (v->bd_phold > 0)
+                --v->bd_phold;
+            else
+                v->bd_df *= v->bd_mult;
+            if (v->amp_hold_left > 0 && --v->amp_hold_left == 0)
+                d9_env_exp(&v->amp, 0.00001f, v->decay * 0.001f * D9_SR);
+            const float amp = d9_env_tick(&v->amp);
+
+            v->ph += d9_inc(f);
+            float o = d9_diode16(d9_tri(v->ph));
+            o += 0.05f * o * o;
+            o = d9_biquad_tick(&v->dc_block, o);
+            const float body = d9_shape(&v->shape, o, v->crush_st) * amp;
+
+            /* the beater click; once its 3 ms envelope has run out it sits at -100 dB
+             * for the rest of the note, and is skipped */
+            float click = 0.0f;
+            if (v->impulse > 0 || v->click_env.left) {
+                if (v->impulse > 0) { click += 1.0f; v->impulse--; }
+                click += d9_biquad_tick(&v->click_lp, nz[i]);
+                click *= d9_env_tick(&v->click_env) * attack;
+            }
+            y = (body + click) * v->out_gain;
+        }
+        {
+            sound_strip_meter_t sample;
+            sound_strip_process(strip, &y, &y, 1, &sample);
+            if (sample.input_peak > meter->input_peak) meter->input_peak = sample.input_peak;
+            if (sample.output_peak > meter->output_peak) meter->output_peak = sample.output_peak;
+            if (sample.gain_min < meter->gain_min) meter->gain_min = sample.gain_min;
+        }
+        d9_emit(bus, i, y);
+    }
+    if (m > 0 && !(v->impulse > 0 || v->click_env.left))
+        v->click_stale = 1;
+    if (m > 0 && v->click_stale && v->mute == 0) {  /* note over: freeze where 9W9's froze */
+        d9_warm(&v->click_lp, nz + m);
+        v->click_stale = 0;
+    }
+}
+
+int drum909_bd_strip_set(drum909_t *d, const sound_strip_config_t *config)
+{
+    return d ? sound_strip_set(&d->bd_strip, config) : -1;
+}
+
+const sound_strip_meter_t *drum909_bd_strip_meter(const drum909_t *d)
+{
+    return d ? &d->bd_strip_meter : 0;
+}
+
+/* Stop inaudible filter ringing below -160 dBFS. State is retained through
+ * retriggers and parameter changes; only a fully silent voice is eligible. */
+static int d9_bd_strip_tail(const sound_strip_t *s)
+{
+    if (sound_strip_bypassed(s)) return 0;
+    if ((s->flags >> 16) || s->guard_gain != 1.0f) return 1;
+    if ((s->flags & (SOUND_STRIP_HIGHPASS | SOUND_STRIP_LOWPASS | SOUND_STRIP_LIMITER)) !=
+        ((s->flags >> 8) & (SOUND_STRIP_HIGHPASS | SOUND_STRIP_LOWPASS | SOUND_STRIP_LIMITER))) return 1;
+    if (!((s->flags >> 8) & SOUND_STRIP_ENABLED) && s->mix > 0.0f) return 1;
+    if (s->mix > 0.0f && s->mix < 1.0f) return 1;
+    if ((s->flags >> 8) & SOUND_STRIP_ENABLED && s->mix == 0.0f) return 1;
+    for (int i = 0; i < 2; ++i) {
+        if (s->hp_z[i] > 1e-8f || s->hp_z[i] < -1e-8f ||
+            s->lp_z[i] > 1e-8f || s->lp_z[i] < -1e-8f) return 1;
+    }
+    return 0;
+}
+
 /* Snare (er99_bt_render, two shells + ENV4 noise). Its click path is pinned
  * off (attack 0 at every trigger), so it is not computed: 0 either way. */
 static void d9_render_sd(d9_bt_t *v, const float *nz, const d9_bus_t *bus, int n)
@@ -766,6 +856,8 @@ static inline void d9_bus(d9_bus_t *b, drum909_t *d, int voice, float *dry, floa
 static void d9_render(drum909_t *d, float *dry, float *rev, float *dly, int n)
 {
     d9_bus_t bus;
+    d->bd_strip_meter.input_peak = d->bd_strip_meter.output_peak = 0.0f;
+    d->bd_strip_meter.gain_min = 1.0f;
     if (n > 256)
         n = 256;
     /* the shared noise, written on after the previous block so nz[-DR_NZ_HIST
@@ -782,9 +874,16 @@ static void d9_render(drum909_t *d, float *dry, float *rev, float *dly, int n)
         nz[i] = d9_noise(&d->noise);
 
     /* 9W9's summing order: BD SD LT MT HT RS CP OH RD CR CH */
-    if (d->bt[DR_BD].mute > 0) {
+    if (d->bt[DR_BD].mute > 0 || d9_bd_strip_tail(&d->bd_strip)) {
         d9_bus(&bus, d, DR_BD, dry, rev, dly);
-        d9_render_bd(&d->bt[DR_BD], nz, &bus, n);
+        if (sound_strip_bypassed(&d->bd_strip))
+            d9_render_bd(&d->bt[DR_BD], nz, &bus, n);
+        else
+            d9_render_bd_strip(&d->bt[DR_BD], nz, &bus, n, &d->bd_strip, &d->bd_strip_meter);
+        if (d->bt[DR_BD].mute == 0 && !d9_bd_strip_tail(&d->bd_strip)) {
+            d->bd_strip.hp_z[0] = d->bd_strip.hp_z[1] = 0.0f;
+            d->bd_strip.lp_z[0] = d->bd_strip.lp_z[1] = 0.0f;
+        }
     }
     if (d->bt[DR_SD].mute > 0) {
         d9_bus(&bus, d, DR_SD, dry, rev, dly);
@@ -842,6 +941,7 @@ void drum909_pan_settle(drum909_t *d)
 
 int drum909_active(const drum909_t *d)
 {
+    if (d9_bd_strip_tail(&d->bd_strip)) return 1;
     for (int i = 0; i < 5; ++i)
         if (i < 2 ? d->bt[i].mute > 0 : d->tom[i - 2].mute > 0)
             return 1;

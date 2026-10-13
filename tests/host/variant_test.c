@@ -218,8 +218,8 @@ static void controls(void)
     fresh();
     for (t = 0; t < NTARGETS; t++) for (v = 0; v < engine_nvoices(t); v++) bound += engine_nparams(t,v);
     assert(bound <= 768);                              /* undo reservation covers current schema */
-    assert(variant_snapshot(VS_INFO, 0, 0, &snapshot) == VR_OK && snapshot.count == 7);
-    assert(snapshot.value[0] == (VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE));
+    assert(variant_snapshot(VS_INFO, 0, 0, &snapshot) == VR_OK && snapshot.count == 8);
+    assert(snapshot.value[0] == (VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE | VCAP_STRIP_AUDIO));
     rev = snapshot.revision;
     assert(variant_command(&invalid, &reply) == VR_UNSUPPORTED && reply.request == 77);
     assert(command(VC_SET_STRIP, 25, VP_BOOST, 0) == VR_INVALID);
