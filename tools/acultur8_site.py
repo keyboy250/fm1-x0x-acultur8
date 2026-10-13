@@ -138,6 +138,7 @@ def package(out, emu=None):
     html = (out / 'emu/index.html').read_text('utf-8')
     html = html.replace('href="/"', 'href="../"').replace('href="/faq"', 'href="../faq/"')
     html = html.replace('href="manual.txt"', 'href="../manual/"')
+    html = html.replace('<nav>', '<nav><a href="../about/">About</a>', 1)
     html = html.replace('https://github.com/charlesvestal/fm1-x0x', REPO)
     html = html.replace('</body>', '<script type="module" src="public-demo.js"></script>\n</body>')
     (out / 'emu/index.html').write_text(html, encoding='utf-8')
@@ -151,7 +152,7 @@ def package(out, emu=None):
     templates = ROOT / 'web/acultur8'
     for name in ('index.html', 'site.css'):
         shutil.copy2(templates / name, out / name)
-    for section in ('faq', 'manual'):
+    for section in ('faq', 'manual', 'about'):
         (out / section).mkdir()
         shutil.copy2(templates / f'{section}.html', out / section / 'index.html')
     shutil.copy2(templates / 'public-demo.js', out / 'emu')
