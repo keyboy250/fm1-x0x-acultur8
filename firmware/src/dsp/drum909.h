@@ -23,7 +23,7 @@ enum { DR_BD, DR_SD, DR_LT, DR_MT, DR_HT, DR_RS, DR_CP, DR_CH, DR_OH, DR_CR, DR_
 
 #define DR_MAX_PARAMS 11         /* most params any voice (or the kit) has (X0X: + PAN, the SD's DECAY, the BD's sends) */
 #define DR_NZ_HIST 256           /* noise history kept across blocks (filter warm-up) */
-#define DR_NZ_BUF (DR_NZ_HIST + 2 * 256)
+#define DR_NZ_BUF (DR_NZ_HIST + 256) /* full history + one full render block; compact before reuse */
 
 /* BD and SD: 9W9's er99_bt_t */
 typedef struct {
