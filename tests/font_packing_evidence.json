@@ -1,0 +1,516 @@
+{
+  "schema": 1,
+  "measured_at": "2026-10-13",
+  "status": "isolated-font-optimization-checks-passed",
+  "hardware_tested": false,
+  "baseline_reference": "tests/target_build_baseline.json",
+  "baseline_inputs_sha256": "3e31dc83f603310b10ba85352c7170f2f6b5b778e81df723258612339c32c26d",
+  "optimized_inputs_sha256": "0f2c7025bab97bf01f4592384bc595e949abc0c5f97df74676b603e6ed57458f",
+  "input_hash_method": "sorted relative UTF-8 path + NUL + file bytes; CRLF normalized to LF for text_extensions",
+  "build_inputs": [
+    "assets/909/README.txt",
+    "assets/909/crash.wav",
+    "assets/909/hh.wav",
+    "assets/909/ride.wav",
+    "assets/fonts/Barlow-OFL.txt",
+    "assets/fonts/BarlowSemiCondensed-Bold.ttf",
+    "assets/fonts/BarlowSemiCondensed-Medium.ttf",
+    "assets/fonts/BarlowSemiCondensed-SemiBold.ttf",
+    "assets/fonts/Terminus-LICENSE.txt",
+    "assets/fonts/ter-u12n.bdf",
+    "assets/fonts/ter-u16b.bdf",
+    "assets/fonts/ter-u16n.bdf",
+    "assets/fonts/ter-u24b.bdf",
+    "assets/fonts/ter-u32b.bdf",
+    "firmware/app.ld",
+    "firmware/crt0.S",
+    "firmware/hal/fm1_adc.h",
+    "firmware/hal/fm1_audio.h",
+    "firmware/hal/fm1_cc.h",
+    "firmware/hal/fm1_cpu1.S",
+    "firmware/hal/fm1_cpu1.h",
+    "firmware/hal/fm1_debug.h",
+    "firmware/hal/fm1_flash.h",
+    "firmware/hal/fm1_gpio.h",
+    "firmware/hal/fm1_guard.h",
+    "firmware/hal/fm1_input.h",
+    "firmware/hal/fm1_irq.h",
+    "firmware/hal/fm1_isr.S",
+    "firmware/hal/fm1_lcd_hw.h",
+    "firmware/hal/fm1_perf.h",
+    "firmware/hal/fm1_sys.h",
+    "firmware/hal/fm1_time.h",
+    "firmware/hal/fm1_timer.h",
+    "firmware/hal/fm1_uart.h",
+    "firmware/hal/fm1_usb.h",
+    "firmware/hal/fm1_vec.S",
+    "firmware/hal/fm1_xip.h",
+    "firmware/loader/crt0_ldr.S",
+    "firmware/loader/ldr_core.c",
+    "firmware/loader/loader.c",
+    "firmware/loader/loader.ld",
+    "firmware/src/app/editor.c",
+    "firmware/src/app/engine.c",
+    "firmware/src/app/engine.h",
+    "firmware/src/app/lz.c",
+    "firmware/src/app/main_fm1.c",
+    "firmware/src/app/panel.c",
+    "firmware/src/app/plat.h",
+    "firmware/src/app/plat_fm1.c",
+    "firmware/src/app/project.c",
+    "firmware/src/app/slots.c",
+    "firmware/src/app/ui.c",
+    "firmware/src/app/undo.c",
+    "firmware/src/app/x0x.h",
+    "firmware/src/dsp/bass303.c",
+    "firmware/src/dsp/bass303.h",
+    "firmware/src/dsp/breaks.c",
+    "firmware/src/dsp/breaks.h",
+    "firmware/src/dsp/drum808.c",
+    "firmware/src/dsp/drum808.h",
+    "firmware/src/dsp/drum909.c",
+    "firmware/src/dsp/drum909.h",
+    "firmware/src/dsp/drum909_dsp.h",
+    "firmware/src/dsp/fastmath.h",
+    "firmware/src/dsp/fxbus.c",
+    "firmware/src/dsp/fxbus.h",
+    "firmware/src/dsp/marked_player.c",
+    "firmware/src/dsp/marked_player.h",
+    "firmware/src/dsp/master.c",
+    "firmware/src/dsp/master.h",
+    "firmware/src/dsp/x0x_param.h",
+    "firmware/src/gfx.c",
+    "firmware/src/lcd.c",
+    "firmware/src/libc.c",
+    "firmware/src/midi_uart.c",
+    "firmware/src/ota.c",
+    "firmware/src/seq/motion.c",
+    "firmware/src/seq/motion.h",
+    "firmware/src/seq/pattern.c",
+    "firmware/src/seq/pattern.h",
+    "firmware/src/seq/sequencer.c",
+    "firmware/src/seq/sequencer.h",
+    "firmware/src/seq/tb3po.c",
+    "firmware/src/seq/tb3po.h",
+    "firmware/src/storage.c",
+    "firmware/src/usb.c",
+    "firmware/src/x0x.c",
+    "tools/build.py",
+    "tools/fm1pkg_make.py",
+    "tools/gen_builtin_break.c",
+    "tools/gen_builtin_break.sh",
+    "tools/gen_drum_samples.py",
+    "tools/gen_font.py",
+    "tools/lz4blk.py"
+  ],
+  "changed_inputs": {
+    "firmware/src/app/ui.c": {
+      "raw_sha256": "fa4ed8e994c21f71ba9da80736ef4d03970dc47b4336ecbbd78fd753079d3842",
+      "rle_sha256": "59d9c5922b27d1cd0da2c5ee7df04081117ed27f4318b25cc7fafe7f97812400"
+    },
+    "firmware/src/gfx.c": {
+      "raw_sha256": "156420b0411bfadc8f294f64c4400f6fea62a53a24bf0ac46459f6a5f135498e",
+      "rle_sha256": "f25c09dad455d232773b61e369ac9f123c6fae2ad4f326fdfaf2e988c3da6c8c"
+    },
+    "tools/gen_font.py": {
+      "raw_sha256": "dde503b730c5595f9c8e546249c1f0f2635ecde4fe110d3864c0460682d2fc73",
+      "rle_sha256": "3ac6e6b6246733313ef254d4441877245ef46fdbd17266708c3b591edbb4eb61"
+    }
+  },
+  "compiler_archive_sha256": "a1545cddbc451a06bac43eb5cd96d831470c42a97c5c0b1f98879a20fc7647bd",
+  "builder_image": "sha256:30ffd8c6cf8a5d697ac0135c489cf1352cc5c58c99c58505995242f240c83da3",
+  "resources": {
+    "image": {
+      "before": 581444,
+      "after": 563076,
+      "saved": 18368,
+      "limit": 581564,
+      "spare_after": 18488
+    },
+    "ram": {
+      "before": 97216,
+      "after": 97216,
+      "limit": 98304
+    },
+    "pool": {
+      "before": 334324,
+      "after": 334324,
+      "limit": 344064,
+      "required_spare": 8192
+    }
+  },
+  "stack_from_target_disassembly": {
+    "cv_text": {
+      "raw_frame": 128,
+      "rle_frame": 120,
+      "rle_nested_peak": 136
+    },
+    "caps": {
+      "raw_frame": 44,
+      "rle_frame": 60,
+      "rle_nested_peak": 76
+    },
+    "font_next": {
+      "rle_frame": 16
+    },
+    "scope": "Function frames and nested font_next call only; interrupts and caller frames excluded. Device stack watermark pending."
+  },
+  "glyph_tests": {
+    "glyphs": 439,
+    "raw_bytes": 43917,
+    "rle_bytes": 25514,
+    "payload_saved": 18403,
+    "render_results": {
+      "raw": {
+        "pixels_sha256": "e971afab542cff352576dc573b4459322a7e2bce477c4bcaa8589ec1c70290d8",
+        "pixel_stream_bytes": 17191240,
+        "result": "frames=1756 checksum=183297732"
+      },
+      "rle": {
+        "pixels_sha256": "e971afab542cff352576dc573b4459322a7e2bce477c4bcaa8589ec1c70290d8",
+        "pixel_stream_bytes": 17191240,
+        "result": "frames=1756 checksum=183297732"
+      }
+    }
+  },
+  "scenarios": {
+    "status": "pass",
+    "scenarios": [
+      "tour",
+      "help",
+      "stereo",
+      "getting_started",
+      "patterns"
+    ],
+    "screenshots": [
+      {
+        "image": "tour/t01_909.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "fc5866612d063ec1e9ebd9374e7e9b2c058e0f85e94726079dbece6e569ebb85"
+      },
+      {
+        "image": "tour/t02_909_readout.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "440496a84b5fe8cb54ec9c7471b1822afdc543c5ed33c23e5f95f3377eab2aa0"
+      },
+      {
+        "image": "tour/t03_808.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "4b33b84f922a710119d395f7cff686242bf4af782d4ed7cd465e09d838483fa4"
+      },
+      {
+        "image": "tour/t04_303a.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "7d7f999d68efb631f3f3f54e67ef2fb503aa84e80e57eb0435ce0f81ac650c20"
+      },
+      {
+        "image": "tour/t05_303a_held.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "e6559d8174d031762e2e3464c830866af1ccbfb590e7043d1ade245713827563"
+      },
+      {
+        "image": "tour/t06_tb3po.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "bf07abd78bfacd9d99492bcc30a0f93a23f119ab36a2cf226593de6305b9c324"
+      },
+      {
+        "image": "tour/t07_new_line_msg.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "c7ad1d82141a8e67e5d55dfe2942bed1d113ff21ec55e297160df5c770d57760"
+      },
+      {
+        "image": "tour/t08_break.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "9d98912a07570f508cad7636128ae0fd31c81ec7c2499fd4e57251338a6ea923"
+      },
+      {
+        "image": "tour/t09_break_loops.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "9bc1119cff0ec84a4f1a9e92083246d58a1fa99cdc7c8314bd68f1e3ae1304c7"
+      },
+      {
+        "image": "tour/t10_home.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "c97b20b4f017cb31916931dca513edc5a02e2be031d7f9086a64ed2686dfbefe"
+      },
+      {
+        "image": "tour/t11_home_mute.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "0abb6610ac99c9b4d41915b380e38857f1f91bc7a7b5c435b6b63f8b2c3b5fd9"
+      },
+      {
+        "image": "tour/t12_fx.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "9d7b9dd427cb06f53cec3493c1904aff803c9d26c0f02ef0f57c839ee69b55a4"
+      },
+      {
+        "image": "tour/t13_mix_comp.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "e36bf982b2ff9544e394fdeda354f3ab6209229eddf08bb576ebb607f19c7cee"
+      },
+      {
+        "image": "tour/t14_mix_pump.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "fb84d0afac9bbb3a04d8d604f20ca11cb64459b57119ec0a958fbd3b3f52d9b3"
+      },
+      {
+        "image": "tour/t15_list.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "e9bea86ea1554577b346504b63bdebae35b4c967fea890244c19923b22152db0"
+      },
+      {
+        "image": "tour/t16_list_edit.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "2b56a88b115c0c59779166ed5d1021aafaf8c6791b1a2cc8424e7c63f3d83670"
+      },
+      {
+        "image": "tour/t17_global.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "90fd5ecba7cc084efc9f0b042bb2545e4b7e776a6b29148c1636bccedcd933ba"
+      },
+      {
+        "image": "tour/t18_global_reset.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "589b27680c54ea94c0a5bf59507d203860027189ebbce887820159e252ccff07"
+      },
+      {
+        "image": "tour/t19_ask.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "461a4bc3a731dad38af8470f0a4f8db0973595b746f178407587474a4c424dd2"
+      },
+      {
+        "image": "tour/t20_cancelled.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "abfa36495513012c2ca762345f791eb7f542771d85b553337f4da566ac4f808b"
+      },
+      {
+        "image": "tour/t21_ask_clear.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "1b1aa3639cdeadf52d8e6ec43da88f7087d0f95ef7fb611b38a6eec6982b7b5d"
+      },
+      {
+        "image": "tour/t22_tempo.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "b34ff08f4ea01c2c49705a535a1f01060ead1b0d34fd9c10442ebc2e16e4a910"
+      },
+      {
+        "image": "help/h01_save.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "74b07bf2b8ea5e4a244337558a32b136cec11d9b47643ff03d1e70e82b93a5a4"
+      },
+      {
+        "image": "help/h02_home.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "44a4ac149fe93fdc880f943005caa9957291f83b64a3a97d9a9556a0e822dac0"
+      },
+      {
+        "image": "help/h03_oct_kbd.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "152b549ffad29299e1a7e4877055648899f3e74da1ee01c33db94cdd63061ddd"
+      },
+      {
+        "image": "stereo/s01_pans.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "12d5c9312c130e8f14194e962c43d8ac98fe076ae161c486dc474e754bbcf1a4"
+      },
+      {
+        "image": "stereo/s02_panned.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "6ae58744dabec441d4d2f4122dc23555899d948aa7416e0720e0f6beb8a6ed7b"
+      },
+      {
+        "image": "stereo/s03_bd_pan.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "f313445f6fc2b444a1b29cdeda86f5421b574148f1db52ee0c550a9f487908a6"
+      },
+      {
+        "image": "getting_started/gs_motion.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "3fffd5b232361bf02d2058f86cb34a28be52633d84201cf9b93fcc53ae33d7c6"
+      },
+      {
+        "image": "patterns/11_chain.png",
+        "size": [
+          240,
+          240
+        ],
+        "rgb_sha256": "c299c915115a1b477e935017a3eb11843564b13a182bf1646867dc66b1046139"
+      }
+    ]
+  },
+  "wasm_parity": {
+    "status": "pass",
+    "frames": 241227,
+    "chunks": 1894,
+    "stereo_audio": "bit-identical",
+    "framebuffer": "pixel-identical after every render chunk",
+    "lights_and_clock": "identical",
+    "peak": 0.26093435287475586,
+    "audio_sha256": "539153f0332661cc307379a89610d01c1a3a7d32a0b8ef2c438d135a05107505",
+    "framebuffer_stream_sha256": "be6b32911dee694d4b2eeb48c733b457fca83b9ae0732cea58cff29070bd98f3"
+  },
+  "host_draw_microbenchmark": {
+    "cases_per_run": 351200,
+    "raw_seconds": [
+      0.242867,
+      0.242373,
+      0.240544
+    ],
+    "rle_seconds": [
+      0.274001,
+      0.269779,
+      0.266813
+    ],
+    "median_percent_change": 11.31,
+    "checksum": 2267411336,
+    "scope": "Host render harness at -O2; includes text width; excludes display I/O and caps. Not a device timing measurement."
+  },
+  "checks": {
+    "glyph_regressions": {
+      "status": "pass",
+      "tests": 4
+    },
+    "address_and_undefined_sanitizers": "pass",
+    "full_host_scenarios": "pass",
+    "raw_rle_wasm_parity": "pass",
+    "entry_image_ram_pool_hal_no_soft_double": "pass",
+    "static_target_cost_15_functions": "pass"
+  },
+  "raw_artifacts": {
+    "x0x.bin": {
+      "bytes": 581444,
+      "sha256": "727d04dc8922b89e460f4185a4104c03c6d7aea425897215127011a1083e46a8"
+    },
+    "x0x.elf": {
+      "bytes": 608644,
+      "sha256": "649a3b7a0ec10b94e555fc62411098e8f5f58f09235a99b20bb1e82f05102adf"
+    },
+    "x0x.dis": {
+      "bytes": 5506824,
+      "sha256": "e9894ad211ceb92dfe2a1a2be91847005f39001830592b982d19d7d958221ff8"
+    },
+    "x0x.fwsc": {
+      "bytes": 609680,
+      "sha256": "0ce8b5eb9fdb68637a17521f4046dda6026392d2a96eaed9c50d67071fdaf7ec"
+    },
+    "emu/x0x.wasm": {
+      "bytes": 630525,
+      "sha256": "40b3d5da82dbb87bbfb1939c4134d9ef72c65d939edeac89b1bf65e368a5f5ca"
+    }
+  },
+  "rle_artifacts": {
+    "x0x.bin": {
+      "bytes": 563076,
+      "sha256": "3a7ffb2527ca80abe4413d4cad59f7fc498be33eec9c3143f65306e011252516"
+    },
+    "x0x.elf": {
+      "bytes": 590752,
+      "sha256": "acd4b62ddc6cb8c32c4c09421537560f31ee6fca8df5d4d25bff26147826d316"
+    },
+    "x0x.dis": {
+      "bytes": 5389543,
+      "sha256": "e96d5cce45e6eaf8ffe711e70b021dd9a5e058c8f1ae09a047a9be9051f519df"
+    },
+    "x0x.fwsc": {
+      "bytes": 609680,
+      "sha256": "077cd13182fe55c97ddb88383827fc816234a3dd995686f4ca3789521eb39c11"
+    },
+    "emu/x0x.wasm": {
+      "bytes": 628219,
+      "sha256": "3f63ae3314b1e40c322ab09f150a5db15eb548726239bb9f37bdaec215834ebc"
+    }
+  },
+  "pending": [
+    "physical draw timing",
+    "device stack watermark",
+    "hardware playback deadlines",
+    "integrated variant resource build after unrelated changes"
+  ]
+}
