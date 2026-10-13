@@ -130,7 +130,8 @@ static uint8_t kbd_held_note[NBASS];
 static int held_note_of(const bpart_t *bp, int s);
 
 /* ============================================================ text helpers === */
-static char *put_s(char *b, const char *s)
+/* Share this cold text-copy loop across drawing/control paths to conserve XIP. */
+static __attribute__((noinline)) char *put_s(char *b, const char *s)
 {
     while (*s)
         *b++ = *s++;
