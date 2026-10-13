@@ -130,13 +130,14 @@ static volatile uint32_t so_w, so_r;
 static uint32_t midi_in_q[MQ], midi_out_q[MQ];
 static volatile uint32_t mi_w, mi_r, mo_w, mo_r;
 
-static void midi_out_event(uint32_t pkt)            /* from the audio ISR */
+#include "midi_ring.h"
+static int midi_out_event(uint32_t pkt) /* bounded enqueue feedback, audio/main single producer */
 {
-    if (usb.config && mo_w - mo_r < MQ) {
-        midi_out_q[mo_w % MQ] = pkt;
-        RING_PUBLISH();
-        mo_w++;
-    }
+    return midi_ring_try_put(midi_out_q,&mo_w,&mo_r,MQ,pkt,usb.config && !usb.suspended);
+}
+static int midi_out_pair(uint32_t first,uint32_t second)
+{
+    return midi_ring_try_pair(midi_out_q,&mo_w,&mo_r,MQ,first,second,usb.config && !usb.suspended);
 }
 
 /* ------------------------------------------------------- descriptors --- */

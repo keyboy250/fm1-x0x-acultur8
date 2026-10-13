@@ -138,7 +138,7 @@ class X0X extends AudioWorkletProcessor {
       };
       const arrangement = read(5,0);
       msg.variant = {info:read(0,0),strip:this.variantStrip ?? 0,viewRevision:this.variantViewRevision,settings:read(2,this.variantStrip ?? 0),meters:read(3,this.variantStrip ?? 0),
-        arrangement,block:arrangement ? read(4,arrangement.values[2]) : null,chord:read(6,0)};
+        arrangement,block:arrangement ? read(4,arrangement.values[2]) : null,chord:read(6,0),bass:[read(7,0),read(7,1)]};
     }
     msg.sync={state:ex.web_sync_state(),bpm:ex.web_seq_bpm(),playing:!!ex.web_seq_playing(),beat:ex.web_seq_beat()};
     if(ex.web_marked_cursor)msg.marked={cursor:ex.web_marked_cursor(),triggers:ex.web_marked_triggers(),slice:ex.web_marked_last(),playing:!!ex.web_marked_playing()||(ex.web_sync_state()===2&&!!ex.web_seq_playing())};

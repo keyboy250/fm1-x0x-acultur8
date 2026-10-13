@@ -474,14 +474,15 @@ static void s_drum(void *x, int kit, int v, float vel)
     else                                 /* the 808's unaccented hit sits at D8_VEL_NORMAL, not at our 909 level */
         drum808_trigger(&d808, v, vel >= 0.999f ? 1.0f : vel * (D8_VEL_NORMAL / (88.0f / 127.0f)));
 }
-static void s_bon(void *x, int p, int note, int acc, int sl)
+/* Shared checked trigger: the void compatibility callback must not duplicate it. */
+static __attribute__((noinline)) int s_bon_checked(void *x,int p,int note,int acc,int sl)
 {
     (void)x;
-    if (prob_skip(PART_303A + p, 0))                  /* skipped: a rest */
-        bass303_note_off(&b303[p]);
-    else
-        bass303_note_on(&b303[p], note, acc, sl);
+    if(prob_skip(PART_303A+p,0)) {bass303_note_off(&b303[p]);return 0;}
+    bass303_note_on(&b303[p],note,acc,sl);return 1;
 }
+static void s_bon(void *x,int p,int note,int acc,int sl) { (void)s_bon_checked(x,p,note,acc,sl); }
+static void s_bretune(void *x,int p,int note,int acc) { (void)x;bass303_note_on(&b303[p],note,acc,1); }
 static void s_boff(void *x, int p) { (void)x; bass303_note_off(&b303[p]); }
 static uint8_t brk_applied[BRK_NSET];  /* the pattern settings the break was last given */
 static void s_brk(void *x, int s16, int bar, float spb, int en)
@@ -503,12 +504,18 @@ static void s_brk(void *x, int s16, int bar, float spb, int en)
     breaks_step(&brk, s16, bar, spb, en);
 }
 static void s_brkstop(void *x) { (void)x; breaks_stop(&brk); }
-static void s_midi(void *x, uint8_t st, uint8_t d1, uint8_t d2)
+static uint32_t midi_packet(uint8_t st,uint8_t d1,uint8_t d2)
 {
-    uint32_t cin = st >= 0xF0 ? 0x0Fu : (uint32_t)(st >> 4);
-    (void)x;
-    plat_midi_out(cin | ((uint32_t)st << 8) | ((uint32_t)d1 << 16) | ((uint32_t)d2 << 24));
+    uint32_t cin=st>=0xF0?0x0Fu:(uint32_t)(st>>4);
+    return cin|((uint32_t)st<<8)|((uint32_t)d1<<16)|((uint32_t)d2<<24);
 }
+static int s_midi_try(void *x,uint8_t st,uint8_t d1,uint8_t d2)
+{ (void)x;return plat_midi_out(midi_packet(st,d1,d2)); }
+static void s_midi(void *x,uint8_t st,uint8_t d1,uint8_t d2)
+{ (void)s_midi_try(x,st,d1,d2); }
+static int s_midi_pair(void *x,uint8_t st1,uint8_t n1,uint8_t v1,uint8_t st2,uint8_t n2,uint8_t v2)
+{ (void)x;return plat_midi_pair(midi_packet(st1,n1,v1),midi_packet(st2,n2,v2)); }
+
 static void s_step(void *x, int t, int p)
 {
     (void)x;
@@ -550,10 +557,16 @@ int engine_motion_part(int t, int v)
 int engine_motion_value(int k) { return motion_value(&mot, k); }
 void engine_motion_rec(int k) { motion_req_rec(&mot, k); }
 void engine_motion_hold(int k) { motion_req_hold(&mot, k); }
-static const seq_sink_t SINK = {s_drum_seq, s_bon, s_boff, s_brk, s_brkstop, s_midi, s_step, 0};
+static const seq_sink_t SINK = {s_drum_seq, s_bon, s_boff, s_brk, s_brkstop, s_midi, s_step, 0, s_bretune, s_bon_checked, s_midi_try, s_midi_pair};
 
 /* ---------------------------------------------------------------- MIDI in --- */
 static uint8_t bass_held[NBASS];       /* note held from MIDI, for legato = slide */
+void engine_notes_clear(void)
+{
+    uint32_t saved=plat_control_enter();
+    seq_notes_clear(&seq,&SINK);bass_held[0]=bass_held[1]=255;
+    plat_control_leave(saved);
+}
 
 static void midi_in(uint32_t pkt)
 {
@@ -580,11 +593,11 @@ static void midi_in(uint32_t pkt)
     for (k = 0; k < NBASS; k++)                         /* the 303s: overlapping notes slide */
         if (seq.ch[TRK_BASS0 + k] == ch) {
             if (ty == 0x90) {
-                bass303_note_on(&b303[k], d1, d2 >= 100, bass_held[k] != 0);
+                bass303_note_on(&b303[k], d1, d2 >= 100, bass_held[k] != 255);
                 bass_held[k] = d1;
             } else if (ty == 0x80 && bass_held[k] == d1) {
                 bass303_note_off(&b303[k]);
-                bass_held[k] = 0;
+                bass_held[k] = 255;
             }
         }
     if (seq.ch[TRK_BRK] == ch && (ty == 0x90 || ty == 0x80) && d1 >= 36 && d1 <= 43)   /* the break's slices */
@@ -627,6 +640,7 @@ static void drain(void)
     }
     cq_r = r;
     strip_block_begin(strip_dirty);
+    seq_midi_prepare(&seq,plat_midi_connected(),&SINK);
     while (guard-- && plat_midi_in(&pkt))
         midi_in(pkt);
 }
@@ -1101,7 +1115,9 @@ void engine_brk_loops(void)
 
 void engine_init(pattern_t *patterns, song_t *song, lane_t *lanes, const sound_t *base)
 {
-    int p;
+    int p;uint8_t owned_note[NBASS],owned_channel[NBASS];
+    if(seq.pat)engine_notes_clear();
+    for(p=0;p<NBASS;p++) {owned_note[p]=seq.pat?seq.bass_notes_out[p]:255;owned_channel[p]=seq.pat?seq.bass_channels_out[p]:255;}
     cq_w = cq_r = 0;
     for (p = 0; p < 25; p++) sound_strip_config_default(&strip_cfg[p]);
     for (p = 0; p < 3; p++) { sound_strip_init(&mono_strip[p]); sound_strip_meter_clear(&mono_strip_meter[p]); }
@@ -1115,6 +1131,8 @@ void engine_init(pattern_t *patterns, song_t *song, lane_t *lanes, const sound_t
     fxbus_init(&fx, dly_buf, DLY_LEN);
     master_init(&mst);
     seq_init(&seq, patterns);
+    for(p=0;p<NBASS;p++){seq.bass_notes_out[p]=owned_note[p];seq.bass_channels_out[p]=owned_channel[p];}
+    bass_held[0]=bass_held[1]=255;
     seq.song = song;
     motion_init(&mot, lanes);
     mot.base = mot_base;

@@ -39,8 +39,10 @@ void plat_keys_dim(uint32_t keys);     /* these keys light dim (a second level; 
 void plat_play_red(int red);           /* PLAY lights green; red (its other LED) while recording (before plat_leds) */
 
 /* USB MIDI, 4-byte USB-MIDI event packets (cable 0) */
+int plat_midi_connected(void);
 int plat_midi_in(uint32_t *pkt);       /* 1 = got one (called from the audio ISR) */
-void plat_midi_out(uint32_t pkt);      /* queue one (audio ISR or main loop) */
+int plat_midi_pair(uint32_t first,uint32_t second); /* atomic two-slot transaction */
+int plat_midi_out(uint32_t pkt);      /* queue one (audio ISR or main loop) */
 
 /* persistent storage (Felucca storage.c objects: A/B sectors, CRC, torn-write safe) */
 int plat_store_load(uint32_t obj, void *dst, uint32_t max);   /* bytes loaded, < 0 = none / bad */

@@ -44,6 +44,8 @@ void seq_init(seq_t *s, pattern_t *patterns)
     }
     s->clk_to_next = NEVER;
     s->arrangement.queued = 255;
+    s->midi_ready=1;
+    for(i=0;i<NBASS;i++)s->bass_notes_out[i]=s->bass_channels_out[i]=255;
 }
 
 static int arrangement_active(const seq_t *s)
@@ -132,19 +134,145 @@ static void midi(const seq_sink_t *o, uint8_t st, uint8_t d1, uint8_t d2)
         o->midi(o->ctx, st, d1, d2);
 }
 
-static void bass_release(seq_t *s, int b, const seq_sink_t *o)
+enum { FOLLOW_BLOCKED_A=1, FOLLOW_ACCENT_A=4, FOLLOW_RETUNE_A=16, FOLLOW_MIDI_REFRESH_A=64 };
+static __attribute__((noinline)) int midi_try(const seq_sink_t *o,uint8_t st,uint8_t n,uint8_t v)
 {
-    seq_track_t *tr = &s->t[TRK_BASS0 + b];
-    if (tr->sounding) {
-        o->bass_off(o->ctx, b);
-        tr->sounding = 0;
-        if (s->send_notes && s->bass_notes_out[b]) {
-            if (s->ch[TRK_BASS0 + b] != SEQ_CH_OFF)    /* (switched OFF while it sounded: 0x80 | 0xFF is a reset) */
-                midi(o, (uint8_t)(0x80 | s->ch[TRK_BASS0 + b]), s->bass_notes_out[b], 0);
-            s->bass_notes_out[b] = 0;
+    if(o->midi_try)return o->midi_try(o->ctx,st,n,v);
+    if(!o->midi)return 0;
+    midi(o,st,n,v);return 1;
+}
+static __attribute__((noinline)) int bass_midi_shared(const seq_t *s,int b)
+{
+    int peer=b^1;
+    return s->bass_notes_out[b]!=255 && s->bass_notes_out[b]==s->bass_notes_out[peer] &&
+        s->bass_channels_out[b]==s->bass_channels_out[peer];
+}
+/* These shared bass paths must remain single copies: both constant-specialized
+ * advance loops use them, and MIDI cleanup also runs outside the musical loop. */
+static __attribute__((noinline)) int bass_midi_off(seq_t *s,int b,const seq_sink_t *o)
+{
+    unsigned bit=FOLLOW_MIDI_REFRESH_A<<b;
+    if(!bass_midi_shared(s,b) && s->bass_notes_out[b]!=255 && s->bass_channels_out[b]<16 &&
+        !midi_try(o,(uint8_t)(0x80|s->bass_channels_out[b]),s->bass_notes_out[b],0)) {
+        s->arrangement.reserved|=(uint8_t)bit;return 0; /* keep actual ownership until accepted */
+    }
+    s->bass_notes_out[b]=s->bass_channels_out[b]=255;
+    s->arrangement.reserved&=(uint8_t)~bit;return 1;
+}
+static __attribute__((noinline)) void bass_release(seq_t *s,int b,const seq_sink_t *o)
+{
+    seq_track_t *tr=&s->t[TRK_BASS0+b];
+    if(tr->sounding) {if(o->bass_off)o->bass_off(o->ctx,b);tr->sounding=0;}
+    (void)bass_midi_off(s,b,o);tr->to_off=0;
+}
+void seq_notes_clear(seq_t *s,const seq_sink_t *o)
+{
+    int b;
+    for(b=0;b<NBASS;b++) {
+        int sounding=s->t[TRK_BASS0+b].sounding;
+        bass_release(s,b,o);if(!sounding && o->bass_off)o->bass_off(o->ctx,b);
+        s->t[TRK_BASS0+b].held_note=0;s->t[TRK_BASS0+b].trigger_rejected=0;
+    }
+    s->arrangement.reserved&=(uint8_t)(FOLLOW_MIDI_REFRESH_A|(FOLLOW_MIDI_REFRESH_A<<1));
+}
+static void bass_midi_on(seq_t *s,int b,int note,int accent,int retrigger,const seq_sink_t *o)
+{
+    unsigned bit=FOLLOW_MIDI_REFRESH_A<<b;
+    uint8_t channel=s->ch[TRK_BASS0+b],old=s->bass_notes_out[b],old_channel=s->bass_channels_out[b];
+    if(retrigger)s->arrangement.reserved|=(uint8_t)bit;
+    if(!s->send_notes || !s->midi_ready || channel>=16) {(void)bass_midi_off(s,b,o);return;}
+    /* Two basses may share one receiver tone. Existing ownership pairs are references;
+       the final reference alone emits Off. A shared tone has one MIDI attack. */
+    {
+        int peer=b^1;unsigned peer_bit=FOLLOW_MIDI_REFRESH_A<<peer;
+        if(s->bass_notes_out[peer]==(uint8_t)note && s->bass_channels_out[peer]==channel) {
+            if(s->arrangement.reserved&peer_bit) {
+                if(!bass_midi_off(s,peer,o))return;
+            } else {
+                if(old!=(uint8_t)note || old_channel!=channel) {
+                    if(!bass_midi_off(s,b,o))return;
+                }
+                s->bass_notes_out[b]=(uint8_t)note;s->bass_channels_out[b]=channel;
+                s->arrangement.reserved&=(uint8_t)~bit;return;
+            }
+        }
+        if(bass_midi_shared(s,b)) {
+            if(!midi_try(o,(uint8_t)(0x90|channel),(uint8_t)note,accent?127:90))return;
+            s->bass_notes_out[b]=(uint8_t)note;s->bass_channels_out[b]=channel;
+            s->arrangement.reserved&=(uint8_t)~bit;return;
         }
     }
-    tr->to_off = 0;
+    if(old==(uint8_t)note && old_channel==channel && !(s->arrangement.reserved&bit))return;
+    if(old!=255 && old_channel<16) {
+        uint8_t on=(uint8_t)(0x90|channel),off=(uint8_t)(0x80|old_channel),velocity=accent?127:90;
+        int off_first=(s->arrangement.reserved&bit) || old_channel!=channel;
+        if(o->midi_pair_try) {
+            if(!(off_first?o->midi_pair_try(o->ctx,off,old,0,on,(uint8_t)note,velocity):
+                 o->midi_pair_try(o->ctx,on,(uint8_t)note,velocity,off,old,0)))return;
+        } else if(o->midi_try) {
+            /* A feedback sink lacking pair support must accept Off before any new On. */
+            if(!bass_midi_off(s,b,o))return;
+            if(!midi_try(o,on,(uint8_t)note,velocity))return;
+        } else {
+            if(!o->midi)return;
+            if(off_first){midi(o,off,old,0);midi(o,on,(uint8_t)note,velocity);}
+            else {midi(o,on,(uint8_t)note,velocity);midi(o,off,old,0);}
+        }
+    } else if(!midi_try(o,(uint8_t)(0x90|channel),(uint8_t)note,accent?127:90))return;
+    s->bass_notes_out[b]=(uint8_t)note;s->bass_channels_out[b]=channel;s->arrangement.reserved&=(uint8_t)~bit;
+}
+void seq_midi_prepare(seq_t *s,int connected,const seq_sink_t *o)
+{
+    int b;s->midi_ready=(uint8_t)(connected!=0);
+    for(b=0;b<NBASS;b++) {
+        seq_track_t *tr=&s->t[TRK_BASS0+b];
+        if(s->mute & (1u<<(MUTE_BASS0+b))) {bass_release(s,b,o);continue;}
+        if(!tr->sounding || !s->playing || !s->send_notes || !s->midi_ready || s->ch[TRK_BASS0+b]>=16 ||
+            (s->bass_notes_out[b]!=255 && s->ch[TRK_BASS0+b]!=s->bass_channels_out[b]))(void)bass_midi_off(s,b,o);
+    }
+}
+void seq_midi_sync(seq_t *s,int connected,const seq_sink_t *o)
+{
+    int b;seq_midi_prepare(s,connected,o);
+    if(!s->playing)return;
+    for(b=0;b<NBASS;b++) {
+        seq_track_t *tr=&s->t[TRK_BASS0+b];
+        if(tr->sounding && !(s->mute&(1u<<(MUTE_BASS0+b))))
+            bass_midi_on(s,b,tr->held_note&127u,(s->arrangement.reserved&(FOLLOW_ACCENT_A<<b))!=0,0,o);
+    }
+}
+static int bass_follow_note(seq_t *s,int b,int source,int transpose,uint8_t *note)
+{
+    unsigned mode=arrangement_bass_mode(s->arrangement.flags,b);
+    if(!(s->arrangement.flags&ARR_ENABLED) || !mode || !s->arrangement.degree) {
+        int n=source+transpose;*note=(uint8_t)(n<0?0:n>127?127:n);return 1;
+    }
+    {
+        harmony_spec_t spec={s->arrangement.key,s->arrangement.mode,s->arrangement.degree,s->arrangement.parent};
+        const arrangement_settings_t *intent=s->arrangement.intent;
+        return intent && harmony_resolve_note(&spec,source,transpose,intent->bass_low[b],intent->bass_high[b],
+            mode==BASS_FOLLOW_ROOT?HARMONY_ROOT_ONLY:HARMONY_CHORD_TONES,note);
+    }
+}
+static void bass_retune_held(seq_t *s,int b,const seq_sink_t *o)
+{
+    seq_track_t *tr=&s->t[TRK_BASS0+b];uint8_t note;
+    unsigned bit=FOLLOW_RETUNE_A<<b;
+    if(!(s->arrangement.reserved&bit))return;
+    s->arrangement.reserved &= (uint8_t)~bit;
+    if(s->mute&(1u<<(MUTE_BASS0+b))) {bass_release(s,b,o);return;}
+    if(!tr->sounding || !(s->arrangement.flags&ARR_ENABLED) ||
+        !arrangement_bass_mode(s->arrangement.flags,b) || !s->arrangement.degree)return;
+    if(!bass_follow_note(s,b,tr->held_note&127u,0,&note)) {
+        bass_release(s,b,o);tr->held_note=0;s->arrangement.reserved|=(uint8_t)(FOLLOW_BLOCKED_A<<b);return;
+    }
+    if(note!=(tr->held_note&127u)) {
+        int accent=(s->arrangement.reserved&(FOLLOW_ACCENT_A<<b))!=0;
+        if(o->bass_retune)o->bass_retune(o->ctx,b,note,accent);
+        else if(o->bass_on)o->bass_on(o->ctx,b,note,accent,1);
+        tr->held_note=(uint8_t)(note|(tr->held_note&128u));
+        bass_midi_on(s,b,note,accent,0,o);
+    }
 }
 
 static void fire_drum(seq_t *s, int k, int p, const seq_sink_t *o)
@@ -167,38 +295,37 @@ static void fire_drum(seq_t *s, int k, int p, const seq_sink_t *o)
     }
 }
 
-static void fire_bass(seq_t *s, int b, int p, uint32_t step_q8, uint32_t carry, const seq_sink_t *o)
+static __attribute__((noinline)) void fire_bass(seq_t *s,int b,int p,uint32_t step_q8,uint32_t carry,const seq_sink_t *o)
 {
-    seq_track_t *tr = &s->t[TRK_BASS0 + b];
-    bpart_t *bp = bpart(s, b);
-    const bstep_t *st = &bp->step[p];
-    int gate = bstep_gate(st), note, hold, nx;
-    uint8_t prev_slide = tr->held_note & 0x80u;     /* bit 7: the step that sounded slides on */
-    if (s->mute & (1u << (MUTE_BASS0 + b)))
-        gate = G_REST;
-    if (gate == G_REST) {
-        bass_release(s, b, o);
-        tr->held_note = 0;
-        return;
-    }
-    note = st->note + (int)bp->transpose - 24;
-    note = note < 0 ? 0 : note > 127 ? 127 : note;
-    if (gate == G_NOTE || !tr->sounding) {
-        int slide = tr->sounding && prev_slide;
-        o->bass_on(o->ctx, b, note, (st->flags & BS_ACCENT) != 0, slide);
-        if (s->send_notes && s->ch[TRK_BASS0 + b] != SEQ_CH_OFF) {
-            uint8_t old = s->bass_notes_out[b];
-            midi(o, (uint8_t)(0x90 | s->ch[TRK_BASS0 + b]), (uint8_t)note, (st->flags & BS_ACCENT) ? 127 : 90);
-            if (old && old != note)
-                midi(o, (uint8_t)(0x80 | s->ch[TRK_BASS0 + b]), old, 0);   /* legato: the new note first */
-            s->bass_notes_out[b] = (uint8_t)note;
+    seq_track_t *tr=&s->t[TRK_BASS0+b];bpart_t *bp=bpart(s,b);const bstep_t *st=&bp->step[p];
+    int gate=bstep_gate(st),hold,nx;uint8_t note;
+    uint8_t prev_slide=tr->held_note&128u;
+    unsigned blocked=FOLLOW_BLOCKED_A<<b,accentbit=FOLLOW_ACCENT_A<<b,retunebit=FOLLOW_RETUNE_A<<b;
+    if(s->mute&(1u<<(MUTE_BASS0+b)))gate=G_REST;
+    if(gate==G_REST) {bass_release(s,b,o);tr->held_note=0;s->arrangement.reserved&=(uint8_t)~retunebit;return;}
+    if(gate==G_NOTE)s->arrangement.reserved&=(uint8_t)~retunebit; /* NOTE handles final projection once */
+    else bass_retune_held(s,b,o);
+    if(gate==G_TIE && (tr->trigger_rejected || (s->arrangement.reserved&blocked) ||
+        (!tr->sounding && (s->arrangement.flags&ARR_ENABLED) && s->arrangement.degree && arrangement_bass_mode(s->arrangement.flags,b))))return;
+    if(gate==G_TIE && tr->sounding)note=tr->held_note&127u; /* TIE's stored note is not played */
+    else {
+        if(!bass_follow_note(s,b,st->note,(int)bp->transpose-24,&note)) {
+            bass_release(s,b,o);tr->held_note=0;s->arrangement.reserved|=(uint8_t)blocked;return;
         }
-        tr->sounding = 1;
+        s->arrangement.reserved&=(uint8_t)~blocked; /* successful projection; chance rejection is separate */
+        {
+            int accent=(st->flags&BS_ACCENT)!=0,slide=tr->sounding && prev_slide;
+            int triggered=o->bass_trigger?o->bass_trigger(o->ctx,b,note,accent,slide):1;
+            if(!o->bass_trigger && o->bass_on)o->bass_on(o->ctx,b,note,accent,slide);
+            if(!triggered) {bass_release(s,b,o);tr->held_note=0;tr->trigger_rejected=1;return;}
+            bass_midi_on(s,b,note,accent,!slide,o);tr->sounding=1;tr->trigger_rejected=0;
+            s->arrangement.reserved=(uint8_t)((s->arrangement.reserved&~(blocked|accentbit))|(accent?accentbit:0));
+        }
     }
-    nx = next_pos(s, TRK_BASS0 + b, p, 0);
-    hold = (st->flags & BS_SLIDE) || bstep_gate(&bp->step[nx]) == G_TIE;
-    tr->held_note = (uint8_t)((note & 0x7F) | ((st->flags & BS_SLIDE) ? 0x80 : 0));
-    tr->to_off = hold ? 0 : carry + step_q8 / 2u;
+    nx=next_pos(s,TRK_BASS0+b,p,0);
+    hold=(st->flags&BS_SLIDE) || bstep_gate(&bp->step[nx])==G_TIE;
+    tr->held_note=(uint8_t)(note|((st->flags&BS_SLIDE)?128u:0));
+    tr->to_off=hold?0:carry+step_q8/2u;
 }
 
 int seq_part_muted(const seq_t *s, int p)
@@ -232,6 +359,7 @@ static void arrangement_latch(seq_t *s, uint16_t block)
     a->mute = s->song->bar[block].mute;
     a->degree = a->intent->degree[block];
     a->key = a->intent->key; a->mode = a->intent->mode; a->parent = a->intent->parent;
+    a->reserved |= FOLLOW_RETUNE_A | (FOLLOW_RETUNE_A<<1);
     s->song_rep = (uint8_t)SONG_REP(&s->song->bar[block]);
     for (t = 0; t < NTRACKS; t++) {
         a->pat[t] = next[t];
@@ -412,6 +540,7 @@ static void do_start(seq_t *s, int from_top, const seq_sink_t *o, int arrangemen
 {
     int t;
     if (from_top) {
+        s->arrangement.reserved=0;
         if (arrangement) {
             s->arrangement.tick = s->arrangement.clock_started = 0;
             s->arrangement.queued = 255;
@@ -422,6 +551,7 @@ static void do_start(seq_t *s, int from_top, const seq_sink_t *o, int arrangemen
         seq_track_t *tr = &s->t[t];
         if (from_top) {
             tr->started = 0;
+            tr->trigger_rejected=0;
             tr->bars = 0;
             tr->pp_dir = 1;
         }
@@ -547,6 +677,7 @@ static inline __attribute__((always_inline)) void advance_common(seq_t *s, uint3
     if (s->ext_pending)
         ext_ticks(s, arrangement);
     if (!s->playing) {
+        seq_midi_prepare(s,s->midi_ready,o);
         if (!s->ext)
             s->clk_to_next = 0;
         for (t = 0; t < NTRACKS; t++)                /* stopped: a cue takes effect at once */
@@ -586,6 +717,8 @@ static inline __attribute__((always_inline)) void advance_common(seq_t *s, uint3
         if (!fired)
             break;
     }
+    if (arrangement) for(t=0;t<NBASS;t++)bass_retune_held(s,t,o);
+    seq_midi_sync(s,s->midi_ready,o); /* retry only FINAL played pitches, after boundary/NOTE/TIE */
     if (!s->ext && (s->send_clock || WEB_CLOCK || arrangement) && s->clk_to_next < 256u) {
         uint32_t period = seq_step_q8(s, RATE_16) / 6u;
         if (s->send_clock) midi(o, 0xF8, 0, 0);

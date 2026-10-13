@@ -21,7 +21,8 @@ static int arrangement_degree_valid(const arrangement_settings_t *a, uint8_t deg
 int arrangement_valid(const arrangement_settings_t *a)
 {
     int i;
-    if (a->flags & ~ARR_ENABLED || a->key > 11 || a->mode > HARMONY_CHROMATIC ||
+    if (a->flags & ~ARR_FLAGS || arrangement_bass_mode(a->flags,0)>BASS_FOLLOW_CHORD ||
+        arrangement_bass_mode(a->flags,1)>BASS_FOLLOW_CHORD || a->key > 11 || a->mode > HARMONY_CHROMATIC ||
         (a->parent > HARMONY_LOCRIAN && a->parent != 255) ||
         (a->pad_channel > 15 && a->pad_channel != 255) || a->pad_root > 127 ||
         a->pad_low > a->pad_high || a->pad_high > 127) return 0;
@@ -45,6 +46,16 @@ int variant_valid(const variant_settings_t *v)
     for (i = 0; i < VARIANT_STRIPS; i++) if (!sound_strip_config_valid(&v->strip[i])) return 0;
     return arrangement_valid(&v->arrangement);
 }
+
+int variant_schema2_valid(const variant_settings_t *v)
+{
+    uint32_t i;
+    if (v->magic != VARIANT_MAGIC || v->schema != 2 || v->bytes != sizeof *v || v->arrangement.flags & ~ARR_ENABLED) return 0;
+    for (i=0;i<VARIANT_STRIPS;i++) if (!sound_strip_config_valid(&v->strip[i])) return 0;
+    return arrangement_valid(&v->arrangement);
+}
+int variant_saved_valid(const variant_settings_t *v)
+{ return variant_valid(v) || variant_schema2_valid(v); }
 
 int variant_schema1_valid(const variant_settings_t *v)
 {
@@ -164,13 +175,29 @@ int variant_command(const variant_command_t *c, variant_reply_t *r)
         arrangement_settings_t candidate = proj.variant.arrangement;
         uint8_t *field = (uint8_t *)&candidate;
         if (c->target || c->voice || c->index > 3 || c->value < 0 || c->value > 255) break;
-        field[c->index] = (uint8_t)c->value;
+        if (!c->index && c->value>1) break;
+        field[c->index] = !c->index ? (uint8_t)((candidate.flags & ~ARR_ENABLED) | c->value) : (uint8_t)c->value;
         if (!arrangement_valid(&candidate)) break;
         if (c->index == 0 && (seq.playing || seq.req_stop || seq.req_start || seq.req_cont)) { result = VR_BUSY; break; }
-        if (!engine_arrangement_global((uint8_t *)&proj.variant.arrangement + c->index,(uint8_t)c->value,c->index == 0)) {
+        if (!engine_arrangement_global((uint8_t *)&proj.variant.arrangement + c->index,field[c->index],c->index == 0)) {
             result = VR_BUSY; break;
         }
         ui_external_changed(); result = VR_QUEUED; break;
+    }
+    case VC_SET_BASS_FOLLOW: {
+        arrangement_settings_t candidate = proj.variant.arrangement;
+        uint8_t *dst; unsigned shift;
+        if (c->target>=NBASS || c->voice || c->index>2 || c->value<0 || c->value>127) break;
+        if (!c->index) {
+            if (c->value>BASS_FOLLOW_CHORD) break;
+            shift=1+2*c->target;
+            candidate.flags=(uint8_t)((candidate.flags & ~(3u<<shift)) | ((unsigned)c->value<<shift));
+            dst=&proj.variant.arrangement.flags;
+        } else if (c->index==1) { candidate.bass_low[c->target]=(uint8_t)c->value;dst=&proj.variant.arrangement.bass_low[c->target]; }
+        else { candidate.bass_high[c->target]=(uint8_t)c->value;dst=&proj.variant.arrangement.bass_high[c->target]; }
+        if (!arrangement_valid(&candidate)) break;
+        if (!engine_arrangement_global(dst,!c->index?candidate.flags:(uint8_t)c->value,1)) { result=VR_BUSY;break; }
+        ui_external_changed();result=VR_QUEUED;break;
     }
     case VC_SET_ARR_LENGTH:
         if (c->target || c->voice || c->index || c->value < 0 || c->value > NSONG) break;
@@ -209,7 +236,7 @@ int variant_snapshot(int section, int target, int voice, variant_snapshot_t *s)
     if (section == VS_INFO) {
         s->count = 8;
         s->value[0] = VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE | VCAP_STRIP_AUDIO |
-            VCAP_ARRANGEMENT | VCAP_HARMONY_METADATA;
+            VCAP_ARRANGEMENT | VCAP_HARMONY_METADATA | VCAP_BASS_FOLLOW;
         s->value[1] = (uint32_t)ui_dirty(); s->value[2] = (uint32_t)project_write_protected();
         s->value[3] = engine_queue_written(); s->value[4] = engine_queue_read();
         s->value[5] = VARIANT_SCHEMA; s->value[6] = VARIANT_STRIPS;
@@ -252,6 +279,19 @@ int variant_snapshot(int section, int target, int voice, variant_snapshot_t *s)
         s->value[8] = a->key; s->value[9] = a->mode; s->value[10] = a->parent;
         s->value[11] = r->degree; s->value[12] = r->key; s->value[13] = r->mode; s->value[14] = r->parent;
         s->value[15] = ((r->mute >> 5) + 1u);
+    } else if (section == VS_BASS_FOLLOW) {
+        const arrangement_settings_t *a=&proj.variant.arrangement;
+        const seq_track_t *t;
+        harmony_spec_t spec;harmony_triad_t chord;
+        if (target<0 || target>=NBASS || voice) return VR_INVALID;
+        t=&seq.t[TRK_BASS0+target];s->count=10;
+        s->value[0]=arrangement_bass_mode(a->flags,target);s->value[1]=a->bass_low[target];s->value[2]=a->bass_high[target];
+        s->value[3]=(seq.arrangement.flags&ARR_ENABLED)?arrangement_bass_mode(seq.arrangement.flags,target):0;
+        spec=(harmony_spec_t){seq.arrangement.key,seq.arrangement.mode,seq.arrangement.degree,seq.arrangement.parent};
+        s->value[4]=(seq.playing && (seq.arrangement.flags&ARR_ENABLED) && harmony_resolve(&spec,60,0,127,&chord))?1:0;
+        s->value[5]=t->sounding?(t->held_note&127u):255;
+        s->value[6]=seq.bass_notes_out[target];s->value[7]=seq.bass_channels_out[target];s->value[8]=seq.midi_ready;
+        s->value[9]=(seq.arrangement.reserved&(1u<<target))?1:0;
     } else if (section == VS_CHORD) {
         const volatile arrangement_runtime_t *a = &seq.arrangement;
         harmony_spec_t spec = {a->key,a->mode,a->degree,a->parent};

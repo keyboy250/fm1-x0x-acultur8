@@ -88,6 +88,7 @@ void plat_leds(uint32_t buttons, uint32_t keys)
 }
 
 /* MIDI: Felucca's rings carry 4-byte USB-MIDI event packets, byte 0 = cable / CIN */
+int plat_midi_connected(void) { return usb.config && !usb.suspended; }
 int plat_midi_in(uint32_t *pkt)
 {
     if (mi_r == mi_w)
@@ -96,7 +97,8 @@ int plat_midi_in(uint32_t *pkt)
     mi_r++;
     return 1;
 }
-void plat_midi_out(uint32_t pkt) { midi_out_event(pkt); }
+int plat_midi_out(uint32_t pkt) { return midi_out_event(pkt); }
+int plat_midi_pair(uint32_t first,uint32_t second) { return midi_out_pair(first,second); }
 
 int plat_store_load(uint32_t obj, void *dst, uint32_t max) { return flash_ok ? st_load(obj, dst, max) : -1; }
 int plat_store_save(uint32_t obj, const void *src, uint32_t len) { return flash_ok ? st_save(obj, src, len) : -9; }

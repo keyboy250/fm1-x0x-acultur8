@@ -27,6 +27,7 @@ int engine_arrangement_refresh(const arrangement_settings_t *intent);
 int engine_arrangement_queue(uint8_t block);
 /* Main context only. Nested holds permit helper calls after incoming requests defer. */
 int engine_transport_reserve(void);
+void engine_notes_clear(void);
 void engine_transport_release(void);
 
 enum { T_909, T_808, T_303, T_BRK, T_FX, T_MIX, T_MST, NTARGETS };

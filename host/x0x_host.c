@@ -100,6 +100,8 @@ void plat_keys_dim(uint32_t k) { dim_keys = k; }      /* dim keys: "o" in the le
 #define MQ 256
 static uint32_t min_q[MQ], mi_w, mi_r;
 static FILE *midi_log;
+static int midi_connected=1; /* synthetic host connection */
+int plat_midi_connected(void) { return midi_connected; }
 int plat_midi_in(uint32_t *pkt)
 {
     if (mi_r == mi_w)
@@ -108,8 +110,9 @@ int plat_midi_in(uint32_t *pkt)
     return 1;
 }
 static uint32_t midi_out_count, clock_out_count, note_ons;
-void plat_midi_out(uint32_t pkt)
+int plat_midi_out(uint32_t pkt)
 {
+    if(!midi_connected)return 0;
     midi_out_count++;
     if ((((pkt >> 8) & 0xF0) == 0x90) && ((pkt >> 24) & 0x7F))
         note_ons++;                                  /* the notes the sequence sent (expect noteons) */
@@ -117,6 +120,13 @@ void plat_midi_out(uint32_t pkt)
         clock_out_count++;
     else if (midi_log)
         fprintf(midi_log, "%u ms: %02X %02X %02X\n", now_ms, (pkt >> 8) & 0xFF, (pkt >> 16) & 0xFF, (pkt >> 24) & 0xFF);
+    return 1;
+}
+
+int plat_midi_pair(uint32_t first,uint32_t second)
+{
+    if(!midi_connected)return 0;
+    (void)plat_midi_out(first);(void)plat_midi_out(second);return 1;
 }
 
 /* flash: one buffer per object, kept across a simulated reboot */

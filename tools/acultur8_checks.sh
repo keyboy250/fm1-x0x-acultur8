@@ -17,6 +17,8 @@ OUT=build/host
 W='-O2 -ffp-contract=off -Wall -Wextra -Wdouble-promotion -Werror'
 run() { name="$1"; shift; printf '\nRequired check: %s\n' "$name"; "$@"; }
 compile() { name="$1"; shift; cc "$@" -o "$OUT/$name"; run "$name" "$OUT/$name"; }
+run bass_follow sh tests/host/run_bass_follow.sh
+run bass_follow_wasm sh tests/host/run_bass_follow_wasm.sh
 run arrangement sh tests/host/run_arrangement.sh
 run arrangement_wasm node tests/host/arrangement_wasm_test.mjs build/emu/x0x.wasm build/host/arrangement_schema1_store.bin
 run variant sh tests/host/run_variant.sh
@@ -33,7 +35,7 @@ run font_packing python3 tests/test_font_packing.py
 run font_pinned_oracle python3 tests/test_font_pinned_oracle.py
 compile harmony $W -std=c99 -pedantic tests/host/harmony_test.c firmware/src/seq/harmony.c
 compile fastmath -O2 -ffp-contract=off -Wall -Wextra -Werror tests/host/fastmath_test.c -lm
-compile sequencer -O2 -ffp-contract=off -Wall -Wextra tests/host/seq_test.c firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c firmware/src/seq/pattern.c
+compile sequencer -O2 -ffp-contract=off -Wall -Wextra tests/host/seq_test.c firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c firmware/src/seq/pattern.c firmware/src/seq/harmony.c
 compile encoder -O2 -w -Ifirmware/hal tests/host/encoder_test.c
 compile bass303_lite -std=c99 -O2 -ffp-contract=off -w -Ifirmware/src/dsp -Ifirmware/src tests/host/bass303_lite_test.c firmware/src/dsp/bass303.c -lm
 compile uac -O2 -w -Ifirmware/src -Ifirmware/hal tests/host/uac_test.c -lm

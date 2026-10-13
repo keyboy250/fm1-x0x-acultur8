@@ -51,6 +51,7 @@ void project_discard_rejected(void) { rejected_save = 0; }
 void project_defaults(void)
 {
     int i;
+    engine_notes_clear(); /* validated load/reset: bounded ownership cleanup before canonical mutation */
     proj.set.magic = PROJ_MAGIC;
     proj.set.format = PROJ_FORMAT;
     proj.set.palette = 1;                /* amber */
@@ -477,7 +478,7 @@ static int project_load_impl(void)
         if (load_stream(n, format, stage, raw_len) ||
             (format == PROJ_VARIANT_STREAM && !variant_schema1_valid((const variant_settings_t *)(stage + LEGACY_RAW_LEN))) ||
             (format == PROJ_ARRANGEMENT_STREAM &&
-             (!variant_valid((const variant_settings_t *)(stage + LEGACY_RAW_LEN)) ||
+             (!variant_saved_valid((const variant_settings_t *)(stage + LEGACY_RAW_LEN)) ||
               !arrangement_song_valid((const song_t *)(stage + __builtin_offsetof(project_t,arr) - RAW_OFF))))) {
             ui_project_stage_finish(0);
             rejected_save = 1;
@@ -508,7 +509,7 @@ static int project_load_impl(void)
     if (stage) {
         uint32_t b;
         for (b = 0; b < raw_len; b++) ((uint8_t *)&proj)[RAW_OFF + b] = stage[b];
-        if (format == PROJ_VARIANT_STREAM) {
+        if (format == PROJ_VARIANT_STREAM || format == PROJ_ARRANGEMENT_STREAM) {
             proj.variant.schema = VARIANT_SCHEMA; proj.variant.bytes = sizeof proj.variant;
         }
     } else {
