@@ -103,3 +103,15 @@ node tests/host/marked_sync_test.mjs build/emu/x0x.wasm
 ```
 
 Dashboard tests create a disposable local Git clone, prepare the pinned baseline and start a temporary loopback HTTP server. They cover exact save/restore, stale-write rejection, new source editing, path/origin/token restrictions, private runtime/decoder exclusions, source exports, stale emulator detection, REX job downloads and FAQ styling. Build packaging checks do not require Docker. Firmware/host, WASM, browser and physical-device results remain separate evidence; successful syntax or packaging checks do not prove device readiness.
+
+## Preview a checked browser-alpha package
+
+After the mandatory checker reports its artifact path, serve that package from the repository root:
+
+```sh
+python tools/serve_alpha.py --site build/site-ARTIFACT --port 8130
+```
+
+Replace `build/site-ARTIFACT` with the exact path in `build/acultur8-checks.json`, then open `http://127.0.0.1:8130/emu/`. The helper verifies every release-manifest file hash before listening, binds only loopback, uses explicit JavaScript/module/WASM MIME types and exposes only the checked package files. It snapshots the bytes; stop/restart it to preview a different package. A failed hash stops startup. Do not use a generic Python static server on Windows: local MIME associations may serve `.mjs` as plain text and prevent the audio worklet from starting. A fresh port avoids responses cached from an earlier incorrect server.
+
+Each origin has separate browser saves. Testing a new preview does not migrate imports or saved projects from another port. Source updates may proceed through reviewed PRs; new Pages deployment remains held for sign-off.

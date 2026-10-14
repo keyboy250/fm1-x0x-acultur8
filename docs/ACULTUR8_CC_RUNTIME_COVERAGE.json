@@ -1,6 +1,6 @@
 {
   "registry_map": "draft-1-actions-prototype-1",
-  "scope": "native implementation candidate; no browser/target/device acceptance",
+  "scope": "native implementation candidate with scoped HOST browser slice evidence; no physical device/DAW acceptance",
   "rows": [
     {
       "id": "sound.909.BD.0",
@@ -4648,91 +4648,247 @@
       "parameter_number": 1104,
       "binding": "UNSUPPORTED",
       "status": "unimplemented",
-      "reason": "browser/nonmusical callback absent"
+      "reason": "native slice dispatch remains unsupported; separate HOST browser overlay below",
+      "browser": {
+        "status": "HOST browser slice ABI1.1; local synthetic acceptance passed",
+        "parameter_number": 1104,
+        "source": 2,
+        "abi": 65537,
+        "ingress": "explicit selected input route; correlated application receipt",
+        "evidence": "docs/ACULTUR8_BROWSER_SLICE_CC.md",
+        "physical_usb_trs": false,
+        "real_daw": false,
+        "real_audio_context": false,
+        "download_delivery": false
+      }
     },
     {
       "id": "slice.repeat",
       "parameter_number": 1105,
       "binding": "UNSUPPORTED",
       "status": "unimplemented",
-      "reason": "browser/nonmusical callback absent"
+      "reason": "native slice dispatch remains unsupported; separate HOST browser overlay below",
+      "browser": {
+        "status": "HOST browser slice ABI1.1; local synthetic acceptance passed",
+        "parameter_number": 1105,
+        "source": 2,
+        "abi": 65537,
+        "ingress": "explicit selected input route; correlated application receipt",
+        "evidence": "docs/ACULTUR8_BROWSER_SLICE_CC.md",
+        "physical_usb_trs": false,
+        "real_daw": false,
+        "real_audio_context": false,
+        "download_delivery": false
+      }
     },
     {
       "id": "slice.layer",
       "parameter_number": 1106,
       "binding": "UNSUPPORTED",
       "status": "unimplemented",
-      "reason": "browser/nonmusical callback absent"
+      "reason": "native slice dispatch remains unsupported; separate HOST browser overlay below",
+      "browser": {
+        "status": "HOST browser slice ABI1.1; local synthetic acceptance passed",
+        "parameter_number": 1106,
+        "source": 2,
+        "abi": 65537,
+        "ingress": "explicit selected input route; correlated application receipt",
+        "evidence": "docs/ACULTUR8_BROWSER_SLICE_CC.md",
+        "physical_usb_trs": false,
+        "real_daw": false,
+        "real_audio_context": false,
+        "download_delivery": false
+      }
     },
     {
       "id": "slice.source_bpm_milli",
       "parameter_number": 1107,
       "binding": "UNSUPPORTED",
       "status": "unimplemented",
-      "reason": "browser/nonmusical callback absent"
+      "reason": "native slice dispatch remains unsupported; separate HOST browser overlay below",
+      "browser": {
+        "status": "HOST browser slice ABI1.1; local synthetic acceptance passed",
+        "parameter_number": 1107,
+        "source": 2,
+        "abi": 65537,
+        "ingress": "explicit selected input route; correlated application receipt",
+        "evidence": "docs/ACULTUR8_BROWSER_SLICE_CC.md",
+        "physical_usb_trs": false,
+        "real_daw": false,
+        "real_audio_context": false,
+        "download_delivery": false
+      }
     },
     {
       "id": "slice.audition_index",
       "parameter_number": 1108,
       "binding": "UNSUPPORTED",
       "status": "unimplemented",
-      "reason": "browser/nonmusical callback absent"
+      "reason": "native slice dispatch remains unsupported; separate HOST browser overlay below",
+      "browser": {
+        "status": "HOST browser slice ABI1.1; local synthetic acceptance passed",
+        "parameter_number": 1108,
+        "source": 2,
+        "abi": 65537,
+        "ingress": "explicit selected input route; correlated application receipt",
+        "evidence": "docs/ACULTUR8_BROWSER_SLICE_CC.md",
+        "physical_usb_trs": false,
+        "real_daw": false,
+        "real_audio_context": false,
+        "download_delivery": false
+      }
     },
     {
       "id": "slice.play",
       "parameter_number": 1109,
       "binding": "UNSUPPORTED",
       "status": "unimplemented",
-      "reason": "browser/nonmusical callback absent"
+      "reason": "native slice dispatch remains unsupported; separate HOST browser overlay below",
+      "browser": {
+        "status": "HOST browser slice ABI1.1; local synthetic acceptance passed",
+        "parameter_number": 1109,
+        "source": 2,
+        "abi": 65537,
+        "ingress": "explicit selected input route; correlated application receipt",
+        "evidence": "docs/ACULTUR8_BROWSER_SLICE_CC.md",
+        "physical_usb_trs": false,
+        "real_daw": false,
+        "real_audio_context": false,
+        "download_delivery": false
+      }
     },
     {
       "id": "slice.stop",
       "parameter_number": 1110,
       "binding": "UNSUPPORTED",
       "status": "unimplemented",
-      "reason": "browser/nonmusical callback absent"
+      "reason": "native slice dispatch remains unsupported; separate HOST browser overlay below",
+      "browser": {
+        "status": "HOST browser slice ABI1.1; local synthetic acceptance passed",
+        "parameter_number": 1110,
+        "source": 2,
+        "abi": 65537,
+        "ingress": "explicit selected input route; correlated application receipt",
+        "evidence": "docs/ACULTUR8_BROWSER_SLICE_CC.md",
+        "physical_usb_trs": false,
+        "real_daw": false,
+        "real_audio_context": false,
+        "download_delivery": false
+      }
     },
     {
       "id": "slice.arm_sync",
       "parameter_number": 1111,
       "binding": "UNSUPPORTED",
       "status": "unimplemented",
-      "reason": "browser/nonmusical callback absent"
+      "reason": "native slice dispatch remains unsupported; separate HOST browser overlay below",
+      "browser": {
+        "status": "HOST browser slice ABI1.1; local synthetic acceptance passed",
+        "parameter_number": 1111,
+        "source": 2,
+        "abi": 65537,
+        "ingress": "explicit selected input route; correlated application receipt",
+        "evidence": "docs/ACULTUR8_BROWSER_SLICE_CC.md",
+        "physical_usb_trs": false,
+        "real_daw": false,
+        "real_audio_context": false,
+        "download_delivery": false
+      }
     },
     {
       "id": "slice.import",
       "parameter_number": 1112,
       "binding": "UNSUPPORTED",
       "status": "unimplemented",
-      "reason": "browser/nonmusical callback absent"
+      "reason": "native slice dispatch remains unsupported; separate HOST browser overlay below",
+      "browser": {
+        "status": "HOST browser slice ABI1.1; local synthetic acceptance passed",
+        "parameter_number": 1112,
+        "source": 2,
+        "abi": 65537,
+        "ingress": "explicit selected input route; correlated application receipt",
+        "evidence": "docs/ACULTUR8_BROWSER_SLICE_CC.md",
+        "physical_usb_trs": false,
+        "real_daw": false,
+        "real_audio_context": false,
+        "download_delivery": false
+      }
     },
     {
       "id": "slice.demo",
       "parameter_number": 1113,
       "binding": "UNSUPPORTED",
       "status": "unimplemented",
-      "reason": "browser/nonmusical callback absent"
+      "reason": "native slice dispatch remains unsupported; separate HOST browser overlay below",
+      "browser": {
+        "status": "HOST browser slice ABI1.1; local synthetic acceptance passed",
+        "parameter_number": 1113,
+        "source": 2,
+        "abi": 65537,
+        "ingress": "explicit selected input route; correlated application receipt",
+        "evidence": "docs/ACULTUR8_BROWSER_SLICE_CC.md",
+        "physical_usb_trs": false,
+        "real_daw": false,
+        "real_audio_context": false,
+        "download_delivery": false
+      }
     },
     {
       "id": "slice.save_import",
       "parameter_number": 1114,
       "binding": "UNSUPPORTED",
       "status": "unimplemented",
-      "reason": "browser/nonmusical callback absent"
+      "reason": "native slice dispatch remains unsupported; separate HOST browser overlay below",
+      "browser": {
+        "status": "HOST browser slice ABI1.1; local synthetic acceptance passed",
+        "parameter_number": 1114,
+        "source": 2,
+        "abi": 65537,
+        "ingress": "explicit selected input route; correlated application receipt",
+        "evidence": "docs/ACULTUR8_BROWSER_SLICE_CC.md",
+        "physical_usb_trs": false,
+        "real_daw": false,
+        "real_audio_context": false,
+        "download_delivery": false
+      }
     },
     {
       "id": "slice.reopen_import",
       "parameter_number": 1115,
       "binding": "UNSUPPORTED",
       "status": "unimplemented",
-      "reason": "browser/nonmusical callback absent"
+      "reason": "native slice dispatch remains unsupported; separate HOST browser overlay below",
+      "browser": {
+        "status": "HOST browser slice ABI1.1; local synthetic acceptance passed",
+        "parameter_number": 1115,
+        "source": 2,
+        "abi": 65537,
+        "ingress": "explicit selected input route; correlated application receipt",
+        "evidence": "docs/ACULTUR8_BROWSER_SLICE_CC.md",
+        "physical_usb_trs": false,
+        "real_daw": false,
+        "real_audio_context": false,
+        "download_delivery": false
+      }
     },
     {
       "id": "slice.export",
       "parameter_number": 1116,
       "binding": "UNSUPPORTED",
       "status": "unimplemented",
-      "reason": "browser/nonmusical callback absent"
+      "reason": "native slice dispatch remains unsupported; separate HOST browser overlay below",
+      "browser": {
+        "status": "HOST browser slice ABI1.1; local synthetic acceptance passed",
+        "parameter_number": 1116,
+        "source": 2,
+        "abi": 65537,
+        "ingress": "explicit selected input route; correlated application receipt",
+        "evidence": "docs/ACULTUR8_BROWSER_SLICE_CC.md",
+        "physical_usb_trs": false,
+        "real_daw": false,
+        "real_audio_context": false,
+        "download_delivery": false
+      }
     },
     {
       "id": "editor.undo",

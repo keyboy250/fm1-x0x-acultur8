@@ -47,7 +47,7 @@ try {
   await load(worker,a);
   assert.deepEqual(a.calls,['boot','reset'],'new engine reset follows boot and precedes ready');
   assert.deepEqual(worker.messages.map(m=>m.type),['cc-input-reset','ready']);
-  assert.deepEqual(frame(worker).ccInput,{version:0x10001,route:0,ready:false,pending:0,stats:[1,2,3,4,5,0xffffffff]});
+  const initialCC=frame(worker).ccInput;assert.deepEqual(initialCC,{version:0x10001,route:0,ready:false,pending:0,source:null,slice:worker.sliceControl.state(),stats:[1,2,3,4,5,0xffffffff]});assert.equal(initialCC.slice.version,0,'old C exports cannot advertise browser slice capability');
   assert.equal((await message(worker,route(true))).result,0);
   assert.equal((await message(worker,batch())).prefix,1);
   assert.equal(frame(worker).ccInput.pending,1);

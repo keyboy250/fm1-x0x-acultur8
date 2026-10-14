@@ -2,12 +2,13 @@
 // Explicit CC-only input. The worklet receipts acknowledge ingress, never
 // canonical application or a physical timing guarantee. No MIDI output calls.
 import {ccPacket} from './cc-input-worklet.mjs';
+import {sliceWire} from './slice-control.mjs';
 const VERSION=0x00010001,MAX_QUEUE=64,MAX_FLIGHT=16;
 const u32=n=>Number.isInteger(n)&&n>=0&&n<=0xffffffff;
 export class CcInputRouter {
-  constructor({send,change=()=>{},requestAccess=()=>globalThis.navigator?.requestMIDIAccess?.({sysex:false}),
+  constructor({send,change=()=>{},browserApply=null,requestAccess=()=>globalThis.navigator?.requestMIDIAccess?.({sysex:false}),
     schedule=(fn,ms)=>setTimeout(fn,ms),cancel=id=>clearTimeout(id)}={}) {
-    this.send=send;this.change=change;this.requestAccess=requestAccess;this.schedule=schedule;this.cancel=cancel;
+    this.send=send;this.change=change;this.browserApply=browserApply;this.browserFlight=null;this.browserApplied=0;this.browserRejected=0;this.browserNoop=0;this.browserStatus='No browser slice operation.';this.frameSerial=0;this.barrierAfter=-1;this.nativeBarrier=false;this.sourceState=null;this.sliceState=null;this.requestAccess=requestAccess;this.schedule=schedule;this.cancel=cancel;
     this.access=null;this.input=null;this.selected='';this.active=false;this.supported=false;this.fresh=false;
     this.route=0;this.serial=0;this.generation=0;this.queue=[];this.flight=null;this.control=null;this.operation=null;
     this.handler=null;this.retryTimer=null;this.zeroProgress=0;this.closing=new Map();this.connecting=false;
@@ -35,6 +36,8 @@ export class CcInputRouter {
   }
   detach(){if(this.input&&this.handler)this.input.removeEventListener('midimessage',this.handler);this.handler=null;}
   clearTraffic(){
+    if(this.browserFlight){this.cancel(this.browserFlight.timer);this.browserFlight.abort.abort();this.browserFlight=null;}
+    this.nativeBarrier=false;
     this.discarded+=this.queue.length;this.queue=[];
     if(this.flight)this.cancel(this.flight.timer);this.flight=null;
     if(this.retryTimer!==null)this.cancel(this.retryTimer);this.retryTimer=null;this.zeroProgress=0;
@@ -78,7 +81,7 @@ export class CcInputRouter {
     const valid=()=>this.operation===op&&this.generation===generation&&this.input===port&&this.current(port)&&this.supported&&this.fresh;
     const check=()=>{if(!valid())throw Error('CC input activation was interrupted.');};
     try{
-      this.status='Opening the selected CC input…';this.changed();
+      this.status='Opening the selected CC inputÃ¢â‚¬Â¦';this.changed();
       // Reset the old source before enabling another route, even when its
       // acknowledgement was lost. New-route ACK is required before listening.
       this.nextRoute();await Promise.race([this.routeRequest(false),cancelled]);check();
@@ -107,11 +110,12 @@ export class CcInputRouter {
     this.nextRoute();this.status='Engine restarted. Await a fresh supported frame, then explicitly enable CC input.';this.changed();
   }
   engineState(state){
+    this.frameSerial++;this.sourceState=Array.isArray(state?.source)&&state.source.length===32&&state.source.every(u32)?state.source.slice():null;this.sliceState=state?.slice??null;
     this.fresh=true;this.supported=state?.version===VERSION;
     this.pending=u32(state?.pending)?state.pending:null;this.stats=Array.isArray(state?.stats)&&state.stats.length===6&&Array.from(state.stats).every(u32)?state.stats.slice():[];
     if(!this.supported&&(this.active||this.operation))this.pause('This engine does not support the CC input protocol.');
     else if(this.active&&state.route===this.route&&state.ready===false)this.pause('The engine disabled this CC input route.');
-    this.changed();
+    this.changed();this.drain();
   }
   receive(bytes){
     if(!this.active)return;
@@ -120,9 +124,39 @@ export class CcInputRouter {
     if(this.queue.length>=MAX_QUEUE){this.discarded++;this.pause('CC input overflow (64 queued messages).');return;}
     this.queue.push(packet);this.drain();this.changed();
   }
+  exactCommit(packet){return ((packet>>>8)&255)===0xbc&&((packet>>>16)&255)===53;}
+  browserHead(packet){return this.browserApply&&sliceWire(packet)!==null;}
+  barrierReady(){return this.frameSerial>this.barrierAfter&&this.pending===0&&(this.sliceState?.version!==0x10001||Number.isInteger(this.sliceState?.gate)&&!(this.sliceState.gate&(2|4|32)));}
+  browserRun(packet,exact=null){
+    const generation=this.generation,route=this.route,request=this.request(),abort=new AbortController();
+    const timer=this.schedule(()=>{if(this.browserFlight?.request===request)this.pause('Browser slice receipt timed out; operation may already have applied.');},5000);
+    const flight={request,route,abort,timer};this.browserFlight=flight;
+    Promise.resolve().then(()=>this.browserApply(packet,{route,signal:abort.signal,current:()=>this.active&&this.route===route&&this.generation===generation,
+      ...(exact?{parameter:exact.parameter,exact}: {})})).then(result=>{
+      if(this.browserFlight!==flight||generation!==this.generation||route!==this.route)return;
+      this.cancel(timer);this.browserFlight=null;this.queue.shift();
+      if(!result||!['applied','rejected','noop'].includes(result.status)||typeof result.reason!=='string'){this.pause('Invalid browser slice application receipt.');return;}
+      if(result.status==='applied')this.browserApplied++;else if(result.status==='rejected')this.browserRejected++;else this.browserNoop++;
+      this.browserStatus=`${result.status}: ${result.reason}`;this.changed();this.drain();
+    },error=>{if(this.browserFlight!==flight)return;this.cancel(timer);this.browserFlight=null;this.queue.shift();this.browserRejected++;this.browserStatus=`rejected: ${error.message||error}`;this.changed();this.drain();});
+  }
   drain(){
-    if(!this.active||this.flight||this.retryTimer!==null||!this.queue.length)return;
-    const request=this.request(),route=this.route,packets=this.queue.slice(0,MAX_FLIGHT);
+    if(!this.active||this.flight||this.browserFlight||this.retryTimer!==null||!this.queue.length)return;
+    const head=this.queue[0],exact=this.browserApply&&this.exactCommit(head);
+    if(this.browserHead(head)||exact){
+      if(this.nativeBarrier&&!this.barrierReady())return;
+      this.nativeBarrier=false;
+      if(this.browserHead(head)){this.browserRun(head);return;}
+      const parameter=this.sourceState?.[13];
+      if(parameter>=1104&&parameter<=1116&&(head>>>24)>=64){
+        const valid=this.sourceState[12]===1&&this.sourceState[14]===7;
+        if(!valid){this.queue.shift();this.browserRejected++;this.browserStatus='rejected: exact-context-incomplete';this.changed();this.drain();return;}
+        this.browserRun(head,{parameter,value:this.sourceState[15]});return;
+      }
+    }
+    const request=this.request(),route=this.route;let count=exact?1:Math.min(MAX_FLIGHT,this.queue.length);
+    if(this.browserApply&&!exact)for(let i=0;i<count;i++)if(this.browserHead(this.queue[i])||this.exactCommit(this.queue[i])){count=i;break;}
+    const packets=this.queue.slice(0,count);if(!packets.length)return;
     const timer=this.schedule(()=>{if(this.flight?.request===request)this.pause('CC receipt timed out; acceptance of that batch is unknown.');},1000);
     this.flight={request,route,count:packets.length,timer};
     try{this.send({type:'cc-input-batch',request,route,packets});}catch(error){this.pause(`CC message send failed: ${error.message}`);}
@@ -141,6 +175,7 @@ export class CcInputRouter {
     if(m.prefix>flight.count||m.result!==0||!m.ready){this.pause('Invalid or rejected CC receipt; acceptance is uncertain.');return true;}
     this.cancel(flight.timer);this.flight=null;
     this.queue.splice(0,m.prefix);this.accepted+=m.prefix;
+    if(m.prefix&&this.browserApply){this.nativeBarrier=true;this.barrierAfter=this.frameSerial;}
     this.zeroProgress=m.prefix?0:this.zeroProgress+1;
     if(this.zeroProgress>=32){this.pause('CC engine ingress remained full.');return true;}
     if(this.queue.length){const generation=this.generation;this.retryTimer=this.schedule(()=>{this.retryTimer=null;if(generation===this.generation)this.drain();},20);}

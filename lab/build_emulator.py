@@ -84,10 +84,10 @@ def package_page(work=None, output=None, home_url='/', storage_namespace='acultu
     (output / 'emu.css').write_text(css, encoding='utf-8', newline='\n')
     (output / 'emu.js').write_text(js, encoding='utf-8', newline='\n')
     shutil.copy2(work / 'assets/fonts/BarlowSemiCondensed-Medium.ttf', output)
-    for name in ['slice-import.js', 'slice-ui.js', 'variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css', 'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css', 'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs']:
+    for name in ['slice-import.js', 'slice-ui.js', 'slice-control.mjs', 'slice-worklet.mjs', 'variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css', 'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css', 'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs']:
         shutil.copy2(work / 'web/emu' / name, output)
     if storage_namespace != 'acultur8-fm1-lab':
-        slice_ui = output / 'slice-ui.js'
+        slice_ui = output / 'slice-control.mjs'
         slice_ui.write_text(slice_ui.read_text('utf-8').replace('acultur8-fm1-marked-imports-v1', storage_namespace + '-marked-imports-v1'), encoding='utf-8', newline='\n')
     shutil.copy2(work / 'docs/MANUAL.md', output / 'manual.txt')
 

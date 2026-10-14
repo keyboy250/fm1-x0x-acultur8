@@ -1,10 +1,14 @@
 # Acultur8 X0X: implementation and GitHub variant plan
 
-## Current working candidate: lossless affine EXP resource recovery
+## Current working candidate: browser slice MIDI controls
 
-Reviewed exact affine tables are integrated locally after a recoverable source/document checkpoint. The isolated candidate passes all nine required software checks, all 38 artifact hashes and all fifteen original firmware gates. Fresh integrated target verification also passes at 580484/581564 image bytes (1080 spare), 98272/98304 ordinary RAM (32 spare) and 335712/344064 pool bytes (160 above reserve). This recovers exactly 1008 linked bytes while preserving all 2432 original IEEE values. The accessor frame grows from 16 to 20 bytes; physical control-path timing and stack qualification remain open. Fresh main software qualification passes all nine checks; source PR is next; no new Pages release is claimed.
+The reviewed source2/HOST slice control implementation is integrated locally on `feat/browser-slice-cc-qualified`. All thirteen controls pass isolated genuine-browser IndexedDB and production C/worklet synthetic-input tests; real AudioContext gain/render/storage/cancellation proof now passes; DAW/device, physical USB/TRS and download-delivery acceptance remain open. Eight focused checks, including portable preview HTTP guards, are now mandatory. Native slice bindings remain unsupported; the native C lookup header is byte-identical. Fresh combined-main qualification passes all nine checks, including seven new mandatory regressions, after a reviewed packaging-test repair. The forty-file artifact is verified; source commit/PR and the complete packaged slice-UI journey are next; per-drum length editing/save/reopen passes separately. See ACULTUR8_BROWSER_SLICE_CC.md for addresses, ownership, receipts and recovery.
 
-Clock/USB reconciliation and thirteen browser slice CC controls remain independent unaccepted candidates. Review caught a reset-observation race and offline slice-button/server-module integration defects; fixes require frozen re-review and actual engine/browser proof. Full clock role/source/loss, receiver, human listening/click diagnosis, long sets and physical tests remain open.
+## Qualified local resource checkpoint: PR19
+
+Reviewed exact affine tables are integrated locally after a recoverable source/document checkpoint. The isolated candidate passes all nine required software checks, all 38 artifact hashes and all fifteen original firmware gates. Fresh integrated target verification also passes at 580484/581564 image bytes (1080 spare), 98272/98304 ordinary RAM (32 spare) and 335712/344064 pool bytes (160 above reserve). This recovers exactly 1008 linked bytes while preserving all 2432 original IEEE values. The accessor frame grows from 16 to 20 bytes; physical control-path timing and stack qualification remain open. Fresh main software qualification passes all nine checks; source PR19 is merged as 1b52ac3c after required CI38500263841 passed; no new Pages release is claimed.
+
+Clock/USB reconciliation remains unintegrated. Its reset/generation fixes now pass conditional native/protocol review, but combining them with the affine tables overflows XIP by184bytes. A newer isolated quadratic-table/HAL combination passes all15 static gates at581124image/98288RAM; full roles409 still exceeds image by1720 andRAM by4bytes, so integration remains pending. Browser slice-button/server-module fixes pass review, focused tests and genuine browser storage proof; their fresh combined-main software checks now pass; real AudioContext/packaged-UI checks remain open. Full clock role/source/loss, receiver, human listening/click diagnosis, long sets and physical tests remain open.
 
 ## Qualified native MIDI editing source checkpoint: PR18
 
@@ -375,3 +379,25 @@ COMPATIBILITY_GUIDE.md defines version 0.1 contribution requirements for humans 
 ## Distant future: Paraphonix expression
 
 FM1-43 explores distributing chord voices across compatible devices under the shared progression/key/scale, with range locks, voice leading and global/per-device voice budgets. See PARAPHONIX_EXPRESSION_DESIGN.md. Planned only, after clock and ensemble foundations; note density and audio headroom are separate acceptance concerns.
+
+## Expanded lane divisions and safe sweeps — 20261014T031958Z
+
+FM1-44 records missing slow/dotted rates and per-lane selectable Straight, Straight+dotted, Straight+triplet and All families. Preserve existing lane.rate IDs/CC105; add versioned family-aware sweep controls with monotonic bins and safe boundary latching. Local 1/8 already exists; 1/2 and 1/8D require storage and timing changes. See RATE_FAMILIES_DESIGN.md. Design only, no runtime or acceptance promotion; source updates authorized, Pages remains held.
+
+## Real AudioContext gain and packaged drum-length proof — 2026-10-14
+
+Frozen source43a7c0c7 / WASM e8d5dc0a passed the isolated real44100Hz AudioContext/production-worklet test for all13 synthetic-input slice CC controls. Four distinct settled windows at each of100/50/0 percent measured RMS0.25/0.125/0 and ratio0.5. Genuine disposable IndexedDB, source/gesture refusal, route invalidation and explicit Stop cleanup pass; no console warnings/errors. Output was muted; hearing/click diagnosis, real DAW/receiver and physical acceptance remain open. Evidence: dashboard/data/browser-audio-lane-proof-20261014.json and associated screenshots/text.
+
+Actual packaged GUI independently preserved909CH length7 and808BD length13 through switching, save and reload on an isolated local origin. This proves those per-drum editing/persistence paths, not a full25lane live-scene/soak test. The8098 dashboard still serves an older emulator without the lane editor. Generic Python static serving on Windows gave MJS text/plain and worklet startup failure; tools/serve_alpha.py now serves only hash-verified release entries with explicit module MIME, loopback/Host and path guards. Fresh-origin8132 starts correctly; earlier cached-MIME failures are retained as diagnostic evidence.
+
+Clock704 + exact quadratic EXP + reviewed HAL IRQ-helper relocation passes all15 original static gates in isolation: image581124/581564, RAM98288/98304, pool335712/344064. Full roles409 added to that combination fails the first target measurement by1720image and4ordinaryRAM bytes. These candidates remain unintegrated; resource recovery, full software/WASM and physical qualification remain pending. Original gates/reserves are unchanged. Source updates authorized; new Pages deployment held.
+
+## Frozen full clock resource candidate — 2026-10-14
+
+After preserving the1720image/4ordinaryRAM failure and an event-gate failure, a separate fullroles candidate now passes original15staticgates at image581348/581564, ordinaryRAM98292/98304 and pool335720/344064. Native exactloss/source/reset/transition and preserved engine/action/pad/bass/USB fixtures pass. CQcursors8bytes moved to existing pool; Follow uses its exact cached deadline; helper-family cost evidence supplements unchanged original rows. Canonical269patch dfef525e03a479542048d3a98221be0a337fa0b58b070ca6070aa8d73eed0656; source7a9aadc6ae6dec428af487f8300796f8d18ef79885eff3ad4856794469550ae4. Independentreview of initialization, deadlineownership and aggregatecosts is underway. Not integrated or completed; actualWASM and physical CPU/stack/source/receiver/soak remain pending.
+
+REX import guidance now sits beside the preview's WAV/JSON controls and has a project-subpath-safe FAQ link. Static package6 and labpackage5 focused tests pass. First fresh main suite stopped on generatedCCinventory panelSHA drift after the helptext edit; regeneration changed onlythatSHA, with693addresses/nativeheaderunchanged. Fresh mandatoryrerun is in progress; no source PR or Pages promotion from these focused checks.
+
+## Fresh composite slice qualification — 2026-10-14
+
+Final inventory-corrected main suite completed exit0: all9mandatorychecks, including reviewed portable-server HTTP regression, PASS; artifact build/site-hywy_bhp has40independentlyverifiedSHAentries. Source45ba2c1b2dfa955d8afc8b7f24b66f4211b7bd7cf8c1e79b07c1e524a11c283a; WASM e8d5dc0adef7c2f28eca7b7ee5f457ae0d02dee54f1504dfc8c12f2d760c6854 remains683698bytes, identical to accepted muted actualworklet evidence. REXguide anchor resolves in the packaged project subpath; nativeheaderunchanged. First fingerprint-drift failure retained, not reported as a pass. Source commit/PR is next; no Pages or hardware release. Recovery build/pre-slice-pr20-20261014 retains trackedbinarydiff and all16untracked source files.

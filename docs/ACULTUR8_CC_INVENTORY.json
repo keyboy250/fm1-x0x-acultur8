@@ -27,7 +27,7 @@
     "firmware/src/midi_uart.c": "278beda53253a65fde7f561da6d62c63f4331f6b4f30ad6652025caf961038ed",
     "firmware/src/usb.c": "7c651372fc473235bde0ce1dbffb0cf8f38d94d2536871820b921d54bef49a19",
     "web/emu/index.html": "9d6dfb9dd706aa39c457925dfc4a392e042eefe9fcf101ad88a5cbae0bc8b845",
-    "web/emu/slice-panel.html": "e1e98d77ade96d887dfd9aca77ff72ff76b6d2a3e67606fe9fcb517301d6bb13",
+    "web/emu/slice-panel.html": "b5d2cfe3a4e1db5c4855bcb18988ecc4e0a557a7896fe5c5076d650a10bfbbb3",
     "web/emu/pad-panel.html": "4ab2ef69f56d535f359bc550e50613e9c8b8ce52dfb6ecb7d809f90a1ceb298c"
   },
   "descriptor_counts": {
