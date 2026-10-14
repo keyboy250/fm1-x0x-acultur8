@@ -119,6 +119,11 @@ static struct {
 
 static pattern_t *pat_of(int part) { return &proj.pat[seq.ppat[part]]; }
 static pattern_t *cur_pat(void) { return pat_of(ui.part); }    /* the pattern the part on screen plays */
+static POLY_COLD int ui_drum_length(const pattern_t *p,int kit,int voice)
+{return (proj.variant.arrangement.flags&POLY_FLAG)?poly_length(proj.pat,(const uint8_t *)&proj.sound,(int)(p-proj.pat),kit*11+voice):p->drum[kit].len;}
+static POLY_COLD int ui_break_slice(const brkpart_t *bp,int step)
+{return (proj.variant.arrangement.flags&POLY_FLAG)?poly_break_slice(proj.pat,(const uint8_t *)&proj.sound,seq.ppat[TRK_BRK],step):bp->slice[step];}
+
 static int part_view(void) { return ui.view == V_PART || ui.view == V_SEQ || ui.view == V_GEN; }
 static int steps_view(void) { return ui.view == V_PART || ui.view == V_SEQ; }   /* the keys are the part's steps */
 static song_t *song(void) { return &proj.arr.song; }
@@ -130,7 +135,8 @@ static uint8_t kbd_held_note[NBASS];
 static int held_note_of(const bpart_t *bp, int s);
 
 /* ============================================================ text helpers === */
-static char *put_s(char *b, const char *s)
+/* Share this cold text-copy loop across drawing/control paths to conserve XIP. */
+static POLY_COLD char *put_s(char *b, const char *s)
 {
     while (*s)
         *b++ = *s++;
@@ -154,7 +160,7 @@ static char *put_i(char *b, int v)
     return b;
 }
 static const char *const NOTE_N[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
-static char *put_note(char *b, int n)
+static POLY_COLD char *put_note(char *b, int n)
 {
     b = put_s(b, NOTE_N[(n % 12 + 12) % 12]);
     return put_i(b, n / 12 - 1);
@@ -168,7 +174,7 @@ static char *put_hex(char *b, uint32_t v, int digits)
     return b;
 }
 
-static void say(const char *a, const char *b)
+static POLY_COLD void say(const char *a, const char *b)
 {
     char *q = put_s(ui.msg, a);
     if (b)
@@ -191,11 +197,19 @@ static int arrangement_panel_refuse(void)
 enum { R_NONE, R_ENG, R_SWING, R_DLEN, R_DRATE, R_BLEN, R_BRATE, R_BDIR, R_BTRANS, R_GEN, R_BRKSET,
        R_BRKSLOT, R_TEMPO, R_ACCENT, R_CLKOUT, R_NOTEOUT, R_PALETTE, R_KEYLED, R_KEYSOUND, R_AUTOSAVE, R_ACT, R_SBAR, R_SPAT,
        R_SLEN, R_STALLS, R_HDR, R_TAPE, R_MIDICH, R_OUTLOUD, R_SREP, R_BATT, R_USBFULL, R_FREEPLAY };   /* R_TAPE: FX's one-knob TAPE (DIGI .. worn tape) */          /* R_HDR: a list's section header (a = its group), never selected */
-typedef struct { uint8_t kind, a, b, c; } pref_t;
-#define PR(k, a, b, c) ((pref_t){(k), (a), (b), (c)})
+/* Four logical bytes; scalar helper ABI avoids aggregate copy temporaries.
+ * Explicit unsigned casts preserve the original uint8_t initializer behavior. */
+typedef uint32_t pref_t;
+#define PR(k,a,b,c) ((pref_t)(uint8_t)(k) | ((pref_t)(uint8_t)(a)<<8) | ((pref_t)(uint8_t)(b)<<16) | ((pref_t)(uint8_t)(c)<<24))
+#define P_KIND(r) ((uint8_t)(r))
+#define P_A(r) ((uint8_t)((r)>>8))
+#define P_B(r) ((uint8_t)((r)>>16))
+#define P_C(r) ((uint8_t)((r)>>24))
+typedef char pref_reference_size_4[(sizeof(pref_t)==4)?1:-1];
 #define NONE PR(R_NONE, 0, 0, 0)
 
-static const char *const RATE_N[] = {"1/16", "1/16T", "1/32", "1/8T"};
+static const char *const RATE_N[] = {"1/16", "1/16T", "1/32", "1/8T", "1/4", "1/8", "1/4T", "1/32T"};
+static const x0x_param_t POLY_RATE_P={"RATE",7,0,RATE_N};
 static const char *const DIR_N[] = {"FWD", "REV", "PING", "RND"};
 static const char *const ONOFF_N[] = {"OFF", "ON"};
 static const char *const ROOT_N[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
@@ -241,7 +255,7 @@ static const x0x_param_t SONG_P[] = {
 };
 
 /* the song's bar k exists from here on: a new bar repeats the one before (the first: what plays) */
-static void song_fill(int k)
+static POLY_COLD void song_fill(int k)
 {
     song_t *sg = song();
     if (arrangement_panel_refuse()) return;
@@ -259,41 +273,50 @@ static void song_fill(int k)
     }
 }
 
-static const x0x_param_t *pref_desc(pref_t r)
+/* Explicit pattern/bass context; callers retain their own journal/refresh/stale policy. */
+static POLY_COLD uint8_t *canonical_gen_byte(pattern_t *pattern,int bass,int field)
 {
-    switch (r.kind) {
-    case R_ENG: return engine_param(r.a, r.b, r.c);
-    case R_GEN: return &GEN_P[r.c % NGEN];
-    case R_BRKSET: return breaks_param(r.c);
-    case R_SWING: return &SEQ_P[SQ_SWING];
-    case R_DLEN: return &SEQ_P[SQ_DLEN];
-    case R_DRATE: return &SEQ_P[SQ_DRATE];
-    case R_BLEN: return &SEQ_P[SQ_BLEN];
-    case R_BRATE: return &SEQ_P[SQ_BRATE];
-    case R_BDIR: return &SEQ_P[SQ_BDIR];
-    case R_BTRANS: return &SEQ_P[SQ_BTRANS];
+    return ((uint8_t *)&pattern->bass[bass].gen)+field;
+}
+typedef char canonical_gen_byte_layout[
+    (__builtin_offsetof(tb3po_cfg_t,density)==0 && __builtin_offsetof(tb3po_cfg_t,accent)==1 &&
+     __builtin_offsetof(tb3po_cfg_t,slide)==2 && __builtin_offsetof(tb3po_cfg_t,oct_range)==3 &&
+     __builtin_offsetof(tb3po_cfg_t,root)==4 && __builtin_offsetof(tb3po_cfg_t,scale)==5 &&
+     __builtin_offsetof(tb3po_cfg_t,base_oct)==6 && __builtin_offsetof(tb3po_cfg_t,mutate_bars)==7)?1:-1];
+static POLY_COLD void canonical_tape_set(unsigned value)
+{
+    uint8_t type=value>=16,wear=type?(uint8_t)((value-16)*127/111):proj.sound.v[T_FX][0][FX_DL_WEAR];
+    proj.sound.v[T_FX][1][0]=(uint8_t)value;
+    proj.sound.v[T_FX][0][FX_DL_TYPE]=type;proj.sound.v[T_FX][0][FX_DL_WEAR]=wear;
+    engine_set(T_FX,0,FX_DL_TYPE,type);engine_set(T_FX,0,FX_DL_WEAR,wear);
+}
+
+static POLY_COLD const x0x_param_t *pref_desc(pref_t r)
+{
+    int kind=P_KIND(r);
+    if(kind>=R_SWING && kind<=R_BTRANS){
+        if((proj.variant.arrangement.flags&POLY_FLAG) && (kind==R_DRATE || kind==R_BRATE))return &POLY_RATE_P;
+        return &SEQ_P[kind-R_SWING];
+    }
+    if(kind>=R_TEMPO && kind<=R_AUTOSAVE)return &SEQ_P[SQ_TEMPO+kind-R_TEMPO];
+    switch (kind) {
+    case R_ENG: return engine_param(P_A(r), P_B(r), P_C(r));
+    case R_GEN: return &GEN_P[P_C(r) % NGEN];
+    case R_BRKSET: return breaks_param(P_C(r));
     case R_BRKSLOT: {
         static x0x_param_t d = {"LOOP", 0, 0, 0};
         d.max = (uint8_t)(engine_brk_nslots() - 1);
         d.names = engine_brk_slot_names();
         return &d;
     }
-    case R_TEMPO: return &SEQ_P[SQ_TEMPO];
-    case R_ACCENT: return &SEQ_P[SQ_ACCENT];
-    case R_CLKOUT: return &SEQ_P[SQ_CLK];
-    case R_NOTEOUT: return &SEQ_P[SQ_NOTES];
-    case R_PALETTE: return &SEQ_P[SQ_THEME];
-    case R_KEYLED: return &SEQ_P[SQ_KEYLED];
-    case R_KEYSOUND: return &SEQ_P[SQ_KEYSOUND];
-    case R_AUTOSAVE: return &SEQ_P[SQ_AUTOSAVE];
-    case R_ACT: return &ACT_P[r.a];
+    case R_ACT: return &ACT_P[P_A(r)];
     case R_SBAR: {
         static x0x_param_t d = {"BAR", 0, 0, 0};
         d.max = (uint8_t)(song()->len < NSONG ? song()->len : NSONG - 1);
         return &d;
     }
-    case R_SPAT: return &SONG_P[r.a % NPARTS];
-    case R_MIDICH: return &MIDICH_P[r.a % NPARTS];
+    case R_SPAT: return &SONG_P[P_A(r) % NPARTS];
+    case R_MIDICH: return &MIDICH_P[P_A(r) % NPARTS];
     case R_OUTLOUD: return &OUT_P;
     case R_USBFULL: return &USBA_P;
     case R_FREEPLAY: return &FREEPLAY_P;
@@ -309,33 +332,21 @@ static const x0x_param_t *pref_desc(pref_t r)
     }
 }
 
-static int pref_get(pref_t r)
+static POLY_COLD int pref_get(pref_t r)
 {
     pattern_t *p = cur_pat();
-    switch (r.kind) {
-    case R_ENG: return proj.sound.v[r.a][r.b][r.c];
+    switch (P_KIND(r)) {
+    case R_ENG: return proj.sound.v[P_A(r)][P_B(r)][P_C(r)];
     case R_SWING: return pat_of(PART_909)->swing;
-    case R_DLEN: return pat_of(r.a)->drum[r.a].len - 1;
-    case R_DRATE: return pat_of(r.a)->drum[r.a].rate;
-    case R_BLEN: return pat_of(NKIT + r.a)->bass[r.a].len - 1;
-    case R_BRATE: return pat_of(NKIT + r.a)->bass[r.a].rate;
-    case R_BDIR: return pat_of(NKIT + r.a)->bass[r.a].dir;
-    case R_BTRANS: return pat_of(NKIT + r.a)->bass[r.a].transpose;
-    case R_GEN: {
-        const tb3po_cfg_t *g = &p->bass[r.a].gen;
-        switch (r.c) {
-        case G_DENS: return g->density;
-        case G_ACC: return g->accent;
-        case G_SLIDE: return g->slide;
-        case G_OCTS: return g->oct_range - 1;
-        case G_ROOT: return g->root;
-        case G_SCALE: return g->scale;
-        case G_BASE: return g->base_oct;
-        default: return g->mutate_bars;
-        }
-    }
-    case R_BRKSET: return p->brk.set[r.c];
-    case R_BRKSLOT: return r.a ? p->brk.slot_b : p->brk.slot_a;
+    case R_DLEN: return (proj.variant.arrangement.flags&POLY_FLAG)?poly_length(proj.pat,(const uint8_t *)&proj.sound,seq.ppat[P_A(r)],P_A(r)*11+ui.sel[P_A(r)])-1:pat_of(P_A(r))->drum[P_A(r)].len - 1;
+    case R_DRATE: return (proj.variant.arrangement.flags&POLY_FLAG)?poly_rate(proj.pat,(const uint8_t *)&proj.sound,seq.ppat[P_A(r)],P_A(r)*11+ui.sel[P_A(r)]):pat_of(P_A(r))->drum[P_A(r)].rate;
+    case R_BLEN: return pat_of(NKIT + P_A(r))->bass[P_A(r)].len - 1;
+    case R_BRATE: return pat_of(NKIT + P_A(r))->bass[P_A(r)].rate;
+    case R_BDIR: return pat_of(NKIT + P_A(r))->bass[P_A(r)].dir;
+    case R_BTRANS: return pat_of(NKIT + P_A(r))->bass[P_A(r)].transpose;
+    case R_GEN: return *canonical_gen_byte(p,P_A(r),P_C(r)<NGEN?P_C(r):G_MUT)-(P_C(r)==G_OCTS);
+    case R_BRKSET: return p->brk.set[P_C(r)];
+    case R_BRKSLOT: return P_A(r) ? p->brk.slot_b : p->brk.slot_a;
     case R_TEMPO: return (int)(seq.bpm + 0.5f) - 20;
     case R_ACCENT: return seq.accent_q7;
     case R_CLKOUT: return seq.send_clock;
@@ -348,12 +359,12 @@ static int pref_get(pref_t r)
     case R_SPAT: {
         const song_t *sg = song();
         int k = ui.song_sel < sg->len ? ui.song_sel : sg->len - 1;
-        return k >= 0 ? sg->bar[k].pat[r.a] : seq.ppat[r.a];
+        return k >= 0 ? sg->bar[k].pat[P_A(r)] : seq.ppat[P_A(r)];
     }
-    case R_MIDICH: return seq.ch[r.a % NPARTS] == SEQ_CH_OFF ? 0 : seq.ch[r.a % NPARTS] + 1;
+    case R_MIDICH: return seq.ch[P_A(r) % NPARTS] == SEQ_CH_OFF ? 0 : seq.ch[P_A(r) % NPARTS] + 1;
     case R_OUTLOUD: return proj.set.out_loud;
     case R_USBFULL: return proj.set.usb_full;
-    case R_FREEPLAY: return ui.freeplay[r.a];
+    case R_FREEPLAY: return ui.freeplay[P_A(r)];
     case R_SREP: return ui.song_sel < song()->len ? song()->bar[ui.song_sel].mute >> 5 : 0;
     case R_BATT: return plat_battery() < 0 ? 5 : plat_battery();
     case R_SLEN: return song()->len;
@@ -363,51 +374,45 @@ static int pref_get(pref_t r)
     }
 }
 
-static void pref_set(pref_t r, int v)
+static POLY_COLD void pref_set(pref_t r, int v)
 {
     pattern_t *p = cur_pat();
     const x0x_param_t *d = pref_desc(r);
-    if (!d || r.kind == R_ACT)
+    if (!d || P_KIND(r) == R_ACT)
         return;
-    if ((r.kind == R_SPAT || r.kind == R_SREP || r.kind == R_SLEN) && arrangement_panel_refuse()) return;
+    v = v < 0 ? 0 : v > d->max ? d->max : v;
+    if((proj.variant.arrangement.flags&POLY_FLAG) && (P_KIND(r)==R_DLEN || P_KIND(r)==R_DRATE || P_KIND(r)==R_BLEN || P_KIND(r)==R_BRATE)){
+        int drum=P_KIND(r)==R_DLEN || P_KIND(r)==R_DRATE,rate=P_KIND(r)==R_DRATE || P_KIND(r)==R_BRATE;
+        int part=drum?P_A(r):NKIT+P_A(r),lane=drum?P_A(r)*11+ui.sel[P_A(r)]:22+P_A(r);
+        if(engine_lane_set(seq.ppat[part],lane,rate,rate?v:v+1))mark_dirty();else say("CONTROL QUEUE BUSY",0);return;
+    }
+    if ((P_KIND(r) == R_SPAT || P_KIND(r) == R_SREP || P_KIND(r) == R_SLEN) && arrangement_panel_refuse()) return;
     v = v < 0 ? 0 : v > d->max ? d->max : v;
     mark_dirty();
-    switch (r.kind) {
+    switch (P_KIND(r)) {
     case R_ENG:
-        proj.sound.v[r.a][r.b][r.c] = (uint8_t)v;
-        engine_set(r.a, r.b, r.c, v);
-        if (r.a == T_MST && r.c == MST_COMP1)          /* the macros: the details they set, for the list */
+        proj.sound.v[P_A(r)][P_B(r)][P_C(r)] = (uint8_t)v;
+        engine_set(P_A(r), P_B(r), P_C(r), v);
+        if (P_A(r) == T_MST && P_C(r) == MST_COMP1)          /* the macros: the details they set, for the list */
             master_comp1_pots(v, &proj.sound.v[T_MST][0][MST_THRESH], &proj.sound.v[T_MST][0][MST_RATIO],
                               &proj.sound.v[T_MST][0][MST_MAKEUP]);
-        else if (r.a == T_MST && r.c == MST_DJF)
+        else if (P_A(r) == T_MST && P_C(r) == MST_DJF)
             master_djf_pots(v, &proj.sound.v[T_MST][0][MST_MODE], &proj.sound.v[T_MST][0][MST_CUTOFF]);
         break;
     case R_SWING: pat_of(PART_909)->swing = (uint8_t)v; break;
-    case R_DLEN: pat_of(r.a)->drum[r.a].len = (uint8_t)(v + 1); break;
-    case R_DRATE: pat_of(r.a)->drum[r.a].rate = (uint8_t)v; break;
-    case R_BLEN: pat_of(NKIT + r.a)->bass[r.a].len = (uint8_t)(v + 1); break;
-    case R_BRATE: pat_of(NKIT + r.a)->bass[r.a].rate = (uint8_t)v; break;
-    case R_BDIR: pat_of(NKIT + r.a)->bass[r.a].dir = (uint8_t)v; break;
-    case R_BTRANS: pat_of(NKIT + r.a)->bass[r.a].transpose = (uint8_t)v; break;
-    case R_GEN: {
-        tb3po_cfg_t *g = &p->bass[r.a].gen;
-        switch (r.c) {
-        case G_DENS: g->density = (uint8_t)v; break;
-        case G_ACC: g->accent = (uint8_t)v; break;
-        case G_SLIDE: g->slide = (uint8_t)v; break;
-        case G_OCTS: g->oct_range = (uint8_t)(v + 1); break;
-        case G_ROOT: g->root = (uint8_t)v; break;
-        case G_SCALE: g->scale = (uint8_t)v; break;
-        case G_BASE: g->base_oct = (uint8_t)v; break;
-        default: g->mutate_bars = (uint8_t)v; break;
-        }
-        if (r.c != G_MUT)                            /* the line stays: the settings are the next NEW / MUTATE's */
-            ui.gen_stale[r.a] = 1;
+    case R_DLEN: pat_of(P_A(r))->drum[P_A(r)].len = (uint8_t)(v + 1); break;
+    case R_DRATE: pat_of(P_A(r))->drum[P_A(r)].rate = (uint8_t)v; break;
+    case R_BLEN: pat_of(NKIT + P_A(r))->bass[P_A(r)].len = (uint8_t)(v + 1); break;
+    case R_BRATE: pat_of(NKIT + P_A(r))->bass[P_A(r)].rate = (uint8_t)v; break;
+    case R_BDIR: pat_of(NKIT + P_A(r))->bass[P_A(r)].dir = (uint8_t)v; break;
+    case R_BTRANS: pat_of(NKIT + P_A(r))->bass[P_A(r)].transpose = (uint8_t)v; break;
+    case R_GEN:
+        *canonical_gen_byte(p,P_A(r),P_C(r)<NGEN?P_C(r):G_MUT)=(uint8_t)(v+(P_C(r)==G_OCTS));
+        if(P_C(r)!=G_MUT)ui.gen_stale[P_A(r)]=1;
         break;
-    }
-    case R_BRKSET: p->brk.set[r.c] = (uint8_t)v; break;
+    case R_BRKSET: p->brk.set[P_C(r)] = (uint8_t)v; break;
     case R_BRKSLOT:
-        if (r.a)
+        if (P_A(r))
             p->brk.slot_b = (uint8_t)v;
         else
             p->brk.slot_a = (uint8_t)v;
@@ -417,7 +422,14 @@ static void pref_set(pref_t r, int v)
     case R_TEMPO: seq.bpm = (float)(v + 20); break;
     case R_ACCENT: seq.accent_q7 = (uint8_t)v; break;
     case R_CLKOUT: seq.send_clock = (uint8_t)v; break;
-    case R_NOTEOUT: seq.send_notes = (uint8_t)v; break;
+    case R_NOTEOUT: {
+        uint32_t saved=plat_control_enter();
+        if(proj.variant.arrangement.pad_channel!=255 && (seq.playing || seq.req_stop || seq.req_start || seq.req_cont)) {
+            plat_control_leave(saved);say("STOP TO CHANGE MIDI",0);break;
+        }
+        proj.variant.arrangement.flags=(uint8_t)((proj.variant.arrangement.flags&~ARR_NOTES_OUT)|(v?ARR_NOTES_OUT:0));
+        proj.set.notes_out=seq.send_notes=(uint8_t)(v!=0);plat_control_leave(saved);break;
+    }
     case R_PALETTE: proj.set.palette = (uint8_t)v; palette_set((uint32_t)v); break;
     case R_KEYLED: proj.set.keyled = (uint8_t)v; break;
     case R_KEYSOUND: proj.set.keysound = (uint8_t)v; break;
@@ -425,16 +437,19 @@ static void pref_set(pref_t r, int v)
     case R_SBAR: ui.song_sel = (uint8_t)v; break;
     case R_SPAT:
         song_fill(ui.song_sel);
-        song()->bar[ui.song_sel].pat[r.a] = (uint8_t)v;
+        song()->bar[ui.song_sel].pat[P_A(r)] = (uint8_t)v;
         break;
-    case R_MIDICH: seq.ch[r.a % NPARTS] = (uint8_t)(v ? v - 1 : SEQ_CH_OFF); break;
+    case R_MIDICH:
+        if (engine_midi_channel_allowed(v ? v - 1 : SEQ_CH_OFF))seq.ch[P_A(r) % NPARTS] = (uint8_t)(v ? v - 1 : SEQ_CH_OFF);
+        else say("PAD CHANNEL BUSY",0);
+        break;
     case R_OUTLOUD: proj.set.out_loud = (uint8_t)v; engine_out_loud(v); break;
     case R_USBFULL: proj.set.usb_full = (uint8_t)v; engine_usb_full(v); break;
     case R_FREEPLAY:
-        ui.freeplay[r.a] = (uint8_t)v;
-        if (!v && kbd_held_note[r.a]) {                /* a key still down: let it go */
-            engine_bass_off(r.a);
-            kbd_held_note[r.a] = 0;
+        ui.freeplay[P_A(r)] = (uint8_t)v;
+        if (!v && kbd_held_note[P_A(r)]) {                /* a key still down: let it go */
+            engine_bass_off(P_A(r));
+            kbd_held_note[P_A(r)] = 0;
         }
         break;
     case R_SREP:
@@ -445,15 +460,7 @@ static void pref_set(pref_t r, int v)
             b->mute = (uint8_t)((b->mute & 0x1Fu) | v << 5);
         }
         break;
-    case R_TAPE: {                                    /* 0..15 the clean digital delay; above, tape, wearing */
-        uint8_t ty = (uint8_t)(v >= 16), we = (uint8_t)(ty ? (v - 16) * 127 / 111 : proj.sound.v[T_FX][0][FX_DL_WEAR]);
-        proj.sound.v[T_FX][1][0] = (uint8_t)v;
-        proj.sound.v[T_FX][0][FX_DL_TYPE] = ty;
-        proj.sound.v[T_FX][0][FX_DL_WEAR] = we;
-        engine_set(T_FX, 0, FX_DL_TYPE, ty);
-        engine_set(T_FX, 0, FX_DL_WEAR, we);
-        break;
-    }
+    case R_TAPE: canonical_tape_set((unsigned)v); break;
     case R_STALLS:
         perf.stalls_on = (uint8_t)v;
         plat_stalls_enable(v);
@@ -487,7 +494,7 @@ static const char *caps_of(const char *n)
 /* the value belongs to the pattern (it changes when the pattern does), not to the sound */
 static int in_pattern(pref_t r)
 {
-    switch (r.kind) {
+    switch (P_KIND(r)) {
     case R_SWING: case R_DLEN: case R_DRATE: case R_BLEN: case R_BRATE: case R_BDIR: case R_BTRANS: case R_GEN:
     case R_BRKSET: case R_BRKSLOT:
         return 1;
@@ -497,7 +504,7 @@ static int in_pattern(pref_t r)
 }
 
 /* a knob's label: mixer refs name their part */
-static const char *pref_name(pref_t r)
+static POLY_COLD const char *pref_name(pref_t r)
 {
     static const char *const MIXN[NPARTS][MX_NPARAMS] = {{"909", "909 RV", "909 DL", "909 PAN"},
                                                          {"808", "808 RV", "808 DL", "808 PAN"},
@@ -509,16 +516,16 @@ static const char *pref_name(pref_t r)
     static const char *const CHN[MX_NPARAMS] = {"LEVEL", "REV", "DLY", "PAN"};
     const x0x_param_t *d = pref_desc(r);
     static const char *const SEQN[6] = {"LENGTH", "RATE", "LENGTH", "RATE", "DIRECTION", "TRANSP"};
-    if (r.kind >= R_DLEN && r.kind <= R_BTRANS)       /* SEQ: the part's own; a list elsewhere: whose */
-        return ui.view == V_SEQ ? SEQN[r.kind - R_DLEN] : PATN[r.kind - R_DLEN][r.a & 1];
-    if (r.kind == R_ENG && r.a == T_MIX && ui.view == V_MIX && r.c < MX_NPARAMS)
-        return CHN[r.c];                               /* MIX's PARTS: the picked part's */
-    if (r.kind == R_ENG && (r.a == T_909 || r.a == T_808) && r.b == NDRUM && r.c == 1)
+    if (P_KIND(r) >= R_DLEN && P_KIND(r) <= R_BTRANS)       /* SEQ: the part's own; a list elsewhere: whose */
+        return ui.view == V_SEQ ? SEQN[P_KIND(r) - R_DLEN] : PATN[P_KIND(r) - R_DLEN][P_A(r) & 1];
+    if (P_KIND(r) == R_ENG && P_A(r) == T_MIX && ui.view == V_MIX && P_C(r) < MX_NPARAMS)
+        return CHN[P_C(r)];                               /* MIX's PARTS: the picked part's */
+    if (P_KIND(r) == R_ENG && (P_A(r) == T_909 || P_A(r) == T_808) && P_B(r) == NDRUM && P_C(r) == 1)
         return "ACCENT";                               /* the kits' depth of accents */
-    if (r.kind == R_ENG && r.a == T_MIX && r.b < NPARTS && r.c < MX_NPARAMS)
-        return MIXN[r.b][r.c];
-    if (r.kind == R_ENG && r.a == T_FX) {               /* the page says which effect: the knob, what */
-        switch (r.c) {
+    if (P_KIND(r) == R_ENG && P_A(r) == T_MIX && P_B(r) < NPARTS && P_C(r) < MX_NPARAMS)
+        return MIXN[P_B(r)][P_C(r)];
+    if (P_KIND(r) == R_ENG && P_A(r) == T_FX) {               /* the page says which effect: the knob, what */
+        switch (P_C(r)) {
         case FX_RV_DECAY: return "DECAY";
         case FX_RV_TONE: case FX_DL_TONE: return "TONE";
         case FX_DL_TIME: return "TIME";
@@ -532,15 +539,15 @@ static const char *pref_name(pref_t r)
         default: break;
         }
     }
-    if (r.kind == R_BRKSET && r.c == BRK_BCHANCE)
+    if (P_KIND(r) == R_BRKSET && P_C(r) == BRK_BCHANCE)
         return "B CHANCE";
-    if (r.kind == R_ENG && (r.a == T_909 || r.a == T_808) && r.b < NDRUM && ui.view == V_MIX && ui.overlay == O_LIST) {
+    if (P_KIND(r) == R_ENG && (P_A(r) == T_909 || P_A(r) == T_808) && P_B(r) < NDRUM && ui.view == V_MIX && ui.overlay == O_LIST) {
         static char t[24];                             /* MIX's list: whose track ("909 BD LEVEL") */
-        put_s(put_s(put_s(put_s(t, r.a == T_909 ? "909 " : "808 "), engine_voice_name(r.a, r.b)), " "), d ? d->name : "");
+        put_s(put_s(put_s(put_s(t, P_A(r) == T_909 ? "909 " : "808 "), engine_voice_name(P_A(r), P_B(r))), " "), d ? d->name : "");
         return t;
     }
-    if (r.kind == R_BRKSLOT)
-        return r.a ? "LOOP B" : "LOOP A";
+    if (P_KIND(r) == R_BRKSLOT)
+        return P_A(r) ? "LOOP B" : "LOOP A";
     return d ? d->name : "";
 }
 
@@ -548,27 +555,27 @@ static const char *pref_name(pref_t r)
 static int is_pan(pref_t r)
 {
     const x0x_param_t *d;
-    if (r.kind != R_ENG)
+    if (P_KIND(r) != R_ENG)
         return 0;
-    if (r.a == T_MIX)
-        return r.c == MX_PAN;
+    if (P_A(r) == T_MIX)
+        return P_C(r) == MX_PAN;
     d = pref_desc(r);
-    return (r.a == T_909 || r.a == T_808) && d && d->name[0] == 'P' && d->name[1] == 'a' && d->name[2] == 'n' &&
+    return (P_A(r) == T_909 || P_A(r) == T_808) && d && d->name[0] == 'P' && d->name[1] == 'a' && d->name[2] == 'n' &&
            !d->name[3];
 }
 
 /* the value, as a number and a unit ("-6" "dB"); a switch gives its name and no unit */
-static void pref_value_of(pref_t r, int v, char *num, char *unit)
+static POLY_COLD void pref_value_of(pref_t r, int v, char *num, char *unit)
 {
     const x0x_param_t *d = pref_desc(r);
     *num = *unit = 0;
-    if (!d || r.kind == R_ACT)
+    if (!d || P_KIND(r) == R_ACT)
         return;
     if (d->names) {
         put_s(num, d->names[v]);
         return;
     }
-    if (r.kind == R_TAPE) {
+    if (P_KIND(r) == R_TAPE) {
         if (v < 16)
             put_s(num, "DIGI");
         else {
@@ -584,11 +591,11 @@ static void pref_value_of(pref_t r, int v, char *num, char *unit)
             put_i(put_s(num, v < 64 ? "L" : "R"), v < 64 ? 64 - v : v - 64);
         return;
     }
-    switch (r.kind) {
+    switch (P_KIND(r)) {
     case R_ENG:
-        if (r.a == T_MST) {                              /* the master formats itself: "-12dB" */
+        if (P_A(r) == T_MST) {                              /* the master formats itself: "-12dB" */
             char t[16], *q = t;
-            engine_master_format(r.c, t);
+            engine_master_format(P_C(r), t);
             while (*q && (*q == '-' || *q == '.' || (*q >= '0' && *q <= '9')))
                 q++;
             put_s(unit, q);
@@ -596,8 +603,8 @@ static void pref_value_of(pref_t r, int v, char *num, char *unit)
             put_s(num, t);
             return;
         }
-        if (r.a == T_MIX) {
-            if (r.c == 0) {                              /* level: 100 = 0 dB, square law */
+        if (P_A(r) == T_MIX) {
+            if (P_C(r) == 0) {                              /* level: 100 = 0 dB, square law */
                 if (!v)
                     put_s(num, "OFF");
                 else {
@@ -636,9 +643,9 @@ static void pref_value_of(pref_t r, int v, char *num, char *unit)
     }
     case R_SWING: put_i(num, 50 + v / 4); put_s(unit, "%"); return;
     case R_GEN:
-        if (r.c == G_OCTS || r.c == G_BASE)
+        if (P_C(r) == G_OCTS || P_C(r) == G_BASE)
             put_i(num, v + 1);
-        else if (r.c == G_MUT) {
+        else if (P_C(r) == G_MUT) {
             if (!v)
                 put_s(num, "OFF");
             else {
@@ -680,7 +687,7 @@ static pages_t pg;
 static uint8_t pg_grp;                 /* the group pages added now belong to */
 static void more(pref_t r)
 {
-    if (r.kind != R_NONE && pg.nmore < MAXMORE)
+    if (P_KIND(r) != R_NONE && pg.nmore < MAXMORE)
         pg.more[pg.nmore++] = r;
 }
 
@@ -707,7 +714,7 @@ static void add_page(const char *t, pref_t a, pref_t b, pref_t c, pref_t d)
     pg.n++;
 }
 
-static void add_eng_pages(int t, int v, int from, int to, const char *name)
+static POLY_COLD void add_eng_pages(int t, int v, int from, int to, const char *name)
 {
     int n = engine_nparams(t, v), i;
     if (to > n)
@@ -742,7 +749,7 @@ static pref_t find_ref(int t, int v, const char *n)
 
 /* a drum track: its sound, four knobs a page (its DRIVE and DIST: SEL's list; its level, pan and sends:
  * MIX's 909 MIX / 808 MIX page) */
-static void add_track_pages(int t, int v)
+static POLY_COLD void add_track_pages(int t, int v)
 {
     const char *nm = engine_voice_name(t, v);
     pref_t snd[NPARAMS_MAX];
@@ -765,7 +772,7 @@ static uint8_t *page_of(int view)
     return &ui.page[view][view == V_PART || view == V_SEQ || view == V_GEN ? ui.part : 0];
 }
 
-static void build_pages(void)
+static POLY_COLD void build_pages(void)
 {
     int p = ui.part, b = bidx();
     pg.n = pg.nmore = 0;
@@ -905,16 +912,16 @@ static char list_title[16];
 static void list_add(pref_t r)
 {
     int i;
-    if (r.kind == R_NONE || ui.list_n >= LIST_MAX)
+    if (P_KIND(r) == R_NONE || ui.list_n >= LIST_MAX)
         return;
     for (i = 0; i < ui.list_n; i++)                   /* a ref on two pages (LEVEL) lists once */
-        if (list_rows[i].kind == r.kind && list_rows[i].a == r.a && list_rows[i].b == r.b && list_rows[i].c == r.c)
+        if (list_rows[i] == r)
             return;
     list_rows[ui.list_n++] = r;
 }
 
 /* a list section's name: whose values follow */
-static void hdr_name(int g, char *t)
+static POLY_COLD void hdr_name(int g, char *t)
 {
     const char *who = is_drum() ? engine_voice_name(ui.part == PART_909 ? T_909 : T_808, ui.sel[ui.part]) : PART_N[ui.part];
     switch (g) {
@@ -932,9 +939,9 @@ static void hdr_name(int g, char *t)
     }
 }
 
-static int list_skip(int i) { return i < ui.list_n && list_rows[i].kind == R_HDR; }
+static int list_skip(int i) { return i < ui.list_n && P_KIND(list_rows[i]) == R_HDR; }
 
-static void open_list_of_pages(void)
+static POLY_COLD void open_list_of_pages(void)
 {
     int p, k, last = -1, groups = 0;
     ui.list_n = 0;
@@ -970,7 +977,7 @@ static void open_list_of_pages(void)
     ui.overlay = ui.list_n ? O_LIST : O_NONE;
 }
 
-static void open_global(void)
+static POLY_COLD void open_global(void)
 {
     ui.list_n = 0;
     list_rows[ui.list_n++] = PR(R_HDR, GR_MIDI, 0, 0);
@@ -1012,7 +1019,7 @@ static void ask(int act, int arg, const char *q1, const char *q2)
 }
 
 /* part `part` of a pattern has something to play */
-static int part_used(const pattern_t *pt, int part)
+static POLY_COLD int part_used(const pattern_t *pt, int part)
 {
     int v, s;
     if (part < NKIT) {
@@ -1029,7 +1036,7 @@ static int part_used(const pattern_t *pt, int part)
     return 0;
 }
 
-static int pattern_used(const pattern_t *pt)
+static POLY_COLD int pattern_used(const pattern_t *pt)
 {
     int v, s, used = pt->brk.steps != 0;
     for (v = 0; v < NDRUM; v++)
@@ -1040,7 +1047,7 @@ static int pattern_used(const pattern_t *pt)
 }
 
 /* motion lanes of one part pattern: gone, and the knobs back to their own values */
-static void clear_lanes(int pat, int part)
+static POLY_COLD void clear_lanes(int pat, int part)
 {
     int k;
     for (k = 0; k < NLANE; k++) {
@@ -1054,19 +1061,20 @@ static void clear_lanes(int pat, int part)
 }
 
 /* part `part` of pattern src onto pattern dst, its lanes too; 0 = done, -1 = lanes did not fit */
-static int copy_part(int dst, int src, int part)
+static POLY_COLD int copy_part(int dst, int src, int part)
 {
     pattern_t *d = &proj.pat[dst];
     const pattern_t *a = &proj.pat[src];
     int k, rc = 0;
     if (part < NKIT) {
-        d->drum[part] = a->drum[part];
+        if(proj.variant.arrangement.flags&POLY_FLAG){int v,w;for(v=0;v<NDRUM;v++){for(w=0;w<NSW;w++)d->drum[part].hit[v][w]=a->drum[part].hit[v][w];poly_set(proj.pat,(uint8_t *)&proj.sound,dst,part*11+v,poly_length(proj.pat,(const uint8_t *)&proj.sound,src,part*11+v),poly_rate(proj.pat,(const uint8_t *)&proj.sound,src,part*11+v));}for(w=0;w<NSW;w++)d->drum[part].accent[w]=a->drum[part].accent[w];}
+        else d->drum[part] = a->drum[part];
         if (part == PART_909)
             d->swing = a->swing;                      /* the 909 is the bar: its groove goes with it */
     } else if (part < PART_BRK)
         d->bass[part - NKIT] = a->bass[part - NKIT];
-    else
-        d->brk = a->brk;
+    else if(proj.variant.arrangement.flags&POLY_FLAG){int st;for(st=0;st<BRK_NSET;st++)d->brk.set[st]=a->brk.set[st];d->brk.slot_a=a->brk.slot_a;d->brk.slot_b=a->brk.slot_b;poly_set(proj.pat,(uint8_t *)&proj.sound,dst,24,poly_length(proj.pat,(const uint8_t *)&proj.sound,src,24),poly_rate(proj.pat,(const uint8_t *)&proj.sound,src,24));for(st=0;st<64;st++)poly_break_set(proj.pat,(uint8_t *)&proj.sound,dst,st,poly_break_gate(proj.pat,(const uint8_t *)&proj.sound,src,st),poly_break_slice(proj.pat,(const uint8_t *)&proj.sound,src,st));}
+    else d->brk = a->brk;
     clear_lanes(dst, part);
     for (k = 0; k < NLANE; k++) {                     /* a copy lands on pattern dst: never copied again */
         const lane_t *l = &proj.arr.lane[k];
@@ -1083,7 +1091,7 @@ static int copy_part(int dst, int src, int part)
     return rc;
 }
 
-static void clear_part(pattern_t *p, int part)
+static POLY_COLD void clear_part(pattern_t *p, int part)
 {
     int i;
     if (part < NKIT) {
@@ -1097,9 +1105,8 @@ static void clear_part(pattern_t *p, int part)
         for (i = 0; i < NSTEPS; i++)
             p->bass[part - NKIT].step[i].flags = G_REST;
     } else {
-        p->brk.steps = 0;
-        for (i = 0; i < 16; i++)
-            p->brk.slice[i] = 0;
+        if(proj.variant.arrangement.flags&POLY_FLAG)for(i=0;i<64;i++)poly_break_set(proj.pat,(uint8_t *)&proj.sound,(int)(p-proj.pat),i,0,0);
+        else {p->brk.steps = 0;for (i = 0; i < 16; i++)p->brk.slice[i] = 0;}
     }
 }
 
@@ -1114,7 +1121,7 @@ static int perf_testing(void);
 static const char *const BTN_LABEL[NB] = {"FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE", "ARP", "SEQ",
                                           "PLAY / STOP", "REC", "OCT-", "OCT+"};
 
-static int help_lines(int b, const char *l[HELP_LINES])
+static POLY_COLD int help_lines(int b, const char *l[HELP_LINES])
 {
     int n = 0, gen = ui.view == V_GEN, kbd = is_303() && ui.rec;
 #define L(s) (l[n++] = (s))
@@ -1178,7 +1185,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
 
 /* SAVE held on its own a moment: the pattern is on the clipboard ("P1 COPIED"); a white key pastes it */
 #define COPY_HOLD 250u
-static void copy_tick(uint32_t btn, uint32_t keys)
+static POLY_COLD void copy_tick(uint32_t btn, uint32_t keys)
 {
     static uint8_t said;
     uint32_t m = 1u << B_SAVE;
@@ -1195,7 +1202,7 @@ static void copy_tick(uint32_t btn, uint32_t keys)
     }
 }
 
-static void help_tick(uint32_t btn, uint32_t keys)
+static POLY_COLD void help_tick(uint32_t btn, uint32_t keys)
 {
     uint32_t now = plat_ms();
     int i;
@@ -1267,7 +1274,7 @@ static void undo_tick(void)
 }
 
 /* a run of the project changed under the engine: the sound's pots go to the engine again */
-static void undo_changed(uint32_t off, uint32_t len)
+static POLY_COLD void undo_changed(uint32_t off, uint32_t len)
 {
     const uint32_t s0 = __builtin_offsetof(project_t, sound), s1 = s0 + sizeof(sound_t);
     const uint32_t l0 = __builtin_offsetof(project_t, arr) + __builtin_offsetof(arrange_t, lane);
@@ -1291,20 +1298,21 @@ static void undo_changed(uint32_t off, uint32_t len)
     {
         uint32_t ar = __builtin_offsetof(project_t,variant) + __builtin_offsetof(variant_settings_t,arrangement);
         uint32_t sg = __builtin_offsetof(project_t,arr) + __builtin_offsetof(arrange_t,song);
+        if ((proj.variant.arrangement.flags&POLY_FLAG) && a < __builtin_offsetof(project_t,arr) && a+len>__builtin_offsetof(project_t,sound))undo_lanes|=2u;
         if ((a < ar + sizeof(arrangement_settings_t) && a + len > ar) ||
             (a < sg + sizeof(song_t) && a + len > sg))
             undo_lanes |= 2u; /* coalesce to one refresh after the full swap */
     }
 }
 
-static int undo_arrangement_intent(int redo)
+static POLY_COLD int undo_arrangement_intent(int redo)
 {
     uint32_t i, flag_offset;
     int k, pending = 0;
     uint8_t prospective;
     const uint8_t *entry, *end;
     uint32_t runs, run;
-    if (arrangement_panel_locked()) return 1;
+    if (arrangement_panel_locked() || (proj.variant.arrangement.flags&POLY_FLAG)) return 1;
     if (!undo_ready) return 0;
     flag_offset = __builtin_offsetof(project_t,variant) + __builtin_offsetof(variant_settings_t,arrangement)
         + __builtin_offsetof(arrangement_settings_t,flags) - UNDO_OFF;
@@ -1313,7 +1321,8 @@ static int undo_arrangement_intent(int redo)
      * discards old redo entries. Inspect before commit: a rejected operation
      * must retain the entire pool, shadow, cursor and open gesture. */
     for (i = 0; i < undo.len; i++) if (undo.region[i] != undo.shadow[i]) { pending = 1; break; }
-    if (pending) return !redo && (undo.shadow[flag_offset] & ARR_ENABLED) ? 1 : 0;
+    if (pending) return !redo && ((undo.shadow[flag_offset]&(ARR_ENABLED|POLY_FLAG)) ||
+        ((undo.shadow[flag_offset]^prospective)&ARR_NOTES_OUT)) ? 1 : 0;
     k = redo ? undo.cur : undo.cur - 1;
     if (k < 0 || k >= undo.n) return 0;
     if (undo.at[k] > undo.at[k+1] || undo.at[k+1] > undo.used || undo.at[k+1] - undo.at[k] < 8u) return 1;
@@ -1327,7 +1336,7 @@ static int undo_arrangement_intent(int redo)
         if (flag_offset >= off && flag_offset-off < n) prospective = entry[flag_offset-off];
         entry += padded;
     }
-    return prospective & ARR_ENABLED ? 1 : 0;
+    return (prospective&(ARR_ENABLED|POLY_FLAG)) || ((prospective^undo.region[flag_offset])&ARR_NOTES_OUT) ? 1 : 0;
 }
 
 int ui_undo_preflight(int redo)
@@ -1339,7 +1348,7 @@ int ui_undo_preflight(int redo)
 }
 
 /* what an undo step touched, in words: "909 P3", "SOUND", "SONG", "MOTION" */
-static void undo_name(uint32_t lo, uint32_t hi, char *t)
+static POLY_COLD void undo_name(uint32_t lo, uint32_t hi, char *t)
 {
     const uint32_t p0 = __builtin_offsetof(project_t, pat), a0 = __builtin_offsetof(project_t, arr),
                    l0 = a0 + __builtin_offsetof(arrange_t, lane);
@@ -1369,7 +1378,7 @@ static void undo_name(uint32_t lo, uint32_t hi, char *t)
     }
 }
 
-static int do_undo(int redo)
+static POLY_COLD int do_undo(int redo)
 {
     uint32_t lo, hi;
     char t[24];
@@ -1409,10 +1418,22 @@ static int do_undo(int redo)
 }
 int ui_external_undo(int redo) { return do_undo(redo); }
 
+/* MIDI history is an explicit stopped action, never an implicit END for a
+ * panel/recording gesture. Terminal refusal lets following Stop pass ingress. */
+POLY_COLD int ui_cc_undo(int redo)
+{
+    int result;
+    if (external_edit || ui.rec || ui.btn || ui.keys || perf_testing() ||
+        seq.transport_stage || seq.transport_hold || !engine_transport_reserve()) return VR_BUSY;
+    result = do_undo(redo);
+    engine_transport_release();
+    return result;
+}
+
 /* SAVE while playing waits for the stop: writing the flash stops the audio (the code and the samples
  * are read from it, and a 4 KB erase takes tens of ms) */
 static uint8_t save_wait;
-static void save_project(void)
+static POLY_COLD void save_project(void)
 {
     int rc;
     if (!engine_transport_reserve()) {
@@ -1440,7 +1461,7 @@ static const char *const PT_N[3] = {"FACTORY LOOP", "ALL FIVE", "WORST CASE"};
 static pattern_t perf_bench[3];
 static sound_t perf_snd;
 
-static void perf_window(int force)
+static POLY_COLD void perf_window(int force)
 {
     uint32_t now = plat_ms(), t = plat_ticks24(), c = plat_cycles(), f = eng_prof_frames, st[3];
     uint32_t dt = t - perf.ticks, dc = c - perf.cyc, df = f - perf.frames, sum = 0;
@@ -1480,7 +1501,7 @@ static void perf_window(int force)
 
 /* the test's patterns: 0 the factory loop (909 kick, clap, open hats; 303 A; the break), 1 all five,
  * 2 everything dense */
-static void perf_build(void)
+static POLY_COLD void perf_build(void)
 {
     /* the tracks in key order (pattern.h): 909 BD SD LT MT HT RS CP CH OH CR RD, 808 ... CB CY OH CH */
     enum { DR_BD, DR_SD, DR_LT, DR_MT, DR_HT, DR_RS, DR_CP, DR_CH, DR_OH, DR_CR, DR_RD };
@@ -1520,7 +1541,7 @@ static void perf_build(void)
     }
 }
 
-static void perf_restore(void)
+static POLY_COLD void perf_restore(void)
 {
     int p;
     seq.pat = perf.pat;
@@ -1538,7 +1559,7 @@ static void perf_restore(void)
     engine_brk_loops();
 }
 
-static void perf_test_start(void)
+static POLY_COLD void perf_test_start(void)
 {
     int p;
     if (perf.test >= 0 && perf.phase != 4)
@@ -1569,7 +1590,7 @@ static void perf_test_abort(void)
 }
 
 /* the test, one step a frame (the main loop): the transport changes take a block to land */
-static void perf_test_tick(void)
+static POLY_COLD void perf_test_tick(void)
 {
     uint32_t now = plat_ms();
     int p;
@@ -1649,14 +1670,16 @@ static void perf_test_tick(void)
 
 static void set_view(int v);
 
-static void run_action(int act, int arg)
+static POLY_COLD void run_action(int act, int arg)
 {
     char t[28], *q;
     if ((act == ACT_SONG_INS || act == ACT_SONG_DEL || act == ACT_SONG_CLR) && arrangement_panel_refuse()) return;
-    int reset_held = 0;
-    if (act == ACT_RESET && arrangement_panel_locked() && !(reset_held = engine_transport_reserve())) {
+    int reset_held = 0,copy_held=0;
+    if(act==ACT_COPY && (proj.variant.arrangement.flags&POLY_FLAG) && !(copy_held=engine_transport_reserve())){say("STOP FOR LANE PATTERN COPY",0);return;}
+    if (act == ACT_RESET && (arrangement_panel_locked() || (proj.variant.arrangement.flags&POLY_FLAG)) && !(reset_held = engine_transport_reserve())) {
         say("STOP FOR ARRANGEMENT RESET", 0); return;
     }
+    if(act==ACT_PERF_TEST && (proj.variant.arrangement.flags&POLY_FLAG)){say("BENCHMARK NEEDS LEGACY PROJECT",0);return;}
     switch (act) {
     case ACT_SAVE: save_project(); break;
     case ACT_CLEAR_PART:
@@ -1684,6 +1707,7 @@ static void run_action(int act, int arg)
         q = put_i(put_s(t, "P"), seq.ppat[PART_909] + 1);
         put_i(put_s(q, " PASTED TO P"), dst + 1);
         say(rc ? "MOTION FULL: NOT ALL PASTED" : t, 0);
+        if(copy_held)engine_transport_release();
         break;
     }
     case ACT_SONG_INS:
@@ -1747,7 +1771,7 @@ static void run_action(int act, int arg)
  * so a fast half turn sweeps 0-127. Several detents in one read are a fast turn too. Small ranges
  * stay gentler; switches and lists never get here (turn_ref steps them one at a time). */
 static uint8_t accel_off;              /* the host simulator's "spin": exact steps */
-static int32_t accel(int role, int32_t s, int range)
+static POLY_COLD int32_t accel(int role, int32_t s, int range)
 {
     uint32_t now = plat_ms(), dt = now - ui.enc_t[role], a = (uint32_t)(s < 0 ? -s : s), m;
     ui.enc_t[role] = now;
@@ -1779,15 +1803,15 @@ static void set_view(int v)
 }
 
 /* a sound knob turned: record its lane (REC, playing), or let the knob win over the lane for a pass */
-static void motion_touch(pref_t r)
+static POLY_COLD void motion_touch(pref_t r)
 {
     int part, k;
-    if (r.kind != R_ENG || !seq.playing)
+    if (P_KIND(r) != R_ENG || !seq.playing)
         return;
-    part = engine_motion_part(r.a, r.b);
-    k = motion_find(proj.arr.lane, seq.ppat[part], part, r.a, r.b, r.c);
+    part = engine_motion_part(P_A(r), P_B(r));
+    k = motion_find(proj.arr.lane, seq.ppat[part], part, P_A(r), P_B(r), P_C(r));
     if (ui.rec) {
-        if (k < 0 && (k = motion_alloc(proj.arr.lane, seq.ppat[part], part, r.a, r.b, r.c)) < 0) {
+        if (k < 0 && (k = motion_alloc(proj.arr.lane, seq.ppat[part], part, P_A(r), P_B(r), P_C(r))) < 0) {
             say("MOTION FULL", 0);
             return;
         }
@@ -1798,19 +1822,19 @@ static void motion_touch(pref_t r)
 }
 
 /* SAVE held + a sound knob: forget its motion in this pattern */
-static void motion_forget(pref_t r)
+static POLY_COLD void motion_forget(pref_t r)
 {
     int part, k;
-    if (r.kind != R_ENG)
+    if (P_KIND(r) != R_ENG)
         return;
-    part = engine_motion_part(r.a, r.b);
-    k = motion_find(proj.arr.lane, seq.ppat[part], part, r.a, r.b, r.c);
+    part = engine_motion_part(P_A(r), P_B(r));
+    k = motion_find(proj.arr.lane, seq.ppat[part], part, P_A(r), P_B(r), P_C(r));
     if (k < 0) {
         say("NO MOTION ON ", pref_name(r));
         return;
     }
     motion_clear(proj.arr.lane, k);
-    engine_set(r.a, r.b, r.c, proj.sound.v[r.a][r.b][r.c]);
+    engine_set(P_A(r), P_B(r), P_C(r), proj.sound.v[P_A(r)][P_B(r)][P_C(r)]);
     mark_dirty();
     say("MOTION CLEARED: ", pref_name(r));
 }
@@ -1819,18 +1843,18 @@ static void motion_forget(pref_t r)
 static int motion_now(pref_t r)
 {
     int part;
-    if (r.kind != R_ENG)
+    if (P_KIND(r) != R_ENG)
         return -1;
-    part = engine_motion_part(r.a, r.b);
-    return engine_motion_value(motion_find(proj.arr.lane, seq.ppat[part], part, r.a, r.b, r.c));
+    part = engine_motion_part(P_A(r), P_B(r));
+    return engine_motion_value(motion_find(proj.arr.lane, seq.ppat[part], part, P_A(r), P_B(r), P_C(r)));
 }
 static int has_motion(pref_t r)
 {
     int part;
-    if (r.kind != R_ENG)
+    if (P_KIND(r) != R_ENG)
         return 0;
-    part = engine_motion_part(r.a, r.b);
-    return motion_find(proj.arr.lane, seq.ppat[part], part, r.a, r.b, r.c) >= 0;
+    part = engine_motion_part(P_A(r), P_B(r));
+    return motion_find(proj.arr.lane, seq.ppat[part], part, P_A(r), P_B(r), P_C(r)) >= 0;
 }
 
 /* p-locks: on EDIT, a step held (one already there: a tap still toggles it) and a sound knob turned
@@ -1843,16 +1867,16 @@ static int lock_step(void)
         return ui.rec ? -1 : ui.held_step;
     return is_drum() ? ui.hold_step : ui.brk_held;
 }
-static int lockable(pref_t r) { return r.kind == R_ENG && engine_motion_part(r.a, r.b) == ui.part; }
+static int lockable(pref_t r) { return P_KIND(r) == R_ENG && engine_motion_part(P_A(r), P_B(r)) == ui.part; }
 static int lock_of(pref_t r, int s)                  /* step s's own value of r, -1 none */
 {
     int k;
     if (s < 0 || !lockable(r))
         return -1;
-    k = motion_find(proj.arr.lane, seq.ppat[ui.part], ui.part, r.a, r.b, r.c);
+    k = motion_find(proj.arr.lane, seq.ppat[ui.part], ui.part, P_A(r), P_B(r), P_C(r));
     return k >= 0 && proj.arr.lane[k].val[s] != MOT_NONE ? proj.arr.lane[k].val[s] : -1;
 }
-static void lock_turn(pref_t r, int e, int role)
+static POLY_COLD void lock_turn(pref_t r, int e, int role)
 {
     int s = lock_step(), part = ui.part, k, cur, nv;
     const x0x_param_t *d = pref_desc(r);
@@ -1867,7 +1891,7 @@ static void lock_turn(pref_t r, int e, int role)
         ui.step_edited = 1;                           /* its release keeps the step */
     else
         ui.hold_used = 1;
-    k = motion_find(proj.arr.lane, seq.ppat[part], part, r.a, r.b, r.c);
+    k = motion_find(proj.arr.lane, seq.ppat[part], part, P_A(r), P_B(r), P_C(r));
     if (ui.btn & (1u << B_SAVE)) {                    /* SAVE + the knob: the step's lock goes */
         int j, any = 0;
         ui.btn_used |= 1u << B_SAVE;
@@ -1880,23 +1904,23 @@ static void lock_turn(pref_t r, int e, int role)
         if (!any)
             motion_clear(proj.arr.lane, k);
         if (!seq.playing)
-            engine_set(r.a, r.b, r.c, proj.sound.v[r.a][r.b][r.c]);
+            engine_set(P_A(r), P_B(r), P_C(r), proj.sound.v[P_A(r)][P_B(r)][P_C(r)]);
         mark_dirty();
         say("P-LOCK CLEARED: ", caps_of(pref_name(r)));
         return;
     }
-    if (k < 0 && (k = motion_alloc(proj.arr.lane, seq.ppat[part], part, r.a, r.b, r.c)) < 0) {
+    if (k < 0 && (k = motion_alloc(proj.arr.lane, seq.ppat[part], part, P_A(r), P_B(r), P_C(r))) < 0) {
         say("MOTION FULL", 0);
         return;
     }
     l = &proj.arr.lane[k];
-    cur = l->val[s] != MOT_NONE ? l->val[s] : proj.sound.v[r.a][r.b][r.c];
+    cur = l->val[s] != MOT_NONE ? l->val[s] : proj.sound.v[P_A(r)][P_B(r)][P_C(r)];
     e = d->names || d->max < 24 ? (e > 0 ? 1 : -1) : accel(role, e, d->max);
     nv = cur + e;
     nv = nv < 0 ? 0 : nv > d->max ? d->max : nv;
     l->val[s] = (uint8_t)nv;
     if (!seq.playing)                                 /* stopped: heard at once, until the step is let go */
-        engine_set(r.a, r.b, r.c, nv);
+        engine_set(P_A(r), P_B(r), P_C(r), nv);
     mark_dirty();
     ui.touched = (int8_t)(role - EN_K1);
     ui.touch_until = plat_ms() + 900u;
@@ -1909,7 +1933,7 @@ static void lock_release(void)                        /* the held step let go: s
     for (i = 0; i < 4; i++) {
         pref_t r = pg.r[cur_page()][i];
         if (lockable(r))
-            engine_set(r.a, r.b, r.c, proj.sound.v[r.a][r.b][r.c]);
+            engine_set(P_A(r), P_B(r), P_C(r), proj.sound.v[P_A(r)][P_B(r)][P_C(r)]);
     }
 }
 /* probability: SEQ or EDIT, a step held, SELECT sets its chance (5..100 %, a T_PROB lane: motion.h's
@@ -1922,7 +1946,7 @@ static int held_any_step(void)
         return ui.rec ? -1 : ui.held_step;
     return is_drum() ? ui.hold_step : ui.brk_held;
 }
-static void prob_turn(int e)
+static POLY_COLD void prob_turn(int e)
 {
     int s = held_any_step(), part = ui.part, v = part << 4 | (is_drum() ? ui.sel[part] : 0), k, nv, j, any = 0;
     char t[24], *q;
@@ -1964,7 +1988,7 @@ static void prob_turn(int e)
 
 /* the 16 steps on the keys that have values of their own (p-locks, recorded motion) for part's lanes
  * of target t (-1: any), voice v (-1: any) */
-static uint32_t lock_marks(int t, int v, int base)
+static POLY_COLD uint32_t lock_marks(int t, int v, int base)
 {
     uint32_t m = 0;
     int k, c;
@@ -1980,10 +2004,10 @@ static uint32_t lock_marks(int t, int v, int base)
     return m;
 }
 
-static void turn_ref(pref_t r, int e, int knob)
+static POLY_COLD void turn_ref(pref_t r, int e, int knob)
 {
     const x0x_param_t *d = pref_desc(r);
-    if (!d || r.kind == R_ACT)
+    if (!d || P_KIND(r) == R_ACT)
         return;
     if (d->names || d->max < 24)
         e = e > 0 ? 1 : -1;                          /* a switch: one detent, one position */
@@ -1995,7 +2019,7 @@ static void turn_ref(pref_t r, int e, int knob)
 
 static int rec_step(int track) { return eng_step[track]; }
 
-static void drum_key(int v, int down)
+static POLY_COLD void drum_key(int v, int down)
 {
     int k = ui.part;
     if (!down)
@@ -2010,7 +2034,8 @@ static void drum_key(int v, int down)
     if (ui.btn & (1u << B_ENV))
         ui.btn_used |= 1u << B_ENV;
     if (ui.rec && seq.playing) {
-        int s = rec_step(TRK_DRUM + k);
+        int s = seq.lane_enabled?seq_lane_position(&seq,k*11+v):rec_step(TRK_DRUM+k);
+        if(s<0 || s>=NSTEPS)return;
         sm_set(cur_pat()->drum[k].hit[v], s);
         if (ui.btn & (1u << B_ENV))
             sm_set(cur_pat()->drum[k].accent, s);
@@ -2021,7 +2046,7 @@ static void drum_key(int v, int down)
 #define STEP_TAP_MS 300u
 /* a white key: a step. An empty one is on at once; one already on comes off on a tap (a quick
  * release), and stays when held (EDIT: its p-locks) */
-static void drum_step(int white, int down)
+static POLY_COLD void drum_step(int white, int down)
 {
     int k = ui.part, s = ui.spage * 16 + white;
     dpart_t *d = &cur_pat()->drum[k];
@@ -2058,7 +2083,7 @@ static void drum_step(int white, int down)
 
 static int kbd_note(int k) { return 41 + k + 12 * ui.oct; }
 
-static void bass_write(int b, int note, int gate)
+static POLY_COLD void bass_write(int b, int note, int gate)
 {
     bpart_t *bp = &cur_pat()->bass[b];
     int len = bp->len ? bp->len : 16, w = ui.wpos[b] % len;
@@ -2079,7 +2104,7 @@ static void bass_write(int b, int note, int gate)
     mark_dirty();
 }
 
-static void bass_kbd(int key, int down)
+static POLY_COLD void bass_kbd(int key, int down)
 {
     int b = bidx(), n = kbd_note(key);
     if (down) {
@@ -2102,7 +2127,7 @@ static void bass_kbd(int key, int down)
 
 /* an edit sounds as the drum keys do (KEY SOUND): while stopped or recording, or always */
 static int key_sounds(void) { return proj.set.keysound || !seq.playing || ui.rec; }
-static void bass_step_key(int white, int down)
+static POLY_COLD void bass_step_key(int white, int down)
 {
     int b = bidx(), s = ui.spage * 16 + white;
     bpart_t *bp = &cur_pat()->bass[b];
@@ -2151,7 +2176,7 @@ static int perf_testing(void) { return perf.test >= 0 && perf.phase != 4; }
 
 /* the held 303 step's note, moved by `by` semitones (KNOB 1: one; OCT: twelve); a rest or a tie
  * becomes a note of its own */
-static void held_note_by(int by)
+static POLY_COLD void held_note_by(int by)
 {
     bpart_t *bp = &cur_pat()->bass[bidx()];
     bstep_t *st = &bp->step[ui.held_step];
@@ -2183,7 +2208,7 @@ static void mute_track(int km, int v)                /* one drum track on / off 
     say(track_muted(km, v) ? "MUTED " : "UNMUTED ", engine_voice_name(km ? T_808 : T_909, v));
 }
 
-static void key_event(int k, int down)
+static POLY_COLD void key_event(int k, int down)
 {
     int w = KEY_WHITE[k], bl = KEY_BLACK[k], wp = w >= 0 ? ui.pbank * 16 + w : -1;   /* wp: a white key's pattern */
     if (ui.overlay == O_ASK || ui.view == V_PERF || perf_testing())
@@ -2291,12 +2316,13 @@ static void key_event(int k, int down)
         brkpart_t *bp = &cur_pat()->brk;
         if (bl >= 0 && bl < 8 && down && ui.brk_held >= 0) {     /* a step held + black 1-8: its own slice */
             int st = ui.brk_held;
-            bp->slice[st] = (uint8_t)(bp->slice[st] == bl + 1 ? 0 : bl + 1);
+            if(proj.variant.arrangement.flags&POLY_FLAG)engine_lane_break_step(seq.ppat[TRK_BRK],st,1,ui_break_slice(bp,st)==bl+1?0:bl+1);
+            else bp->slice[st]=(uint8_t)(bp->slice[st]==bl+1?0:bl+1);
             bp->steps |= 1u << st;
             ui.hold_used = 1;                          /* its release keeps the step */
             ui.brk_pinkeys |= (uint16_t)(1u << bl);
             mark_dirty();
-            if (bp->slice[st]) {
+            if (ui_break_slice(bp,st)) {
                 char t[24];
                 put_i(put_s(put_i(put_s(t, "STEP "), st + 1), ": SLICE "), bl + 1);
                 say(t, 0);
@@ -2327,7 +2353,7 @@ static void key_event(int k, int down)
     }
 }
 
-static void list_move(int d)
+static POLY_COLD void list_move(int d)
 {
     int s = ui.list_sel, step = d < 0 ? -1 : 1, t;
     for (; d; d -= step) {                             /* a row at a time, over the section headers */
@@ -2344,19 +2370,19 @@ static void list_move(int d)
         ui.list_top = (uint8_t)(ui.list_sel - 5);
 }
 
-static void list_enter(void)
+static POLY_COLD void list_enter(void)
 {
     pref_t r = list_rows[ui.list_sel];
-    if (r.kind != R_ACT)
+    if (P_KIND(r) != R_ACT)
         return;
-    if (r.a == ACT_CLEAR_PAT)
+    if (P_A(r) == ACT_CLEAR_PAT)
         ask(ACT_CLEAR_PAT, 0, "CLEAR THIS PATTERN?", "ALL FIVE PARTS");
-    else if (r.a == ACT_RESET)
+    else if (P_A(r) == ACT_RESET)
         ask(ACT_RESET, 0, "FACTORY RESET?", "SOUND, PATTERNS, SONG");
-    else if (r.a == ACT_SONG_CLR)
+    else if (P_A(r) == ACT_SONG_CLR)
         ask(ACT_SONG_CLR, 0, "CLEAR THE SONG?", 0);
     else
-        run_action(r.a, 0);
+        run_action(P_A(r), 0);
 }
 
 static void close_overlay(void)
@@ -2369,7 +2395,7 @@ static void close_overlay(void)
     ui.overlay = O_NONE;
 }
 
-static void button_tap(int b)
+static POLY_COLD void button_tap(int b)
 {
     if (perf_testing()) {                             /* the test owns the transport: HOME or PLAY stop it */
         if ((b == B_HOME || b == B_PLAY) && perf.phase != 3)
@@ -2533,7 +2559,7 @@ static void button_tap(int b)
     }
 }
 
-static void input(void)
+static POLY_COLD void input(void)
 {
     uint32_t btn = plat_buttons(), keys = plat_keys(), ch, i;
     int e;
@@ -2768,7 +2794,7 @@ static int32_t tw(const felucca_font_t *f, const char *s) { return text_w(f, s);
  * font's cell (which differs per face and size) */
 typedef struct { const felucca_font_t *f; int8_t top, bot; } capm_t;
 static capm_t capm[6];
-static const capm_t *caps(const felucca_font_t *f)
+static POLY_COLD const capm_t *caps(const felucca_font_t *f)
 {
     int i;
     for (i = 0; i < 6 && capm[i].f; i++)
@@ -2841,7 +2867,7 @@ static void text_r(int32_t rx, int32_t y, const felucca_font_t *f, const char *s
 }
 
 /* ---- anti-aliased shapes. Coverage is 0..16; a pixel is blended over what is there. ---- */
-static void px_blend(int32_t x, int32_t y, uint16_t c, uint32_t a)
+static POLY_COLD void px_blend(int32_t x, int32_t y, uint16_t c, uint32_t a)
 {
     uint16_t *q;
     uint32_t bg;
@@ -2887,7 +2913,7 @@ static void corners_init(void)
 }
 
 /* a filled rounded rectangle; r is clamped to fit */
-static void rbox(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t c)
+static POLY_COLD void rbox(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t c)
 {
     int32_t i, j;
     if (w <= 0 || h <= 0)
@@ -2916,7 +2942,7 @@ static void rbox(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t
 }
 
 /* a 1-px rounded outline */
-static void rframe(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t c)
+static POLY_COLD void rframe(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t c)
 {
     int32_t i, j;
     if (r > w / 2)
@@ -2947,7 +2973,7 @@ static void box(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c) { rbox(x
 static void frame(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c) { rframe(x, y, w, h, rad_of(h < w ? h : w), c); }
 
 /* an anti-aliased disc of radius r (float) at (cx, cy) */
-static void disc(float cx, float cy, float r, uint16_t c)
+static POLY_COLD void disc(float cx, float cy, float r, uint16_t c)
 {
     int32_t x0 = (int32_t)fm_floorf(cx - r - 1.0f), x1 = (int32_t)(cx + r + 1.0f);
     int32_t y0 = (int32_t)fm_floorf(cy - r - 1.0f), y1 = (int32_t)(cy + r + 1.0f), x, y;
@@ -2961,7 +2987,7 @@ static void disc(float cx, float cy, float r, uint16_t c)
 static void dot(int32_t x, int32_t y, int32_t r, uint16_t c) { disc((float)x + 0.5f, (float)y + 0.5f, (float)r + 0.3f, c); }
 
 /* atan2 in turns, 0..1 from +x going clockwise on screen (y down) */
-static float turns(float y, float x)
+static POLY_COLD float turns(float y, float x)
 {
     float ax = fm_fabsf(x), ay = fm_fabsf(y), a = ax < ay ? ax / (ay + 1e-9f) : ay / (ax + 1e-9f), s = a * a, r;
     r = ((-0.0464964749f * s + 0.15931422f) * s - 0.327622764f) * s * a + a;   /* atan on [0, 1] */
@@ -2976,7 +3002,7 @@ static float turns(float y, float x)
 
 /* a knob: a 270-degree track from 7:30 to 4:30, thickness th, anti-aliased, round ends; the
  * value filled from the start (or from the top, for a bipolar value) and a round handle */
-static void arc(int32_t cx, int32_t cy, int32_t r, float v, uint16_t track, uint16_t fill, int bipolar)
+static POLY_COLD void arc(int32_t cx, int32_t cy, int32_t r, float v, uint16_t track, uint16_t fill, int bipolar)
 {
     const float th = 3.4f, a0 = 0.375f, sweep = 0.75f;  /* start at 135 degrees, in turns */
     float ro = (float)r, ri = ro - th, rm = ro - th * 0.5f, fx = (float)cx + 0.5f, fy = (float)cy + 0.5f;
@@ -3009,7 +3035,7 @@ static void arc(int32_t cx, int32_t cy, int32_t r, float v, uint16_t track, uint
     }
 }
 
-static void play_icon(int32_t x, int32_t y, uint16_t c)
+static POLY_COLD void play_icon(int32_t x, int32_t y, uint16_t c)
 {
     int32_t i, j;
     for (j = 0; j < 11; j++)                           /* a triangle, edges anti-aliased */
@@ -3025,14 +3051,14 @@ static void play_icon(int32_t x, int32_t y, uint16_t c)
 static int steps_len(void)
 {
     if (is_drum())
-        return cur_pat()->drum[ui.part].len;
+        return ui_drum_length(cur_pat(),ui.part,ui.sel[ui.part]);
     if (is_303() && !ui.rec)
         return cur_pat()->bass[bidx()].len;
     return 0;
 }
 
 /* -------------------------------------------------------------- header --- */
-static void draw_header(void)
+static POLY_COLD void draw_header(void)
 {
     char b[24];
     int32_t x;
@@ -3113,11 +3139,11 @@ static int step_of(int col) { return ui.spage * 16 + col; }
 static int32_t col_x(int c) { return GX + c * 13 + (c >> 2); }   /* a pixel between beats */
 
 #define DROW 11                                    /* drum rows: 12 of them over both bands, a gap under */
-static void draw_drum(int band)
+static POLY_COLD void draw_drum(int band)
 {
-    int k = ui.part, v, c, len = cur_pat()->drum[k].len;
+    int k = ui.part, v, c, len = ui_drum_length(cur_pat(),k,ui.sel[k]);
     const dpart_t *d = &cur_pat()->drum[k];
-    int ph = seq.playing ? eng_step[TRK_DRUM + k] : -1;
+    int ph = seq.playing ? (seq.lane_enabled?seq_lane_position(&seq,k*11+ui.sel[k]):eng_step[TRK_DRUM+k]) : -1;
     uint16_t col = part_col(), on_dim = dim(col, 8);
     uint32_t lmarks = lock_marks(k == PART_909 ? T_909 : T_808, ui.sel[k], ui.spage * 16) |
                       lock_marks(T_PROB, k << 4 | ui.sel[k], ui.spage * 16);
@@ -3166,7 +3192,7 @@ static int held_note_of(const bpart_t *bp, int s)
     return bp->step[s].note;
 }
 
-static void draw_303(int band, int gen)
+static POLY_COLD void draw_303(int band, int gen)
 {
     int b = bidx(), c, o = band * BAND_H, n;       /* o: drawn in the screen's rows, minus the band's */
     const bpart_t *bp = &cur_pat()->bass[b];
@@ -3247,7 +3273,7 @@ static void draw_303(int band, int gen)
     }
 }
 
-static void draw_break(int band)
+static POLY_COLD void draw_break(int band)
 {
     const brkpart_t *bp = &cur_pat()->brk;
     int c, ph = seq.playing ? eng_step[TRK_BRK] : -1, slice, bank, div, running;
@@ -3283,8 +3309,8 @@ static void draw_break(int band)
             box(x, 2, 12, 10, on ? (c == ph ? C_WHITE : col) : (c == ph ? C_DIM : C_LINE));
             if (on && ((lmarks >> c) & 1u))            /* the step's own values (p-locks): a notch */
                 cv_rect(x + 8, 3, 3, 3, C_BLACK);
-            if (bp->slice[c]) {                        /* the step's own slice */
-                char d[2] = {(char)('0' + bp->slice[c]), 0};
+            if (ui_break_slice(bp,c)) {                        /* the step's own slice */
+                char d[2] = {(char)('0' + ui_break_slice(bp,c)), 0};
                 text_c(x + 6, vc(&FONT_XS, 2, 10), &FONT_XS, d, on ? C_BLACK : C_GRAY);
             }
         }
@@ -3306,7 +3332,7 @@ static void draw_break(int band)
 }
 
 /* a part's lane on HOME: the 16 steps of the page its playhead is on (bits: those 16, from base) */
-static void lane(int y, int p, uint32_t bits, int ph, int len, int base)
+static POLY_COLD void lane(int y, int p, uint32_t bits, int ph, int len, int base)
 {
     int c, muted = part_muted(p);
     cv_text(3, y, &FONT_XS, PART_S[p], muted ? C_DIM : PART_COL[p]);
@@ -3318,7 +3344,7 @@ static void lane(int y, int p, uint32_t bits, int ph, int len, int base)
     }
 }
 
-static void draw_home(int band)
+static POLY_COLD void draw_home(int band)
 {
     int p, c;
     if (band == 0) {                                   /* the 16 patterns; in each, a bar per part playing it */
@@ -3351,7 +3377,7 @@ static void draw_home(int band)
             int v, base = seq.playing ? (eng_step[TRK_DRUM + p] & ~15) : 0;
             for (v = 0; v < NDRUM; v++)
                 bits |= d->hit[v][base >> 5] >> (base & 31);
-            lane(32 + p * 16, p, bits & 0xFFFFu, eng_step[TRK_DRUM + p], d->len, base);
+            lane(32 + p * 16, p, bits & 0xFFFFu, eng_step[TRK_DRUM + p], ui_drum_length(pat_of(p),p,0), base);
         }
     } else {
         for (p = 2; p < NPARTS; p++) {
@@ -3372,7 +3398,7 @@ static void draw_home(int band)
 }
 
 /* SONG: a table of bars, twelve rows across the two bands (the first is the heading) */
-static void draw_song(int band)
+static POLY_COLD void draw_song(int band)
 {
     const song_t *sg = song();
     int r, p, top = ui.song_sel > 5 ? ui.song_sel - 5 : 0;
@@ -3411,7 +3437,7 @@ static void draw_song(int band)
     }
 }
 
-static void draw_fx(int band)
+static POLY_COLD void draw_fx(int band)
 {
     int p;
     if (band == 0) {                                   /* five parts x reverb / delay */
@@ -3445,14 +3471,14 @@ static void draw_fx(int band)
 }
 
 /* MIX, a drum machine's page: its eleven tracks' levels (and pans), the selected one lit */
-static void draw_drum_mix(int band, int k)
+static POLY_COLD void draw_drum_mix(int band, int k)
 {
     int t = k ? T_808 : T_909, v, o = band * BAND_H;
     uint16_t col = PART_COL[k];
     for (v = 0; v < NDRUM; v++) {
         int x = 4 + v * 21, sel = v == ui.sel[k];
         pref_t lv = find_ref(t, v, "Level"), pn = find_ref(t, v, "Pan");
-        int l = lv.kind ? proj.sound.v[t][v][lv.c] : 0, pa = pn.kind ? proj.sound.v[t][v][pn.c] : 64;
+        int l = P_KIND(lv) ? proj.sound.v[t][v][P_C(lv)] : 0, pa = P_KIND(pn) ? proj.sound.v[t][v][P_C(pn)] : 64;
         int muted = (seq.mute | seq.vmute) & (1u << (k * NDRUM + v)), fh = 96, f = l * fh / 127;
         if (sel)
             box(x, 0 - o, 19, 134, dim(col, 3));
@@ -3470,7 +3496,7 @@ static void draw_drum_mix(int band, int k)
     }
 }
 
-static void draw_mix(int band)
+static POLY_COLD void draw_mix(int band)
 {
     int p;
     if (drum_mix_page() >= 0) {
@@ -3538,7 +3564,7 @@ static char *put_pct10(char *q, int v)                /* 123 -> "12.3%" */
     q = put_i(q, v % 10);
     return put_s(q, "%");
 }
-static void draw_perf(int band)
+static POLY_COLD void draw_perf(int band)
 {
     static const char *const SN[ENG_PROF_N] = {"909", "808", "303A", "303B", "BREAK", "FX", "MASTER", "SEQ"};
     char t[40], *q;
@@ -3648,7 +3674,7 @@ static void draw_perf(int band)
 }
 
 /* the readout: the knob being turned, large, across the bottom band */
-static void draw_readout(void)
+static POLY_COLD void draw_readout(void)
 {
     char num[16], unit[8];
     pref_t r;
@@ -3665,8 +3691,8 @@ static void draw_readout(void)
             put_s(put_s(put_s(t, engine_voice_name(ui.part == PART_909 ? T_909 : T_808, ui.sel[ui.part])), "  "), nm);
             nm = t;
         } else if (in_pattern(r)) {                      /* the pattern's: "P3  LENGTH" (it changes with it) */
-            int pp = r.kind == R_DLEN || r.kind == R_DRATE ? r.a : r.kind >= R_BLEN && r.kind <= R_BTRANS ? NKIT + r.a
-                     : r.kind == R_SWING ? PART_909 : part_view() ? ui.part : PART_909;
+            int pp = P_KIND(r) == R_DLEN || P_KIND(r) == R_DRATE ? P_A(r) : P_KIND(r) >= R_BLEN && P_KIND(r) <= R_BTRANS ? NKIT + P_A(r)
+                     : P_KIND(r) == R_SWING ? PART_909 : part_view() ? ui.part : PART_909;
             put_s(put_s(put_i(put_s(t, "P"), seq.ppat[pp] + 1), "  "), nm);
             nm = t;
         }
@@ -3693,7 +3719,7 @@ static void draw_readout(void)
 }
 
 /* a list over the main area: six rows of 24 px */
-static void draw_list(int band)
+static POLY_COLD void draw_list(int band)
 {
     int i;
     for (i = 0; i < 3; i++) {
@@ -3704,9 +3730,9 @@ static void draw_list(int band)
         if (row >= ui.list_n)
             break;
         r = list_rows[row];
-        if (r.kind == R_HDR) {                         /* a section: whose values follow */
+        if (P_KIND(r) == R_HDR) {                         /* a section: whose values follow */
             char t[28];
-            hdr_name(r.a, t);
+            hdr_name(P_A(r), t);
             cv_text(8, vc(&FONT_XS, y + 4, 16), &FONT_XS, t, C_AMB);
             cv_rect(8, y + 19, 220, 1, C_LINE);
             continue;
@@ -3715,7 +3741,7 @@ static void draw_list(int band)
         if (sel)
             box(0, y + 1, 232, 21, dim(part_col(), 6));
         cv_text(8, vc(sel ? &FONT_B : &FONT_S, y + 1, 18), sel ? &FONT_B : &FONT_S, caps_of(pref_name(r)), sel ? C_WHITE : C_GRAY);
-        if (r.kind == R_ACT) {                         /* an action: the return arrow */
+        if (P_KIND(r) == R_ACT) {                         /* an action: the return arrow */
             uint16_t ac = sel ? C_WHITE : C_DIM;
             cv_rect(212, y + 12, 12, 2, ac);
             cv_rect(222, y + 6, 2, 7, ac);
@@ -3744,7 +3770,7 @@ static void draw_list(int band)
     }
 }
 
-static void draw_ask(int band)
+static POLY_COLD void draw_ask(int band)
 {
     uint16_t red = RGB(255, 80, 60);
     if (band == 0) {
@@ -3763,7 +3789,7 @@ static void draw_ask(int band)
     }
 }
 
-static void draw_help(int band)
+static POLY_COLD void draw_help(int band)
 {
     const char *l[HELP_LINES];
     int n = help_lines(ui.help - 1, l), k;
@@ -3781,7 +3807,7 @@ static void draw_help(int band)
 
 #ifdef X0X_HOST
 /* every card, on every kind of screen, fits the screen: 1 = yes (prints the first that does not) */
-static int help_fits(void)
+static POLY_COLD int help_fits(void)
 {
     static const uint8_t views[] = {V_PART, V_SEQ, V_HOME, V_SONG, V_GEN, V_FX, V_MIX};
     const char *l[HELP_LINES];
@@ -3828,7 +3854,7 @@ static int help_fits(void)
 
 /* the footer: one line at the bottom of the main area, what the keys do on this screen (until the
  * first button, how to find out what any of them does) */
-static uint16_t footer_text(const char **a, const char **b, const char **c)
+static POLY_COLD uint16_t footer_text(const char **a, const char **b, const char **c)
 {
     *a = *b = *c = 0;
     if (!any_button) {
@@ -3885,14 +3911,14 @@ static uint16_t footer_text(const char **a, const char **b, const char **c)
     return C_DIM;
 }
 #define FOOT_Y 71                     /* in the knob row: its last line, in the tiny face */
-static void draw_footer(void)
+static POLY_COLD void draw_footer(void)
 {
     const char *a, *b, *c;
     uint16_t col = footer_text(&a, &b, &c);
     segs(4, vc(&FONT_T, FOOT_Y, 9), &FONT_T, col, FOOT_GAP, a, b, c, 0);
 }
 
-static void draw_main(void)
+static POLY_COLD void draw_main(void)
 {
     int band, readout = ui.touched >= 0 && (int32_t)(ui.touch_until - plat_ms()) > 0 && ui.overlay == O_NONE;
     if (!readout)
@@ -3940,7 +3966,7 @@ static void cell_value(int cx, int y, const char *num, const char *unit, uint16_
 
 /* what the knob strip shows, hashed: it is only redrawn when this changes (the arcs cost a
  * square root and an arctangent per pixel; most frames nothing in the strip moves) */
-static uint32_t knobs_sig(void)
+static POLY_COLD uint32_t knobs_sig(void)
 {
     uint32_t h = 2166136261u, i;
     int pgi = cur_page();
@@ -3963,7 +3989,7 @@ static uint32_t knobs_sig(void)
     }
     for (i = 0; i < 4; i++) {
         pref_t r = pg.r[pgi][i];
-        MIXIN(r.kind | r.a << 8 | r.b << 16 | (uint32_t)r.c << 24);
+        MIXIN(r);
         MIXIN(pref_get(r));
         MIXIN(has_motion(r) | (motion_now(r) + 1) << 1);
         MIXIN(lock_of(r, lock_step()) + 1);
@@ -3986,7 +4012,7 @@ static int strcmp_s(const char *a, const char *b)
 }
 
 /* the knob row's tag: whose knobs these are (BD, 909 KIT, P3 PATTERN, 909 MIX: BD, 303A STEP 5) */
-static void knob_tag(char *t)
+static POLY_COLD void knob_tag(char *t)
 {
     int g = pg.group[cur_page()], dm = drum_mix_page();
     const char *ti = pg.title[cur_page()];
@@ -4020,7 +4046,7 @@ static void knob_tag(char *t)
     }
 }
 
-static void draw_knobs(void)
+static POLY_COLD void draw_knobs(void)
 {
     static uint32_t last_sig;
     int i, pgi = cur_page();
@@ -4098,7 +4124,7 @@ static void draw_knobs(void)
                 box(cx - w0 / 2 + k * (pw + gap), 33, pw, 9, k == val ? col : C_LINE);
         } else {
             arc(cx, 38, 12, d->max ? (float)val / (float)d->max : 0.0f, C_LINE, col,
-                r.kind == R_BTRANS || is_pan(r) || (r.kind == R_ENG && r.a == T_MST && r.c == MST_DJF));   /* from the middle */
+                P_KIND(r) == R_BTRANS || is_pan(r) || (P_KIND(r) == R_ENG && P_A(r) == T_MST && P_C(r) == MST_DJF));   /* from the middle */
         }
         pref_value_of(r, val, num, unit);
         cell_value(cx, vc(&FONT_B, 53, 13), num, unit, touched ? C_WHITE : C_HI);
@@ -4171,7 +4197,7 @@ static void leds(void)
             const uint32_t *bits = (ui.btn & (1u << B_ENV)) ? d0->accent : d0->hit[ui.sel[ui.part]];
             int ph = eng_step[TRK_DRUM + ui.part];
             for (i = 0; i < 16; i++) {
-                int s = step_of((int)i), on = s < d0->len && sm_get(bits, s);
+                int s = step_of((int)i), on = s < ui_drum_length(cur_pat(),ui.part,ui.sel[ui.part]) && sm_get(bits, s);
                 if (seq.playing && s == ph)
                     on = !on;
                 if (on)
@@ -4254,7 +4280,7 @@ void ui_init(void)
  * audio. Only the objects that changed are written (project.c), usually one or two sectors. */
 #define AUTOSAVE_QUIET 4000u
 #define AUTOSAVE_GAP 20000u
-static void autosave(void)
+static POLY_COLD void autosave(void)
 {
     uint32_t now = plat_ms();
     if (save_wait && !seq.playing && !seq.req_stop) { /* SAVE pressed while playing: now */
@@ -4279,7 +4305,7 @@ static void autosave(void)
     }
 }
 
-void ui_frame(void)
+POLY_COLD void ui_frame(void)
 {
     uint32_t i;
     input();

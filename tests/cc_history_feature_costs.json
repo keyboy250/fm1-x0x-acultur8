@@ -1,0 +1,2932 @@
+{
+  "model": {
+    "nest_weight": 4,
+    "divide_extra_weight": 8,
+    "max_depth": 4
+  },
+  "objectLoopNormalization": "External relocation-qualified calls/tail transfers cannot form intra-function loops; only their printed target labels are suppressed before original cost(). All instructions/calls remain counted.",
+  "scope": "Existing official pre-optimization history target objects; original15gates and limits untouched. XIP failed1592B, no target acceptance.",
+  "limits": "Static instruction/loop/frame estimates, not cycles or whole-chain worst stack. Object addresses qualify duplicates. Unresolvedexternal/indirect callbacks and IRQ nesting remain unmeasured. All outlined callee work is listed; lower caller counts are not CPU improvement.",
+  "objects": {
+    "build\\history-cost-experiment\\target-x0x.o": {
+      "sha256": "2467382f5a6778c67d64e01a9f915ff4e56d11135974825c6f558668324b086c",
+      "dis_sha256": "600d3c5bab52e1f02d9561346a1c13dad14122252c2297b0a21cc8ae8d9225e7"
+    },
+    "build\\history-cost-experiment\\target-engine.o": {
+      "sha256": "f0bc1e5ce40d4c01b62b7040aa452d5b36e5aad35675ddecc2bec010bb9fea40",
+      "dis_sha256": "33c33c86c7bd7ee2986dc1004ab039aba3db5044255d2a77acbcdcc7ff3e6fda"
+    }
+  },
+  "sourceManifest": "build/cc-history-checkpoint/manifest.json",
+  "sourceCallbackAlternatives": {
+    "do_undo": [
+      "undo_undo",
+      "undo_redo"
+    ],
+    "ud_swap": [
+      "undo_changed"
+    ]
+  },
+  "rootIds": {
+    "ui_cc_undo": [
+      "target-x0x.o:ui_cc_undo@.text.ui_cc_undo+0x0"
+    ],
+    "do_undo": [
+      "target-x0x.o:do_undo@.text.do_undo+0x0"
+    ],
+    "ui_undo_preflight": [
+      "target-x0x.o:ui_undo_preflight@.text.ui_undo_preflight+0x0"
+    ],
+    "undo_arrangement_intent": [
+      "target-x0x.o:undo_arrangement_intent@.text.undo_arrangement_intent+0x0"
+    ],
+    "engine_transport_reserve": [
+      "target-engine.o:engine_transport_reserve@.text.engine_transport_reserve+0x0"
+    ],
+    "engine_transport_release": [
+      "target-engine.o:engine_transport_release@.text.engine_transport_release+0x0"
+    ]
+  },
+  "rows": {
+    "target-engine.o:engine_arrangement_refresh@.text.engine_arrangement_refresh+0x0": {
+      "name": "engine_arrangement_refresh",
+      "metrics": {
+        "insns": 26,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 2,
+      "unconditionalPrologueBytes": 12,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 12,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 12,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          "0x2",
+          "r5 = 0 <engine_arrangement_refresh : 0 >"
+        ],
+        [
+          "0x8",
+          "r1 = [r5+20]"
+        ],
+        [
+          "0xa",
+          "r4 = r0  #"
+        ],
+        [
+          "0xc",
+          "r2 = [r5+24]"
+        ],
+        [
+          "0xe",
+          "r1 = 0x400 - r1"
+        ],
+        [
+          "0x12",
+          "r2 = 0x0 - r2"
+        ],
+        [
+          "0x16",
+          "r0 = 0"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x1c",
+          "kind": "direct-call",
+          "targetName": "plat_control_enter",
+          "targets": [
+            "target-x0x.o:plat_control_enter@.text.plat_control_enter+0x0"
+          ]
+        },
+        {
+          "site": "0x4c",
+          "kind": "direct-call",
+          "targetName": "plat_control_leave",
+          "targets": [
+            "target-x0x.o:plat_control_leave@.text.plat_control_leave+0x0"
+          ]
+        }
+      ]
+    },
+    "target-engine.o:engine_brk_loops@.text.engine_brk_loops+0x0": {
+      "name": "engine_brk_loops",
+      "metrics": {
+        "insns": 144,
+        "loop": 119,
+        "div": 5,
+        "call": 2,
+        "cost": 159
+      },
+      "allCallSites": 3,
+      "unconditionalPrologueBytes": 112,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 52,
+          "kind": "register-push"
+        },
+        {
+          "site": "0x2",
+          "bytes": 60,
+          "kind": "local-allocation"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 112,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          "0x2",
+          "sp += -60"
+        ],
+        [
+          "0x4",
+          "r0 = 0 <engine_brk_loops : 0 >"
+        ],
+        [
+          "0xa",
+          "r4 = [r0+180]"
+        ],
+        [
+          "0xe",
+          "r5 = b[r0+193] (u)"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x12",
+          "kind": "direct-call",
+          "targetName": "scan_loops",
+          "targets": [
+            "target-engine.o:scan_loops@.text.scan_loops+0x0"
+          ]
+        },
+        {
+          "site": "0x7e",
+          "kind": "direct-call",
+          "targetName": "plat_slot",
+          "targets": [
+            "target-x0x.o:plat_slot@.text.plat_slot+0x0"
+          ]
+        },
+        {
+          "site": "0x1b2",
+          "kind": "direct-call",
+          "targetName": "breaks_set_loop",
+          "targets": []
+        }
+      ]
+    },
+    "target-engine.o:engine_motion_reset@.text.engine_motion_reset+0x0": {
+      "name": "engine_motion_reset",
+      "metrics": {
+        "insns": 4,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [
+        [
+          "0x0",
+          "r0 = 0 <engine_motion_reset : 0 >"
+        ],
+        [
+          "0x6",
+          "r1 = 1"
+        ],
+        [
+          "0x8",
+          "b[r0+0] = r1"
+        ],
+        [
+          "0xa",
+          "rts"
+        ]
+      ],
+      "edges": []
+    },
+    "target-engine.o:engine_nparams@.text.engine_nparams+0x0": {
+      "name": "engine_nparams",
+      "metrics": {
+        "insns": 15,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [
+        [
+          "0x0",
+          "r2 = r0"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x14",
+          "kind": "tail-transfer",
+          "targetName": "drum909_nparams",
+          "targets": []
+        },
+        {
+          "site": "0x1e",
+          "kind": "tail-transfer",
+          "targetName": "drum808_nparams",
+          "targets": []
+        },
+        {
+          "site": "0x22",
+          "kind": "tail-transfer",
+          "targetName": "bass303_nparams",
+          "targets": []
+        },
+        {
+          "site": "0x26",
+          "kind": "tail-transfer",
+          "targetName": "fxbus_nparams",
+          "targets": []
+        },
+        {
+          "site": "0x2e",
+          "kind": "tail-transfer",
+          "targetName": "master_nparams",
+          "targets": []
+        }
+      ]
+    },
+    "target-engine.o:engine_nvoices@.text.engine_nvoices+0x0": {
+      "name": "engine_nvoices",
+      "metrics": {
+        "insns": 5,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [],
+      "edges": []
+    },
+    "target-engine.o:engine_param@.text.engine_param+0x0": {
+      "name": "engine_param",
+      "metrics": {
+        "insns": 32,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 1,
+      "unconditionalPrologueBytes": 4,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 4,
+          "kind": "return-address-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 4,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = rets"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x16",
+          "kind": "tail-transfer",
+          "targetName": "drum909_param",
+          "targets": []
+        },
+        {
+          "site": "0x24",
+          "kind": "tail-transfer",
+          "targetName": "drum808_param",
+          "targets": []
+        },
+        {
+          "site": "0x2c",
+          "kind": "tail-transfer",
+          "targetName": "bass303_param",
+          "targets": []
+        },
+        {
+          "site": "0x34",
+          "kind": "tail-transfer",
+          "targetName": "breaks_param",
+          "targets": []
+        },
+        {
+          "site": "0x3c",
+          "kind": "tail-transfer",
+          "targetName": "fxbus_param",
+          "targets": []
+        },
+        {
+          "site": "0x58",
+          "kind": "direct-call",
+          "targetName": "master_param",
+          "targets": []
+        }
+      ]
+    },
+    "target-engine.o:engine_queue_space@.text.engine_queue_space+0x0": {
+      "name": "engine_queue_space",
+      "metrics": {
+        "insns": 6,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [
+        [
+          "0x0",
+          "r0 = 0 <engine_queue_space : 0 >"
+        ],
+        [
+          "0x6",
+          "r1 = [r0+20]"
+        ],
+        [
+          "0x8",
+          "r1 = 0x400 - r1  #"
+        ],
+        [
+          "0xc",
+          "r0 = [r0+24]"
+        ],
+        [
+          "0xe",
+          "r0 += r1"
+        ],
+        [
+          "0x10",
+          "rts"
+        ]
+      ],
+      "edges": []
+    },
+    "target-engine.o:engine_set@.text.engine_set+0x0": {
+      "name": "engine_set",
+      "metrics": {
+        "insns": 22,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 16,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 16,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 16,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r6-r4}"
+        ],
+        [
+          "0x2",
+          "r4 = 0 <engine_set : 0 >"
+        ],
+        [
+          "0x8",
+          "r5 = [r4+20]"
+        ],
+        [
+          "0xa",
+          "r6 = [r4+24]"
+        ],
+        [
+          "0xc",
+          "r6 = r5 - r6"
+        ]
+      ],
+      "edges": []
+    },
+    "target-engine.o:engine_strip_set@.text.engine_strip_set+0x0": {
+      "name": "engine_strip_set",
+      "metrics": {
+        "insns": 44,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 16,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 16,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 16,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r6-r4}"
+        ],
+        [
+          "0x2",
+          "r3 = r0"
+        ],
+        [
+          "0x4",
+          "r0 = 0"
+        ]
+      ],
+      "edges": []
+    },
+    "target-engine.o:engine_transport_release@.text.engine_transport_release+0x0": {
+      "name": "engine_transport_release",
+      "metrics": {
+        "insns": 11,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 1,
+      "unconditionalPrologueBytes": 4,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 4,
+          "kind": "return-address-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 4,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = rets"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x2",
+          "kind": "direct-call",
+          "targetName": "plat_control_enter",
+          "targets": [
+            "target-x0x.o:plat_control_enter@.text.plat_control_enter+0x0"
+          ]
+        },
+        {
+          "site": "0x22",
+          "kind": "tail-transfer",
+          "targetName": "plat_control_leave",
+          "targets": [
+            "target-x0x.o:plat_control_leave@.text.plat_control_leave+0x0"
+          ]
+        }
+      ]
+    },
+    "target-engine.o:engine_transport_reserve@.text.engine_transport_reserve+0x0": {
+      "name": "engine_transport_reserve",
+      "metrics": {
+        "insns": 29,
+        "loop": 20,
+        "div": 0,
+        "call": 1,
+        "cost": 20
+      },
+      "allCallSites": 3,
+      "unconditionalPrologueBytes": 4,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 4,
+          "kind": "return-address-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 4,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = rets"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x2",
+          "kind": "direct-call",
+          "targetName": "plat_control_enter",
+          "targets": [
+            "target-x0x.o:plat_control_enter@.text.plat_control_enter+0x0"
+          ]
+        },
+        {
+          "site": "0x2c",
+          "kind": "direct-call",
+          "targetName": "plat_control_leave",
+          "targets": [
+            "target-x0x.o:plat_control_leave@.text.plat_control_leave+0x0"
+          ]
+        },
+        {
+          "site": "0x58",
+          "kind": "direct-call",
+          "targetName": "plat_control_leave",
+          "targets": [
+            "target-x0x.o:plat_control_leave@.text.plat_control_leave+0x0"
+          ]
+        }
+      ]
+    },
+    "target-engine.o:engine_voice_name@.text.engine_voice_name+0x0": {
+      "name": "engine_voice_name",
+      "metrics": {
+        "insns": 34,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 8,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 8,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 8,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r4}"
+        ],
+        [
+          "0x2",
+          "r2 = r0"
+        ],
+        [
+          "0x4",
+          "r3 = 0 <engine_voice_name : 0 >"
+        ]
+      ],
+      "edges": []
+    },
+    "target-engine.o:scan_loops@.text.scan_loops+0x0": {
+      "name": "scan_loops",
+      "metrics": {
+        "insns": 66,
+        "loop": 50,
+        "div": 2,
+        "call": 1,
+        "cost": 198
+      },
+      "allCallSites": 1,
+      "unconditionalPrologueBytes": 60,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 52,
+          "kind": "register-push"
+        },
+        {
+          "site": "0x2",
+          "bytes": 8,
+          "kind": "local-allocation"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 60,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          "0x2",
+          "sp += -8"
+        ],
+        [
+          "0x4",
+          "r1 = 0 <scan_loops : 0 >"
+        ],
+        [
+          "0xa",
+          "r0 = 0 <scan_loops : 0 >"
+        ],
+        [
+          "0x10",
+          "[r1+200] = r0"
+        ],
+        [
+          "0x14",
+          "r0 = 0 <scan_loops : 0 >"
+        ],
+        [
+          "0x1a",
+          "[r1+204] = r0"
+        ],
+        [
+          "0x1e",
+          "r4 = 0 <scan_loops : 0 >"
+        ],
+        [
+          "0x24",
+          "[r4+32] = 0x2"
+        ],
+        [
+          "0x28",
+          "r5 = 0 <scan_loops : 0 >"
+        ],
+        [
+          "0x2e",
+          "r12 = 66 <scan_loops+0x42 : 42 >"
+        ],
+        [
+          "0x32",
+          "r14 = 82 <scan_loops+0x52 : 52 >"
+        ],
+        [
+          "0x36",
+          "r15 = 10 <scan_loops+0xA : a >"
+        ],
+        [
+          "0x3a",
+          "r11_r10 = 0"
+        ],
+        [
+          "0x3c",
+          "r0 = r11"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x3e",
+          "kind": "direct-call",
+          "targetName": "plat_slot_zones",
+          "targets": [
+            "target-x0x.o:plat_slot_zones@.text.plat_slot_zones+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:add_page@.text.add_page+0x0": {
+      "name": "add_page",
+      "metrics": {
+        "insns": 40,
+        "loop": 6,
+        "div": 0,
+        "call": 0,
+        "cost": 6
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 16,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 16,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 16,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r6-r4}"
+        ],
+        [
+          "0x2",
+          "r4 = 0 <add_page : 0 >"
+        ],
+        [
+          "0x8",
+          "r5 = [r4+408]"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:add_track_pages@.text.add_track_pages+0x0": {
+      "name": "add_track_pages",
+      "metrics": {
+        "insns": 101,
+        "loop": 69,
+        "div": 0,
+        "call": 10,
+        "cost": 108
+      },
+      "allCallSites": 12,
+      "unconditionalPrologueBytes": 120,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 52,
+          "kind": "register-push"
+        },
+        {
+          "site": "0x2",
+          "bytes": 68,
+          "kind": "local-allocation"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 120,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          "0x2",
+          "sp += -68"
+        ],
+        [
+          "0x4",
+          "r5 = r1"
+        ],
+        [
+          "0x6",
+          "r6 = r0"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x8",
+          "kind": "direct-call",
+          "targetName": "engine_voice_name",
+          "targets": [
+            "target-engine.o:engine_voice_name@.text.engine_voice_name+0x0"
+          ]
+        },
+        {
+          "site": "0x12",
+          "kind": "direct-call",
+          "targetName": "engine_nparams",
+          "targets": [
+            "target-engine.o:engine_nparams@.text.engine_nparams+0x0"
+          ]
+        },
+        {
+          "site": "0x4c",
+          "kind": "direct-call",
+          "targetName": "name_is",
+          "targets": [
+            "target-x0x.o:name_is@.text.name_is+0x0"
+          ]
+        },
+        {
+          "site": "0x5a",
+          "kind": "direct-call",
+          "targetName": "name_is",
+          "targets": [
+            "target-x0x.o:name_is@.text.name_is+0x0"
+          ]
+        },
+        {
+          "site": "0x68",
+          "kind": "direct-call",
+          "targetName": "name_is",
+          "targets": [
+            "target-x0x.o:name_is@.text.name_is+0x0"
+          ]
+        },
+        {
+          "site": "0x76",
+          "kind": "direct-call",
+          "targetName": "name_is",
+          "targets": [
+            "target-x0x.o:name_is@.text.name_is+0x0"
+          ]
+        },
+        {
+          "site": "0x96",
+          "kind": "direct-call",
+          "targetName": "engine_param",
+          "targets": [
+            "target-engine.o:engine_param@.text.engine_param+0x0"
+          ]
+        },
+        {
+          "site": "0x9e",
+          "kind": "direct-call",
+          "targetName": "name_is",
+          "targets": [
+            "target-x0x.o:name_is@.text.name_is+0x0"
+          ]
+        },
+        {
+          "site": "0xa8",
+          "kind": "direct-call",
+          "targetName": "name_is",
+          "targets": [
+            "target-x0x.o:name_is@.text.name_is+0x0"
+          ]
+        },
+        {
+          "site": "0xb4",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0xbc",
+          "kind": "direct-call",
+          "targetName": "engine_nparams",
+          "targets": [
+            "target-engine.o:engine_nparams@.text.engine_nparams+0x0"
+          ]
+        },
+        {
+          "site": "0x114",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:arrangement_panel_locked@.text.arrangement_panel_locked+0x0": {
+      "name": "arrangement_panel_locked",
+      "metrics": {
+        "insns": 9,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [
+        [
+          "0x0",
+          "r0 = 31152 <arrangement_panel_locked+0x79B0 : 79b0 >"
+        ],
+        [
+          "0x4",
+          "r1 = 0 <arrangement_panel_locked : 0 >"
+        ],
+        [
+          "0xa",
+          "r0 = b[r1+r0] (u)"
+        ],
+        [
+          "0xe",
+          "r1 = 404 <arrangement_panel_locked+0x194 : 194 >"
+        ],
+        [
+          "0x12",
+          "r2 = 0 <arrangement_panel_locked : 0 >"
+        ],
+        [
+          "0x18",
+          "r1 = b[r2+r1] (u)"
+        ],
+        [
+          "0x1c",
+          "r0 |= r1"
+        ],
+        [
+          "0x1e",
+          "r0 = r0 & 0x1"
+        ],
+        [
+          "0x22",
+          "rts"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:bidx@.text.bidx+0x0": {
+      "name": "bidx",
+      "metrics": {
+        "insns": 6,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [
+        [
+          "0x0",
+          "r0 = 0 <bidx : 0 >"
+        ],
+        [
+          "0x6",
+          "r1 = b[r0+1] (u)"
+        ],
+        [
+          "0x8",
+          "r0 = 1"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:build_pages@.text.build_pages+0x0": {
+      "name": "build_pages",
+      "metrics": {
+        "insns": 317,
+        "loop": 159,
+        "div": 0,
+        "call": 25,
+        "cost": 384
+      },
+      "allCallSites": 51,
+      "unconditionalPrologueBytes": 56,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 52,
+          "kind": "register-push"
+        },
+        {
+          "site": "0x2",
+          "bytes": 4,
+          "kind": "local-allocation"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 56,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          "0x2",
+          "sp += -4"
+        ],
+        [
+          "0x4",
+          "r2 = 0 <build_pages : 0 >"
+        ],
+        [
+          "0xa",
+          "r6 = b[r2+1] (u)"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0xc",
+          "kind": "direct-call",
+          "targetName": "bidx",
+          "targets": [
+            "target-x0x.o:bidx@.text.bidx+0x0"
+          ]
+        },
+        {
+          "site": "0x5e",
+          "kind": "direct-call",
+          "targetName": "is_drum",
+          "targets": [
+            "target-x0x.o:is_drum@.text.is_drum+0x0"
+          ]
+        },
+        {
+          "site": "0x74",
+          "kind": "direct-call",
+          "targetName": "add_track_pages",
+          "targets": [
+            "target-x0x.o:add_track_pages@.text.add_track_pages+0x0"
+          ]
+        },
+        {
+          "site": "0xc4",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x10a",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x126",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x130",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x138",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x140",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x148",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x150",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x18a",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x1ca",
+          "kind": "direct-call",
+          "targetName": "find_ref",
+          "targets": [
+            "target-x0x.o:find_ref@.text.find_ref+0x0"
+          ]
+        },
+        {
+          "site": "0x1d6",
+          "kind": "direct-call",
+          "targetName": "find_ref",
+          "targets": [
+            "target-x0x.o:find_ref@.text.find_ref+0x0"
+          ]
+        },
+        {
+          "site": "0x1e2",
+          "kind": "direct-call",
+          "targetName": "find_ref",
+          "targets": [
+            "target-x0x.o:find_ref@.text.find_ref+0x0"
+          ]
+        },
+        {
+          "site": "0x1ee",
+          "kind": "direct-call",
+          "targetName": "find_ref",
+          "targets": [
+            "target-x0x.o:find_ref@.text.find_ref+0x0"
+          ]
+        },
+        {
+          "site": "0x200",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x226",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x22e",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x236",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x23e",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x246",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x24e",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x256",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x25e",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x266",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x26e",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x278",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x280",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x288",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x2aa",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x2d0",
+          "kind": "direct-call",
+          "targetName": "is_drum",
+          "targets": [
+            "target-x0x.o:is_drum@.text.is_drum+0x0"
+          ]
+        },
+        {
+          "site": "0x2ee",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x306",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x316",
+          "kind": "direct-call",
+          "targetName": "page_of",
+          "targets": [
+            "target-x0x.o:page_of@.text.page_of+0x0"
+          ]
+        },
+        {
+          "site": "0x328",
+          "kind": "direct-call",
+          "targetName": "is_303",
+          "targets": [
+            "target-x0x.o:is_303@.text.is_303+0x0"
+          ]
+        },
+        {
+          "site": "0x362",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x390",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x39c",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x3a8",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x3b4",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x3c0",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x3c6",
+          "kind": "direct-call",
+          "targetName": "is_303",
+          "targets": [
+            "target-x0x.o:is_303@.text.is_303+0x0"
+          ]
+        },
+        {
+          "site": "0x3e4",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x416",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x41e",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x43c",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x458",
+          "kind": "direct-call",
+          "targetName": "add_page",
+          "targets": [
+            "target-x0x.o:add_page@.text.add_page+0x0"
+          ]
+        },
+        {
+          "site": "0x460",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x468",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        },
+        {
+          "site": "0x470",
+          "kind": "direct-call",
+          "targetName": "more",
+          "targets": [
+            "target-x0x.o:more@.text.more+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:do_undo@.text.do_undo+0x0": {
+      "name": "do_undo",
+      "metrics": {
+        "insns": 93,
+        "loop": 16,
+        "div": 0,
+        "call": 3,
+        "cost": 16
+      },
+      "allCallSites": 17,
+      "unconditionalPrologueBytes": 52,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 20,
+          "kind": "register-push"
+        },
+        {
+          "site": "0x2",
+          "bytes": 32,
+          "kind": "local-allocation"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 52,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r7-r4}"
+        ],
+        [
+          "0x2",
+          "sp += -32"
+        ],
+        [
+          "0x4",
+          "r5 = r0"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x6",
+          "kind": "direct-call",
+          "targetName": "ui_undo_preflight",
+          "targets": [
+            "target-x0x.o:ui_undo_preflight@.text.ui_undo_preflight+0x0"
+          ]
+        },
+        {
+          "site": "0x1e",
+          "kind": "direct-call",
+          "targetName": "say",
+          "targets": [
+            "target-x0x.o:say@.text.say+0x0"
+          ]
+        },
+        {
+          "site": "0x28",
+          "kind": "direct-call",
+          "targetName": "undo_arrangement_intent",
+          "targets": [
+            "target-x0x.o:undo_arrangement_intent@.text.undo_arrangement_intent+0x0"
+          ]
+        },
+        {
+          "site": "0x2e",
+          "kind": "direct-call",
+          "targetName": "engine_transport_reserve",
+          "targets": [
+            "target-engine.o:engine_transport_reserve@.text.engine_transport_reserve+0x0"
+          ]
+        },
+        {
+          "site": "0x3c",
+          "kind": "direct-call",
+          "targetName": "engine_queue_space",
+          "targets": [
+            "target-engine.o:engine_queue_space@.text.engine_queue_space+0x0"
+          ]
+        },
+        {
+          "site": "0x58",
+          "kind": "direct-call",
+          "targetName": "say",
+          "targets": [
+            "target-x0x.o:say@.text.say+0x0"
+          ]
+        },
+        {
+          "site": "0x6a",
+          "kind": "direct-call",
+          "targetName": "undo_commit",
+          "targets": [
+            "target-x0x.o:undo_commit@.text.undo_commit+0x0"
+          ]
+        },
+        {
+          "site": "0x90",
+          "kind": "unresolved-indirect-call",
+          "targetName": null,
+          "targets": []
+        },
+        {
+          "site": "0x9a",
+          "kind": "direct-call",
+          "targetName": "engine_motion_reset",
+          "targets": [
+            "target-engine.o:engine_motion_reset@.text.engine_motion_reset+0x0"
+          ]
+        },
+        {
+          "site": "0xb0",
+          "kind": "direct-call",
+          "targetName": "engine_arrangement_refresh",
+          "targets": [
+            "target-engine.o:engine_arrangement_refresh@.text.engine_arrangement_refresh+0x0"
+          ]
+        },
+        {
+          "site": "0xb4",
+          "kind": "direct-call",
+          "targetName": "engine_brk_loops",
+          "targets": [
+            "target-engine.o:engine_brk_loops@.text.engine_brk_loops+0x0"
+          ]
+        },
+        {
+          "site": "0xe0",
+          "kind": "direct-call",
+          "targetName": "build_pages",
+          "targets": [
+            "target-x0x.o:build_pages@.text.build_pages+0x0"
+          ]
+        },
+        {
+          "site": "0xe4",
+          "kind": "direct-call",
+          "targetName": "mark_dirty",
+          "targets": [
+            "target-x0x.o:mark_dirty@.text.mark_dirty+0x0"
+          ]
+        },
+        {
+          "site": "0xf0",
+          "kind": "direct-call",
+          "targetName": "undo_name",
+          "targets": [
+            "target-x0x.o:undo_name@.text.undo_name+0x0"
+          ]
+        },
+        {
+          "site": "0x106",
+          "kind": "direct-call",
+          "targetName": "say",
+          "targets": [
+            "target-x0x.o:say@.text.say+0x0"
+          ]
+        },
+        {
+          "site": "0x124",
+          "kind": "direct-call",
+          "targetName": "say",
+          "targets": [
+            "target-x0x.o:say@.text.say+0x0"
+          ]
+        },
+        {
+          "site": "0x12a",
+          "kind": "direct-call",
+          "targetName": "engine_transport_release",
+          "targets": [
+            "target-engine.o:engine_transport_release@.text.engine_transport_release+0x0"
+          ]
+        },
+        {
+          "site": null,
+          "kind": "source-callback-alternative",
+          "targetName": "undo_undo",
+          "targets": [
+            "target-x0x.o:undo_undo@.text.undo_undo+0x0"
+          ]
+        },
+        {
+          "site": null,
+          "kind": "source-callback-alternative",
+          "targetName": "undo_redo",
+          "targets": [
+            "target-x0x.o:undo_redo@.text.undo_redo+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:find_ref@.text.find_ref+0x0": {
+      "name": "find_ref",
+      "metrics": {
+        "insns": 27,
+        "loop": 11,
+        "div": 0,
+        "call": 3,
+        "cost": 11
+      },
+      "allCallSites": 4,
+      "unconditionalPrologueBytes": 24,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 24,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 24,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r8-r4}"
+        ],
+        [
+          "0x2",
+          "r8 = r2"
+        ],
+        [
+          "0x4",
+          "r5_r4 = r1_r0"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x6",
+          "kind": "direct-call",
+          "targetName": "engine_nparams",
+          "targets": [
+            "target-engine.o:engine_nparams@.text.engine_nparams+0x0"
+          ]
+        },
+        {
+          "site": "0x14",
+          "kind": "direct-call",
+          "targetName": "engine_param",
+          "targets": [
+            "target-engine.o:engine_param@.text.engine_param+0x0"
+          ]
+        },
+        {
+          "site": "0x1a",
+          "kind": "direct-call",
+          "targetName": "name_is",
+          "targets": [
+            "target-x0x.o:name_is@.text.name_is+0x0"
+          ]
+        },
+        {
+          "site": "0x22",
+          "kind": "direct-call",
+          "targetName": "engine_nparams",
+          "targets": [
+            "target-engine.o:engine_nparams@.text.engine_nparams+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:is_303@.text.is_303+0x0": {
+      "name": "is_303",
+      "metrics": {
+        "insns": 8,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [
+        [
+          "0x0",
+          "r0 = 0 <is_303 : 0 >"
+        ],
+        [
+          "0x6",
+          "r0 = b[r0+1] (u)"
+        ],
+        [
+          "0x8",
+          "r0 |= 1"
+        ],
+        [
+          "0xa",
+          "r1 = r0.b0 (u)"
+        ],
+        [
+          "0xc",
+          "r0 = 1"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:is_drum@.text.is_drum+0x0": {
+      "name": "is_drum",
+      "metrics": {
+        "insns": 6,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [
+        [
+          "0x0",
+          "r0 = 0 <is_drum : 0 >"
+        ],
+        [
+          "0x6",
+          "r1 = b[r0+1] (u)"
+        ],
+        [
+          "0x8",
+          "r0 = 1"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:mark_dirty@.text.mark_dirty+0x0": {
+      "name": "mark_dirty",
+      "metrics": {
+        "insns": 4,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [
+        [
+          "0x0",
+          "r0 = 0 <mark_dirty : 0 >"
+        ],
+        [
+          "0x6",
+          "r1 = 1"
+        ],
+        [
+          "0x8",
+          "[r0+244] = r1"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0xc",
+          "kind": "tail-transfer",
+          "targetName": "variant_changed",
+          "targets": []
+        }
+      ]
+    },
+    "target-x0x.o:more@.text.more+0x0": {
+      "name": "more",
+      "metrics": {
+        "insns": 9,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [],
+      "edges": []
+    },
+    "target-x0x.o:name_is@.text.name_is+0x0": {
+      "name": "name_is",
+      "metrics": {
+        "insns": 13,
+        "loop": 4,
+        "div": 0,
+        "call": 0,
+        "cost": 4
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [],
+      "edges": []
+    },
+    "target-x0x.o:page_of@.text.page_of+0x0": {
+      "name": "page_of",
+      "metrics": {
+        "insns": 14,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 8,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 8,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 8,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r4}"
+        ],
+        [
+          "0x2",
+          "r1 = 0 <page_of : 0 >"
+        ],
+        [
+          "0x8",
+          "r4 = r0 + -1  #"
+        ],
+        [
+          "0xc",
+          "r2 = b[r1+1] (u)"
+        ],
+        [
+          "0xe",
+          "r3 = r2"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:perf_testing@.text.perf_testing+0x0": {
+      "name": "perf_testing",
+      "metrics": {
+        "insns": 12,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [
+        [
+          "0x0",
+          "r0 = 0 <perf_testing : 0 >"
+        ],
+        [
+          "0x6",
+          "r2 = b[r0+0] (u)"
+        ],
+        [
+          "0x8",
+          "r0 = 1"
+        ],
+        [
+          "0xa",
+          "r1 = 1"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:plat_control_enter@.text.plat_control_enter+0x0": {
+      "name": "plat_control_enter",
+      "metrics": {
+        "insns": 3,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [
+        [
+          "0x0",
+          "cli"
+        ],
+        [
+          "0x2",
+          "r0 = 0"
+        ],
+        [
+          "0x4",
+          "rts"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:plat_control_leave@.text.plat_control_leave+0x0": {
+      "name": "plat_control_leave",
+      "metrics": {
+        "insns": 3,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [
+        [
+          "0x0",
+          "csync"
+        ],
+        [
+          "0x2",
+          "sti"
+        ],
+        [
+          "0x4",
+          "rts"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:plat_slot@.text.plat_slot+0x0": {
+      "name": "plat_slot",
+      "metrics": {
+        "insns": 43,
+        "loop": 11,
+        "div": 0,
+        "call": 0,
+        "cost": 11
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 28,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 28,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 28,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r9-r4}"
+        ],
+        [
+          "0x2",
+          "r4 = r0"
+        ],
+        [
+          "0x4",
+          "r0 = 0"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:plat_slot_zones@.text.plat_slot_zones+0x0": {
+      "name": "plat_slot_zones",
+      "metrics": {
+        "insns": 7,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [
+        [
+          "0x0",
+          "r1 = r0"
+        ],
+        [
+          "0x2",
+          "r0 = 0"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:put_i@.text.put_i+0x0": {
+      "name": "put_i",
+      "metrics": {
+        "insns": 28,
+        "loop": 13,
+        "div": 1,
+        "call": 0,
+        "cost": 21
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 32,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 20,
+          "kind": "register-push"
+        },
+        {
+          "site": "0x2",
+          "bytes": 12,
+          "kind": "local-allocation"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 32,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r7-r4}"
+        ],
+        [
+          "0x2",
+          "sp += -12"
+        ],
+        [
+          "0x4",
+          "r5 = abs(r1)"
+        ],
+        [
+          "0x8",
+          "r2 = 0"
+        ],
+        [
+          "0xa",
+          "r4 = 10"
+        ],
+        [
+          "0xc",
+          "r3 = sp + 0"
+        ],
+        [
+          "0xe",
+          "r6 = r5"
+        ],
+        [
+          "0x10",
+          "r5 = r6 / r4 (u)"
+        ],
+        [
+          "0x14",
+          "r7 = r5 * 0xA"
+        ],
+        [
+          "0x18",
+          "r7 = r6 - r7"
+        ],
+        [
+          "0x1a",
+          "r7 = r7 | 0x30"
+        ],
+        [
+          "0x1e",
+          "b[r3+r2] = r7"
+        ],
+        [
+          "0x22",
+          "r2 += 1"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:put_s@.text.put_s+0x0": {
+      "name": "put_s",
+      "metrics": {
+        "insns": 7,
+        "loop": 3,
+        "div": 0,
+        "call": 0,
+        "cost": 3
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [],
+      "edges": []
+    },
+    "target-x0x.o:say@.text.say+0x0": {
+      "name": "say",
+      "metrics": {
+        "insns": 14,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 2,
+      "unconditionalPrologueBytes": 8,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 8,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 8,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r4}"
+        ],
+        [
+          "0x2",
+          "r3 = r1"
+        ],
+        [
+          "0x4",
+          "r1 = r0"
+        ],
+        [
+          "0x6",
+          "r4 = 0 <say : 0 >"
+        ],
+        [
+          "0xc",
+          "r0 = r4 + 135"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x10",
+          "kind": "direct-call",
+          "targetName": "put_s",
+          "targets": [
+            "target-x0x.o:put_s@.text.put_s+0x0"
+          ]
+        },
+        {
+          "site": "0x18",
+          "kind": "direct-call",
+          "targetName": "put_s",
+          "targets": [
+            "target-x0x.o:put_s@.text.put_s+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:ud_get16@.text.ud_get16+0x0": {
+      "name": "ud_get16",
+      "metrics": {
+        "insns": 5,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 0,
+      "stackAllocationSites": [],
+      "allocationSumBytesNotWorstStack": 0,
+      "prologue": [
+        [
+          "0x0",
+          "r1 = b[r0+1] (u)"
+        ],
+        [
+          "0x2",
+          "r0 = b[r0+0] (u)"
+        ],
+        [
+          "0x4",
+          "r0 <= insert(r1, p:8, l:24)"
+        ],
+        [
+          "0x8",
+          "r0 = r0.l (u)"
+        ],
+        [
+          "0xa",
+          "rts"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:ud_swap@.text.ud_swap+0x0": {
+      "name": "ud_swap",
+      "metrics": {
+        "insns": 41,
+        "loop": 26,
+        "div": 0,
+        "call": 1,
+        "cost": 56
+      },
+      "allCallSites": 1,
+      "unconditionalPrologueBytes": 44,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 44,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 44,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r13-r4}"
+        ],
+        [
+          "0x2",
+          "r13 = r0"
+        ],
+        [
+          "0x4",
+          "r0 = 20496 <ud_swap+0x5010 : 5010 >"
+        ],
+        [
+          "0x8",
+          "r0 += r13"
+        ],
+        [
+          "0xa",
+          "r0 = [r0+r1<<2]"
+        ],
+        [
+          "0xe",
+          "r0 += r13"
+        ],
+        [
+          "0x10",
+          "r10 = r2  #"
+        ],
+        [
+          "0x12",
+          "r1 = b[r0+13] (u)"
+        ],
+        [
+          "0x14",
+          "r8 = b[++r0=12] (u)"
+        ],
+        [
+          "0x18",
+          "r8 <= insert(r1, p:8, l:8)"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x74",
+          "kind": "unresolved-indirect-call",
+          "targetName": null,
+          "targets": []
+        },
+        {
+          "site": null,
+          "kind": "source-callback-alternative",
+          "targetName": "undo_changed",
+          "targets": [
+            "target-x0x.o:undo_changed@.text.undo_changed+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:ui_cc_undo@.text.ui_cc_undo+0x0": {
+      "name": "ui_cc_undo",
+      "metrics": {
+        "insns": 31,
+        "loop": 25,
+        "div": 0,
+        "call": 4,
+        "cost": 25
+      },
+      "allCallSites": 4,
+      "unconditionalPrologueBytes": 12,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 12,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 12,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          "0x2",
+          "r1 = 0 <ui_cc_undo : 0 >"
+        ],
+        [
+          "0x8",
+          "r5 = r0  #"
+        ],
+        [
+          "0xa",
+          "r1 = b[r1+5] (u)"
+        ],
+        [
+          "0xc",
+          "r4 = -3"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x26",
+          "kind": "direct-call",
+          "targetName": "perf_testing",
+          "targets": [
+            "target-x0x.o:perf_testing@.text.perf_testing+0x0"
+          ]
+        },
+        {
+          "site": "0x46",
+          "kind": "direct-call",
+          "targetName": "engine_transport_reserve",
+          "targets": [
+            "target-engine.o:engine_transport_reserve@.text.engine_transport_reserve+0x0"
+          ]
+        },
+        {
+          "site": "0x4e",
+          "kind": "direct-call",
+          "targetName": "do_undo",
+          "targets": [
+            "target-x0x.o:do_undo@.text.do_undo+0x0"
+          ]
+        },
+        {
+          "site": "0x54",
+          "kind": "direct-call",
+          "targetName": "engine_transport_release",
+          "targets": [
+            "target-engine.o:engine_transport_release@.text.engine_transport_release+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:ui_undo_preflight@.text.ui_undo_preflight+0x0": {
+      "name": "ui_undo_preflight",
+      "metrics": {
+        "insns": 27,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 2,
+      "unconditionalPrologueBytes": 12,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 12,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 12,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          "0x2",
+          "r1 = 0 <ui_undo_preflight : 0 >"
+        ],
+        [
+          "0x8",
+          "r1 = b[r1+68] (u)"
+        ],
+        [
+          "0xc",
+          "r5 = r0"
+        ],
+        [
+          "0xe",
+          "r4 = -4"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x12",
+          "kind": "direct-call",
+          "targetName": "engine_queue_space",
+          "targets": [
+            "target-engine.o:engine_queue_space@.text.engine_queue_space+0x0"
+          ]
+        },
+        {
+          "site": "0x48",
+          "kind": "direct-call",
+          "targetName": "undo_arrangement_intent",
+          "targets": [
+            "target-x0x.o:undo_arrangement_intent@.text.undo_arrangement_intent+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:undo_arrangement_intent@.text.undo_arrangement_intent+0x0": {
+      "name": "undo_arrangement_intent",
+      "metrics": {
+        "insns": 97,
+        "loop": 27,
+        "div": 0,
+        "call": 2,
+        "cost": 27
+      },
+      "allCallSites": 4,
+      "unconditionalPrologueBytes": 40,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 40,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 40,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r12-r4}"
+        ],
+        [
+          "0x2",
+          "r3 = r0"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x4",
+          "kind": "direct-call",
+          "targetName": "arrangement_panel_locked",
+          "targets": [
+            "target-x0x.o:arrangement_panel_locked@.text.arrangement_panel_locked+0x0"
+          ]
+        },
+        {
+          "site": "0xa2",
+          "kind": "direct-call",
+          "targetName": "ud_get16",
+          "targets": [
+            "target-x0x.o:ud_get16@.text.ud_get16+0x0"
+          ]
+        },
+        {
+          "site": "0xc6",
+          "kind": "direct-call",
+          "targetName": "ud_get16",
+          "targets": [
+            "target-x0x.o:ud_get16@.text.ud_get16+0x0"
+          ]
+        },
+        {
+          "site": "0xce",
+          "kind": "direct-call",
+          "targetName": "ud_get16",
+          "targets": [
+            "target-x0x.o:ud_get16@.text.ud_get16+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:undo_changed@.text.undo_changed+0x0": {
+      "name": "undo_changed",
+      "metrics": {
+        "insns": 87,
+        "loop": 52,
+        "div": 2,
+        "call": 5,
+        "cost": 95
+      },
+      "allCallSites": 5,
+      "unconditionalPrologueBytes": 52,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 52,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 52,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          "0x2",
+          "r4 = r1"
+        ],
+        [
+          "0x4",
+          "r5 = r0"
+        ],
+        [
+          "0x6",
+          "r11 = r5 + 28"
+        ],
+        [
+          "0xa",
+          "r10 = r11 + r4"
+        ],
+        [
+          "0xe",
+          "r12 = 0 <undo_changed : 0 >"
+        ],
+        [
+          "0x14",
+          "r9 = 0 <undo_changed : 0 >"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x42",
+          "kind": "direct-call",
+          "targetName": "engine_nvoices",
+          "targets": [
+            "target-engine.o:engine_nvoices@.text.engine_nvoices+0x0"
+          ]
+        },
+        {
+          "site": "0x52",
+          "kind": "direct-call",
+          "targetName": "engine_nparams",
+          "targets": [
+            "target-engine.o:engine_nparams@.text.engine_nparams+0x0"
+          ]
+        },
+        {
+          "site": "0x70",
+          "kind": "direct-call",
+          "targetName": "engine_set",
+          "targets": [
+            "target-engine.o:engine_set@.text.engine_set+0x0"
+          ]
+        },
+        {
+          "site": "0xb4",
+          "kind": "direct-call",
+          "targetName": "variant_field_get",
+          "targets": []
+        },
+        {
+          "site": "0xbe",
+          "kind": "direct-call",
+          "targetName": "engine_strip_set",
+          "targets": [
+            "target-engine.o:engine_strip_set@.text.engine_strip_set+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:undo_commit@.text.undo_commit+0x0": {
+      "name": "undo_commit",
+      "metrics": {
+        "insns": 160,
+        "loop": 104,
+        "div": 0,
+        "call": 0,
+        "cost": 392
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 52,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 52,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 52,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          "0x2",
+          "r15 = 0 <undo_commit : 0 >"
+        ],
+        [
+          "0x8",
+          "r2 = [r15+8]"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0xac",
+          "kind": "tail-transfer",
+          "targetName": "undo_init",
+          "targets": [
+            "target-x0x.o:undo_init@.text.undo_init+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:undo_init@.text.undo_init+0x0": {
+      "name": "undo_init",
+      "metrics": {
+        "insns": 25,
+        "loop": 5,
+        "div": 0,
+        "call": 0,
+        "cost": 5
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 8,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 8,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 8,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r4}"
+        ],
+        [
+          "0x2",
+          "r3 = 0 <undo_init : 0 >"
+        ],
+        [
+          "0x8",
+          "d[r3+0] = r1_r0"
+        ],
+        [
+          "0xc",
+          "[r3+8] = r2"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:undo_name@.text.undo_name+0x0": {
+      "name": "undo_name",
+      "metrics": {
+        "insns": 68,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 2,
+      "unconditionalPrologueBytes": 12,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 12,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 12,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          "0x2",
+          "r4 = r1 + 28"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x92",
+          "kind": "tail-transfer",
+          "targetName": "put_s",
+          "targets": [
+            "target-x0x.o:put_s@.text.put_s+0x0"
+          ]
+        },
+        {
+          "site": "0xdc",
+          "kind": "direct-call",
+          "targetName": "put_s",
+          "targets": [
+            "target-x0x.o:put_s@.text.put_s+0x0"
+          ]
+        },
+        {
+          "site": "0xe6",
+          "kind": "direct-call",
+          "targetName": "put_s",
+          "targets": [
+            "target-x0x.o:put_s@.text.put_s+0x0"
+          ]
+        },
+        {
+          "site": "0xee",
+          "kind": "tail-transfer",
+          "targetName": "put_i",
+          "targets": [
+            "target-x0x.o:put_i@.text.put_i+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:undo_redo@.text.undo_redo+0x0": {
+      "name": "undo_redo",
+      "metrics": {
+        "insns": 18,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 2,
+      "unconditionalPrologueBytes": 24,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 24,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 24,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r8-r4}"
+        ],
+        [
+          "0x2",
+          "r4 = r0"
+        ],
+        [
+          "0x4",
+          "r7 = 20628 <undo_redo+0x5094 : 5094 >"
+        ],
+        [
+          "0x8",
+          "r5 = [++r7=r4]"
+        ],
+        [
+          "0xc",
+          "r8 = r1  #"
+        ],
+        [
+          "0xe",
+          "r6 = [r7+4]"
+        ],
+        [
+          "0x10",
+          "r0 = 0"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x1a",
+          "kind": "direct-call",
+          "targetName": "undo_span",
+          "targets": [
+            "target-x0x.o:undo_span@.text.undo_span+0x0"
+          ]
+        },
+        {
+          "site": "0x24",
+          "kind": "direct-call",
+          "targetName": "ud_swap",
+          "targets": [
+            "target-x0x.o:ud_swap@.text.ud_swap+0x0"
+          ]
+        }
+      ]
+    },
+    "target-x0x.o:undo_span@.text.undo_span+0x0": {
+      "name": "undo_span",
+      "metrics": {
+        "insns": 18,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 0,
+      "unconditionalPrologueBytes": 16,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 16,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 16,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r6-r4}"
+        ],
+        [
+          "0x2",
+          "r1 = r1 << 2"
+        ],
+        [
+          "0x4",
+          "r1 += r0"
+        ],
+        [
+          "0x6",
+          "r4 = 5124 <undo_span+0x1404 : 1404 >"
+        ],
+        [
+          "0xa",
+          "r5 = [r1+r4<<2]"
+        ],
+        [
+          "0xe",
+          "r0 += 12"
+        ],
+        [
+          "0x10",
+          "r5 += r0"
+        ],
+        [
+          "0x12",
+          "r6 = b[r5+3] (u)"
+        ],
+        [
+          "0x14",
+          "r5 = b[r5+2] (u)"
+        ],
+        [
+          "0x16",
+          "r5 <= insert(r6, p:8, l:8)"
+        ],
+        [
+          "0x1a",
+          "[r2+0] = r5"
+        ],
+        [
+          "0x1c",
+          "r1 = [r1+r4<<2]"
+        ],
+        [
+          "0x20",
+          "r0 += r1"
+        ],
+        [
+          "0x22",
+          "r1 = b[r0+5] (u)"
+        ],
+        [
+          "0x24",
+          "r0 = b[r0+4] (u)"
+        ],
+        [
+          "0x26",
+          "r0 <= insert(r1, p:8, l:8)"
+        ],
+        [
+          "0x2a",
+          "[r3+0] = r0"
+        ],
+        [
+          "0x2c",
+          "{pc, r6-r4} = [sp++]"
+        ]
+      ],
+      "edges": []
+    },
+    "target-x0x.o:undo_undo@.text.undo_undo+0x0": {
+      "name": "undo_undo",
+      "metrics": {
+        "insns": 17,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "allCallSites": 2,
+      "unconditionalPrologueBytes": 16,
+      "stackAllocationSites": [
+        {
+          "site": "0x0",
+          "bytes": 16,
+          "kind": "register-push"
+        }
+      ],
+      "allocationSumBytesNotWorstStack": 16,
+      "prologue": [
+        [
+          "0x0",
+          "[--sp] = {rets, r6-r4}"
+        ],
+        [
+          "0x2",
+          "r5_r4 = r1_r0"
+        ],
+        [
+          "0x4",
+          "r6 = 20632 <undo_undo+0x5098 : 5098 >"
+        ],
+        [
+          "0x8",
+          "r0 = [++r6=r4]"
+        ]
+      ],
+      "edges": [
+        {
+          "site": "0x16",
+          "kind": "direct-call",
+          "targetName": "undo_span",
+          "targets": [
+            "target-x0x.o:undo_span@.text.undo_span+0x0"
+          ]
+        },
+        {
+          "site": "0x20",
+          "kind": "direct-call",
+          "targetName": "ud_swap",
+          "targets": [
+            "target-x0x.o:ud_swap@.text.ud_swap+0x0"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,4836 @@
+{
+  "registry_map": "draft-1",
+  "scope": "native implementation candidate; no browser/target/device acceptance",
+  "rows": [
+    {
+      "id": "sound.909.BD.0",
+      "parameter_number": 0,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.BD.1",
+      "parameter_number": 1,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.BD.2",
+      "parameter_number": 2,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.BD.3",
+      "parameter_number": 3,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.BD.4",
+      "parameter_number": 4,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.BD.5",
+      "parameter_number": 5,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.BD.6",
+      "parameter_number": 6,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.BD.7",
+      "parameter_number": 7,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.BD.8",
+      "parameter_number": 8,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.BD.9",
+      "parameter_number": 9,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.BD.10",
+      "parameter_number": 10,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.SD.0",
+      "parameter_number": 16,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.SD.1",
+      "parameter_number": 17,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.SD.2",
+      "parameter_number": 18,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.SD.3",
+      "parameter_number": 19,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.SD.4",
+      "parameter_number": 20,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.SD.5",
+      "parameter_number": 21,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.SD.6",
+      "parameter_number": 22,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.SD.7",
+      "parameter_number": 23,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.SD.8",
+      "parameter_number": 24,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.SD.9",
+      "parameter_number": 25,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.LT.0",
+      "parameter_number": 32,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.LT.1",
+      "parameter_number": 33,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.LT.2",
+      "parameter_number": 34,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.LT.3",
+      "parameter_number": 35,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.LT.4",
+      "parameter_number": 36,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.LT.5",
+      "parameter_number": 37,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.LT.6",
+      "parameter_number": 38,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.LT.7",
+      "parameter_number": 39,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.LT.8",
+      "parameter_number": 40,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.MT.0",
+      "parameter_number": 48,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.MT.1",
+      "parameter_number": 49,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.MT.2",
+      "parameter_number": 50,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.MT.3",
+      "parameter_number": 51,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.MT.4",
+      "parameter_number": 52,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.MT.5",
+      "parameter_number": 53,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.MT.6",
+      "parameter_number": 54,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.MT.7",
+      "parameter_number": 55,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.MT.8",
+      "parameter_number": 56,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.HT.0",
+      "parameter_number": 64,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.HT.1",
+      "parameter_number": 65,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.HT.2",
+      "parameter_number": 66,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.HT.3",
+      "parameter_number": 67,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.HT.4",
+      "parameter_number": 68,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.HT.5",
+      "parameter_number": 69,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.HT.6",
+      "parameter_number": 70,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.HT.7",
+      "parameter_number": 71,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.HT.8",
+      "parameter_number": 72,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RS.0",
+      "parameter_number": 80,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RS.1",
+      "parameter_number": 81,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RS.2",
+      "parameter_number": 82,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RS.3",
+      "parameter_number": 83,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RS.4",
+      "parameter_number": 84,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RS.5",
+      "parameter_number": 85,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RS.6",
+      "parameter_number": 86,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CP.0",
+      "parameter_number": 96,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CP.1",
+      "parameter_number": 97,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CP.2",
+      "parameter_number": 98,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CP.3",
+      "parameter_number": 99,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CP.4",
+      "parameter_number": 100,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CP.5",
+      "parameter_number": 101,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CP.6",
+      "parameter_number": 102,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CP.7",
+      "parameter_number": 103,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CH.0",
+      "parameter_number": 112,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CH.1",
+      "parameter_number": 113,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CH.2",
+      "parameter_number": 114,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CH.3",
+      "parameter_number": 115,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CH.4",
+      "parameter_number": 116,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CH.5",
+      "parameter_number": 117,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CH.6",
+      "parameter_number": 118,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CH.7",
+      "parameter_number": 119,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.OH.0",
+      "parameter_number": 128,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.OH.1",
+      "parameter_number": 129,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.OH.2",
+      "parameter_number": 130,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.OH.3",
+      "parameter_number": 131,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.OH.4",
+      "parameter_number": 132,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.OH.5",
+      "parameter_number": 133,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.OH.6",
+      "parameter_number": 134,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.OH.7",
+      "parameter_number": 135,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CR.0",
+      "parameter_number": 144,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CR.1",
+      "parameter_number": 145,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CR.2",
+      "parameter_number": 146,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CR.3",
+      "parameter_number": 147,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CR.4",
+      "parameter_number": 148,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CR.5",
+      "parameter_number": 149,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CR.6",
+      "parameter_number": 150,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.CR.7",
+      "parameter_number": 151,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RD.0",
+      "parameter_number": 160,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RD.1",
+      "parameter_number": 161,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RD.2",
+      "parameter_number": 162,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RD.3",
+      "parameter_number": 163,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RD.4",
+      "parameter_number": 164,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RD.5",
+      "parameter_number": 165,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RD.6",
+      "parameter_number": 166,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.RD.7",
+      "parameter_number": 167,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.KIT.0",
+      "parameter_number": 176,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.909.KIT.1",
+      "parameter_number": 177,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.BD.0",
+      "parameter_number": 192,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.BD.1",
+      "parameter_number": 193,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.BD.2",
+      "parameter_number": 194,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.BD.3",
+      "parameter_number": 195,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.BD.4",
+      "parameter_number": 196,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.BD.5",
+      "parameter_number": 197,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.BD.6",
+      "parameter_number": 198,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.BD.7",
+      "parameter_number": 199,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.BD.8",
+      "parameter_number": 200,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.BD.9",
+      "parameter_number": 201,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.SD.0",
+      "parameter_number": 208,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.SD.1",
+      "parameter_number": 209,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.SD.2",
+      "parameter_number": 210,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.SD.3",
+      "parameter_number": 211,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.SD.4",
+      "parameter_number": 212,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.SD.5",
+      "parameter_number": 213,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.SD.6",
+      "parameter_number": 214,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.SD.7",
+      "parameter_number": 215,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.SD.8",
+      "parameter_number": 216,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.SD.9",
+      "parameter_number": 217,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.LT.0",
+      "parameter_number": 224,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.LT.1",
+      "parameter_number": 225,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.LT.2",
+      "parameter_number": 226,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.LT.3",
+      "parameter_number": 227,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.LT.4",
+      "parameter_number": 228,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.LT.5",
+      "parameter_number": 229,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.LT.6",
+      "parameter_number": 230,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.LT.7",
+      "parameter_number": 231,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.LT.8",
+      "parameter_number": 232,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.MT.0",
+      "parameter_number": 240,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.MT.1",
+      "parameter_number": 241,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.MT.2",
+      "parameter_number": 242,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.MT.3",
+      "parameter_number": 243,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.MT.4",
+      "parameter_number": 244,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.MT.5",
+      "parameter_number": 245,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.MT.6",
+      "parameter_number": 246,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.MT.7",
+      "parameter_number": 247,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.MT.8",
+      "parameter_number": 248,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.HT.0",
+      "parameter_number": 256,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.HT.1",
+      "parameter_number": 257,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.HT.2",
+      "parameter_number": 258,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.HT.3",
+      "parameter_number": 259,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.HT.4",
+      "parameter_number": 260,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.HT.5",
+      "parameter_number": 261,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.HT.6",
+      "parameter_number": 262,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.HT.7",
+      "parameter_number": 263,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.HT.8",
+      "parameter_number": 264,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.RS.0",
+      "parameter_number": 272,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.RS.1",
+      "parameter_number": 273,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.RS.2",
+      "parameter_number": 274,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.RS.3",
+      "parameter_number": 275,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.RS.4",
+      "parameter_number": 276,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.RS.5",
+      "parameter_number": 277,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.RS.6",
+      "parameter_number": 278,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.RS.7",
+      "parameter_number": 279,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.RS.8",
+      "parameter_number": 280,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CP.0",
+      "parameter_number": 288,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CP.1",
+      "parameter_number": 289,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CP.2",
+      "parameter_number": 290,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CP.3",
+      "parameter_number": 291,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CP.4",
+      "parameter_number": 292,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CP.5",
+      "parameter_number": 293,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CP.6",
+      "parameter_number": 294,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CP.7",
+      "parameter_number": 295,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CP.8",
+      "parameter_number": 296,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CP.9",
+      "parameter_number": 297,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CB.0",
+      "parameter_number": 304,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CB.1",
+      "parameter_number": 305,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CB.2",
+      "parameter_number": 306,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CB.3",
+      "parameter_number": 307,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CB.4",
+      "parameter_number": 308,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CB.5",
+      "parameter_number": 309,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CB.6",
+      "parameter_number": 310,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CB.7",
+      "parameter_number": 311,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CY.0",
+      "parameter_number": 320,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CY.1",
+      "parameter_number": 321,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CY.2",
+      "parameter_number": 322,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CY.3",
+      "parameter_number": 323,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CY.4",
+      "parameter_number": 324,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CY.5",
+      "parameter_number": 325,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CY.6",
+      "parameter_number": 326,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CY.7",
+      "parameter_number": 327,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.OH.0",
+      "parameter_number": 336,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.OH.1",
+      "parameter_number": 337,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.OH.2",
+      "parameter_number": 338,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.OH.3",
+      "parameter_number": 339,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.OH.4",
+      "parameter_number": 340,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.OH.5",
+      "parameter_number": 341,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.OH.6",
+      "parameter_number": 342,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.OH.7",
+      "parameter_number": 343,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CH.0",
+      "parameter_number": 352,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CH.1",
+      "parameter_number": 353,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CH.2",
+      "parameter_number": 354,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CH.3",
+      "parameter_number": 355,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CH.4",
+      "parameter_number": 356,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CH.5",
+      "parameter_number": 357,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CH.6",
+      "parameter_number": 358,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.CH.7",
+      "parameter_number": 359,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.KIT.0",
+      "parameter_number": 368,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.808.KIT.1",
+      "parameter_number": 369,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.A.0",
+      "parameter_number": 384,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.A.1",
+      "parameter_number": 385,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.A.2",
+      "parameter_number": 386,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.A.3",
+      "parameter_number": 387,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.A.4",
+      "parameter_number": 388,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.A.5",
+      "parameter_number": 389,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.A.6",
+      "parameter_number": 390,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.A.7",
+      "parameter_number": 391,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.A.8",
+      "parameter_number": 392,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.A.9",
+      "parameter_number": 393,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.A.10",
+      "parameter_number": 394,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.A.11",
+      "parameter_number": 395,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.B.0",
+      "parameter_number": 400,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.B.1",
+      "parameter_number": 401,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.B.2",
+      "parameter_number": 402,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.B.3",
+      "parameter_number": 403,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.B.4",
+      "parameter_number": 404,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.B.5",
+      "parameter_number": 405,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.B.6",
+      "parameter_number": 406,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.B.7",
+      "parameter_number": 407,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.B.8",
+      "parameter_number": 408,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.B.9",
+      "parameter_number": 409,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.B.10",
+      "parameter_number": 410,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.303.B.11",
+      "parameter_number": 411,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.BREAK.GLOBAL.0",
+      "parameter_number": 416,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.BREAK.GLOBAL.1",
+      "parameter_number": 417,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.0",
+      "parameter_number": 432,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.1",
+      "parameter_number": 433,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.2",
+      "parameter_number": 434,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.3",
+      "parameter_number": 435,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.4",
+      "parameter_number": 436,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.5",
+      "parameter_number": 437,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.6",
+      "parameter_number": 438,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.7",
+      "parameter_number": 439,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.8",
+      "parameter_number": 440,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.9",
+      "parameter_number": 441,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.10",
+      "parameter_number": 442,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.11",
+      "parameter_number": 443,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.12",
+      "parameter_number": 444,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.13",
+      "parameter_number": 445,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.14",
+      "parameter_number": 446,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.FX.GLOBAL.15",
+      "parameter_number": 447,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.909.0",
+      "parameter_number": 464,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.909.1",
+      "parameter_number": 465,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.909.2",
+      "parameter_number": 466,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.909.3",
+      "parameter_number": 467,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.808.0",
+      "parameter_number": 480,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.808.1",
+      "parameter_number": 481,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.808.2",
+      "parameter_number": 482,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.808.3",
+      "parameter_number": 483,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.303A.0",
+      "parameter_number": 496,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.303A.1",
+      "parameter_number": 497,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.303A.2",
+      "parameter_number": 498,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.303A.3",
+      "parameter_number": 499,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.303B.0",
+      "parameter_number": 512,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.303B.1",
+      "parameter_number": 513,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.303B.2",
+      "parameter_number": 514,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.303B.3",
+      "parameter_number": 515,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.BREAK.0",
+      "parameter_number": 528,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.BREAK.1",
+      "parameter_number": 529,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.BREAK.2",
+      "parameter_number": 530,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MIX.BREAK.3",
+      "parameter_number": 531,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.0",
+      "parameter_number": 544,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.1",
+      "parameter_number": 545,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.2",
+      "parameter_number": 546,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.3",
+      "parameter_number": 547,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.4",
+      "parameter_number": 548,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.5",
+      "parameter_number": 549,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.6",
+      "parameter_number": 550,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.7",
+      "parameter_number": 551,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.8",
+      "parameter_number": 552,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.9",
+      "parameter_number": 553,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.10",
+      "parameter_number": 554,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.11",
+      "parameter_number": 555,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.12",
+      "parameter_number": 556,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "sound.MASTER.GLOBAL.13",
+      "parameter_number": 557,
+      "binding": "SOUND",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.0.highpass",
+      "parameter_number": 576,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.0.lowpass",
+      "parameter_number": 577,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.0.boost",
+      "parameter_number": 578,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.0.ceiling",
+      "parameter_number": 579,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.0.release",
+      "parameter_number": 580,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.0.flags",
+      "parameter_number": 581,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.0.enabled",
+      "parameter_number": 582,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.0.highpass_enabled",
+      "parameter_number": 583,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.0.lowpass_enabled",
+      "parameter_number": 584,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.0.limiter_enabled",
+      "parameter_number": 585,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.1.highpass",
+      "parameter_number": 588,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.1.lowpass",
+      "parameter_number": 589,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.1.boost",
+      "parameter_number": 590,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.1.ceiling",
+      "parameter_number": 591,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.1.release",
+      "parameter_number": 592,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.1.flags",
+      "parameter_number": 593,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.1.enabled",
+      "parameter_number": 594,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.1.highpass_enabled",
+      "parameter_number": 595,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.1.lowpass_enabled",
+      "parameter_number": 596,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.1.limiter_enabled",
+      "parameter_number": 597,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.2.highpass",
+      "parameter_number": 600,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.2.lowpass",
+      "parameter_number": 601,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.2.boost",
+      "parameter_number": 602,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.2.ceiling",
+      "parameter_number": 603,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.2.release",
+      "parameter_number": 604,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.2.flags",
+      "parameter_number": 605,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.2.enabled",
+      "parameter_number": 606,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.2.highpass_enabled",
+      "parameter_number": 607,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.2.lowpass_enabled",
+      "parameter_number": 608,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.2.limiter_enabled",
+      "parameter_number": 609,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.3.highpass",
+      "parameter_number": 612,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.3.lowpass",
+      "parameter_number": 613,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.3.boost",
+      "parameter_number": 614,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.3.ceiling",
+      "parameter_number": 615,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.3.release",
+      "parameter_number": 616,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.3.flags",
+      "parameter_number": 617,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.3.enabled",
+      "parameter_number": 618,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.3.highpass_enabled",
+      "parameter_number": 619,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.3.lowpass_enabled",
+      "parameter_number": 620,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.3.limiter_enabled",
+      "parameter_number": 621,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.4.highpass",
+      "parameter_number": 624,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.4.lowpass",
+      "parameter_number": 625,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.4.boost",
+      "parameter_number": 626,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.4.ceiling",
+      "parameter_number": 627,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.4.release",
+      "parameter_number": 628,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.4.flags",
+      "parameter_number": 629,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.4.enabled",
+      "parameter_number": 630,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.4.highpass_enabled",
+      "parameter_number": 631,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.4.lowpass_enabled",
+      "parameter_number": 632,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.4.limiter_enabled",
+      "parameter_number": 633,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.5.highpass",
+      "parameter_number": 636,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.5.lowpass",
+      "parameter_number": 637,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.5.boost",
+      "parameter_number": 638,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.5.ceiling",
+      "parameter_number": 639,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.5.release",
+      "parameter_number": 640,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.5.flags",
+      "parameter_number": 641,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.5.enabled",
+      "parameter_number": 642,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.5.highpass_enabled",
+      "parameter_number": 643,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.5.lowpass_enabled",
+      "parameter_number": 644,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.5.limiter_enabled",
+      "parameter_number": 645,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.6.highpass",
+      "parameter_number": 648,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.6.lowpass",
+      "parameter_number": 649,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.6.boost",
+      "parameter_number": 650,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.6.ceiling",
+      "parameter_number": 651,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.6.release",
+      "parameter_number": 652,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.6.flags",
+      "parameter_number": 653,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.6.enabled",
+      "parameter_number": 654,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.6.highpass_enabled",
+      "parameter_number": 655,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.6.lowpass_enabled",
+      "parameter_number": 656,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.6.limiter_enabled",
+      "parameter_number": 657,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.7.highpass",
+      "parameter_number": 660,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.7.lowpass",
+      "parameter_number": 661,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.7.boost",
+      "parameter_number": 662,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.7.ceiling",
+      "parameter_number": 663,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.7.release",
+      "parameter_number": 664,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.7.flags",
+      "parameter_number": 665,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.7.enabled",
+      "parameter_number": 666,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.7.highpass_enabled",
+      "parameter_number": 667,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.7.lowpass_enabled",
+      "parameter_number": 668,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.7.limiter_enabled",
+      "parameter_number": 669,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.8.highpass",
+      "parameter_number": 672,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.8.lowpass",
+      "parameter_number": 673,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.8.boost",
+      "parameter_number": 674,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.8.ceiling",
+      "parameter_number": 675,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.8.release",
+      "parameter_number": 676,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.8.flags",
+      "parameter_number": 677,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.8.enabled",
+      "parameter_number": 678,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.8.highpass_enabled",
+      "parameter_number": 679,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.8.lowpass_enabled",
+      "parameter_number": 680,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.8.limiter_enabled",
+      "parameter_number": 681,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.9.highpass",
+      "parameter_number": 684,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.9.lowpass",
+      "parameter_number": 685,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.9.boost",
+      "parameter_number": 686,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.9.ceiling",
+      "parameter_number": 687,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.9.release",
+      "parameter_number": 688,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.9.flags",
+      "parameter_number": 689,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.9.enabled",
+      "parameter_number": 690,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.9.highpass_enabled",
+      "parameter_number": 691,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.9.lowpass_enabled",
+      "parameter_number": 692,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.9.limiter_enabled",
+      "parameter_number": 693,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.10.highpass",
+      "parameter_number": 696,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.10.lowpass",
+      "parameter_number": 697,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.10.boost",
+      "parameter_number": 698,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.10.ceiling",
+      "parameter_number": 699,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.10.release",
+      "parameter_number": 700,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.10.flags",
+      "parameter_number": 701,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.10.enabled",
+      "parameter_number": 702,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.10.highpass_enabled",
+      "parameter_number": 703,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.10.lowpass_enabled",
+      "parameter_number": 704,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.10.limiter_enabled",
+      "parameter_number": 705,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.11.highpass",
+      "parameter_number": 708,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.11.lowpass",
+      "parameter_number": 709,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.11.boost",
+      "parameter_number": 710,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.11.ceiling",
+      "parameter_number": 711,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.11.release",
+      "parameter_number": 712,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.11.flags",
+      "parameter_number": 713,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.11.enabled",
+      "parameter_number": 714,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.11.highpass_enabled",
+      "parameter_number": 715,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.11.lowpass_enabled",
+      "parameter_number": 716,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.11.limiter_enabled",
+      "parameter_number": 717,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.12.highpass",
+      "parameter_number": 720,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.12.lowpass",
+      "parameter_number": 721,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.12.boost",
+      "parameter_number": 722,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.12.ceiling",
+      "parameter_number": 723,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.12.release",
+      "parameter_number": 724,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.12.flags",
+      "parameter_number": 725,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.12.enabled",
+      "parameter_number": 726,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.12.highpass_enabled",
+      "parameter_number": 727,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.12.lowpass_enabled",
+      "parameter_number": 728,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.12.limiter_enabled",
+      "parameter_number": 729,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.13.highpass",
+      "parameter_number": 732,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.13.lowpass",
+      "parameter_number": 733,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.13.boost",
+      "parameter_number": 734,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.13.ceiling",
+      "parameter_number": 735,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.13.release",
+      "parameter_number": 736,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.13.flags",
+      "parameter_number": 737,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.13.enabled",
+      "parameter_number": 738,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.13.highpass_enabled",
+      "parameter_number": 739,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.13.lowpass_enabled",
+      "parameter_number": 740,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.13.limiter_enabled",
+      "parameter_number": 741,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.14.highpass",
+      "parameter_number": 744,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.14.lowpass",
+      "parameter_number": 745,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.14.boost",
+      "parameter_number": 746,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.14.ceiling",
+      "parameter_number": 747,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.14.release",
+      "parameter_number": 748,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.14.flags",
+      "parameter_number": 749,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.14.enabled",
+      "parameter_number": 750,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.14.highpass_enabled",
+      "parameter_number": 751,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.14.lowpass_enabled",
+      "parameter_number": 752,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.14.limiter_enabled",
+      "parameter_number": 753,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.15.highpass",
+      "parameter_number": 756,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.15.lowpass",
+      "parameter_number": 757,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.15.boost",
+      "parameter_number": 758,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.15.ceiling",
+      "parameter_number": 759,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.15.release",
+      "parameter_number": 760,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.15.flags",
+      "parameter_number": 761,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.15.enabled",
+      "parameter_number": 762,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.15.highpass_enabled",
+      "parameter_number": 763,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.15.lowpass_enabled",
+      "parameter_number": 764,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.15.limiter_enabled",
+      "parameter_number": 765,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.16.highpass",
+      "parameter_number": 768,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.16.lowpass",
+      "parameter_number": 769,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.16.boost",
+      "parameter_number": 770,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.16.ceiling",
+      "parameter_number": 771,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.16.release",
+      "parameter_number": 772,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.16.flags",
+      "parameter_number": 773,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.16.enabled",
+      "parameter_number": 774,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.16.highpass_enabled",
+      "parameter_number": 775,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.16.lowpass_enabled",
+      "parameter_number": 776,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.16.limiter_enabled",
+      "parameter_number": 777,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.17.highpass",
+      "parameter_number": 780,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.17.lowpass",
+      "parameter_number": 781,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.17.boost",
+      "parameter_number": 782,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.17.ceiling",
+      "parameter_number": 783,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.17.release",
+      "parameter_number": 784,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.17.flags",
+      "parameter_number": 785,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.17.enabled",
+      "parameter_number": 786,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.17.highpass_enabled",
+      "parameter_number": 787,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.17.lowpass_enabled",
+      "parameter_number": 788,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.17.limiter_enabled",
+      "parameter_number": 789,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.18.highpass",
+      "parameter_number": 792,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.18.lowpass",
+      "parameter_number": 793,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.18.boost",
+      "parameter_number": 794,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.18.ceiling",
+      "parameter_number": 795,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.18.release",
+      "parameter_number": 796,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.18.flags",
+      "parameter_number": 797,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.18.enabled",
+      "parameter_number": 798,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.18.highpass_enabled",
+      "parameter_number": 799,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.18.lowpass_enabled",
+      "parameter_number": 800,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.18.limiter_enabled",
+      "parameter_number": 801,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.19.highpass",
+      "parameter_number": 804,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.19.lowpass",
+      "parameter_number": 805,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.19.boost",
+      "parameter_number": 806,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.19.ceiling",
+      "parameter_number": 807,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.19.release",
+      "parameter_number": 808,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.19.flags",
+      "parameter_number": 809,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.19.enabled",
+      "parameter_number": 810,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.19.highpass_enabled",
+      "parameter_number": 811,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.19.lowpass_enabled",
+      "parameter_number": 812,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.19.limiter_enabled",
+      "parameter_number": 813,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.20.highpass",
+      "parameter_number": 816,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.20.lowpass",
+      "parameter_number": 817,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.20.boost",
+      "parameter_number": 818,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.20.ceiling",
+      "parameter_number": 819,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.20.release",
+      "parameter_number": 820,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.20.flags",
+      "parameter_number": 821,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.20.enabled",
+      "parameter_number": 822,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.20.highpass_enabled",
+      "parameter_number": 823,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.20.lowpass_enabled",
+      "parameter_number": 824,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.20.limiter_enabled",
+      "parameter_number": 825,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.21.highpass",
+      "parameter_number": 828,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.21.lowpass",
+      "parameter_number": 829,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.21.boost",
+      "parameter_number": 830,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.21.ceiling",
+      "parameter_number": 831,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.21.release",
+      "parameter_number": 832,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.21.flags",
+      "parameter_number": 833,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.21.enabled",
+      "parameter_number": 834,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.21.highpass_enabled",
+      "parameter_number": 835,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.21.lowpass_enabled",
+      "parameter_number": 836,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.21.limiter_enabled",
+      "parameter_number": 837,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.22.highpass",
+      "parameter_number": 840,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.22.lowpass",
+      "parameter_number": 841,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.22.boost",
+      "parameter_number": 842,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.22.ceiling",
+      "parameter_number": 843,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.22.release",
+      "parameter_number": 844,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.22.flags",
+      "parameter_number": 845,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.22.enabled",
+      "parameter_number": 846,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.22.highpass_enabled",
+      "parameter_number": 847,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.22.lowpass_enabled",
+      "parameter_number": 848,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.22.limiter_enabled",
+      "parameter_number": 849,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.23.highpass",
+      "parameter_number": 852,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.23.lowpass",
+      "parameter_number": 853,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.23.boost",
+      "parameter_number": 854,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.23.ceiling",
+      "parameter_number": 855,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.23.release",
+      "parameter_number": 856,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.23.flags",
+      "parameter_number": 857,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.23.enabled",
+      "parameter_number": 858,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.23.highpass_enabled",
+      "parameter_number": 859,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.23.lowpass_enabled",
+      "parameter_number": 860,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.23.limiter_enabled",
+      "parameter_number": 861,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.24.highpass",
+      "parameter_number": 864,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.24.lowpass",
+      "parameter_number": 865,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.24.boost",
+      "parameter_number": 866,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.24.ceiling",
+      "parameter_number": 867,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.24.release",
+      "parameter_number": 868,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.24.flags",
+      "parameter_number": 869,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.24.enabled",
+      "parameter_number": 870,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.24.highpass_enabled",
+      "parameter_number": 871,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.24.lowpass_enabled",
+      "parameter_number": 872,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "strip.24.limiter_enabled",
+      "parameter_number": 873,
+      "binding": "STRIP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_SWING",
+      "parameter_number": 900,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_DLEN",
+      "parameter_number": 901,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_DRATE",
+      "parameter_number": 902,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_BLEN",
+      "parameter_number": 903,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_BRATE",
+      "parameter_number": 904,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_BDIR",
+      "parameter_number": 905,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_BTRANS",
+      "parameter_number": 906,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_TEMPO",
+      "parameter_number": 907,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_ACCENT",
+      "parameter_number": 908,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_CLK",
+      "parameter_number": 909,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_NOTES",
+      "parameter_number": 910,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_THEME",
+      "parameter_number": 911,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_KEYLED",
+      "parameter_number": 912,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_KEYSOUND",
+      "parameter_number": 913,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SQ_AUTOSAVE",
+      "parameter_number": 914,
+      "binding": "SEQ",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "generator.0",
+      "parameter_number": 920,
+      "binding": "GEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "generator.1",
+      "parameter_number": 921,
+      "binding": "GEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "generator.2",
+      "parameter_number": 922,
+      "binding": "GEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "generator.3",
+      "parameter_number": 923,
+      "binding": "GEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "generator.4",
+      "parameter_number": 924,
+      "binding": "GEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "generator.5",
+      "parameter_number": 925,
+      "binding": "GEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "generator.6",
+      "parameter_number": 926,
+      "binding": "GEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "generator.7",
+      "parameter_number": 927,
+      "binding": "GEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "break.generator.0",
+      "parameter_number": 936,
+      "binding": "BRKGEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "break.generator.1",
+      "parameter_number": 937,
+      "binding": "BRKGEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "break.generator.2",
+      "parameter_number": 938,
+      "binding": "BRKGEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "break.generator.3",
+      "parameter_number": 939,
+      "binding": "BRKGEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "break.generator.4",
+      "parameter_number": 940,
+      "binding": "BRKGEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "break.generator.5",
+      "parameter_number": 941,
+      "binding": "BRKGEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "break.generator.6",
+      "parameter_number": 942,
+      "binding": "BRKGEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "break.generator.7",
+      "parameter_number": 943,
+      "binding": "BRKGEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "break.generator.8",
+      "parameter_number": 944,
+      "binding": "BRKGEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "break.generator.9",
+      "parameter_number": 945,
+      "binding": "BRKGEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "break.generator.10",
+      "parameter_number": 946,
+      "binding": "BRKGEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "break.generator.11",
+      "parameter_number": 947,
+      "binding": "BRKGEN",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "part.channel.0",
+      "parameter_number": 952,
+      "binding": "CHANNEL",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "part.channel.1",
+      "parameter_number": 953,
+      "binding": "CHANNEL",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "part.channel.2",
+      "parameter_number": 954,
+      "binding": "CHANNEL",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "part.channel.3",
+      "parameter_number": 955,
+      "binding": "CHANNEL",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "part.channel.4",
+      "parameter_number": 956,
+      "binding": "CHANNEL",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.OUT_P",
+      "parameter_number": 960,
+      "binding": "PREF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.USBA_P",
+      "parameter_number": 961,
+      "binding": "PREF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.FREEPLAY_P",
+      "parameter_number": 962,
+      "binding": "PREF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.SREP_P",
+      "parameter_number": 963,
+      "binding": "PREF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.STALLS_P",
+      "parameter_number": 964,
+      "binding": "PREF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.BATT_P",
+      "parameter_number": null,
+      "binding": "PREF",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "song.0",
+      "parameter_number": 972,
+      "binding": "SONG",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "song.1",
+      "parameter_number": 973,
+      "binding": "SONG",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "song.2",
+      "parameter_number": 974,
+      "binding": "SONG",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "song.3",
+      "parameter_number": 975,
+      "binding": "SONG",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "song.4",
+      "parameter_number": 976,
+      "binding": "SONG",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "song.5",
+      "parameter_number": 977,
+      "binding": "SONG",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "action.0",
+      "parameter_number": null,
+      "binding": "ACTION",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "action.1",
+      "parameter_number": 985,
+      "binding": "ACTION",
+      "status": "unimplemented",
+      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+    },
+    {
+      "id": "action.2",
+      "parameter_number": 986,
+      "binding": "ACTION",
+      "status": "unimplemented",
+      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+    },
+    {
+      "id": "action.3",
+      "parameter_number": 987,
+      "binding": "ACTION",
+      "status": "unimplemented",
+      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+    },
+    {
+      "id": "action.4",
+      "parameter_number": 988,
+      "binding": "ACTION",
+      "status": "unimplemented",
+      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+    },
+    {
+      "id": "action.5",
+      "parameter_number": 989,
+      "binding": "ACTION",
+      "status": "unimplemented",
+      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+    },
+    {
+      "id": "action.6",
+      "parameter_number": 990,
+      "binding": "ACTION",
+      "status": "unimplemented",
+      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+    },
+    {
+      "id": "action.7",
+      "parameter_number": 991,
+      "binding": "ACTION",
+      "status": "unimplemented",
+      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+    },
+    {
+      "id": "action.8",
+      "parameter_number": 992,
+      "binding": "ACTION",
+      "status": "unimplemented",
+      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+    },
+    {
+      "id": "action.9",
+      "parameter_number": 993,
+      "binding": "ACTION",
+      "status": "unimplemented",
+      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+    },
+    {
+      "id": "action.10",
+      "parameter_number": 994,
+      "binding": "ACTION",
+      "status": "unimplemented",
+      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+    },
+    {
+      "id": "action.11",
+      "parameter_number": 995,
+      "binding": "ACTION",
+      "status": "unimplemented",
+      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+    },
+    {
+      "id": "selector.pattern",
+      "parameter_number": 1010,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.part",
+      "parameter_number": 1011,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.drum",
+      "parameter_number": 1012,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.bass",
+      "parameter_number": 1013,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.step",
+      "parameter_number": 1014,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.block_low",
+      "parameter_number": 1015,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.block_high",
+      "parameter_number": 1016,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.motion_low",
+      "parameter_number": 1017,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.motion_high",
+      "parameter_number": 1018,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.break_slot_a",
+      "parameter_number": 1019,
+      "binding": "PREF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.break_slot_b",
+      "parameter_number": 1020,
+      "binding": "PREF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.song_edit_block",
+      "parameter_number": 1021,
+      "binding": "PREF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pref.tape_macro",
+      "parameter_number": 1022,
+      "binding": "PREF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "step.drum_hit",
+      "parameter_number": 1023,
+      "binding": "STEP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "step.drum_accent",
+      "parameter_number": 1024,
+      "binding": "STEP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "step.bass_note",
+      "parameter_number": 1025,
+      "binding": "STEP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "step.bass_gate",
+      "parameter_number": 1026,
+      "binding": "STEP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "step.bass_accent",
+      "parameter_number": 1027,
+      "binding": "STEP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "step.bass_slide",
+      "parameter_number": 1028,
+      "binding": "STEP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "step.break_allowed",
+      "parameter_number": 1029,
+      "binding": "STEP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "step.break_slice",
+      "parameter_number": 1030,
+      "binding": "STEP",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "motion.value",
+      "parameter_number": 1031,
+      "binding": "MOTION",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "motion.target",
+      "parameter_number": 1032,
+      "binding": "MOTION",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "motion.voice",
+      "parameter_number": 1033,
+      "binding": "MOTION",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "motion.param",
+      "parameter_number": 1034,
+      "binding": "MOTION",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "motion.pattern",
+      "parameter_number": 1035,
+      "binding": "MOTION",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "motion.part",
+      "parameter_number": 1036,
+      "binding": "MOTION",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "motion.record",
+      "parameter_number": 1037,
+      "binding": "MOTION",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "motion.hold",
+      "parameter_number": 1038,
+      "binding": "MOTION",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "motion.clear",
+      "parameter_number": 1039,
+      "binding": "MOTION",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "probability.value",
+      "parameter_number": 1040,
+      "binding": "PROB",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "performance.mute",
+      "parameter_number": 1041,
+      "binding": "PERF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "performance.solo",
+      "parameter_number": 1042,
+      "binding": "PERF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "performance.pattern_cue",
+      "parameter_number": 1043,
+      "binding": "PERF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "performance.chain_start",
+      "parameter_number": 1044,
+      "binding": "PERF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "performance.chain_end",
+      "parameter_number": 1045,
+      "binding": "PERF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "performance.song_enabled",
+      "parameter_number": 1046,
+      "binding": "PERF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "performance.song_record",
+      "parameter_number": 1047,
+      "binding": "PERF",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "generator.new",
+      "parameter_number": 1048,
+      "binding": "GENACTION",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "generator.mutate",
+      "parameter_number": 1049,
+      "binding": "GENACTION",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "generator.seed_byte",
+      "parameter_number": 1050,
+      "binding": "SEED",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "arrangement.enabled",
+      "parameter_number": 1051,
+      "binding": "ARR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "arrangement.length",
+      "parameter_number": 1052,
+      "binding": "ARR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "arrangement.key",
+      "parameter_number": 1053,
+      "binding": "ARR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "arrangement.mode",
+      "parameter_number": 1054,
+      "binding": "ARR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "arrangement.parent",
+      "parameter_number": 1055,
+      "binding": "ARR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "arrangement.degree",
+      "parameter_number": 1056,
+      "binding": "ARR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "arrangement.duration",
+      "parameter_number": 1057,
+      "binding": "ARR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "arrangement.pattern",
+      "parameter_number": 1058,
+      "binding": "ARR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "arrangement.mute",
+      "parameter_number": 1059,
+      "binding": "ARR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "arrangement.queue",
+      "parameter_number": 1060,
+      "binding": "ARR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "follow.mode",
+      "parameter_number": 1061,
+      "binding": "FOLLOW",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "follow.low",
+      "parameter_number": 1062,
+      "binding": "FOLLOW",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "follow.high",
+      "parameter_number": 1063,
+      "binding": "FOLLOW",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pad.channel",
+      "parameter_number": 1064,
+      "binding": "PAD",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pad.root",
+      "parameter_number": 1065,
+      "binding": "PAD",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pad.low",
+      "parameter_number": 1066,
+      "binding": "PAD",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "pad.high",
+      "parameter_number": 1067,
+      "binding": "PAD",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.kit",
+      "parameter_number": 1068,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.strip",
+      "parameter_number": 1069,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.seed_byte",
+      "parameter_number": 1070,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.commit",
+      "parameter_number": 1071,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.parameter_low",
+      "parameter_number": 1072,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "selector.parameter_high",
+      "parameter_number": 1073,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "value.exact_low7",
+      "parameter_number": 1074,
+      "binding": "EXACT",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "value.exact_mid7",
+      "parameter_number": 1075,
+      "binding": "EXACT",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "value.exact_high2",
+      "parameter_number": 1076,
+      "binding": "EXACT",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "value.exact_commit",
+      "parameter_number": 1077,
+      "binding": "EXACT",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "lane.length",
+      "parameter_number": 1128,
+      "binding": "LANE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "lane.rate",
+      "parameter_number": 1129,
+      "binding": "LANE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "value.exact_high7",
+      "parameter_number": 1130,
+      "binding": "EXACT",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "lane.mode",
+      "parameter_number": 1131,
+      "binding": "LANE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "output.master_knob",
+      "parameter_number": 1100,
+      "binding": "MASTER",
+      "status": "native candidate; focused acceptance required",
+      "reason": "runtime Q12 gain, source-owned ADC pickup; physical acceptance pending"
+    },
+    {
+      "id": "slice.level_percent",
+      "parameter_number": 1104,
+      "binding": "UNSUPPORTED",
+      "status": "unimplemented",
+      "reason": "browser/nonmusical callback absent"
+    },
+    {
+      "id": "slice.repeat",
+      "parameter_number": 1105,
+      "binding": "UNSUPPORTED",
+      "status": "unimplemented",
+      "reason": "browser/nonmusical callback absent"
+    },
+    {
+      "id": "slice.layer",
+      "parameter_number": 1106,
+      "binding": "UNSUPPORTED",
+      "status": "unimplemented",
+      "reason": "browser/nonmusical callback absent"
+    },
+    {
+      "id": "slice.source_bpm_milli",
+      "parameter_number": 1107,
+      "binding": "UNSUPPORTED",
+      "status": "unimplemented",
+      "reason": "browser/nonmusical callback absent"
+    },
+    {
+      "id": "slice.audition_index",
+      "parameter_number": 1108,
+      "binding": "UNSUPPORTED",
+      "status": "unimplemented",
+      "reason": "browser/nonmusical callback absent"
+    },
+    {
+      "id": "slice.play",
+      "parameter_number": 1109,
+      "binding": "UNSUPPORTED",
+      "status": "unimplemented",
+      "reason": "browser/nonmusical callback absent"
+    },
+    {
+      "id": "slice.stop",
+      "parameter_number": 1110,
+      "binding": "UNSUPPORTED",
+      "status": "unimplemented",
+      "reason": "browser/nonmusical callback absent"
+    },
+    {
+      "id": "slice.arm_sync",
+      "parameter_number": 1111,
+      "binding": "UNSUPPORTED",
+      "status": "unimplemented",
+      "reason": "browser/nonmusical callback absent"
+    },
+    {
+      "id": "slice.import",
+      "parameter_number": 1112,
+      "binding": "UNSUPPORTED",
+      "status": "unimplemented",
+      "reason": "browser/nonmusical callback absent"
+    },
+    {
+      "id": "slice.demo",
+      "parameter_number": 1113,
+      "binding": "UNSUPPORTED",
+      "status": "unimplemented",
+      "reason": "browser/nonmusical callback absent"
+    },
+    {
+      "id": "slice.save_import",
+      "parameter_number": 1114,
+      "binding": "UNSUPPORTED",
+      "status": "unimplemented",
+      "reason": "browser/nonmusical callback absent"
+    },
+    {
+      "id": "slice.reopen_import",
+      "parameter_number": 1115,
+      "binding": "UNSUPPORTED",
+      "status": "unimplemented",
+      "reason": "browser/nonmusical callback absent"
+    },
+    {
+      "id": "slice.export",
+      "parameter_number": 1116,
+      "binding": "UNSUPPORTED",
+      "status": "unimplemented",
+      "reason": "browser/nonmusical callback absent"
+    },
+    {
+      "id": "editor.undo",
+      "parameter_number": 1117,
+      "binding": "HISTORY",
+      "status": "native candidate; focused acceptance required",
+      "reason": "stopped shared project history; rejects owned/recording gestures; global proj.set settings remain outside journal"
+    },
+    {
+      "id": "editor.redo",
+      "parameter_number": 1118,
+      "binding": "HISTORY",
+      "status": "native candidate; focused acceptance required",
+      "reason": "stopped shared project history; rejects owned/recording gestures; global proj.set settings remain outside journal"
+    },
+    {
+      "id": "transport.play",
+      "parameter_number": 1119,
+      "binding": "TRANSPORT",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "transport.stop",
+      "parameter_number": 1120,
+      "binding": "TRANSPORT",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "transport.record",
+      "parameter_number": 1121,
+      "binding": "TRANSPORT",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "route.connect_permission",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "route.output_selection",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "route.activate",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "route.retry_cleanup",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "route.disconnect",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "file.audio_selection",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "file.marker_selection",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "file.hardware_slot_upload",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "file.hardware_slot_clear",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "ui.navigation",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "ui.keyboard_latch",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "ui.factory_reset",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    }
+  ]
+}

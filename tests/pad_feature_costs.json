@@ -1,0 +1,4709 @@
+{
+  "schema": 1,
+  "kind": "additional-pad-static-costs",
+  "dis_sha256": "918289836a90666600994f40409d47d35c64590689f35acfede915217cda94a8",
+  "build_source_sha256": "acabfca22ed9558d825d323bc555ea165eeee5da0d86d7fad7b06c2d091faa7c",
+  "wasm_sha256": "0289ee8b2b139a72f2fb8ea92d5c52e625d3439192572f17ecd944a80e8d13b8",
+  "original_gate_report_sha256": "6add082becc77874191e7b16f4b1b8160cff6701255f7ee8d45e31505f815281",
+  "model": {
+    "nest_weight": 4,
+    "divide_extra_weight": 8,
+    "max_depth": 4
+  },
+  "rows": {
+    "memcpy@0x2000cc4": {
+      "metrics": {
+        "insns": 7,
+        "loop": 3,
+        "div": 0,
+        "call": 0,
+        "cost": 3
+      },
+      "instruction_bytes": 16,
+      "frame_bytes": 8,
+      "prologue": [
+        [
+          "0x2000cc4",
+          "[--sp] = {rets, r4}"
+        ]
+      ],
+      "all_calls": [],
+      "edges": []
+    },
+    "plat_control_enter@0x2000cd4": {
+      "metrics": {
+        "insns": 3,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 6,
+      "frame_bytes": 0,
+      "prologue": [
+        [
+          "0x2000cd4",
+          "cli"
+        ],
+        [
+          "0x2000cd6",
+          "r0 = 0"
+        ],
+        [
+          "0x2000cd8",
+          "rts"
+        ]
+      ],
+      "all_calls": [],
+      "edges": []
+    },
+    "plat_control_leave@0x2000cda": {
+      "metrics": {
+        "insns": 3,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 6,
+      "frame_bytes": 0,
+      "prologue": [
+        [
+          "0x2000cda",
+          "csync"
+        ],
+        [
+          "0x2000cdc",
+          "sti"
+        ],
+        [
+          "0x2000cde",
+          "rts"
+        ]
+      ],
+      "all_calls": [],
+      "edges": []
+    },
+    "plat_midi_connected@0x2000e96": {
+      "metrics": {
+        "insns": 10,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 32,
+      "frame_bytes": 0,
+      "prologue": [
+        [
+          "0x2000e96",
+          "r1 = 349 <firmware/src/x0x.c+0x15C : 15c >"
+        ],
+        [
+          "0x2000e9a",
+          "r0 = 29435232 <help_lines.cp : 1c12560 >"
+        ],
+        [
+          "0x2000ea0",
+          "r1 = b[r0+r1] (u)"
+        ]
+      ],
+      "all_calls": [],
+      "edges": []
+    },
+    "plat_midi_out@0x2000ee4": {
+      "metrics": {
+        "insns": 25,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 84,
+      "frame_bytes": 8,
+      "prologue": [
+        [
+          "0x2000ee4",
+          "[--sp] = {rets, r4}"
+        ],
+        [
+          "0x2000ee6",
+          "r2 = 349 <firmware/src/x0x.c+0x15C : 15c >"
+        ],
+        [
+          "0x2000eea",
+          "r1 = 29435232 <help_lines.cp : 1c12560 >"
+        ],
+        [
+          "0x2000ef0",
+          "r3 = b[r1+r2] (u)"
+        ],
+        [
+          "0x2000ef4",
+          "r2 = 29434720 <play_red : 1c12360 >"
+        ]
+      ],
+      "all_calls": [],
+      "edges": []
+    },
+    "plat_midi_pair@0x2000f38": {
+      "metrics": {
+        "insns": 28,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 94,
+      "frame_bytes": 12,
+      "prologue": [
+        [
+          "0x2000f38",
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          "0x2000f3a",
+          "r3 = 349 <firmware/src/x0x.c+0x15C : 15c >"
+        ],
+        [
+          "0x2000f3e",
+          "r2 = 29435232 <help_lines.cp : 1c12560 >"
+        ],
+        [
+          "0x2000f44",
+          "r4 = b[r2+r3] (u)"
+        ],
+        [
+          "0x2000f48",
+          "r3 = 29434720 <play_red : 1c12360 >"
+        ]
+      ],
+      "all_calls": [],
+      "edges": []
+    },
+    "plat_midi_batch@0x2000f96": {
+      "metrics": {
+        "insns": 35,
+        "loop": 5,
+        "div": 0,
+        "call": 0,
+        "cost": 5
+      },
+      "instruction_bytes": 114,
+      "frame_bytes": 24,
+      "prologue": [
+        [
+          "0x2000f96",
+          "[--sp] = {rets, r8-r4}"
+        ],
+        [
+          "0x2000f98",
+          "r3 = 349 <firmware/src/x0x.c+0x15C : 15c >"
+        ],
+        [
+          "0x2000f9c",
+          "r2 = 29435232 <help_lines.cp : 1c12560 >"
+        ],
+        [
+          "0x2000fa2",
+          "r4 = b[r2+r3] (u)"
+        ],
+        [
+          "0x2000fa6",
+          "r8 = 29434720 <play_red : 1c12360 >"
+        ]
+      ],
+      "all_calls": [],
+      "edges": []
+    },
+    "project_defaults@0x2001776": {
+      "metrics": {
+        "insns": 46,
+        "loop": 11,
+        "div": 0,
+        "call": 1,
+        "cost": 11
+      },
+      "instruction_bytes": 134,
+      "frame_bytes": 20,
+      "prologue": [
+        [
+          "0x2001776",
+          "[--sp] = {rets, r7-r4}"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2001778",
+          "call 176600 <engine_notes_clear : 202c954 >"
+        ],
+        [
+          "0x20017b2",
+          "call 175346 <engine_sound_defaults : 202c4a8 >"
+        ],
+        [
+          "0x20017bc",
+          "call 184270 <variant_defaults : 202e78e >"
+        ],
+        [
+          "0x20017e4",
+          "call 172814 <pattern_init : 202baf6 >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "engine_notes_clear@0x202c954",
+          "kind": "direct-call",
+          "site": "0x2001778"
+        },
+        {
+          "target": "engine_sound_defaults@0x202c4a8",
+          "kind": "direct-call",
+          "site": "0x20017b2"
+        },
+        {
+          "target": "variant_defaults@0x202e78e",
+          "kind": "direct-call",
+          "site": "0x20017bc"
+        },
+        {
+          "target": "pattern_init@0x202baf6",
+          "kind": "direct-call",
+          "site": "0x20017e4"
+        }
+      ]
+    },
+    "project_load@0x2001afc": {
+      "metrics": {
+        "insns": 667,
+        "loop": 634,
+        "div": 4,
+        "call": 29,
+        "cost": 13605
+      },
+      "instruction_bytes": 2110,
+      "frame_bytes": 468,
+      "prologue": [
+        [
+          "0x2001afc",
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          "0x2001afe",
+          "sp += -416"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2001b00",
+          "call 173620 <engine_transport_reserve : 202c138 >"
+        ],
+        [
+          "0x2001b06",
+          "call 173596 <engine_queue_space : 202c126 >"
+        ],
+        [
+          "0x2001b1c",
+          "call -2406 <plat_store_load : 20011ba >"
+        ],
+        [
+          "0x2001b6e",
+          "call 173584 <engine_transport_release : 202c182 >"
+        ],
+        [
+          "0x2001b8a",
+          "call -2516 <plat_store_load : 20011ba >"
+        ],
+        [
+          "0x2001bc6",
+          "call -974 <ui_project_stage : 20017fc >"
+        ],
+        [
+          "0x2001c0c",
+          "call -566 <ui_project_stage_finish : 20019da >"
+        ],
+        [
+          "0x2001c28",
+          "call -1206 <project_defaults : 2001776 >"
+        ],
+        [
+          "0x2001c3c",
+          "call -3964 <memcpy : 2000cc4 >"
+        ],
+        [
+          "0x2001c48",
+          "call -2706 <plat_store_load : 20011ba >"
+        ],
+        [
+          "0x2001ccc",
+          "call -4108 <memcpy : 2000cc4 >"
+        ],
+        [
+          "0x2001cf4",
+          "call -706 <load_obj : 2001a36 >"
+        ],
+        [
+          "0x2001d10",
+          "call -606 <sound_bd_sends : 2001ab6 >"
+        ],
+        [
+          "0x2001d26",
+          "call -628"
+        ],
+        [
+          "0x2001d4c",
+          "call 174314"
+        ],
+        [
+          "0x2001e16",
+          "call -1478 <st_get : 2001854 >"
+        ],
+        [
+          "0x2001e32",
+          "call -1506 <st_get : 2001854 >"
+        ],
+        [
+          "0x2001e4a",
+          "call -1530 <st_get : 2001854 >"
+        ],
+        [
+          "0x2001e58",
+          "call -1544 <st_get : 2001854 >"
+        ],
+        [
+          "0x2001ea8",
+          "call -1410 <crc32_of : 200192a >"
+        ],
+        [
+          "0x2001ec6",
+          "call 183000 <variant_schema1_valid : 202e9a2 >"
+        ],
+        [
+          "0x2001eda",
+          "call 182786 <variant_saved_valid : 202e8e0 >"
+        ],
+        [
+          "0x2001ee8",
+          "call -1422 <arrangement_song_valid : 200195e >"
+        ],
+        [
+          "0x2001f2a",
+          "call -3444 <plat_store_load : 20011ba >"
+        ],
+        [
+          "0x2002002",
+          "call -4930 <memcpy : 2000cc4 >"
+        ],
+        [
+          "0x20020ba",
+          "call 170552 <pattern_init : 202baf6 >"
+        ],
+        [
+          "0x20020e4",
+          "call -1714 <load_obj : 2001a36 >"
+        ],
+        [
+          "0x20020f8",
+          "call -1734 <load_obj : 2001a36 >"
+        ],
+        [
+          "0x200213c",
+          "call 172372 <engine_nparams : 202c294 >"
+        ],
+        [
+          "0x200215e",
+          "call 172388 <engine_param : 202c2c6 >"
+        ],
+        [
+          "0x2002282",
+          "call 171806 <engine_arrangement_refresh : 202c1a4 >"
+        ],
+        [
+          "0x2002288",
+          "call -2226 <ui_project_stage_finish : 20019da >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "engine_transport_reserve@0x202c138",
+          "kind": "direct-call",
+          "site": "0x2001b00"
+        },
+        {
+          "target": "engine_queue_space@0x202c126",
+          "kind": "direct-call",
+          "site": "0x2001b06"
+        },
+        {
+          "target": "plat_store_load@0x20011ba",
+          "kind": "direct-call",
+          "site": "0x2001b1c"
+        },
+        {
+          "target": "engine_transport_release@0x202c182",
+          "kind": "direct-call",
+          "site": "0x2001b6e"
+        },
+        {
+          "target": "plat_store_load@0x20011ba",
+          "kind": "direct-call",
+          "site": "0x2001b8a"
+        },
+        {
+          "target": "ui_project_stage@0x20017fc",
+          "kind": "direct-call",
+          "site": "0x2001bc6"
+        },
+        {
+          "target": "ui_project_stage_finish@0x20019da",
+          "kind": "direct-call",
+          "site": "0x2001c0c"
+        },
+        {
+          "target": "project_defaults@0x2001776",
+          "kind": "direct-call",
+          "site": "0x2001c28"
+        },
+        {
+          "target": "memcpy@0x2000cc4",
+          "kind": "direct-call",
+          "site": "0x2001c3c"
+        },
+        {
+          "target": "plat_store_load@0x20011ba",
+          "kind": "direct-call",
+          "site": "0x2001c48"
+        },
+        {
+          "target": "memcpy@0x2000cc4",
+          "kind": "direct-call",
+          "site": "0x2001ccc"
+        },
+        {
+          "target": "load_obj@0x2001a36",
+          "kind": "direct-call",
+          "site": "0x2001cf4"
+        },
+        {
+          "target": "sound_bd_sends@0x2001ab6",
+          "kind": "direct-call",
+          "site": "0x2001d10"
+        },
+        {
+          "target": "st_get@0x2001854",
+          "kind": "direct-call",
+          "site": "0x2001e16"
+        },
+        {
+          "target": "st_get@0x2001854",
+          "kind": "direct-call",
+          "site": "0x2001e32"
+        },
+        {
+          "target": "st_get@0x2001854",
+          "kind": "direct-call",
+          "site": "0x2001e4a"
+        },
+        {
+          "target": "st_get@0x2001854",
+          "kind": "direct-call",
+          "site": "0x2001e58"
+        },
+        {
+          "target": "crc32_of@0x200192a",
+          "kind": "direct-call",
+          "site": "0x2001ea8"
+        },
+        {
+          "target": "variant_schema1_valid@0x202e9a2",
+          "kind": "direct-call",
+          "site": "0x2001ec6"
+        },
+        {
+          "target": "variant_saved_valid@0x202e8e0",
+          "kind": "direct-call",
+          "site": "0x2001eda"
+        },
+        {
+          "target": "arrangement_song_valid@0x200195e",
+          "kind": "direct-call",
+          "site": "0x2001ee8"
+        },
+        {
+          "target": "plat_store_load@0x20011ba",
+          "kind": "direct-call",
+          "site": "0x2001f2a"
+        },
+        {
+          "target": "memcpy@0x2000cc4",
+          "kind": "direct-call",
+          "site": "0x2002002"
+        },
+        {
+          "target": "pattern_init@0x202baf6",
+          "kind": "direct-call",
+          "site": "0x20020ba"
+        },
+        {
+          "target": "load_obj@0x2001a36",
+          "kind": "direct-call",
+          "site": "0x20020e4"
+        },
+        {
+          "target": "load_obj@0x2001a36",
+          "kind": "direct-call",
+          "site": "0x20020f8"
+        },
+        {
+          "target": "engine_nparams@0x202c294",
+          "kind": "direct-call",
+          "site": "0x200213c"
+        },
+        {
+          "target": "engine_param@0x202c2c6",
+          "kind": "direct-call",
+          "site": "0x200215e"
+        },
+        {
+          "target": "engine_arrangement_refresh@0x202c1a4",
+          "kind": "direct-call",
+          "site": "0x2002282"
+        },
+        {
+          "target": "ui_project_stage_finish@0x20019da",
+          "kind": "direct-call",
+          "site": "0x2002288"
+        }
+      ]
+    },
+    "project_apply_io@0x200233a": {
+      "metrics": {
+        "insns": 30,
+        "loop": 13,
+        "div": 0,
+        "call": 0,
+        "cost": 13
+      },
+      "instruction_bytes": 102,
+      "frame_bytes": 16,
+      "prologue": [
+        [
+          "0x200233a",
+          "[--sp] = {rets, r6-r4}"
+        ],
+        [
+          "0x200233c",
+          "r4 = 29458568 <proj : 1c18088 >"
+        ],
+        [
+          "0x2002342",
+          "r1 = b[r4+10] (u)"
+        ],
+        [
+          "0x2002344",
+          "r0 = 29490476 <seq : 1c1fd2c >"
+        ],
+        [
+          "0x200234a",
+          "b[r0+29] = r1"
+        ],
+        [
+          "0x200234e",
+          "r1 = 31152 <firmware/src/x0x.c+0x79B0 : 79b0 >"
+        ],
+        [
+          "0x2002352",
+          "r1 = b[r4+r1] (u)"
+        ],
+        [
+          "0x2002356",
+          "r1 = uextra(r1, p:5, l:1)"
+        ],
+        [
+          "0x200235a",
+          "b[r4+11] = r1"
+        ],
+        [
+          "0x200235c",
+          "b[r0+30] = r1"
+        ],
+        [
+          "0x2002360",
+          "r1 = 0"
+        ],
+        [
+          "0x2002362",
+          "r2 = 33749152 <project_apply_io.DEF : 202f8a0 >"
+        ],
+        [
+          "0x2002368",
+          "r3 = r1 + r4"
+        ],
+        [
+          "0x200236a",
+          "r5 = b[r3+20] (u)"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2002392",
+          "call 172112 <engine_out_loud : 202c3e6 >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "engine_out_loud@0x202c3e6",
+          "kind": "direct-call",
+          "site": "0x2002392"
+        },
+        {
+          "target": "engine_usb_full@0x202c40e",
+          "kind": "tail-transfer",
+          "site": "0x200239c"
+        }
+      ]
+    },
+    "project_save@0x200262e": {
+      "metrics": {
+        "insns": 139,
+        "loop": 15,
+        "div": 0,
+        "call": 1,
+        "cost": 15
+      },
+      "instruction_bytes": 398,
+      "frame_bytes": 100,
+      "prologue": [
+        [
+          "0x200262e",
+          "[--sp] = {rets, r11-r4}"
+        ],
+        [
+          "0x2002630",
+          "sp += -64"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2002632",
+          "call 170754 <engine_transport_reserve : 202c138 >"
+        ],
+        [
+          "0x2002656",
+          "call 180806 <variant_valid : 202e8a0 >"
+        ],
+        [
+          "0x2002660",
+          "call 181108 <variant_is_default : 202e9d8 >"
+        ],
+        [
+          "0x2002686",
+          "call -6598 <memcpy : 2000cc4 >"
+        ],
+        [
+          "0x200269a",
+          "call -652 <lz_compress : 2002412 >"
+        ],
+        [
+          "0x20026b2",
+          "call -3416 <arrangement_song_valid : 200195e >"
+        ],
+        [
+          "0x2002718",
+          "call -338 <save_obj : 20025ca >"
+        ],
+        [
+          "0x2002728",
+          "call -354 <save_obj : 20025ca >"
+        ],
+        [
+          "0x2002736",
+          "call -3600 <crc32_of : 200192a >"
+        ],
+        [
+          "0x2002796",
+          "call -904 <lz_compress : 2002412 >"
+        ],
+        [
+          "0x20027a4",
+          "call -432 <st_flush : 20025f8 >"
+        ],
+        [
+          "0x20027b2",
+          "call 170444 <engine_transport_release : 202c182 >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "engine_transport_reserve@0x202c138",
+          "kind": "direct-call",
+          "site": "0x2002632"
+        },
+        {
+          "target": "variant_valid@0x202e8a0",
+          "kind": "direct-call",
+          "site": "0x2002656"
+        },
+        {
+          "target": "variant_is_default@0x202e9d8",
+          "kind": "direct-call",
+          "site": "0x2002660"
+        },
+        {
+          "target": "memcpy@0x2000cc4",
+          "kind": "direct-call",
+          "site": "0x2002686"
+        },
+        {
+          "target": "lz_compress@0x2002412",
+          "kind": "direct-call",
+          "site": "0x200269a"
+        },
+        {
+          "target": "arrangement_song_valid@0x200195e",
+          "kind": "direct-call",
+          "site": "0x20026b2"
+        },
+        {
+          "target": "save_obj@0x20025ca",
+          "kind": "direct-call",
+          "site": "0x2002718"
+        },
+        {
+          "target": "save_obj@0x20025ca",
+          "kind": "direct-call",
+          "site": "0x2002728"
+        },
+        {
+          "target": "crc32_of@0x200192a",
+          "kind": "direct-call",
+          "site": "0x2002736"
+        },
+        {
+          "target": "lz_compress@0x2002412",
+          "kind": "direct-call",
+          "site": "0x2002796"
+        },
+        {
+          "target": "st_flush@0x20025f8",
+          "kind": "direct-call",
+          "site": "0x20027a4"
+        },
+        {
+          "target": "engine_transport_release@0x202c182",
+          "kind": "direct-call",
+          "site": "0x20027b2"
+        }
+      ]
+    },
+    "pref_set@0x2002c4c": {
+      "metrics": {
+        "insns": 403,
+        "loop": 378,
+        "div": 3,
+        "call": 15,
+        "cost": 417
+      },
+      "instruction_bytes": 1266,
+      "frame_bytes": 40,
+      "prologue": [
+        [
+          "0x2002c4c",
+          "[--sp] = {rets, r11-r4}"
+        ],
+        [
+          "0x2002c4e",
+          "sp += -4"
+        ],
+        [
+          "0x2002c50",
+          "r8 = 29396544 <ui : 1c08e40 >"
+        ],
+        [
+          "0x2002c56",
+          "r2 = b[r8+1] (u)"
+        ],
+        [
+          "0x2002c5a",
+          "r10 = 29490476 <seq : 1c1fd2c >"
+        ],
+        [
+          "0x2002c60",
+          "r2 += r10"
+        ],
+        [
+          "0x2002c62",
+          "r11 = b[r2+9] (u)"
+        ],
+        [
+          "0x2002c66",
+          "r4 = r1"
+        ],
+        [
+          "0x2002c68",
+          "r5 = r0"
+        ],
+        [
+          "0x2002c6a",
+          "r6 = sp + 0"
+        ],
+        [
+          "0x2002c6c",
+          "r2 = 4"
+        ],
+        [
+          "0x2002c6e",
+          "r0 = r6"
+        ],
+        [
+          "0x2002c70",
+          "r1 = r5"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2002c72",
+          "call -8114 <memcpy : 2000cc4 >"
+        ],
+        [
+          "0x2002c78",
+          "call -630 <pref_desc : 2002a06 >"
+        ],
+        [
+          "0x2002c92",
+          "call -290 <arrangement_panel_refuse : 2002b74 >"
+        ],
+        [
+          "0x2002cae",
+          "call 178696 <variant_changed : 202e6ba >"
+        ],
+        [
+          "0x2002d28",
+          "call 169592 <engine_set : 202c3a4 >"
+        ],
+        [
+          "0x2002d42",
+          "call 149322 <master_comp1_pots : 2027490 >"
+        ],
+        [
+          "0x2002e74",
+          "call 176038 <engine_brk_loops : 202de1e >"
+        ],
+        [
+          "0x2002f30",
+          "call -886 <song_fill : 2002bbe >"
+        ],
+        [
+          "0x2002f5c",
+          "call -930 <song_fill : 2002bbe >"
+        ],
+        [
+          "0x2002fb8",
+          "call 170358 <engine_midi_channel_allowed : 202c932 >"
+        ],
+        [
+          "0x2002fdc",
+          "call 168966 <engine_out_loud : 202c3e6 >"
+        ],
+        [
+          "0x2002ff0",
+          "call -1078 <song_fill : 2002bbe >"
+        ],
+        [
+          "0x200301a",
+          "call 168944 <engine_usb_full : 202c40e >"
+        ],
+        [
+          "0x200303c",
+          "call 170034 <engine_bass_off : 202c872 >"
+        ],
+        [
+          "0x200305e",
+          "call 148700 <master_djf_pots : 202753e >"
+        ],
+        [
+          "0x20030a2",
+          "call 168702 <engine_set : 202c3a4 >"
+        ],
+        [
+          "0x20030ae",
+          "call 168690 <engine_set : 202c3a4 >"
+        ],
+        [
+          "0x20030e4",
+          "call -1410 <put_s : 2002b66 >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "memcpy@0x2000cc4",
+          "kind": "direct-call",
+          "site": "0x2002c72"
+        },
+        {
+          "target": "pref_desc@0x2002a06",
+          "kind": "direct-call",
+          "site": "0x2002c78"
+        },
+        {
+          "target": "arrangement_panel_refuse@0x2002b74",
+          "kind": "direct-call",
+          "site": "0x2002c92"
+        },
+        {
+          "target": "variant_changed@0x202e6ba",
+          "kind": "direct-call",
+          "site": "0x2002cae"
+        },
+        {
+          "target": "engine_set@0x202c3a4",
+          "kind": "direct-call",
+          "site": "0x2002d28"
+        },
+        {
+          "target": "master_comp1_pots@0x2027490",
+          "kind": "direct-call",
+          "site": "0x2002d42"
+        },
+        {
+          "target": "engine_brk_loops@0x202de1e",
+          "kind": "direct-call",
+          "site": "0x2002e74"
+        },
+        {
+          "target": "song_fill@0x2002bbe",
+          "kind": "direct-call",
+          "site": "0x2002f30"
+        },
+        {
+          "target": "song_fill@0x2002bbe",
+          "kind": "direct-call",
+          "site": "0x2002f5c"
+        },
+        {
+          "target": "engine_midi_channel_allowed@0x202c932",
+          "kind": "direct-call",
+          "site": "0x2002fb8"
+        },
+        {
+          "target": "engine_out_loud@0x202c3e6",
+          "kind": "direct-call",
+          "site": "0x2002fdc"
+        },
+        {
+          "target": "song_fill@0x2002bbe",
+          "kind": "direct-call",
+          "site": "0x2002ff0"
+        },
+        {
+          "target": "engine_usb_full@0x202c40e",
+          "kind": "direct-call",
+          "site": "0x200301a"
+        },
+        {
+          "target": "engine_bass_off@0x202c872",
+          "kind": "direct-call",
+          "site": "0x200303c"
+        },
+        {
+          "target": "master_djf_pots@0x202753e",
+          "kind": "direct-call",
+          "site": "0x200305e"
+        },
+        {
+          "target": "engine_set@0x202c3a4",
+          "kind": "direct-call",
+          "site": "0x20030a2"
+        },
+        {
+          "target": "engine_set@0x202c3a4",
+          "kind": "direct-call",
+          "site": "0x20030ae"
+        },
+        {
+          "target": "put_s@0x2002b66",
+          "kind": "direct-call",
+          "site": "0x20030e4"
+        }
+      ]
+    },
+    "undo_arrangement_intent@0x200318c": {
+      "metrics": {
+        "insns": 99,
+        "loop": 29,
+        "div": 0,
+        "call": 0,
+        "cost": 29
+      },
+      "instruction_bytes": 312,
+      "frame_bytes": 40,
+      "prologue": [
+        [
+          "0x200318c",
+          "[--sp] = {rets, r12-r4}"
+        ],
+        [
+          "0x200318e",
+          "r1 = 31152 <firmware/src/x0x.c+0x79B0 : 79b0 >"
+        ],
+        [
+          "0x2003192",
+          "r2 = 29458568 <proj : 1c18088 >"
+        ],
+        [
+          "0x2003198",
+          "r1 = b[r2+r1] (u)"
+        ],
+        [
+          "0x200319c",
+          "r2 = 29490476 <seq : 1c1fd2c >"
+        ],
+        [
+          "0x20031a2",
+          "r2 = b[r2+224] (u)"
+        ],
+        [
+          "0x20031a6",
+          "r2 |= r1"
+        ],
+        [
+          "0x20031a8",
+          "r1 = r0"
+        ]
+      ],
+      "all_calls": [],
+      "edges": []
+    },
+    "ui_undo_preflight@0x20032c4": {
+      "metrics": {
+        "insns": 24,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 70,
+      "frame_bytes": 12,
+      "prologue": [
+        [
+          "0x20032c4",
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          "0x20032c6",
+          "r1 = 29434720 <play_red : 1c12360 >"
+        ],
+        [
+          "0x20032cc",
+          "r1 = b[r1+68] (u)"
+        ],
+        [
+          "0x20032d0",
+          "r5 = r0"
+        ],
+        [
+          "0x20032d2",
+          "r4 = -4"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x20032d6",
+          "call 167500 <engine_queue_space : 202c126 >"
+        ],
+        [
+          "0x20032fe",
+          "call -374 <undo_arrangement_intent : 200318c >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "engine_queue_space@0x202c126",
+          "kind": "direct-call",
+          "site": "0x20032d6"
+        },
+        {
+          "target": "undo_arrangement_intent@0x200318c",
+          "kind": "direct-call",
+          "site": "0x20032fe"
+        }
+      ]
+    },
+    "fm1_alnk0_irq@0x200e5b2": {
+      "metrics": {
+        "insns": 78,
+        "loop": 11,
+        "div": 0,
+        "call": 3,
+        "cost": 11
+      },
+      "instruction_bytes": 244,
+      "frame_bytes": 32,
+      "prologue": [
+        [
+          "0x200e5b2",
+          "[--sp] = {rets, r10-r4}"
+        ],
+        [
+          "0x200e5b4",
+          "r5 = 0x12E00"
+        ],
+        [
+          "0x200e5b8",
+          "r0 = b[r5+8] (u)"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x200e606",
+          "call -868 <uac_render_start : 200e2a6 >"
+        ],
+        [
+          "0x200e612",
+          "call 125096 <engine_render : 202cebe >"
+        ],
+        [
+          "0x200e618",
+          "call -738 <uac_tap : 200e33a >"
+        ],
+        [
+          "0x200e622",
+          "call 122354 <engine_volume : 202c418 >"
+        ],
+        [
+          "0x200e678",
+          "call 121396 <engine_load : 202c0b0 >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "uac_render_start@0x200e2a6",
+          "kind": "direct-call",
+          "site": "0x200e606"
+        },
+        {
+          "target": "engine_render@0x202cebe",
+          "kind": "direct-call",
+          "site": "0x200e612"
+        },
+        {
+          "target": "uac_tap@0x200e33a",
+          "kind": "direct-call",
+          "site": "0x200e618"
+        },
+        {
+          "target": "engine_volume@0x202c418",
+          "kind": "direct-call",
+          "site": "0x200e622"
+        },
+        {
+          "target": "engine_load@0x202c0b0",
+          "kind": "direct-call",
+          "site": "0x200e678"
+        }
+      ]
+    },
+    "bass303_note_off@0x2021950": {
+      "metrics": {
+        "insns": 3,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 8,
+      "frame_bytes": 0,
+      "prologue": [
+        [
+          "0x2021950",
+          "r1 = 0"
+        ],
+        [
+          "0x2021952",
+          "[r0+168] = r1"
+        ],
+        [
+          "0x2021956",
+          "rts"
+        ]
+      ],
+      "all_calls": [],
+      "edges": []
+    },
+    "seq_pad_desired@0x2028cf8": {
+      "metrics": {
+        "insns": 72,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 186,
+      "frame_bytes": 40,
+      "prologue": [
+        [
+          "0x2028cf8",
+          "[--sp] = {rets, r8-r4}"
+        ],
+        [
+          "0x2028cfa",
+          "sp += -16"
+        ],
+        [
+          "0x2028cfc",
+          "r4 = r0"
+        ],
+        [
+          "0x2028cfe",
+          "r6 = r4 + 216"
+        ],
+        [
+          "0x2028d02",
+          "r7 = [r6+4]"
+        ],
+        [
+          "0x2028d04",
+          "r0 = b[r6+9] (u)"
+        ],
+        [
+          "0x2028d06",
+          "b[sp+4] = r0"
+        ],
+        [
+          "0x2028d0a",
+          "r0 = b[r6+10] (u)"
+        ],
+        [
+          "0x2028d0c",
+          "b[sp+5] = r0"
+        ],
+        [
+          "0x2028d10",
+          "r2 = b[r4+234] (u)"
+        ],
+        [
+          "0x2028d14",
+          "b[sp+6] = r2"
+        ],
+        [
+          "0x2028d18",
+          "r5 = r1  #"
+        ],
+        [
+          "0x2028d1a",
+          "r0 = b[r6+11] (u)"
+        ],
+        [
+          "0x2028d1c",
+          "b[sp+7] = r0"
+        ],
+        [
+          "0x2028d20",
+          "r0 = 255"
+        ],
+        [
+          "0x2028d22",
+          "b[r5+0] = r0"
+        ],
+        [
+          "0x2028d24",
+          "b[r5+1] = r0"
+        ],
+        [
+          "0x2028d26",
+          "b[r5+2] = r0"
+        ],
+        [
+          "0x2028d28",
+          "r1 = b[r4+8] (u)"
+        ],
+        [
+          "0x2028d2a",
+          "r0 = 1"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2028d50",
+          "call 27048 <harmony_resolve : 202f6fc >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "harmony_resolve@0x202f6fc",
+          "kind": "direct-call",
+          "site": "0x2028d50"
+        }
+      ]
+    },
+    "pad_publish@0x2028db2": {
+      "metrics": {
+        "insns": 78,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 188,
+      "frame_bytes": 52,
+      "prologue": [
+        [
+          "0x2028db2",
+          "[--sp] = {rets, r9-r4}"
+        ],
+        [
+          "0x2028db4",
+          "sp += -24"
+        ],
+        [
+          "0x2028db6",
+          "r6 = r0 + 212"
+        ],
+        [
+          "0x2028dba",
+          "r8 = r3  #"
+        ],
+        [
+          "0x2028dbc",
+          "r0 = b[r6+3] (u)"
+        ],
+        [
+          "0x2028dbe",
+          "r4 = r2"
+        ],
+        [
+          "0x2028dc0",
+          "r2 = 0"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2028e36",
+          "call r3"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "s_midi_batch@0x202e6b2",
+          "kind": "source-callback-alternative",
+          "site": null
+        }
+      ]
+    },
+    "bass_midi_shared@0x2028e6e": {
+      "metrics": {
+        "insns": 17,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 52,
+      "frame_bytes": 12,
+      "prologue": [
+        [
+          "0x2028e6e",
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          "0x2028e70",
+          "r2 = r0"
+        ],
+        [
+          "0x2028e72",
+          "r0 = r2 + r1"
+        ],
+        [
+          "0x2028e74",
+          "r4 = b[r0+208] (u)"
+        ],
+        [
+          "0x2028e78",
+          "r0 = 0"
+        ]
+      ],
+      "all_calls": [],
+      "edges": []
+    },
+    "midi_try@0x2028ea2": {
+      "metrics": {
+        "insns": 14,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 28,
+      "frame_bytes": 8,
+      "prologue": [
+        [
+          "0x2028ea2",
+          "[--sp] = {rets, r4}"
+        ],
+        [
+          "0x2028ea4",
+          "r4 = [r0+40]"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2028eaa",
+          "call r4"
+        ],
+        [
+          "0x2028eb4",
+          "call r4"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "s_midi_try@0x202e658",
+          "kind": "source-callback-alternative",
+          "site": null
+        },
+        {
+          "target": "s_midi@0x202e5ce",
+          "kind": "source-callback-alternative",
+          "site": null
+        }
+      ]
+    },
+    "bass_midi_off@0x2028ebe": {
+      "metrics": {
+        "insns": 34,
+        "loop": 23,
+        "div": 0,
+        "call": 1,
+        "cost": 62
+      },
+      "instruction_bytes": 94,
+      "frame_bytes": 28,
+      "prologue": [
+        [
+          "0x2028ebe",
+          "[--sp] = {rets, r9-r4}"
+        ],
+        [
+          "0x2028ec0",
+          "r8 = r2"
+        ],
+        [
+          "0x2028ec2",
+          "r6 = r1"
+        ],
+        [
+          "0x2028ec4",
+          "r4 = r0"
+        ],
+        [
+          "0x2028ec6",
+          "r0 = 64"
+        ],
+        [
+          "0x2028ec8",
+          "r9 = r0 << r6"
+        ],
+        [
+          "0x2028ecc",
+          "r0 = r4"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2028ece",
+          "call -100 <bass_midi_shared : 2028e6e >"
+        ],
+        [
+          "0x2028f0c",
+          "call -110 <midi_try : 2028ea2 >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "bass_midi_shared@0x2028e6e",
+          "kind": "direct-call",
+          "site": "0x2028ece"
+        },
+        {
+          "target": "midi_try@0x2028ea2",
+          "kind": "direct-call",
+          "site": "0x2028f0c"
+        }
+      ]
+    },
+    "bass_release@0x2028f1c": {
+      "metrics": {
+        "insns": 22,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 54,
+      "frame_bytes": 24,
+      "prologue": [
+        [
+          "0x2028f1c",
+          "[--sp] = {rets, r8-r4}"
+        ],
+        [
+          "0x2028f1e",
+          "r4 = r1"
+        ],
+        [
+          "0x2028f20",
+          "r5 = r0"
+        ],
+        [
+          "0x2028f22",
+          "r0 = r4 + 2"
+        ],
+        [
+          "0x2028f24",
+          "r0 = r0 * 0x18"
+        ],
+        [
+          "0x2028f28",
+          "r8 = r5 + r0"
+        ],
+        [
+          "0x2028f2c",
+          "r7 = r8"
+        ],
+        [
+          "0x2028f2e",
+          "r0 = b[++r7=63] (u)"
+        ],
+        [
+          "0x2028f32",
+          "r6 = r2"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2028f3c",
+          "call r2"
+        ],
+        [
+          "0x2028f48",
+          "call -142 <bass_midi_off : 2028ebe >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "bass_midi_off@0x2028ebe",
+          "kind": "direct-call",
+          "site": "0x2028f48"
+        },
+        {
+          "target": "s_boff@0x202e4ba",
+          "kind": "source-callback-alternative",
+          "site": null
+        }
+      ]
+    },
+    "seq_notes_clear@0x2028f52": {
+      "metrics": {
+        "insns": 44,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 110,
+      "frame_bytes": 24,
+      "prologue": [
+        [
+          "0x2028f52",
+          "[--sp] = {rets, r8-r4}"
+        ],
+        [
+          "0x2028f54",
+          "r5_r4 = r1_r0"
+        ],
+        [
+          "0x2028f56",
+          "r1 = [r5+52]"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2028f5c",
+          "call r1"
+        ],
+        [
+          "0x2028f70",
+          "call -450 <pad_publish : 2028db2 >"
+        ],
+        [
+          "0x2028f80",
+          "call -104 <bass_release : 2028f1c >"
+        ],
+        [
+          "0x2028f8e",
+          "call r2"
+        ],
+        [
+          "0x2028f9e",
+          "call -134 <bass_release : 2028f1c >"
+        ],
+        [
+          "0x2028fac",
+          "call r2"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "pad_publish@0x2028db2",
+          "kind": "direct-call",
+          "site": "0x2028f70"
+        },
+        {
+          "target": "bass_release@0x2028f1c",
+          "kind": "direct-call",
+          "site": "0x2028f80"
+        },
+        {
+          "target": "bass_release@0x2028f1c",
+          "kind": "direct-call",
+          "site": "0x2028f9e"
+        },
+        {
+          "target": "s_boff@0x202e4ba",
+          "kind": "source-callback-alternative",
+          "site": null
+        }
+      ]
+    },
+    "seq_midi_prepare@0x2028fc0": {
+      "metrics": {
+        "insns": 85,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 204,
+      "frame_bytes": 24,
+      "prologue": [
+        [
+          "0x2028fc0",
+          "[--sp] = {rets, r7-r4}"
+        ],
+        [
+          "0x2028fc2",
+          "sp += -4"
+        ],
+        [
+          "0x2028fc4",
+          "r4 = r2"
+        ],
+        [
+          "0x2028fc6",
+          "r6 = r1"
+        ],
+        [
+          "0x2028fc8",
+          "r5 = r0"
+        ],
+        [
+          "0x2028fca",
+          "r7 = r5 + 208"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2028fda",
+          "call r1"
+        ],
+        [
+          "0x2028fe8",
+          "call -756 <seq_pad_desired : 2028cf8 >"
+        ],
+        [
+          "0x2028ffc",
+          "call -590 <pad_publish : 2028db2 >"
+        ],
+        [
+          "0x2029034",
+          "call -378 <bass_midi_off : 2028ebe >"
+        ],
+        [
+          "0x2029040",
+          "call -296 <bass_release : 2028f1c >"
+        ],
+        [
+          "0x2029076",
+          "call -444 <bass_midi_off : 2028ebe >"
+        ],
+        [
+          "0x2029084",
+          "call -364 <bass_release : 2028f1c >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "seq_pad_desired@0x2028cf8",
+          "kind": "direct-call",
+          "site": "0x2028fe8"
+        },
+        {
+          "target": "pad_publish@0x2028db2",
+          "kind": "direct-call",
+          "site": "0x2028ffc"
+        },
+        {
+          "target": "bass_midi_off@0x2028ebe",
+          "kind": "direct-call",
+          "site": "0x2029034"
+        },
+        {
+          "target": "bass_release@0x2028f1c",
+          "kind": "direct-call",
+          "site": "0x2029040"
+        },
+        {
+          "target": "bass_midi_off@0x2028ebe",
+          "kind": "direct-call",
+          "site": "0x2029076"
+        },
+        {
+          "target": "bass_release@0x2028f1c",
+          "kind": "direct-call",
+          "site": "0x2029084"
+        }
+      ]
+    },
+    "bass_midi_on@0x202908c": {
+      "metrics": {
+        "insns": 166,
+        "loop": 117,
+        "div": 0,
+        "call": 9,
+        "cost": 3918
+      },
+      "instruction_bytes": 466,
+      "frame_bytes": 68,
+      "prologue": [
+        [
+          "0x202908c",
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          "0x202908e",
+          "sp += -16"
+        ],
+        [
+          "0x2029090",
+          "r14 = r3"
+        ],
+        [
+          "0x2029092",
+          "r4 = r1"
+        ],
+        [
+          "0x2029094",
+          "r6 = r0"
+        ],
+        [
+          "0x2029096",
+          "r0 = r6 + r4"
+        ],
+        [
+          "0x2029098",
+          "r13 = b[r0+33] (u)"
+        ],
+        [
+          "0x202909c",
+          "r7 = r0 + 208  #"
+        ],
+        [
+          "0x20290a0",
+          "r0 = [sp+68]"
+        ],
+        [
+          "0x20290a2",
+          "r15 = b[r7+2] (u)"
+        ],
+        [
+          "0x20290a6",
+          "r10 = b[r7+0] (u)"
+        ],
+        [
+          "0x20290aa",
+          "r1 = 64"
+        ],
+        [
+          "0x20290ac",
+          "r12 = r1 << r4"
+        ],
+        [
+          "0x20290b0",
+          "r11 = r6 + 239"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2029100",
+          "call -582 <bass_midi_off : 2028ebe >"
+        ],
+        [
+          "0x202910a",
+          "call -672 <bass_midi_shared : 2028e6e >"
+        ],
+        [
+          "0x2029122",
+          "call -644 <midi_try : 2028ea2 >"
+        ],
+        [
+          "0x2029146",
+          "call -652 <bass_midi_off : 2028ebe >"
+        ],
+        [
+          "0x20291d4",
+          "call -794 <bass_midi_off : 2028ebe >"
+        ],
+        [
+          "0x20291ec",
+          "call -818 <bass_midi_off : 2028ebe >"
+        ],
+        [
+          "0x2029212",
+          "call r14"
+        ],
+        [
+          "0x202922a",
+          "call r4"
+        ],
+        [
+          "0x202923c",
+          "call r4"
+        ],
+        [
+          "0x2029248",
+          "call r4"
+        ],
+        [
+          "0x202925a",
+          "call r4"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "bass_midi_off@0x2028ebe",
+          "kind": "direct-call",
+          "site": "0x2029100"
+        },
+        {
+          "target": "bass_midi_shared@0x2028e6e",
+          "kind": "direct-call",
+          "site": "0x202910a"
+        },
+        {
+          "target": "midi_try@0x2028ea2",
+          "kind": "direct-call",
+          "site": "0x2029122"
+        },
+        {
+          "target": "bass_midi_off@0x2028ebe",
+          "kind": "direct-call",
+          "site": "0x2029146"
+        },
+        {
+          "target": "bass_midi_off@0x2028ebe",
+          "kind": "direct-call",
+          "site": "0x20291d4"
+        },
+        {
+          "target": "bass_midi_off@0x2028ebe",
+          "kind": "direct-call",
+          "site": "0x20291ec"
+        },
+        {
+          "target": "s_midi_pair@0x202e676",
+          "kind": "source-callback-alternative",
+          "site": null
+        },
+        {
+          "target": "s_midi_try@0x202e658",
+          "kind": "source-callback-alternative",
+          "site": null
+        },
+        {
+          "target": "s_midi@0x202e5ce",
+          "kind": "source-callback-alternative",
+          "site": null
+        }
+      ]
+    },
+    "pad_sync@0x202925e": {
+      "metrics": {
+        "insns": 44,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 116,
+      "frame_bytes": 16,
+      "prologue": [
+        [
+          "0x202925e",
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          "0x2029260",
+          "sp += -4"
+        ],
+        [
+          "0x2029262",
+          "r4 = r1"
+        ],
+        [
+          "0x2029264",
+          "r5 = r0"
+        ],
+        [
+          "0x2029266",
+          "r1 = sp + 1"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x2029268",
+          "call -1396 <seq_pad_desired : 2028cf8 >"
+        ],
+        [
+          "0x20292ca",
+          "call -1308 <pad_publish : 2028db2 >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "seq_pad_desired@0x2028cf8",
+          "kind": "direct-call",
+          "site": "0x2029268"
+        },
+        {
+          "target": "pad_publish@0x2028db2",
+          "kind": "direct-call",
+          "site": "0x20292ca"
+        }
+      ]
+    },
+    "seq_midi_sync@0x20292d2": {
+      "metrics": {
+        "insns": 41,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 112,
+      "frame_bytes": 28,
+      "prologue": [
+        [
+          "0x20292d2",
+          "[--sp] = {rets, r7-r4}"
+        ],
+        [
+          "0x20292d4",
+          "sp += -8"
+        ],
+        [
+          "0x20292d6",
+          "r4 = r2"
+        ],
+        [
+          "0x20292d8",
+          "r5 = r0"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x20292da",
+          "call -798 <seq_midi_prepare : 2028fc0 >"
+        ],
+        [
+          "0x202930a",
+          "call -642 <bass_midi_on : 202908c >"
+        ],
+        [
+          "0x2029332",
+          "call -682 <bass_midi_on : 202908c >"
+        ],
+        [
+          "0x202933a",
+          "call -224 <pad_sync : 202925e >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "seq_midi_prepare@0x2028fc0",
+          "kind": "direct-call",
+          "site": "0x20292da"
+        },
+        {
+          "target": "bass_midi_on@0x202908c",
+          "kind": "direct-call",
+          "site": "0x202930a"
+        },
+        {
+          "target": "bass_midi_on@0x202908c",
+          "kind": "direct-call",
+          "site": "0x2029332"
+        },
+        {
+          "target": "pad_sync@0x202925e",
+          "kind": "direct-call",
+          "site": "0x202933a"
+        }
+      ]
+    },
+    "seq_advance@0x2029fbe": {
+      "metrics": {
+        "insns": 961,
+        "loop": 942,
+        "div": 14,
+        "call": 23,
+        "cost": 45334
+      },
+      "instruction_bytes": 2892,
+      "frame_bytes": 140,
+      "prologue": [
+        [
+          "0x2029fbe",
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          "0x2029fc0",
+          "sp += -88"
+        ],
+        [
+          "0x2029fc2",
+          "r12 = r0"
+        ],
+        [
+          "0x2029fc4",
+          "r10 = r0 + 128"
+        ],
+        [
+          "0x2029fc8",
+          "r0 = [r10+56]"
+        ],
+        [
+          "0x2029fcc",
+          "r0 += r1"
+        ],
+        [
+          "0x2029fce",
+          "[r10+56] = r0"
+        ],
+        [
+          "0x2029fd2",
+          "r5 = r12 + 216"
+        ],
+        [
+          "0x2029fd6",
+          "r11 = r2  #"
+        ],
+        [
+          "0x2029fd8",
+          "r3 = b[r5+2] (u)"
+        ],
+        [
+          "0x2029fda",
+          "r2 = r12 + 152"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x202a02a",
+          "call r1"
+        ],
+        [
+          "0x202a03c",
+          "call -4750 <pad_publish : 2028db2 >"
+        ],
+        [
+          "0x202a04a",
+          "call -4402 <bass_release : 2028f1c >"
+        ],
+        [
+          "0x202a054",
+          "call -4412 <bass_release : 2028f1c >"
+        ],
+        [
+          "0x202a062",
+          "call r1"
+        ],
+        [
+          "0x202a08e",
+          "call r8"
+        ],
+        [
+          "0x202a0a0",
+          "call -1820 <do_start : 2029988 >"
+        ],
+        [
+          "0x202a0bc",
+          "call -1848 <do_start : 2029988 >"
+        ],
+        [
+          "0x202a1c2",
+          "call -1728 <next_pos : 2029b06 >"
+        ],
+        [
+          "0x202a38e",
+          "call -5238 <bass_release : 2028f1c >"
+        ],
+        [
+          "0x202a458",
+          "call -2390 <next_pos : 2029b06 >"
+        ],
+        [
+          "0x202a530",
+          "call -3720 <bar_end : 20296ac >"
+        ],
+        [
+          "0x202a60c",
+          "call 4740 <tb3po_mutate : 202b894 >"
+        ],
+        [
+          "0x202a674",
+          "call r3"
+        ],
+        [
+          "0x202a6f0",
+          "call r4"
+        ],
+        [
+          "0x202a726",
+          "call r4"
+        ],
+        [
+          "0x202a740",
+          "call r11"
+        ],
+        [
+          "0x202a7b6",
+          "call r4"
+        ],
+        [
+          "0x202a7cc",
+          "call -2676 <fire_bass : 2029d5c >"
+        ],
+        [
+          "0x202a7f4",
+          "call -3314 <next_pos : 2029b06 >"
+        ],
+        [
+          "0x202a984",
+          "call -5814 <seq_midi_sync : 20292d2 >"
+        ],
+        [
+          "0x202aa10",
+          "call r5"
+        ],
+        [
+          "0x202aa9a",
+          "call -6878 <seq_midi_prepare : 2028fc0 >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "pad_publish@0x2028db2",
+          "kind": "direct-call",
+          "site": "0x202a03c"
+        },
+        {
+          "target": "bass_release@0x2028f1c",
+          "kind": "direct-call",
+          "site": "0x202a04a"
+        },
+        {
+          "target": "bass_release@0x2028f1c",
+          "kind": "direct-call",
+          "site": "0x202a054"
+        },
+        {
+          "target": "do_start@0x2029988",
+          "kind": "direct-call",
+          "site": "0x202a0a0"
+        },
+        {
+          "target": "do_start@0x2029988",
+          "kind": "direct-call",
+          "site": "0x202a0bc"
+        },
+        {
+          "target": "next_pos@0x2029b06",
+          "kind": "direct-call",
+          "site": "0x202a1c2"
+        },
+        {
+          "target": "bass_release@0x2028f1c",
+          "kind": "direct-call",
+          "site": "0x202a38e"
+        },
+        {
+          "target": "next_pos@0x2029b06",
+          "kind": "direct-call",
+          "site": "0x202a458"
+        },
+        {
+          "target": "bar_end@0x20296ac",
+          "kind": "direct-call",
+          "site": "0x202a530"
+        },
+        {
+          "target": "tb3po_mutate@0x202b894",
+          "kind": "direct-call",
+          "site": "0x202a60c"
+        },
+        {
+          "target": "fire_bass@0x2029d5c",
+          "kind": "direct-call",
+          "site": "0x202a7cc"
+        },
+        {
+          "target": "next_pos@0x2029b06",
+          "kind": "direct-call",
+          "site": "0x202a7f4"
+        },
+        {
+          "target": "seq_midi_sync@0x20292d2",
+          "kind": "direct-call",
+          "site": "0x202a984"
+        },
+        {
+          "target": "seq_midi_prepare@0x2028fc0",
+          "kind": "direct-call",
+          "site": "0x202aa9a"
+        }
+      ]
+    },
+    "seq_advance_arrangement@0x202ab60": {
+      "metrics": {
+        "insns": 865,
+        "loop": 846,
+        "div": 15,
+        "call": 26,
+        "cost": 35763
+      },
+      "instruction_bytes": 2564,
+      "frame_bytes": 124,
+      "prologue": [
+        [
+          "0x202ab60",
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          "0x202ab62",
+          "sp += -72"
+        ],
+        [
+          "0x202ab64",
+          "r6 = r0 + 176"
+        ],
+        [
+          "0x202ab68",
+          "r12 = r0  #"
+        ],
+        [
+          "0x202ab6a",
+          "r0 = [r6+8]"
+        ],
+        [
+          "0x202ab6c",
+          "r5 = r1"
+        ],
+        [
+          "0x202ab6e",
+          "r0 += r5"
+        ],
+        [
+          "0x202ab70",
+          "r3 = r12 + 216  #"
+        ],
+        [
+          "0x202ab74",
+          "[r6+8] = r0"
+        ],
+        [
+          "0x202ab76",
+          "r11 = r2  #"
+        ],
+        [
+          "0x202ab78",
+          "r1 = b[r3+2] (u)"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x202abc8",
+          "call r1"
+        ],
+        [
+          "0x202abde",
+          "call -7728 <pad_publish : 2028db2 >"
+        ],
+        [
+          "0x202abf0",
+          "call -7384 <bass_release : 2028f1c >"
+        ],
+        [
+          "0x202abfa",
+          "call -7394 <bass_release : 2028f1c >"
+        ],
+        [
+          "0x202ac08",
+          "call r1"
+        ],
+        [
+          "0x202ac38",
+          "call r8"
+        ],
+        [
+          "0x202ac4a",
+          "call -4806 <do_start : 2029988 >"
+        ],
+        [
+          "0x202ac64",
+          "call -4832 <do_start : 2029988 >"
+        ],
+        [
+          "0x202ace2",
+          "call -476 <arrangement_tick : 202ab0a >"
+        ],
+        [
+          "0x202ad5c",
+          "call -4698 <next_pos : 2029b06 >"
+        ],
+        [
+          "0x202aef2",
+          "call -1004"
+        ],
+        [
+          "0x202af26",
+          "call -8206 <bass_release : 2028f1c >"
+        ],
+        [
+          "0x202afe0",
+          "call -5342 <next_pos : 2029b06 >"
+        ],
+        [
+          "0x202b0fe",
+          "call 1938 <tb3po_mutate : 202b894 >"
+        ],
+        [
+          "0x202b164",
+          "call r3"
+        ],
+        [
+          "0x202b1ee",
+          "call r4"
+        ],
+        [
+          "0x202b224",
+          "call r4"
+        ],
+        [
+          "0x202b23e",
+          "call r11"
+        ],
+        [
+          "0x202b2b4",
+          "call r4"
+        ],
+        [
+          "0x202b2c8",
+          "call -5488 <fire_bass : 2029d5c >"
+        ],
+        [
+          "0x202b2e8",
+          "call -6118 <next_pos : 2029b06 >"
+        ],
+        [
+          "0x202b370",
+          "call -5898 <bass_retune_held : 2029c6a >"
+        ],
+        [
+          "0x202b37a",
+          "call -5908 <bass_retune_held : 2029c6a >"
+        ],
+        [
+          "0x202b386",
+          "call -8376 <seq_midi_sync : 20292d2 >"
+        ],
+        [
+          "0x202b40e",
+          "call r5"
+        ],
+        [
+          "0x202b4f4",
+          "call -9528 <seq_midi_prepare : 2028fc0 >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "pad_publish@0x2028db2",
+          "kind": "direct-call",
+          "site": "0x202abde"
+        },
+        {
+          "target": "bass_release@0x2028f1c",
+          "kind": "direct-call",
+          "site": "0x202abf0"
+        },
+        {
+          "target": "bass_release@0x2028f1c",
+          "kind": "direct-call",
+          "site": "0x202abfa"
+        },
+        {
+          "target": "do_start@0x2029988",
+          "kind": "direct-call",
+          "site": "0x202ac4a"
+        },
+        {
+          "target": "do_start@0x2029988",
+          "kind": "direct-call",
+          "site": "0x202ac64"
+        },
+        {
+          "target": "arrangement_tick@0x202ab0a",
+          "kind": "direct-call",
+          "site": "0x202ace2"
+        },
+        {
+          "target": "next_pos@0x2029b06",
+          "kind": "direct-call",
+          "site": "0x202ad5c"
+        },
+        {
+          "target": "bass_release@0x2028f1c",
+          "kind": "direct-call",
+          "site": "0x202af26"
+        },
+        {
+          "target": "next_pos@0x2029b06",
+          "kind": "direct-call",
+          "site": "0x202afe0"
+        },
+        {
+          "target": "tb3po_mutate@0x202b894",
+          "kind": "direct-call",
+          "site": "0x202b0fe"
+        },
+        {
+          "target": "fire_bass@0x2029d5c",
+          "kind": "direct-call",
+          "site": "0x202b2c8"
+        },
+        {
+          "target": "next_pos@0x2029b06",
+          "kind": "direct-call",
+          "site": "0x202b2e8"
+        },
+        {
+          "target": "bass_retune_held@0x2029c6a",
+          "kind": "direct-call",
+          "site": "0x202b370"
+        },
+        {
+          "target": "bass_retune_held@0x2029c6a",
+          "kind": "direct-call",
+          "site": "0x202b37a"
+        },
+        {
+          "target": "seq_midi_sync@0x20292d2",
+          "kind": "direct-call",
+          "site": "0x202b386"
+        },
+        {
+          "target": "seq_midi_prepare@0x2028fc0",
+          "kind": "direct-call",
+          "site": "0x202b4f4"
+        }
+      ]
+    },
+    "engine_arrangement_refresh@0x202c1a4": {
+      "metrics": {
+        "insns": 26,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 84,
+      "frame_bytes": 12,
+      "prologue": [
+        [
+          "0x202c1a4",
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          "0x202c1a6",
+          "r5 = 29457440 <mot_release_req : 1c17c20 >"
+        ],
+        [
+          "0x202c1ac",
+          "r1 = [r5+20]"
+        ],
+        [
+          "0x202c1ae",
+          "r4 = r0  #"
+        ],
+        [
+          "0x202c1b0",
+          "r2 = [r5+24]"
+        ],
+        [
+          "0x202c1b2",
+          "r1 = 0x400 - r1"
+        ],
+        [
+          "0x202c1b6",
+          "r2 = 0x0 - r2"
+        ],
+        [
+          "0x202c1ba",
+          "r0 = 0"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x202c1c0",
+          "call -177392 <plat_control_enter : 2000cd4 >"
+        ],
+        [
+          "0x202c1f0",
+          "call -177434 <plat_control_leave : 2000cda >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "plat_control_enter@0x2000cd4",
+          "kind": "direct-call",
+          "site": "0x202c1c0"
+        },
+        {
+          "target": "plat_control_leave@0x2000cda",
+          "kind": "direct-call",
+          "site": "0x202c1f0"
+        }
+      ]
+    },
+    "engine_out_loud@0x202c3e6": {
+      "metrics": {
+        "insns": 10,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 40,
+      "frame_bytes": 0,
+      "prologue": [],
+      "all_calls": [],
+      "edges": []
+    },
+    "engine_usb_full@0x202c40e": {
+      "metrics": {
+        "insns": 3,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 10,
+      "frame_bytes": 0,
+      "prologue": [
+        [
+          "0x202c40e",
+          "r1 = 29457440 <mot_release_req : 1c17c20 >"
+        ],
+        [
+          "0x202c414",
+          "[r1+28] = r0"
+        ],
+        [
+          "0x202c416",
+          "rts"
+        ]
+      ],
+      "all_calls": [],
+      "edges": []
+    },
+    "engine_midi_channel_allowed@0x202c932": {
+      "metrics": {
+        "insns": 10,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 34,
+      "frame_bytes": 0,
+      "prologue": [
+        [
+          "0x202c932",
+          "r1 = r0"
+        ],
+        [
+          "0x202c934",
+          "r0 = 1"
+        ]
+      ],
+      "all_calls": [],
+      "edges": []
+    },
+    "engine_notes_clear@0x202c954": {
+      "metrics": {
+        "insns": 16,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 50,
+      "frame_bytes": 8,
+      "prologue": [
+        [
+          "0x202c954",
+          "[--sp] = {rets, r4}"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x202c956",
+          "call -179334 <plat_control_enter : 2000cd4 >"
+        ],
+        [
+          "0x202c96e",
+          "call -14880 <seq_notes_clear : 2028f52 >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "plat_control_enter@0x2000cd4",
+          "kind": "direct-call",
+          "site": "0x202c956"
+        },
+        {
+          "target": "seq_notes_clear@0x2028f52",
+          "kind": "direct-call",
+          "site": "0x202c96e"
+        },
+        {
+          "target": "plat_control_leave@0x2000cda",
+          "kind": "tail-transfer",
+          "site": "0x202c982"
+        }
+      ]
+    },
+    "engine_render@0x202cebe": {
+      "metrics": {
+        "insns": 953,
+        "loop": 775,
+        "div": 2,
+        "call": 65,
+        "cost": 1202
+      },
+      "instruction_bytes": 3350,
+      "frame_bytes": 128,
+      "prologue": [
+        [
+          "0x202cebe",
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          "0x202cec0",
+          "sp += -76"
+        ],
+        [
+          "0x202cec2",
+          "r8 = 29457440 <mot_release_req : 1c17c20 >"
+        ],
+        [
+          "0x202cec8",
+          "r2 = [r8+28]"
+        ],
+        [
+          "0x202cecc",
+          "r6 = r1"
+        ],
+        [
+          "0x202cece",
+          "r4 = r0"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x202ced8",
+          "call -180626 <plat_master : 2000d4a >"
+        ],
+        [
+          "0x202cf1a",
+          "call -4134 <motion_release : 202bef8 >"
+        ],
+        [
+          "0x202cf2e",
+          "call -1452"
+        ],
+        [
+          "0x202cf32",
+          "call -178140 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202cf8c",
+          "call -22724 <master_key : 20276cc >"
+        ],
+        [
+          "0x202cfde",
+          "call -74062 <drum808_trigger : 201ae94 >"
+        ],
+        [
+          "0x202d002",
+          "call -47270 <bass303_note_on : 2021760 >"
+        ],
+        [
+          "0x202d01c",
+          "call -46800 <bass303_note_off : 2021950 >"
+        ],
+        [
+          "0x202d02c",
+          "call -102964 <drum909_trigger : 2013dfc >"
+        ],
+        [
+          "0x202d054",
+          "call -39484 <breaks_live : 202361c >"
+        ],
+        [
+          "0x202d186",
+          "call -1990 <apply_param : 202c9c4 >"
+        ],
+        [
+          "0x202d198",
+          "call -1656 <strip_block_begin : 202cb24 >"
+        ],
+        [
+          "0x202d19c",
+          "call -181002 <plat_midi_connected : 2000e96 >"
+        ],
+        [
+          "0x202d1aa",
+          "call -16878 <seq_midi_prepare : 2028fc0 >"
+        ],
+        [
+          "0x202d1c0",
+          "call -181006 <plat_midi_in : 2000eb6 >"
+        ],
+        [
+          "0x202d1e2",
+          "call -7274 <seq_ext_clock : 202b57c >"
+        ],
+        [
+          "0x202d27e",
+          "call -23478 <master_key : 20276cc >"
+        ],
+        [
+          "0x202d296",
+          "call -103582 <drum909_trigger : 2013dfc >"
+        ],
+        [
+          "0x202d2e0",
+          "call -23576 <master_key : 20276cc >"
+        ],
+        [
+          "0x202d2f6",
+          "call -74854 <drum808_trigger : 201ae94 >"
+        ],
+        [
+          "0x202d33a",
+          "call -48094 <bass303_note_on : 2021760 >"
+        ],
+        [
+          "0x202d346",
+          "call -7654 <seq_start : 202b564 >"
+        ],
+        [
+          "0x202d34e",
+          "call -7646 <seq_continue : 202b574 >"
+        ],
+        [
+          "0x202d356",
+          "call -7662 <seq_stop : 202b56c >"
+        ],
+        [
+          "0x202d36a",
+          "call -47646 <bass303_note_off : 2021950 >"
+        ],
+        [
+          "0x202d396",
+          "call -47690 <bass303_note_off : 2021950 >"
+        ],
+        [
+          "0x202d3bc",
+          "call -48224 <bass303_note_on : 2021760 >"
+        ],
+        [
+          "0x202d3f2",
+          "call -40410 <breaks_live : 202361c >"
+        ],
+        [
+          "0x202d440",
+          "call -5610 <motion_tick : 202be5a >"
+        ],
+        [
+          "0x202d446",
+          "call -18346 <seq_tempo : 2028ca0 >"
+        ],
+        [
+          "0x202d452",
+          "call -31236 <fxbus_set_bpm : 2025a52 >"
+        ],
+        [
+          "0x202d466",
+          "call r3"
+        ],
+        [
+          "0x202d468",
+          "call -179474 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202d498",
+          "call r2"
+        ],
+        [
+          "0x202d4c8",
+          "call -179726 <plat_cpu2_run : 20016be >"
+        ],
+        [
+          "0x202d500",
+          "call -179626 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202d50e",
+          "call -81878 <drum909_active : 201953c >"
+        ],
+        [
+          "0x202d536",
+          "call -82296 <drum909_render_st : 20193c2 >"
+        ],
+        [
+          "0x202d5f6",
+          "call -2604 <scale_glide : 202cbce >"
+        ],
+        [
+          "0x202d606",
+          "call -2620 <scale_glide : 202cbce >"
+        ],
+        [
+          "0x202d616",
+          "call -2636 <scale_glide : 202cbce >"
+        ],
+        [
+          "0x202d626",
+          "call -2652 <scale_glide : 202cbce >"
+        ],
+        [
+          "0x202d634",
+          "call -2434 <kit_sends : 202ccb6 >"
+        ],
+        [
+          "0x202d64c",
+          "call -82600 <drum909_render : 20193a8 >"
+        ],
+        [
+          "0x202d652",
+          "call -82304 <drum909_pan_settle : 20194d6 >"
+        ],
+        [
+          "0x202d656",
+          "call -179968 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202d668",
+          "call -179986 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202d674",
+          "call -2314 <bass_strip_render : 202cd6e >"
+        ],
+        [
+          "0x202d67c",
+          "call -180006 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202d686",
+          "call -180016 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202d692",
+          "call -2344 <bass_strip_render : 202cd6e >"
+        ],
+        [
+          "0x202d69a",
+          "call -180036 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202d6a4",
+          "call -180046 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202d6ae",
+          "call -180158 <plat_cpu2_wait : 20016f4 >"
+        ],
+        [
+          "0x202d6b6",
+          "call -2244 <core2_job : 202cdf6 >"
+        ],
+        [
+          "0x202d6bc",
+          "call -180070 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202d76c",
+          "call -2896 <add_glide : 202cc20 >"
+        ],
+        [
+          "0x202d782",
+          "call -2918 <add_glide : 202cc20 >"
+        ],
+        [
+          "0x202d798",
+          "call -2940 <add_glide : 202cc20 >"
+        ],
+        [
+          "0x202d7ae",
+          "call -2962 <add_glide : 202cc20 >"
+        ],
+        [
+          "0x202d7d8",
+          "call -2854 <kit_sends : 202ccb6 >"
+        ],
+        [
+          "0x202d89a",
+          "call -3198 <add_glide : 202cc20 >"
+        ],
+        [
+          "0x202d8aa",
+          "call -3214 <add_glide : 202cc20 >"
+        ],
+        [
+          "0x202d8ba",
+          "call -3230 <add_glide : 202cc20 >"
+        ],
+        [
+          "0x202d8ca",
+          "call -3246 <add_glide : 202cc20 >"
+        ],
+        [
+          "0x202d8d8",
+          "call -3158 <meter : 202cc86 >"
+        ],
+        [
+          "0x202d996",
+          "call -3450 <add_glide : 202cc20 >"
+        ],
+        [
+          "0x202d9a6",
+          "call -3466 <add_glide : 202cc20 >"
+        ],
+        [
+          "0x202d9b6",
+          "call -3482 <add_glide : 202cc20 >"
+        ],
+        [
+          "0x202d9c6",
+          "call -3498 <add_glide : 202cc20 >"
+        ],
+        [
+          "0x202d9d2",
+          "call -3408 <meter : 202cc86 >"
+        ],
+        [
+          "0x202d9d6",
+          "call -180864 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202da08",
+          "call -28766 <fxbus_process_st : 20269ae >"
+        ],
+        [
+          "0x202da0c",
+          "call -180918 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202da1e",
+          "call -180936 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202da36",
+          "call r3"
+        ],
+        [
+          "0x202da38",
+          "call -180962 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202da60",
+          "call -7020 <motion_release : 202bef8 >"
+        ],
+        [
+          "0x202da6a",
+          "call -181012 <plat_cycles : 200175a >"
+        ],
+        [
+          "0x202da8c",
+          "call -25496 <master_process_st : 20276f8 >"
+        ],
+        [
+          "0x202da90",
+          "call -181050 <plat_cycles : 200175a >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "plat_master@0x2000d4a",
+          "kind": "direct-call",
+          "site": "0x202ced8"
+        },
+        {
+          "target": "motion_release@0x202bef8",
+          "kind": "direct-call",
+          "site": "0x202cf1a"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202cf32"
+        },
+        {
+          "target": "master_key@0x20276cc",
+          "kind": "direct-call",
+          "site": "0x202cf8c"
+        },
+        {
+          "target": "drum808_trigger@0x201ae94",
+          "kind": "direct-call",
+          "site": "0x202cfde"
+        },
+        {
+          "target": "bass303_note_on@0x2021760",
+          "kind": "direct-call",
+          "site": "0x202d002"
+        },
+        {
+          "target": "bass303_note_off@0x2021950",
+          "kind": "direct-call",
+          "site": "0x202d01c"
+        },
+        {
+          "target": "drum909_trigger@0x2013dfc",
+          "kind": "direct-call",
+          "site": "0x202d02c"
+        },
+        {
+          "target": "breaks_live@0x202361c",
+          "kind": "direct-call",
+          "site": "0x202d054"
+        },
+        {
+          "target": "apply_param@0x202c9c4",
+          "kind": "direct-call",
+          "site": "0x202d186"
+        },
+        {
+          "target": "strip_block_begin@0x202cb24",
+          "kind": "direct-call",
+          "site": "0x202d198"
+        },
+        {
+          "target": "plat_midi_connected@0x2000e96",
+          "kind": "direct-call",
+          "site": "0x202d19c"
+        },
+        {
+          "target": "seq_midi_prepare@0x2028fc0",
+          "kind": "direct-call",
+          "site": "0x202d1aa"
+        },
+        {
+          "target": "plat_midi_in@0x2000eb6",
+          "kind": "direct-call",
+          "site": "0x202d1c0"
+        },
+        {
+          "target": "seq_ext_clock@0x202b57c",
+          "kind": "direct-call",
+          "site": "0x202d1e2"
+        },
+        {
+          "target": "master_key@0x20276cc",
+          "kind": "direct-call",
+          "site": "0x202d27e"
+        },
+        {
+          "target": "drum909_trigger@0x2013dfc",
+          "kind": "direct-call",
+          "site": "0x202d296"
+        },
+        {
+          "target": "master_key@0x20276cc",
+          "kind": "direct-call",
+          "site": "0x202d2e0"
+        },
+        {
+          "target": "drum808_trigger@0x201ae94",
+          "kind": "direct-call",
+          "site": "0x202d2f6"
+        },
+        {
+          "target": "bass303_note_on@0x2021760",
+          "kind": "direct-call",
+          "site": "0x202d33a"
+        },
+        {
+          "target": "seq_start@0x202b564",
+          "kind": "direct-call",
+          "site": "0x202d346"
+        },
+        {
+          "target": "seq_continue@0x202b574",
+          "kind": "direct-call",
+          "site": "0x202d34e"
+        },
+        {
+          "target": "seq_stop@0x202b56c",
+          "kind": "direct-call",
+          "site": "0x202d356"
+        },
+        {
+          "target": "bass303_note_off@0x2021950",
+          "kind": "direct-call",
+          "site": "0x202d36a"
+        },
+        {
+          "target": "bass303_note_off@0x2021950",
+          "kind": "direct-call",
+          "site": "0x202d396"
+        },
+        {
+          "target": "bass303_note_on@0x2021760",
+          "kind": "direct-call",
+          "site": "0x202d3bc"
+        },
+        {
+          "target": "breaks_live@0x202361c",
+          "kind": "direct-call",
+          "site": "0x202d3f2"
+        },
+        {
+          "target": "motion_tick@0x202be5a",
+          "kind": "direct-call",
+          "site": "0x202d440"
+        },
+        {
+          "target": "seq_tempo@0x2028ca0",
+          "kind": "direct-call",
+          "site": "0x202d446"
+        },
+        {
+          "target": "fxbus_set_bpm@0x2025a52",
+          "kind": "direct-call",
+          "site": "0x202d452"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202d468"
+        },
+        {
+          "target": "plat_cpu2_run@0x20016be",
+          "kind": "direct-call",
+          "site": "0x202d4c8"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202d500"
+        },
+        {
+          "target": "drum909_active@0x201953c",
+          "kind": "direct-call",
+          "site": "0x202d50e"
+        },
+        {
+          "target": "drum909_render_st@0x20193c2",
+          "kind": "direct-call",
+          "site": "0x202d536"
+        },
+        {
+          "target": "scale_glide@0x202cbce",
+          "kind": "direct-call",
+          "site": "0x202d5f6"
+        },
+        {
+          "target": "scale_glide@0x202cbce",
+          "kind": "direct-call",
+          "site": "0x202d606"
+        },
+        {
+          "target": "scale_glide@0x202cbce",
+          "kind": "direct-call",
+          "site": "0x202d616"
+        },
+        {
+          "target": "scale_glide@0x202cbce",
+          "kind": "direct-call",
+          "site": "0x202d626"
+        },
+        {
+          "target": "kit_sends@0x202ccb6",
+          "kind": "direct-call",
+          "site": "0x202d634"
+        },
+        {
+          "target": "drum909_render@0x20193a8",
+          "kind": "direct-call",
+          "site": "0x202d64c"
+        },
+        {
+          "target": "drum909_pan_settle@0x20194d6",
+          "kind": "direct-call",
+          "site": "0x202d652"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202d656"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202d668"
+        },
+        {
+          "target": "bass_strip_render@0x202cd6e",
+          "kind": "direct-call",
+          "site": "0x202d674"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202d67c"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202d686"
+        },
+        {
+          "target": "bass_strip_render@0x202cd6e",
+          "kind": "direct-call",
+          "site": "0x202d692"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202d69a"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202d6a4"
+        },
+        {
+          "target": "plat_cpu2_wait@0x20016f4",
+          "kind": "direct-call",
+          "site": "0x202d6ae"
+        },
+        {
+          "target": "core2_job@0x202cdf6",
+          "kind": "direct-call",
+          "site": "0x202d6b6"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202d6bc"
+        },
+        {
+          "target": "add_glide@0x202cc20",
+          "kind": "direct-call",
+          "site": "0x202d76c"
+        },
+        {
+          "target": "add_glide@0x202cc20",
+          "kind": "direct-call",
+          "site": "0x202d782"
+        },
+        {
+          "target": "add_glide@0x202cc20",
+          "kind": "direct-call",
+          "site": "0x202d798"
+        },
+        {
+          "target": "add_glide@0x202cc20",
+          "kind": "direct-call",
+          "site": "0x202d7ae"
+        },
+        {
+          "target": "kit_sends@0x202ccb6",
+          "kind": "direct-call",
+          "site": "0x202d7d8"
+        },
+        {
+          "target": "add_glide@0x202cc20",
+          "kind": "direct-call",
+          "site": "0x202d89a"
+        },
+        {
+          "target": "add_glide@0x202cc20",
+          "kind": "direct-call",
+          "site": "0x202d8aa"
+        },
+        {
+          "target": "add_glide@0x202cc20",
+          "kind": "direct-call",
+          "site": "0x202d8ba"
+        },
+        {
+          "target": "add_glide@0x202cc20",
+          "kind": "direct-call",
+          "site": "0x202d8ca"
+        },
+        {
+          "target": "meter@0x202cc86",
+          "kind": "direct-call",
+          "site": "0x202d8d8"
+        },
+        {
+          "target": "add_glide@0x202cc20",
+          "kind": "direct-call",
+          "site": "0x202d996"
+        },
+        {
+          "target": "add_glide@0x202cc20",
+          "kind": "direct-call",
+          "site": "0x202d9a6"
+        },
+        {
+          "target": "add_glide@0x202cc20",
+          "kind": "direct-call",
+          "site": "0x202d9b6"
+        },
+        {
+          "target": "add_glide@0x202cc20",
+          "kind": "direct-call",
+          "site": "0x202d9c6"
+        },
+        {
+          "target": "meter@0x202cc86",
+          "kind": "direct-call",
+          "site": "0x202d9d2"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202d9d6"
+        },
+        {
+          "target": "fxbus_process_st@0x20269ae",
+          "kind": "direct-call",
+          "site": "0x202da08"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202da0c"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202da1e"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202da38"
+        },
+        {
+          "target": "motion_release@0x202bef8",
+          "kind": "direct-call",
+          "site": "0x202da60"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202da6a"
+        },
+        {
+          "target": "master_process_st@0x20276f8",
+          "kind": "direct-call",
+          "site": "0x202da8c"
+        },
+        {
+          "target": "plat_cycles@0x200175a",
+          "kind": "direct-call",
+          "site": "0x202da90"
+        },
+        {
+          "target": "seq_advance@0x2029fbe",
+          "kind": "source-callback-alternative",
+          "site": null
+        },
+        {
+          "target": "seq_advance_arrangement@0x202ab60",
+          "kind": "source-callback-alternative",
+          "site": null
+        }
+      ]
+    },
+    "engine_init@0x202dfe4": {
+      "metrics": {
+        "insns": 206,
+        "loop": 4,
+        "div": 0,
+        "call": 0,
+        "cost": 4
+      },
+      "instruction_bytes": 708,
+      "frame_bytes": 76,
+      "prologue": [
+        [
+          "0x202dfe4",
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          "0x202dfe6",
+          "sp += -24"
+        ],
+        [
+          "0x202dfe8",
+          "r6 = 29490476 <seq : 1c1fd2c >"
+        ],
+        [
+          "0x202dfee",
+          "r4 = [r6+0]"
+        ],
+        [
+          "0x202dff0",
+          "d[sp+12] = r3_r2"
+        ],
+        [
+          "0x202dff4",
+          "d[sp+4] = r1_r0"
+        ],
+        [
+          "0x202dff8",
+          "r7 = 29457440 <mot_release_req : 1c17c20 >"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x202e000",
+          "call -185136 <plat_control_enter : 2000cd4 >"
+        ],
+        [
+          "0x202e012",
+          "call -20676 <seq_notes_clear : 2028f52 >"
+        ],
+        [
+          "0x202e01e",
+          "call -185160 <plat_control_leave : 2000cda >"
+        ],
+        [
+          "0x202e08e",
+          "call 2824 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e094",
+          "call 2818 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e09a",
+          "call 2812 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e0a0",
+          "call 2806 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e0a8",
+          "call 2798 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e0b0",
+          "call 2790 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e0b8",
+          "call 2782 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e0c0",
+          "call 2774 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e0c8",
+          "call 2766 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e0d0",
+          "call 2758 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e0d8",
+          "call 2750 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e0e0",
+          "call 2742 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e0e8",
+          "call 2734 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e0f0",
+          "call 2726 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e0f8",
+          "call 2718 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e100",
+          "call 2710 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e108",
+          "call 2702 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e110",
+          "call 2694 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e118",
+          "call 2686 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e120",
+          "call 2678 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e128",
+          "call 2670 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e130",
+          "call 2662 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e138",
+          "call 2654 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e140",
+          "call 2646 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e148",
+          "call 2638 <sound_strip_config_default : 202eb9a >"
+        ],
+        [
+          "0x202e154",
+          "call 3934 <sound_strip_init : 202f0b6 >"
+        ],
+        [
+          "0x202e172",
+          "call 3904 <sound_strip_init : 202f0b6 >"
+        ],
+        [
+          "0x202e182",
+          "call 3888 <sound_strip_init : 202f0b6 >"
+        ],
+        [
+          "0x202e1b0",
+          "call -112174 <drum909_init : 2012b86 >"
+        ],
+        [
+          "0x202e1ba",
+          "call -82060 <drum808_init : 201a132 >"
+        ],
+        [
+          "0x202e1c6",
+          "call -52644 <bass303_init : 2021426 >"
+        ],
+        [
+          "0x202e1ce",
+          "call -52652 <bass303_init : 2021426 >"
+        ],
+        [
+          "0x202e1d8",
+          "call -38928 <breaks_init : 20249cc >"
+        ],
+        [
+          "0x202e1ee",
+          "call -34600 <fxbus_init : 2025aca >"
+        ],
+        [
+          "0x202e1f8",
+          "call -28138 <master_init : 2027412 >"
+        ],
+        [
+          "0x202e200",
+          "call -22040 <seq_init : 2028bec >"
+        ],
+        [
+          "0x202e204",
+          "call -185202 <plat_midi_connected : 2000e96 >"
+        ],
+        [
+          "0x202e258",
+          "call -9878 <motion_init : 202bbc6 >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "plat_control_enter@0x2000cd4",
+          "kind": "direct-call",
+          "site": "0x202e000"
+        },
+        {
+          "target": "seq_notes_clear@0x2028f52",
+          "kind": "direct-call",
+          "site": "0x202e012"
+        },
+        {
+          "target": "plat_control_leave@0x2000cda",
+          "kind": "direct-call",
+          "site": "0x202e01e"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e08e"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e094"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e09a"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e0a0"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e0a8"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e0b0"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e0b8"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e0c0"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e0c8"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e0d0"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e0d8"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e0e0"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e0e8"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e0f0"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e0f8"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e100"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e108"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e110"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e118"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e120"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e128"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e130"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e138"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e140"
+        },
+        {
+          "target": "sound_strip_config_default@0x202eb9a",
+          "kind": "direct-call",
+          "site": "0x202e148"
+        },
+        {
+          "target": "sound_strip_init@0x202f0b6",
+          "kind": "direct-call",
+          "site": "0x202e154"
+        },
+        {
+          "target": "sound_strip_init@0x202f0b6",
+          "kind": "direct-call",
+          "site": "0x202e172"
+        },
+        {
+          "target": "sound_strip_init@0x202f0b6",
+          "kind": "direct-call",
+          "site": "0x202e182"
+        },
+        {
+          "target": "drum909_init@0x2012b86",
+          "kind": "direct-call",
+          "site": "0x202e1b0"
+        },
+        {
+          "target": "drum808_init@0x201a132",
+          "kind": "direct-call",
+          "site": "0x202e1ba"
+        },
+        {
+          "target": "bass303_init@0x2021426",
+          "kind": "direct-call",
+          "site": "0x202e1c6"
+        },
+        {
+          "target": "bass303_init@0x2021426",
+          "kind": "direct-call",
+          "site": "0x202e1ce"
+        },
+        {
+          "target": "breaks_init@0x20249cc",
+          "kind": "direct-call",
+          "site": "0x202e1d8"
+        },
+        {
+          "target": "fxbus_init@0x2025aca",
+          "kind": "direct-call",
+          "site": "0x202e1ee"
+        },
+        {
+          "target": "master_init@0x2027412",
+          "kind": "direct-call",
+          "site": "0x202e1f8"
+        },
+        {
+          "target": "seq_init@0x2028bec",
+          "kind": "direct-call",
+          "site": "0x202e200"
+        },
+        {
+          "target": "plat_midi_connected@0x2000e96",
+          "kind": "direct-call",
+          "site": "0x202e204"
+        },
+        {
+          "target": "motion_init@0x202bbc6",
+          "kind": "direct-call",
+          "site": "0x202e258"
+        }
+      ]
+    },
+    "s_boff@0x202e4ba": {
+      "metrics": {
+        "insns": 4,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 16,
+      "frame_bytes": 0,
+      "prologue": [
+        [
+          "0x202e4ba",
+          "r0 = r1 * 0x2F0"
+        ],
+        [
+          "0x202e4be",
+          "r1 = 29649008 <b303 : 1c46870 >"
+        ],
+        [
+          "0x202e4c4",
+          "r0 += r1"
+        ]
+      ],
+      "all_calls": [],
+      "edges": [
+        {
+          "target": "bass303_note_off@0x2021950",
+          "kind": "tail-transfer",
+          "site": "0x202e4c6"
+        }
+      ]
+    },
+    "s_midi@0x202e5ce": {
+      "metrics": {
+        "insns": 10,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 30,
+      "frame_bytes": 8,
+      "prologue": [
+        [
+          "0x202e5ce",
+          "[--sp] = {rets, r4}"
+        ],
+        [
+          "0x202e5d0",
+          "r4 = r1 >> 4"
+        ],
+        [
+          "0x202e5d2",
+          "r0 = 15"
+        ]
+      ],
+      "all_calls": [],
+      "edges": [
+        {
+          "target": "plat_midi_out@0x2000ee4",
+          "kind": "tail-transfer",
+          "site": "0x202e5e8"
+        }
+      ]
+    },
+    "s_midi_try@0x202e658": {
+      "metrics": {
+        "insns": 10,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 30,
+      "frame_bytes": 8,
+      "prologue": [
+        [
+          "0x202e658",
+          "[--sp] = {rets, r4}"
+        ],
+        [
+          "0x202e65a",
+          "r4 = r1 >> 4"
+        ],
+        [
+          "0x202e65c",
+          "r0 = 15"
+        ]
+      ],
+      "all_calls": [],
+      "edges": [
+        {
+          "target": "plat_midi_out@0x2000ee4",
+          "kind": "tail-transfer",
+          "site": "0x202e672"
+        }
+      ]
+    },
+    "s_midi_pair@0x202e676": {
+      "metrics": {
+        "insns": 20,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 60,
+      "frame_bytes": 12,
+      "prologue": [
+        [
+          "0x202e676",
+          "[--sp] = {rets, r5, r4}"
+        ],
+        [
+          "0x202e678",
+          "r4 = r1"
+        ],
+        [
+          "0x202e67a",
+          "r5 = r4 >> 4"
+        ],
+        [
+          "0x202e67c",
+          "r1 = 15"
+        ],
+        [
+          "0x202e67e",
+          "r0 = 15"
+        ]
+      ],
+      "all_calls": [],
+      "edges": [
+        {
+          "target": "plat_midi_pair@0x2000f38",
+          "kind": "tail-transfer",
+          "site": "0x202e6ae"
+        }
+      ]
+    },
+    "s_midi_batch@0x202e6b2": {
+      "metrics": {
+        "insns": 3,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 8,
+      "frame_bytes": 0,
+      "prologue": [
+        [
+          "0x202e6b2",
+          "r0 = r1"
+        ],
+        [
+          "0x202e6b4",
+          "r1 = r2"
+        ]
+      ],
+      "all_calls": [],
+      "edges": [
+        {
+          "target": "plat_midi_batch@0x2000f96",
+          "kind": "tail-transfer",
+          "site": "0x202e6b6"
+        }
+      ]
+    },
+    "distances@0x202f634": {
+      "metrics": {
+        "insns": 67,
+        "loop": 0,
+        "div": 0,
+        "call": 0,
+        "cost": 0
+      },
+      "instruction_bytes": 200,
+      "frame_bytes": 32,
+      "prologue": [
+        [
+          "0x202f634",
+          "[--sp] = {rets, r10-r4}"
+        ],
+        [
+          "0x202f636",
+          "r3 = 0"
+        ]
+      ],
+      "all_calls": [],
+      "edges": []
+    },
+    "harmony_resolve@0x202f6fc": {
+      "metrics": {
+        "insns": 63,
+        "loop": 15,
+        "div": 0,
+        "call": 0,
+        "cost": 15
+      },
+      "instruction_bytes": 178,
+      "frame_bytes": 72,
+      "prologue": [
+        [
+          "0x202f6fc",
+          "[--sp] = {rets, r15-r4}"
+        ],
+        [
+          "0x202f6fe",
+          "sp += -20"
+        ],
+        [
+          "0x202f700",
+          "r11 = [sp+72]"
+        ],
+        [
+          "0x202f704",
+          "r13 = r3"
+        ],
+        [
+          "0x202f706",
+          "r14 = r2"
+        ],
+        [
+          "0x202f708",
+          "r15 = r1"
+        ],
+        [
+          "0x202f70a",
+          "r12 = 0"
+        ]
+      ],
+      "all_calls": [
+        [
+          "0x202f732",
+          "call -258 <distances : 202f634 >"
+        ],
+        [
+          "0x202f7a0",
+          "call -191200 <memcpy : 2000cc4 >"
+        ]
+      ],
+      "edges": [
+        {
+          "target": "distances@0x202f634",
+          "kind": "direct-call",
+          "site": "0x202f732"
+        },
+        {
+          "target": "memcpy@0x2000cc4",
+          "kind": "direct-call",
+          "site": "0x202f7a0"
+        }
+      ]
+    }
+  },
+  "caller_chains": [
+    {
+      "root": "fm1_alnk0_irq@0x200e5b2",
+      "helper": "pad_publish@0x2028db2",
+      "chain": [
+        "fm1_alnk0_irq@0x200e5b2",
+        "engine_render@0x202cebe",
+        "seq_midi_prepare@0x2028fc0",
+        "pad_publish@0x2028db2"
+      ]
+    },
+    {
+      "root": "fm1_alnk0_irq@0x200e5b2",
+      "helper": "pad_sync@0x202925e",
+      "chain": [
+        "fm1_alnk0_irq@0x200e5b2",
+        "engine_render@0x202cebe",
+        "seq_advance@0x2029fbe",
+        "seq_midi_sync@0x20292d2",
+        "pad_sync@0x202925e"
+      ]
+    },
+    {
+      "root": "fm1_alnk0_irq@0x200e5b2",
+      "helper": "seq_pad_desired@0x2028cf8",
+      "chain": [
+        "fm1_alnk0_irq@0x200e5b2",
+        "engine_render@0x202cebe",
+        "seq_midi_prepare@0x2028fc0",
+        "seq_pad_desired@0x2028cf8"
+      ]
+    },
+    {
+      "root": "fm1_alnk0_irq@0x200e5b2",
+      "helper": "seq_midi_prepare@0x2028fc0",
+      "chain": [
+        "fm1_alnk0_irq@0x200e5b2",
+        "engine_render@0x202cebe",
+        "seq_midi_prepare@0x2028fc0"
+      ]
+    },
+    {
+      "root": "fm1_alnk0_irq@0x200e5b2",
+      "helper": "seq_midi_sync@0x20292d2",
+      "chain": [
+        "fm1_alnk0_irq@0x200e5b2",
+        "engine_render@0x202cebe",
+        "seq_advance@0x2029fbe",
+        "seq_midi_sync@0x20292d2"
+      ]
+    },
+    {
+      "root": "fm1_alnk0_irq@0x200e5b2",
+      "helper": "s_midi_batch@0x202e6b2",
+      "chain": [
+        "fm1_alnk0_irq@0x200e5b2",
+        "engine_render@0x202cebe",
+        "seq_midi_prepare@0x2028fc0",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2"
+      ]
+    },
+    {
+      "root": "fm1_alnk0_irq@0x200e5b2",
+      "helper": "plat_midi_batch@0x2000f96",
+      "chain": [
+        "fm1_alnk0_irq@0x200e5b2",
+        "engine_render@0x202cebe",
+        "seq_midi_prepare@0x2028fc0",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2",
+        "plat_midi_batch@0x2000f96"
+      ]
+    },
+    {
+      "root": "fm1_alnk0_irq@0x200e5b2",
+      "helper": "plat_midi_connected@0x2000e96",
+      "chain": [
+        "fm1_alnk0_irq@0x200e5b2",
+        "engine_render@0x202cebe",
+        "plat_midi_connected@0x2000e96"
+      ]
+    },
+    {
+      "root": "fm1_alnk0_irq@0x200e5b2",
+      "helper": "harmony_resolve@0x202f6fc",
+      "chain": [
+        "fm1_alnk0_irq@0x200e5b2",
+        "engine_render@0x202cebe",
+        "seq_midi_prepare@0x2028fc0",
+        "seq_pad_desired@0x2028cf8",
+        "harmony_resolve@0x202f6fc"
+      ]
+    },
+    {
+      "root": "engine_render@0x202cebe",
+      "helper": "pad_publish@0x2028db2",
+      "chain": [
+        "engine_render@0x202cebe",
+        "seq_midi_prepare@0x2028fc0",
+        "pad_publish@0x2028db2"
+      ]
+    },
+    {
+      "root": "engine_render@0x202cebe",
+      "helper": "pad_sync@0x202925e",
+      "chain": [
+        "engine_render@0x202cebe",
+        "seq_advance@0x2029fbe",
+        "seq_midi_sync@0x20292d2",
+        "pad_sync@0x202925e"
+      ]
+    },
+    {
+      "root": "engine_render@0x202cebe",
+      "helper": "seq_pad_desired@0x2028cf8",
+      "chain": [
+        "engine_render@0x202cebe",
+        "seq_midi_prepare@0x2028fc0",
+        "seq_pad_desired@0x2028cf8"
+      ]
+    },
+    {
+      "root": "engine_render@0x202cebe",
+      "helper": "seq_midi_prepare@0x2028fc0",
+      "chain": [
+        "engine_render@0x202cebe",
+        "seq_midi_prepare@0x2028fc0"
+      ]
+    },
+    {
+      "root": "engine_render@0x202cebe",
+      "helper": "seq_midi_sync@0x20292d2",
+      "chain": [
+        "engine_render@0x202cebe",
+        "seq_advance@0x2029fbe",
+        "seq_midi_sync@0x20292d2"
+      ]
+    },
+    {
+      "root": "engine_render@0x202cebe",
+      "helper": "s_midi_batch@0x202e6b2",
+      "chain": [
+        "engine_render@0x202cebe",
+        "seq_midi_prepare@0x2028fc0",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2"
+      ]
+    },
+    {
+      "root": "engine_render@0x202cebe",
+      "helper": "plat_midi_batch@0x2000f96",
+      "chain": [
+        "engine_render@0x202cebe",
+        "seq_midi_prepare@0x2028fc0",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2",
+        "plat_midi_batch@0x2000f96"
+      ]
+    },
+    {
+      "root": "engine_render@0x202cebe",
+      "helper": "plat_midi_connected@0x2000e96",
+      "chain": [
+        "engine_render@0x202cebe",
+        "plat_midi_connected@0x2000e96"
+      ]
+    },
+    {
+      "root": "engine_render@0x202cebe",
+      "helper": "harmony_resolve@0x202f6fc",
+      "chain": [
+        "engine_render@0x202cebe",
+        "seq_midi_prepare@0x2028fc0",
+        "seq_pad_desired@0x2028cf8",
+        "harmony_resolve@0x202f6fc"
+      ]
+    },
+    {
+      "root": "seq_advance@0x2029fbe",
+      "helper": "pad_publish@0x2028db2",
+      "chain": [
+        "seq_advance@0x2029fbe",
+        "pad_publish@0x2028db2"
+      ]
+    },
+    {
+      "root": "seq_advance@0x2029fbe",
+      "helper": "pad_sync@0x202925e",
+      "chain": [
+        "seq_advance@0x2029fbe",
+        "seq_midi_sync@0x20292d2",
+        "pad_sync@0x202925e"
+      ]
+    },
+    {
+      "root": "seq_advance@0x2029fbe",
+      "helper": "seq_pad_desired@0x2028cf8",
+      "chain": [
+        "seq_advance@0x2029fbe",
+        "seq_midi_prepare@0x2028fc0",
+        "seq_pad_desired@0x2028cf8"
+      ]
+    },
+    {
+      "root": "seq_advance@0x2029fbe",
+      "helper": "seq_midi_prepare@0x2028fc0",
+      "chain": [
+        "seq_advance@0x2029fbe",
+        "seq_midi_prepare@0x2028fc0"
+      ]
+    },
+    {
+      "root": "seq_advance@0x2029fbe",
+      "helper": "seq_midi_sync@0x20292d2",
+      "chain": [
+        "seq_advance@0x2029fbe",
+        "seq_midi_sync@0x20292d2"
+      ]
+    },
+    {
+      "root": "seq_advance@0x2029fbe",
+      "helper": "s_midi_batch@0x202e6b2",
+      "chain": [
+        "seq_advance@0x2029fbe",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2"
+      ]
+    },
+    {
+      "root": "seq_advance@0x2029fbe",
+      "helper": "plat_midi_batch@0x2000f96",
+      "chain": [
+        "seq_advance@0x2029fbe",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2",
+        "plat_midi_batch@0x2000f96"
+      ]
+    },
+    {
+      "root": "seq_advance@0x2029fbe",
+      "helper": "harmony_resolve@0x202f6fc",
+      "chain": [
+        "seq_advance@0x2029fbe",
+        "seq_midi_prepare@0x2028fc0",
+        "seq_pad_desired@0x2028cf8",
+        "harmony_resolve@0x202f6fc"
+      ]
+    },
+    {
+      "root": "seq_advance_arrangement@0x202ab60",
+      "helper": "pad_publish@0x2028db2",
+      "chain": [
+        "seq_advance_arrangement@0x202ab60",
+        "pad_publish@0x2028db2"
+      ]
+    },
+    {
+      "root": "seq_advance_arrangement@0x202ab60",
+      "helper": "pad_sync@0x202925e",
+      "chain": [
+        "seq_advance_arrangement@0x202ab60",
+        "seq_midi_sync@0x20292d2",
+        "pad_sync@0x202925e"
+      ]
+    },
+    {
+      "root": "seq_advance_arrangement@0x202ab60",
+      "helper": "seq_pad_desired@0x2028cf8",
+      "chain": [
+        "seq_advance_arrangement@0x202ab60",
+        "seq_midi_prepare@0x2028fc0",
+        "seq_pad_desired@0x2028cf8"
+      ]
+    },
+    {
+      "root": "seq_advance_arrangement@0x202ab60",
+      "helper": "seq_midi_prepare@0x2028fc0",
+      "chain": [
+        "seq_advance_arrangement@0x202ab60",
+        "seq_midi_prepare@0x2028fc0"
+      ]
+    },
+    {
+      "root": "seq_advance_arrangement@0x202ab60",
+      "helper": "seq_midi_sync@0x20292d2",
+      "chain": [
+        "seq_advance_arrangement@0x202ab60",
+        "seq_midi_sync@0x20292d2"
+      ]
+    },
+    {
+      "root": "seq_advance_arrangement@0x202ab60",
+      "helper": "s_midi_batch@0x202e6b2",
+      "chain": [
+        "seq_advance_arrangement@0x202ab60",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2"
+      ]
+    },
+    {
+      "root": "seq_advance_arrangement@0x202ab60",
+      "helper": "plat_midi_batch@0x2000f96",
+      "chain": [
+        "seq_advance_arrangement@0x202ab60",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2",
+        "plat_midi_batch@0x2000f96"
+      ]
+    },
+    {
+      "root": "seq_advance_arrangement@0x202ab60",
+      "helper": "harmony_resolve@0x202f6fc",
+      "chain": [
+        "seq_advance_arrangement@0x202ab60",
+        "seq_midi_prepare@0x2028fc0",
+        "seq_pad_desired@0x2028cf8",
+        "harmony_resolve@0x202f6fc"
+      ]
+    },
+    {
+      "root": "engine_notes_clear@0x202c954",
+      "helper": "pad_publish@0x2028db2",
+      "chain": [
+        "engine_notes_clear@0x202c954",
+        "seq_notes_clear@0x2028f52",
+        "pad_publish@0x2028db2"
+      ]
+    },
+    {
+      "root": "engine_notes_clear@0x202c954",
+      "helper": "seq_notes_clear@0x2028f52",
+      "chain": [
+        "engine_notes_clear@0x202c954",
+        "seq_notes_clear@0x2028f52"
+      ]
+    },
+    {
+      "root": "engine_notes_clear@0x202c954",
+      "helper": "s_midi_batch@0x202e6b2",
+      "chain": [
+        "engine_notes_clear@0x202c954",
+        "seq_notes_clear@0x2028f52",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2"
+      ]
+    },
+    {
+      "root": "engine_notes_clear@0x202c954",
+      "helper": "plat_midi_batch@0x2000f96",
+      "chain": [
+        "engine_notes_clear@0x202c954",
+        "seq_notes_clear@0x2028f52",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2",
+        "plat_midi_batch@0x2000f96"
+      ]
+    },
+    {
+      "root": "engine_notes_clear@0x202c954",
+      "helper": "engine_notes_clear@0x202c954",
+      "chain": [
+        "engine_notes_clear@0x202c954"
+      ]
+    },
+    {
+      "root": "engine_init@0x202dfe4",
+      "helper": "pad_publish@0x2028db2",
+      "chain": [
+        "engine_init@0x202dfe4",
+        "seq_notes_clear@0x2028f52",
+        "pad_publish@0x2028db2"
+      ]
+    },
+    {
+      "root": "engine_init@0x202dfe4",
+      "helper": "seq_notes_clear@0x2028f52",
+      "chain": [
+        "engine_init@0x202dfe4",
+        "seq_notes_clear@0x2028f52"
+      ]
+    },
+    {
+      "root": "engine_init@0x202dfe4",
+      "helper": "s_midi_batch@0x202e6b2",
+      "chain": [
+        "engine_init@0x202dfe4",
+        "seq_notes_clear@0x2028f52",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2"
+      ]
+    },
+    {
+      "root": "engine_init@0x202dfe4",
+      "helper": "plat_midi_batch@0x2000f96",
+      "chain": [
+        "engine_init@0x202dfe4",
+        "seq_notes_clear@0x2028f52",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2",
+        "plat_midi_batch@0x2000f96"
+      ]
+    },
+    {
+      "root": "engine_init@0x202dfe4",
+      "helper": "plat_midi_connected@0x2000e96",
+      "chain": [
+        "engine_init@0x202dfe4",
+        "plat_midi_connected@0x2000e96"
+      ]
+    },
+    {
+      "root": "project_defaults@0x2001776",
+      "helper": "pad_publish@0x2028db2",
+      "chain": [
+        "project_defaults@0x2001776",
+        "engine_notes_clear@0x202c954",
+        "seq_notes_clear@0x2028f52",
+        "pad_publish@0x2028db2"
+      ]
+    },
+    {
+      "root": "project_defaults@0x2001776",
+      "helper": "seq_notes_clear@0x2028f52",
+      "chain": [
+        "project_defaults@0x2001776",
+        "engine_notes_clear@0x202c954",
+        "seq_notes_clear@0x2028f52"
+      ]
+    },
+    {
+      "root": "project_defaults@0x2001776",
+      "helper": "s_midi_batch@0x202e6b2",
+      "chain": [
+        "project_defaults@0x2001776",
+        "engine_notes_clear@0x202c954",
+        "seq_notes_clear@0x2028f52",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2"
+      ]
+    },
+    {
+      "root": "project_defaults@0x2001776",
+      "helper": "plat_midi_batch@0x2000f96",
+      "chain": [
+        "project_defaults@0x2001776",
+        "engine_notes_clear@0x202c954",
+        "seq_notes_clear@0x2028f52",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2",
+        "plat_midi_batch@0x2000f96"
+      ]
+    },
+    {
+      "root": "project_defaults@0x2001776",
+      "helper": "engine_notes_clear@0x202c954",
+      "chain": [
+        "project_defaults@0x2001776",
+        "engine_notes_clear@0x202c954"
+      ]
+    },
+    {
+      "root": "project_load@0x2001afc",
+      "helper": "pad_publish@0x2028db2",
+      "chain": [
+        "project_load@0x2001afc",
+        "project_defaults@0x2001776",
+        "engine_notes_clear@0x202c954",
+        "seq_notes_clear@0x2028f52",
+        "pad_publish@0x2028db2"
+      ]
+    },
+    {
+      "root": "project_load@0x2001afc",
+      "helper": "seq_notes_clear@0x2028f52",
+      "chain": [
+        "project_load@0x2001afc",
+        "project_defaults@0x2001776",
+        "engine_notes_clear@0x202c954",
+        "seq_notes_clear@0x2028f52"
+      ]
+    },
+    {
+      "root": "project_load@0x2001afc",
+      "helper": "s_midi_batch@0x202e6b2",
+      "chain": [
+        "project_load@0x2001afc",
+        "project_defaults@0x2001776",
+        "engine_notes_clear@0x202c954",
+        "seq_notes_clear@0x2028f52",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2"
+      ]
+    },
+    {
+      "root": "project_load@0x2001afc",
+      "helper": "plat_midi_batch@0x2000f96",
+      "chain": [
+        "project_load@0x2001afc",
+        "project_defaults@0x2001776",
+        "engine_notes_clear@0x202c954",
+        "seq_notes_clear@0x2028f52",
+        "pad_publish@0x2028db2",
+        "s_midi_batch@0x202e6b2",
+        "plat_midi_batch@0x2000f96"
+      ]
+    },
+    {
+      "root": "project_load@0x2001afc",
+      "helper": "engine_notes_clear@0x202c954",
+      "chain": [
+        "project_load@0x2001afc",
+        "project_defaults@0x2001776",
+        "engine_notes_clear@0x202c954"
+      ]
+    },
+    {
+      "root": "project_load@0x2001afc",
+      "helper": "engine_arrangement_refresh@0x202c1a4",
+      "chain": [
+        "project_load@0x2001afc",
+        "engine_arrangement_refresh@0x202c1a4"
+      ]
+    },
+    {
+      "root": "project_load@0x2001afc",
+      "helper": "harmony_resolve@0x202f6fc",
+      "chain": [
+        "project_load@0x2001afc",
+        "variant_saved_valid@0x202e8e0",
+        "arrangement_valid@0x202e6c6",
+        "harmony_resolve@0x202f6fc"
+      ]
+    },
+    {
+      "root": "project_save@0x200262e",
+      "helper": "harmony_resolve@0x202f6fc",
+      "chain": [
+        "project_save@0x200262e",
+        "variant_valid@0x202e8a0",
+        "arrangement_valid@0x202e6c6",
+        "harmony_resolve@0x202f6fc"
+      ]
+    },
+    {
+      "root": "pref_set@0x2002c4c",
+      "helper": "engine_midi_channel_allowed@0x202c932",
+      "chain": [
+        "pref_set@0x2002c4c",
+        "engine_midi_channel_allowed@0x202c932"
+      ]
+    }
+  ],
+  "not_emitted": [
+    "pad_release",
+    "midi_out_batch",
+    "midi_ring_try_batch",
+    "cq_put",
+    "do_stop",
+    "engine_arrangement_global",
+    "variant_command",
+    "variant_snapshot",
+    "host_web_midi_ready",
+    "host_web_midi_batch",
+    "host_web_midi_packet",
+    "host_web_midi_ack",
+    "host_web_midi_cancel",
+    "web_midi_ready",
+    "web_midi_cancel",
+    "web_buttons_tagged",
+    "web_input_ticket"
+  ],
+  "limits": "Original target_budget model/limits unchanged. Static metrics exclude callees; all_calls includes straight-line and indirect calls. Frames are prologue allocations only, not worst stack. Source callback alternatives are conservative annotations, not resolved executed paths. Shortest chains do not prove cycles, branch frequency, interrupt nesting, deadline margin or receiver delivery. Lower caller counts moved work into helpers."
+}

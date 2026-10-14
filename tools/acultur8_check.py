@@ -51,6 +51,20 @@ def main():
         run('fresh-host-and-wasm-build', command)
         docker = ['docker', 'run', '--rm', '--network=none', '--cap-drop=ALL',
                   '--security-opt=no-new-privileges', *docker_identity(), '-v', str(ROOT) + ':/src', '-w', '/src', args.image]
+        # A Windows worktree's .git file contains a host-absolute path that is
+        # meaningless in Linux. Mount its existing metadata read-only and give
+        # Git explicit container paths for pinned independent oracle archives.
+        if (ROOT / '.git').is_file():
+            git_dir = Path(subprocess.check_output(
+                ['git', 'rev-parse', '--absolute-git-dir'], cwd=ROOT, text=True).strip())
+            common = Path(subprocess.check_output(
+                ['git', 'rev-parse', '--git-common-dir'], cwd=ROOT, text=True).strip())
+            if not common.is_absolute():
+                common = (ROOT / common).resolve()
+            docker[-1:-1] = ['-v', str(git_dir) + ':/oracle-git:ro',
+                             '-v', str(common) + ':/oracle-common:ro',
+                             '-e', 'GIT_DIR=/oracle-git', '-e', 'GIT_COMMON_DIR=/oracle-common',
+                             '-e', 'GIT_WORK_TREE=/src']
         run('required-engine-regressions', docker + ['sh', 'tools/acultur8_checks.sh'])
         run('portable-dashboard', [sys.executable, 'lab/test_dashboard.py'])
         run('emulator-page-bridge', [sys.executable, 'lab/test_build_emulator.py'])

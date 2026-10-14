@@ -37,7 +37,7 @@ for(let i=0;i<16;i++){
 }
 function send(op,target=0,voice=0,index=0,value=0,hold=null){
   if(!available||protectedProject||typeof window.fm1SliceSend!=='function')return;
-  request=0x80000000|((request+1)&0x7fffffff);request>>>=0;
+  request=0x80000000|((request+1)&0x3fffffff);request>>>=0;
   const sent={op,target,voice,index,value,hold};pending.set(request,sent);
   if(hold)holds.set(hold,{request,revision:null,target});
   window.fm1SliceSend({type:'variant-command',abi:1,op,request,target,voice,index,value});
@@ -157,7 +157,8 @@ window.addEventListener('fm1-marked',event=>{
   if(!error&&!holds.size&&!tickets.size&&!pending.size&&/^(Queued|Edit acknowledged)/.test($('arrangement-status').textContent))say('Applied · C snapshot received.');
   $('arrangement-project').textContent=`Project ${info.values[1]?'has unsaved changes':'matches its saved state'} · revision ${info.revision}`;
   const chord=v.chord?.abi===1?v.chord.values:null;
-  $('arrangement-chord').textContent=harmony&&chord?.length===7&&chord[0]?`Playing chord metadata: ${chord.slice(1,4).map(pc=>notes[pc]??'?').join(' · ')} · MIDI ${chord.slice(4,7).join(', ')}. Bass-follow and pad connections pending.`:'No playing chord metadata. Bass-follow and pad connections pending.';
+  const follow=(lastCaps&128)?'Enabled bass follow uses this shared chord. External accompaniment remains pending.':'Bass-follow and external accompaniment remain pending.';
+  $('arrangement-chord').textContent=harmony&&chord?.length===7&&chord[0]?`Playing chord metadata: ${chord.slice(1,4).map(pc=>notes[pc]??'?').join(' · ')} · MIDI ${chord.slice(4,7).join(', ')}. ${follow}`:(lastCaps&128)?'No playing chord metadata. Bass follow keeps legacy pitches when no chord is available. External accompaniment remains pending.':'No playing chord metadata. Bass-follow and external accompaniment remain pending.';
   render();
 });
 render();

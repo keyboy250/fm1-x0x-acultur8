@@ -1,0 +1,13 @@
+<section class="cc-input-lab" aria-labelledby="cc-input-title">
+  <h2 id="cc-input-title">MIDI CC automation input · candidate</h2>
+  <p>Receive controller automation from one MIDI input. This route ignores keyboard notes, system messages and CC 120–127. It does not echo MIDI to an output.</p>
+  <p id="cc-input-availability">Switch on the emulator to check the CC protocol.</p>
+  <div class="cc-input-actions"><button id="cc-input-connect" type="button">Connect MIDI input</button><label for="cc-input-port">Input<select id="cc-input-port" disabled><option value="">Choose an input</option></select></label></div>
+  <div class="cc-input-actions"><button id="cc-input-enable" type="button" disabled>Enable selected CC input</button><button id="cc-input-retry" type="button" disabled>Retry selected input</button><button id="cc-input-disable" type="button" disabled>Disable CC input</button></div>
+  <p id="cc-input-status" role="status" aria-live="polite">No MIDI permission requested.</p>
+  <p id="cc-input-counts">No CC input received.</p>
+  <p id="cc-input-engine"></p>
+  <p>Automation and panel edits share the project's Undo history. Automation applied during an open panel edit can be undone with that edit.</p>
+  <p>Connect MIDI input is the only permission request. Inputs are never restored or enabled automatically. After a pause or restart, explicitly retry and resend the complete controller selection and value. An overflow or missing receipt discards pending input and resets controller selection; already accepted or applied settings remain.</p>
+  <p>This is a development candidate with partial runtime coverage. An ingress receipt does not prove that a parameter changed. Compiled WASM integration, full parameter coverage, physical-device delivery and timing still require verification.</p>
+</section>

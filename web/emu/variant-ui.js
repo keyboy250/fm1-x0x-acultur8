@@ -23,7 +23,7 @@ const say=(text,isError=false)=>{error=isError;$('variant-status').textContent=t
 const passed=ticket=>((read-(ticket>>>0))|0)>=0;
 function command(op,index=0,value=0){
   if(typeof window.fm1SliceSend!=='function')return;
-  request=(request+1)>>>0;
+  request=(request+1)&0x3fffffff;
   pending.set(request,{op,index,value,target:selectedStrip});lockSelector();
   window.fm1SliceSend({type:'variant-command',abi:1,op,request,target:selectedStrip,voice:0,index,value});
   if(op!==3&&op!==4)say(op===7?'Requesting project save…':'Waiting for engine acknowledgement…');

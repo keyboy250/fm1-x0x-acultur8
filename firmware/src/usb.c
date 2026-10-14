@@ -129,14 +129,23 @@ static volatile uint32_t so_w, so_r;
 #define MQ 64u
 static uint32_t midi_in_q[MQ], midi_out_q[MQ];
 static volatile uint32_t mi_w, mi_r, mo_w, mo_r;
+#if X0X_CC
+#include "midi_cc_ingress.h"
+#endif
 
-static void midi_out_event(uint32_t pkt)            /* from the audio ISR */
+#include "midi_ring.h"
+static int midi_out_event(uint32_t pkt) /* bounded enqueue feedback, audio/main single producer */
 {
-    if (usb.config && mo_w - mo_r < MQ) {
-        midi_out_q[mo_w % MQ] = pkt;
-        RING_PUBLISH();
-        mo_w++;
-    }
+    return midi_ring_try_put(midi_out_q,&mo_w,&mo_r,MQ,pkt,usb.config && !usb.suspended);
+}
+static int midi_out_pair(uint32_t first,uint32_t second)
+{
+    return midi_ring_try_pair(midi_out_q,&mo_w,&mo_r,MQ,first,second,usb.config && !usb.suspended);
+}
+
+static int midi_out_batch(const uint32_t *packets,uint32_t count)
+{
+    return midi_ring_try_batch(midi_out_q,&mo_w,&mo_r,MQ,packets,count,usb.config && !usb.suspended);
 }
 
 /* ------------------------------------------------------- descriptors --- */
@@ -637,11 +646,16 @@ static void ep1_rx(void)
             uint32_t k, nb = cin == 4u || cin == 7u ? 3u : cin == 6u ? 2u : 1u;
             for (k = 0; k < nb; k++)
                 sysex_byte(ep1rx[i + 1 + k]);
-        } else if (((cin >= 8u && cin <= 0xEu) || (cin == 0xFu && ep1rx[i + 1] >= 0xF8u)) && mi_w - mi_r < MQ) {
+        } else if ((cin >= 8u && cin <= 0xEu) || (cin == 0xFu && ep1rx[i + 1] >= 0xF8u)) {
             /* CIN 0xF: a single byte; the real-time ones (clock, start, continue, stop) matter */
-            midi_in_q[mi_w % MQ] = pkt;
-            RING_PUBLISH();
-            mi_w++;
+#if X0X_CC
+            (void)cc_ingress_put(midi_in_q,&mi_w,&mi_r,MQ,pkt,0);
+#else
+            if (mi_w - mi_r < MQ) {
+                midi_in_q[mi_w % MQ] = pkt;
+                RING_PUBLISH();mi_w++;
+            }
+#endif
         }
     }
     usb.rx_pkts++;

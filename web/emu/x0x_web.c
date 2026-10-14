@@ -14,6 +14,23 @@ static void web_audio(const int32_t *blk, uint32_t n);
 
 #undef __attribute__
 
+/* Bounded browser MIDI FIFO. Host strips attributes; exports live here after undef. */
+__attribute__((used,visibility("default"))) int web_midi_ready(int ready) {return host_web_midi_ready(ready);}
+__attribute__((used,visibility("default"))) uint32_t web_midi_epoch(void) {return host_web_midi_epoch();}
+__attribute__((used,visibility("default"))) uint32_t web_midi_cancel(void) {return host_web_midi_cancel();}
+__attribute__((used,visibility("default"))) uint32_t web_midi_pending(void) {return host_web_midi_pending();}
+__attribute__((used,visibility("default"))) int web_midi_batch(int max) {return host_web_midi_batch(max);}
+__attribute__((used,visibility("default"))) uint32_t web_midi_packet(int index) {return host_web_midi_packet(index);}
+__attribute__((used,visibility("default"))) int web_midi_ack(int prefix) {return host_web_midi_ack(prefix);}
+/* Main/worklet message context only: explicit selected input is source2.
+ * Return0 is bounded input-ring acceptance, not audio application/delivery. */
+__attribute__((used,visibility("default"))) int web_midi_ingest(uint32_t packet,int source){return host_web_midi_ingest(packet,source);}
+__attribute__((used,visibility("default"))) void web_cc_reset_source(int source){if(source>=0&&source<CC_SOURCES)cc_reset_source((uint8_t)source);}
+__attribute__((used,visibility("default"))) uint32_t web_cc_source(int source,int field){return source<0||source>=CC_SOURCES||field<0?0xffffffffu:cc_source_field((uint8_t)source,(unsigned)field);}
+__attribute__((used,visibility("default"))) uint32_t web_cc_stat(int index){return index<0||index>=6?0xffffffffu:((uint32_t *)&cc_stats)[index];}
+__attribute__((used,visibility("default"))) uint32_t web_cc_pending(void){return mi_w-mi_r;}
+__attribute__((used,visibility("default"))) uint32_t web_cc_version(void){return 0x00010001u;} /* ABI1 / map1; partial candidate, not complete coverage */
+
 /* Fixed-size, shared-engine editor bridge. Never expose live project memory. */
 static variant_reply_t web_variant_reply;
 static variant_snapshot_t web_variant_view;
@@ -77,13 +94,21 @@ __attribute__((used, visibility("default"))) void web_render(uint32_t n)
 
 __attribute__((used, visibility("default"))) void web_boot(void) { boot(); }
 __attribute__((used, visibility("default"))) void web_buttons(uint32_t m) { held_btn = m; }
+__attribute__((used, visibility("default"))) void web_buttons_tagged(uint32_t m,uint32_t ticket) {if(ticket){held_btn=m;web_input_pending=ticket;}}
+__attribute__((used, visibility("default"))) uint32_t web_input_ticket(void) {return web_input_applied;}
 __attribute__((used, visibility("default"))) void web_keys(uint32_t m) { held_keys = m; }
 __attribute__((used, visibility("default"))) void web_enc(int role, int32_t n)
 {
     if (role >= 0 && role < NE)
         enc_acc[role] += n;
 }
-__attribute__((used, visibility("default"))) void web_master(uint32_t v) { master = v > 4096u ? 4096u : v; }
+__attribute__((used, visibility("default"))) void web_master(uint32_t v) { (void)master_control_set(&master_control,v>4096u?4096u:v,MC_POINTER); }
+__attribute__((used, visibility("default"))) uint32_t web_master_state(void) { return master_control_state(&master_control); }
+__attribute__((used, visibility("default"))) void web_master_step(int32_t delta) {
+    if(!delta || delta < -4096 || delta > 4096)return;
+    int32_t v=(int32_t)plat_master()+delta;
+    (void)master_control_set(&master_control,(uint32_t)(v<0?0:v>4096?4096:v),MC_POINTER);
+}
 __attribute__((used, visibility("default"))) uint32_t web_lit_buttons(void) { return lit_btn; }
 __attribute__((used, visibility("default"))) uint32_t web_lit_keys(void) { return lit_keys; }
 __attribute__((used, visibility("default"))) uint32_t web_dim_keys(void) { return dim_keys & ~lit_keys; }

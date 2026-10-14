@@ -100,7 +100,7 @@ void fm1_alnk0_irq(void)                            /* via isr_alnk0 (hal/fm1_is
 }
 extern void isr_alnk0(void);
 
-static void audio_init(void)
+static POLY_COLD void audio_init(void)
 {
     uint32_t i;
     for (i = 0; i < 2u * HALF_WORDS; i++)
@@ -108,7 +108,7 @@ static void audio_init(void)
     fm1_audio_init(abuf, HALF_WORDS, isr_alnk0, 3);
 }
 
-static void audio_silence(void)                     /* IRQs off (flash erase): the DMA would loop stale audio */
+static POLY_COLD void audio_silence(void)                     /* IRQs off (flash erase): the DMA would loop stale audio */
 {
     uint32_t i;
     for (i = 0; i < sizeof abuf / sizeof abuf[0]; i++)
@@ -202,7 +202,7 @@ static void fm1_fault(const fm1_crash_t *c)
     fm1_reboot();
 }
 
-static void enter_uboot(const char *why)
+static POLY_COLD void enter_uboot(const char *why)
 {
     fm1_audio_stop();
     lcd_fill(0, 0, 240, 240, C_BLACK);
@@ -217,7 +217,7 @@ static void enter_uboot(const char *why)
 /* SAFE MODE: X0X crashed (or hung) twice while starting. Nothing that makes sound runs: no audio,
  * no engine, no UI; USB is on, so the web installer (X0X, or the stock firmware) and M-UPGRADE can
  * reach it. PLAY tries X0X again. The chip's own update mode stays the last resort (fm1_cstart). */
-static void safe_main(void)
+static POLY_COLD void safe_main(void)
 {
     char b[24];
     uint32_t t0, play;
@@ -268,7 +268,7 @@ static void safe_main(void)
     }
 }
 
-static void fm1_main(void)
+static POLY_COLD void fm1_main(void)
 {
     int32_t knob = 512 * 16;
     uint32_t last_frame = 0, k;
@@ -363,7 +363,7 @@ static void fm1_main(void)
                 uint32_t k10;
                 knob += (a * 16 - knob) / 8;
                 k10 = (uint32_t)(knob / 16);
-                master_q12 = (k10 * k10) >> 8;           /* 0 .. ~4096 */
+                master_control_adc(&master_control,(k10 * k10) >> 8); /* retained ADC smoothing/curve */
             }
         }
         {   /* OCT- + OCT+ held 5 s: update mode (Felucca's, unchanged) */
@@ -385,6 +385,7 @@ static void fm1_main(void)
                 enter_uboot("UBOOT");
             }
         }
+        plat_midi_service();                        /* main-only canonical CC handoff */
         ed_service();                               /* sample upload SysEx */
         ota_service();                              /* M-UPGRADE handshake */
         if (usb.ota_req) {
@@ -414,7 +415,7 @@ static void fm1_main(void)
     }
 }
 
-void fm1_cstart(void)
+POLY_COLD void fm1_cstart(void)
 {
     uint32_t *s, *d, p3, src, wdt;
     fm1_cpu1_halt();                                /* a second core left running by the reset would read

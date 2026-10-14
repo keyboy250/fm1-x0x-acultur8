@@ -1,0 +1,27 @@
+<section class="lane-lab" aria-labelledby="lane-title">
+  <h2 id="lane-title">Sound lanes · local preview</h2>
+  <p>Set a separate length and speed for each of the 25 sounds. Choose the pattern to edit independently of the pattern currently playing.</p>
+  <p id="lane-availability">Switch on the FM1 panel to check lane support.</p>
+  <div class="lane-mode-row"><button id="lane-mode" type="button" disabled>Initialize independent lanes</button><p id="lane-mode-state">Clock mode unavailable.</p></div>
+  <p>Initialize while stopped. After initialization, grouped/independent switches keep every sound's settings and take effect at the next musical bar. Grouped mode uses each drum kit's BD clock; bass and BREAK keep their own clocks.</p>
+  <fieldset id="lane-selection" disabled><legend>Editor selection</legend>
+    <label for="lane-pattern">Pattern ID (0–31)<select id="lane-pattern"></select></label>
+    <label for="lane-sound">Sound<select id="lane-sound"></select></label>
+  </fieldset>
+  <p id="lane-position">No playing position available.</p>
+  <fieldset id="lane-timing" disabled><legend>Selected sound timing</legend>
+    <label for="lane-length">Length (steps)<input id="lane-length" type="number" min="1" max="64" step="1" inputmode="numeric"></label>
+    <label for="lane-rate">Step rate<select id="lane-rate"></select></label>
+    <p id="lane-timing-state">Initialize the lanes to edit their timing.</p>
+  </fieldset>
+  <div id="lane-break-panel" hidden>
+    <h3>BREAK · 64 steps</h3>
+    <p>Gate turns a step on or off. Generator keeps the pattern's generated slice choice; Slice 1–8 forces that slice. Steps beyond the chosen length stay stored.</p>
+    <div class="lane-pages"><button id="lane-previous" type="button" disabled>Previous 32</button><strong id="lane-page-label">Steps 1–32 of 64</strong><button id="lane-next" type="button" disabled>Next 32</button></div>
+    <fieldset id="lane-break-controls" disabled><legend>Gates and slices</legend><div id="lane-grid" class="lane-grid"></div></fieldset>
+  </div>
+  <div class="lane-actions"><button id="lane-undo" type="button" disabled>Undo</button><button id="lane-redo" type="button" disabled>Redo</button><button id="lane-save" type="button" disabled>Save project</button></div>
+  <p id="lane-status" role="status" aria-live="polite">Waiting for the engine.</p>
+  <p id="lane-project"></p>
+  <p>Live timing edits are acknowledged first, then adopted at that sound's next local step. Edits to another pattern prepare it for later playback. Stop before Undo, Redo or Save. This editor sends internal engine commands. The separate MIDI CC input candidate has partial parameter coverage; physical-device testing remains pending.</p>
+</section>

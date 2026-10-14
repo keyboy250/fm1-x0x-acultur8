@@ -17,13 +17,42 @@ OUT=build/host
 W='-O2 -ffp-contract=off -Wall -Wextra -Wdouble-promotion -Werror'
 run() { name="$1"; shift; printf '\nRequired check: %s\n' "$name"; "$@"; }
 compile() { name="$1"; shift; cc "$@" -o "$OUT/$name"; run "$name" "$OUT/$name"; }
+run bass_follow sh tests/host/run_bass_follow.sh
+run bass_follow_wasm sh tests/host/run_bass_follow_wasm.sh
+run external_pad sh tests/host/run_pad.sh
+run external_pad_bridge sh tests/host/run_pad_bridge.sh
+run external_pad_wasm sh tests/host/run_pad_wasm.sh
+run midi_router node tests/host/midi_router_test.mjs
+run pad_ui node tests/host/pad_ui_test.mjs
+run pointer_keys node tests/host/pointer_keys_test.mjs build/emu/x0x.wasm
+run individual_lanes sh tests/host/run_lane.sh
+run individual_lanes_off_pcm sh tests/host/run_lane_off_pcm.sh
+run individual_lanes_wasm sh tests/host/run_lane_wasm.sh
+run lane_ui node tests/host/lane_ui_test.mjs
+run worklet_gesture node tests/host/worklet_gesture_test.mjs build/emu/x0x.wasm
+run cc_inventory python3 tools/cc_inventory.py --check
+run cc_inventory_tests python3 tests/cc_inventory_test.py
+run live_cc sh tests/host/run_live_cc.sh
+run cc_history sh tests/host/run_cc_history.sh
+run canonical_setters sh tests/host/run_canonical_setter.sh
+run master_control sh tests/host/run_master_control.sh
+run master_control_wasm node tests/host/master_control_wasm_test.mjs build/emu/x0x.wasm
+run cc_input_worklet node tests/host/cc_input_worklet_test.mjs
+run cc_input_router node tests/host/cc_input_router_test.mjs
+run cc_input_ui node tests/host/cc_input_ui_test.mjs
+run cc_input_integration node tests/host/cc_input_integration_test.mjs
+run cc_input_wasm node tests/host/cc_input_wasm_test.mjs build/emu/x0x.wasm
+run cc_history_wasm node tests/host/cc_history_wasm_test.mjs build/emu/x0x.wasm
 run arrangement sh tests/host/run_arrangement.sh
 run arrangement_wasm node tests/host/arrangement_wasm_test.mjs build/emu/x0x.wasm build/host/arrangement_schema1_store.bin
 run variant sh tests/host/run_variant.sh
 run variant_wasm node tests/host/variant_wasm_test.mjs build/emu/x0x.wasm
 run kick_wasm node tests/host/kick_wasm_test.mjs build/emu/x0x.wasm
 run all909_strip sh tests/host/run_all909_strip.sh
+run drum909_ranges sh tests/host/run_d9_range.sh
+run exp_tables sh tests/host/run_exp_table.sh
 run drum808_strip sh tests/host/run_drum808_strip.sh
+run drum808_ranges sh tests/host/run_d8_range.sh
 run all_strip sh tests/host/run_all_strip.sh
 run all_strip_wasm sh tests/host/run_all_strip_wasm.sh
 run sound_strip sh tests/host/run_sound_strip.sh
@@ -33,7 +62,7 @@ run font_packing python3 tests/test_font_packing.py
 run font_pinned_oracle python3 tests/test_font_pinned_oracle.py
 compile harmony $W -std=c99 -pedantic tests/host/harmony_test.c firmware/src/seq/harmony.c
 compile fastmath -O2 -ffp-contract=off -Wall -Wextra -Werror tests/host/fastmath_test.c -lm
-compile sequencer -O2 -ffp-contract=off -Wall -Wextra tests/host/seq_test.c firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c firmware/src/seq/pattern.c
+compile sequencer -O2 -ffp-contract=off -Wall -Wextra tests/host/seq_test.c firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c firmware/src/seq/pattern.c firmware/src/seq/harmony.c
 compile encoder -O2 -w -Ifirmware/hal tests/host/encoder_test.c
 compile bass303_lite -std=c99 -O2 -ffp-contract=off -w -Ifirmware/src/dsp -Ifirmware/src tests/host/bass303_lite_test.c firmware/src/dsp/bass303.c -lm
 compile uac -O2 -w -Ifirmware/src -Ifirmware/hal tests/host/uac_test.c -lm

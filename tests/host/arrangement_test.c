@@ -92,7 +92,7 @@ static void command_storage(void)
     assert(proj.arr.song.len==192 && proj.variant.arrangement.degree[2]==6 && proj.arr.song.bar[2].mute==expected_block.mute);
     /* Old format-3 fixture is generated with its independent schema-1 byte length/header. */
     proj.variant.schema=1;proj.variant.bytes=208;
-    assert(stream_measure(SCHEMA1_RAW_LEN,&packed)==0 && save_stream(SCHEMA1_RAW_LEN,3,packed)==0);
+    assert(stream_measure(SCHEMA1_RAW_LEN,RAW_OFF,&packed)==0 && save_stream(SCHEMA1_RAW_LEN,RAW_OFF,3,packed)==0);
     {
         FILE *fixture = fopen("build/host/arrangement_schema1_store.bin","wb");
         int obj;
@@ -105,11 +105,11 @@ static void command_storage(void)
         fclose(fixture);
     }
     assert(project_load()==0);
-    assert(proj.variant.schema==2 && proj.variant.bytes==412 && proj.variant.arrangement.flags==0 && proj.variant.arrangement.degree[2]==0);
+    assert(proj.variant.schema==5 && proj.variant.bytes==412 && proj.variant.arrangement.flags==0 && proj.variant.arrangement.degree[2]==0);
     assert(!memcmp(proj.variant.strip,before.variant.strip,sizeof proj.variant.strip));
     /* Valid CRC but invalid arrangement data must preserve project, journal and stored bytes. */
     proj.variant.arrangement.degree[191]=8;
-    assert(stream_measure(RAW_LEN,&packed)==0 && save_stream(RAW_LEN,4,packed)==0);
+    assert(stream_measure(RAW_LEN,RAW_OFF,&packed)==0 && save_stream(RAW_LEN,RAW_OFF,4,packed)==0);
     arrangement_defaults(&proj.variant.arrangement);before=proj;writes=store_writes;
     assert(project_load()==-8 && project_write_protected());
     assert(!memcmp(&before,&proj,sizeof proj) && store_writes==writes);
@@ -133,16 +133,16 @@ static void reject_format4(void)
         fresh();assert(cmd(VC_SET_ARR_LENGTH,0,0,0,2)==VR_QUEUED);
         assert(cmd(VC_SET_BLOCK,0,1<<3,0,0)==VR_QUEUED);drain();
         before=proj;
-        if(kind==0)proj.variant.arrangement.flags=2;
+        if(kind==0)proj.variant.arrangement.flags=64;
         if(kind==1)proj.variant.arrangement.key=12;
         if(kind==2)proj.variant.arrangement.mode=HARMONY_CHROMATIC;
         if(kind==3)proj.variant.arrangement.parent=7;
         if(kind==4)proj.variant.arrangement.degree[191]=8;
         if(kind==5)proj.arr.song.len=193;
         if(kind==6)proj.arr.song.bar[191].pat[4]=32;
-        if(kind==7)proj.variant.schema=3;
+        if(kind==7)proj.variant.schema=6;
         if(kind==8)proj.variant.bytes--;
-        assert(stream_measure(RAW_LEN,&packed)==0 && save_stream(RAW_LEN,4,packed)==0);
+        assert(stream_measure(RAW_LEN,RAW_OFF,&packed)==0 && save_stream(RAW_LEN,RAW_OFF,4,packed)==0);
         proj=before;journal=undo;memcpy(shadow,undo_shadow,sizeof shadow);writes=store_writes;
         assert(project_load()==-8 && project_write_protected());
         assert(!memcmp(&before,&proj,sizeof proj) && !memcmp(&journal,&undo,sizeof undo));
@@ -338,7 +338,7 @@ static void step_event(void *ctx,int part,int pos)
 static int drum_event(void *ctx,int kit,int voice,float vel) {(void)ctx;(void)kit;(void)voice;(void)vel;return 1;}
 static void bass_event(void *ctx,int part,int note,int accent,int slide) {(void)ctx;(void)part;(void)note;(void)accent;(void)slide;}
 static void bass_off(void *ctx,int part) {(void)ctx;(void)part;}
-static const seq_sink_t sink={drum_event,bass_event,bass_off,0,0,0,step_event,0};
+static const seq_sink_t sink={drum_event,bass_event,bass_off,0,0,0,step_event,0,0,0,0,0,0,0};
 static void advance(uint32_t n)
 {
     while(n) {

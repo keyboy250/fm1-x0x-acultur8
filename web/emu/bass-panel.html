@@ -1,0 +1,26 @@
+<section class="bass-lab" aria-labelledby="bass-title">
+  <h2 id="bass-title">303 A/B · chord follow</h2>
+  <p>Choose how each bass follows the playing arrangement chord. Stop playback before changing follow mode or MIDI-note bounds.</p>
+  <p id="bass-availability">Switch on the FM1 panel to check bass-follow support.</p>
+  <div class="bass-parts">
+    <fieldset id="bass-controls-0" disabled>
+      <legend>303 A</legend>
+      <label for="bass-mode-0">Follow mode <select id="bass-mode-0" data-part="0" data-field="0" aria-describedby="bass-help"><option value="0">Off · legacy notes</option><option value="1">Root only</option><option value="2">Chord tones only</option></select></label>
+      <label for="bass-low-0">Lowest MIDI note <input id="bass-low-0" type="number" min="0" max="127" step="1" data-part="0" data-field="1"></label>
+      <label for="bass-high-0">Highest MIDI note <input id="bass-high-0" type="number" min="0" max="127" step="1" data-part="0" data-field="2"></label>
+      <p id="bass-state-0">303 A state unavailable.</p>
+    </fieldset>
+    <fieldset id="bass-controls-1" disabled>
+      <legend>303 B</legend>
+      <label for="bass-mode-1">Follow mode <select id="bass-mode-1" data-part="1" data-field="0" aria-describedby="bass-help"><option value="0">Off · legacy notes</option><option value="1">Root only</option><option value="2">Chord tones only</option></select></label>
+      <label for="bass-low-1">Lowest MIDI note <input id="bass-low-1" type="number" min="0" max="127" step="1" data-part="1" data-field="1"></label>
+      <label for="bass-high-1">Highest MIDI note <input id="bass-high-1" type="number" min="0" max="127" step="1" data-part="1" data-field="2"></label>
+      <p id="bass-state-1">303 B state unavailable.</p>
+    </fieldset>
+  </div>
+  <p id="bass-chord">Playing chord metadata unavailable.</p>
+  <p id="bass-help">Off keeps the original absolute notes. Root/Chord uses the shared engine chord when arrangement is enabled and a positive chord degree is playing; a block with no chord retains legacy pitches. In strict follow mode, a range with no valid target produces no note. TIE cannot revive a rejected note: a new NOTE is required. Slides keep their intentional intermediate pitches. Pattern generators, mutation, rhythm and accent/slide settings are unchanged.</p>
+  <div class="bass-actions"><button id="bass-undo" type="button" disabled>Undo</button><button id="bass-redo" type="button" disabled>Redo</button><button id="bass-save" type="button" disabled>Save project</button></div>
+  <p id="bass-project"></p>
+  <p id="bass-status" role="status" aria-live="polite">Waiting for the engine.</p>
+</section>

@@ -53,12 +53,12 @@ jobs:
             build/emu/manifest.json
           if-no-files-found: error
       - name: Upload tested Pages artifact
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/acultur8/main'
+        if: ${{ false }} # Pages publication awaits separate sign-off
         uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ steps.artifact.outputs.site }}
   publish:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/acultur8/main'
+    if: ${{ false }} # Pages publication awaits separate sign-off
     needs: required-checks
     runs-on: ubuntu-24.04
     permissions:

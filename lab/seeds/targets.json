@@ -5,11 +5,11 @@
     "acceptance": "Produce a valid x0x.fwsc using pinned pi32v2 and AC79 inputs; pass image, 96 KiB RAM, pool headroom and no-soft-double checks; report actual X0X render costs.",
     "status": "review",
     "area": "toolchain",
-    "notes": "All-25 strip candidate plus lossless Huffman fonts passes all 15 unchanged original target gates: image 579636/581564, RAM 97860/98304, pool 335712/344064; pool free 8352 with required reserve 8192. Independent source review, complete fresh mandatory suite and actual local/hosted browser GUI acceptance pass. alpha.strips.1 at c081d63 is published with exact26 hosted hashes. Physical draw/audio/stack/DMA and device acceptance remain pending;15 static gates do not prove worst-case CPU.",
+    "notes": "Reviewed PR #13 merged at c081d630; final-head CI 38395393049 and merged CI/Pages 38395769684 passed. All 26 hosted hashes, exact source/WASM and actual hosted GUI checks pass; recoverable alpha.strips.1 is published. This covers the 25 instrument strips, including mono BREAK; marked-slice preview is separate. Physical draw/audio/stack and human listening are not claimed. Target image 579636/581564, RAM 97860/98304 and pool 335712/344064 leaves 160 bytes above reserve; 15 original static gates pass. Native font drawing is approximately 49.6% slower; device qualification remains pending.",
     "priority": 1,
-    "milestone": "A–D · Target build",
+    "milestone": "Aâ€“D Â· Target build",
     "depends_on": [],
-    "next_check": "Preserve the accepted publication and unchanged resource limits, including 160 bytes above pool reserve; measure physical draw/audio, stack/DMA and worst-case deadlines separately."
+    "next_check": "Preserve published source/WASM and acceptance evidence; qualify physical CPU, draw, stack and audio separately, then continue the remaining bass/MIDI and whole-scene work."
   },
   {
     "id": "FM1-04",
@@ -17,11 +17,11 @@
     "acceptance": "Record representative and stressed patterns, clipping, output level and resource use; preserve a bypass reference for new DSP and compare each feature against it.",
     "status": "doing",
     "area": "sound",
-    "notes": "Reviewed noise-arena saving and accepted basic arrangement remain preserved. All 25 sound strips pass native/actual WASM, independent review, complete fresh mandatory suite and actual local/hosted browser GUI acceptance. Combined target: image 579636, RAM 97860, pool 335712; 15 original gates unchanged. Additional helper instruction/stack costs are recorded in tests/all_sound_feature_costs.json and caller costs in tests/all_sound_target_costs.json; these are static estimates, not cycles. Huffman glyph/display parity passes; native draw is about 49.6% slower than packet fonts. Publication alpha.strips.1 is accepted; physical worst-case CPU and timing remain pending.",
+    "notes": "Reviewed PR #13 merged at c081d630; final-head CI 38395393049 and merged CI/Pages 38395769684 passed. All 26 hosted hashes, exact source/WASM and actual hosted GUI checks pass; recoverable alpha.strips.1 is published. This covers the 25 instrument strips, including mono BREAK; marked-slice preview is separate. Physical draw/audio/stack and human listening are not claimed. Explicit active helpers and call/stack costs remain separate from original static gates; worst-case physical workload is unqualified.",
     "priority": 2,
-    "milestone": "A–D · Performance baseline",
+    "milestone": "Aâ€“D Â· Performance baseline",
     "depends_on": [],
-    "next_check": "Preserve accepted browser publication; record dense physical workload, 808 paired tails/core2 stack and worst-case timing without changing limits."
+    "next_check": "Preserve published source/WASM and acceptance evidence; qualify physical CPU, draw, stack and audio separately, then continue the remaining bass/MIDI and whole-scene work."
   },
   {
     "id": "FM1-05",
@@ -31,7 +31,7 @@
     "area": "quality",
     "notes": "Shared save foundation and arrangement schema 2/format 4 pass native and actual worklet migration, roundtrip, corrupt/future-format rejection, protected history, queue and transport reservation tests. Published all-25 local/hosted save, undo/redo, old-project migration and reopen acceptance are preserved at alpha.strips.1. Save may commit an open gesture before a later I/O failure. Future bass/pad schema and physical interrupted-save acceptance remain open.",
     "priority": 3,
-    "milestone": "B · Shared foundations",
+    "milestone": "B Â· Shared foundations",
     "depends_on": [
       "FM1-01"
     ],
@@ -45,7 +45,7 @@
     "area": "protocol",
     "notes": "Reviewed bounded command/snapshot bridge passes production WASM/worklet bounds, queue backpressure, desired-versus-applied tickets and protected saves. Published local/hosted all-25 and arrangement editor acknowledgements, isolated selected views, draft locks and unsupported mask-1 gating pass. New bass/pad commands and hardware capability negotiation remain open.",
     "priority": 3,
-    "milestone": "B · Shared foundations",
+    "milestone": "B Â· Shared foundations",
     "depends_on": [
       "FM1-01"
     ],
@@ -57,14 +57,14 @@
     "acceptance": "Add sound-strip, arrangement and chord controls using shared engine state and acknowledged commands; preserve editing while playback continues; verify desktop and narrow layouts.",
     "status": "doing",
     "area": "interface",
-    "notes": "Accepted all 25 sound editor and public basic arrangement/chord metadata share acknowledged C state. Native/actual WASM, complete mandatory suite, local/hosted all 25 selection, isolated edits, undo/redo, saved reload, busy-save guard and 390px layout pass. The old mask-1 engine disables 24 options while keeping kick usable without errors. Broader arrangement and actual bass/MIDI/pad controls remain pending.",
+    "notes": "Reviewed PR #13 merged at c081d630; final-head CI 38395393049 and merged CI/Pages 38395769684 passed. All 26 hosted hashes, exact source/WASM and actual hosted GUI checks pass; recoverable alpha.strips.1 is published. This covers the 25 instrument strips, including mono BREAK; marked-slice preview is separate. Physical draw/audio/stack and human listening are not claimed. Actual hosted Undo/Redo/reload, six-slice sync, live busy Save, stopped Save and contained 390px layout pass. Port 8098 clean-main source/WASM matches; actual iframe has all 25 choices and isolated 303 B boost 0 loaded.",
     "priority": 4,
     "milestone": "B-C - Feature controls",
     "depends_on": [
       "FM1-07",
       "FM1-05"
     ],
-    "next_check": "Preserve accepted all 25/arrangement controls and original slice workflow; add broader order/loop and actual bass/MIDI controls with independent acceptance."
+    "next_check": "Preserve published source/WASM and acceptance evidence; qualify physical CPU, draw, stack and audio separately, then continue the remaining bass/MIDI and whole-scene work."
   },
   {
     "id": "FM1-27",
@@ -88,13 +88,13 @@
     "acceptance": "Independent HPF/LPF per 808/909 sound, 303 part and break part; bypass preserves baseline audio; smooth cutoff changes, bounded output and worst-case CPU checks pass.",
     "status": "review",
     "area": "sound",
-    "notes": "All 25 independent 909/808, 303 A/B and instrument mono BREAK HPF/LPF paths pass native/actual WASM, independent review, complete mandatory suite and local/hostedGUI acceptance. alpha.strips.1 at c081d63 preserves exact bypass, meters, persistence, tails and isolation. All 15 original static target gates pass unchanged, but the explicit worst-case CPU and physical deadline criterion remains pending; static gates do not establish physical CPU headroom. Marked-WAV preview is separate.",
+    "notes": "Reviewed PR #13 merged at c081d630; final-head CI 38395393049 and merged CI/Pages 38395769684 passed. All 26 hosted hashes, exact source/WASM and actual hosted GUI checks pass; recoverable alpha.strips.1 is published. This covers the 25 instrument strips, including mono BREAK; marked-slice preview is separate. Physical draw/audio/stack and human listening are not claimed. Browser functional filter/bypass/control coverage passed, but its explicit worst-case CPU acceptance still needs physical FM1 measurements.",
     "priority": 5,
-    "milestone": "B · Sound controls",
+    "milestone": "B Â· Sound controls",
     "depends_on": [
       "FM1-27"
     ],
-    "next_check": "Measure dense worst-case CPU/deadline behavior, 808 paired tails/core2 stack and physical timing without weakening resource limits; preserve accepted all 25 browser functionality."
+    "next_check": "Measure worst-case physical CPU and stack across all 25 strips, paired 808 tails and core2; retain passing browser filter/bypass evidence and unchanged limits."
   },
   {
     "id": "FM1-12",
@@ -102,13 +102,13 @@
     "acceptance": "Start with one 909 kick, then extend to individual sounds; verify the summed-strip ceiling including overlapping hits/tails, gain reduction, release, aligned timing, effect sends and unchanged bypass sound.",
     "status": "done",
     "area": "sound",
-    "notes": "All 25 instrument strips have accepted browser functional HPF/LPF, input boost and summed-sound sample-peak ceiling behavior, including tails, meters, exact bypass, save/reopen, undo/redo and isolation. PR #13 independent review and CI run 38395393049 passed; merged CI/Pages run 38395769684 and all 26 hosted hashes match. alpha.strips.1 identifies c081d63. Hosted 808 boost 12/ceiling -18 and BREAK 6/undo 0/redo 6 survive reload; arrangement 4 and public six-slice sync retain120BPM source with FM1 at 125 BPM, PLAY stop and live-save rejection/stopped-save acknowledgement. No lookahead or true-peak claim. Physical timing remains pending under FM1-11/06/10; Marked-WAV preview stays separate.",
+    "notes": "Reviewed PR #13 merged at c081d630; final-head CI 38395393049 and merged CI/Pages 38395769684 passed. All 26 hosted hashes, exact source/WASM and actual hosted GUI checks pass; recoverable alpha.strips.1 is published. This covers the 25 instrument strips, including mono BREAK; marked-slice preview is separate. Physical draw/audio/stack and human listening are not claimed. Accepted within browser functional scope: summed ceilings/tails, real meters, finite release, timing, selected-send policy, unchanged bypass, Undo/Redo and saved reload passed native/actual-WASM/local/hosted checks.",
     "priority": 5,
-    "milestone": "B · Sound controls",
+    "milestone": "B Â· Sound controls",
     "depends_on": [
       "FM1-27"
     ],
-    "next_check": "Browser functional acceptance complete. Preserve release alpha.strips.1 and existing saves; continue actual bass/MIDI and broader arrangement controls. Physical worst-case timing remains separate."
+    "next_check": "Preserve browser functional acceptance; physical timing/audio and human listening remain separate unqualified checks."
   },
   {
     "id": "FM1-13",
@@ -116,14 +116,14 @@
     "acceptance": "Show pattern step pages separately from arrangement blocks; edit block order, repeat count and quantized transitions; verify internal/external clock, save/load and playback while editing.",
     "status": "doing",
     "area": "sequencer",
-    "notes": "Basic arrangement is already publicly accepted at e78ee13: twelve pages/192 rows, five pattern assignments and mutes, independent 1-8 musical-bar durations, next-bar queue and latched chord intent. Preserve timing, migration, transport and undo acceptance. Local and hosted all-25 coexistence now passes with four-block arrangement and six synthetic slices using 120 BPM source synchronized to FM1 at 125 BPM, PLAY stop and protected live-save behavior. alpha.arrangement.1 at e78ee13 and alpha.strips.1 at c081d63 are published and accepted. Broader insert/duplicate/delete, row order and loop-range controls remain pending.",
+    "notes": "Reviewed PR #12 published basic arrangement at e78ee13: twelve pages/192 rows, five pattern assignments/mutes, 1â€“8 musical-bar durations and next-bar queue. 288 native timing combinations plus focused worklet tests pass. Hosted I/VI (duration 2)/IV/V progression, editing/playing independence, queue, busy Save, stopped save/reload and slice coexistence pass. Broader row-order and loop-range controls remain open.",
     "priority": 6,
-    "milestone": "C · Arrangement and harmony",
+    "milestone": "C Â· Arrangement and harmony",
     "depends_on": [
       "FM1-05",
       "FM1-07"
     ],
-    "next_check": "Preserve published basic arrangement and all 25 coexistence; implement broader insertion/order/loop controls without disturbing playback."
+    "next_check": "Preserve published basic arrangement acceptance; implement insert/duplicate/delete and loop-range controls without disturbing playback."
   },
   {
     "id": "FM1-14",
@@ -131,41 +131,41 @@
     "acceptance": "Sequence degrees 1-7 with scale-derived triad qualities and chord durations; verify major/minor tables, progression loops and saved-project migration. Pentatonic mode must not invent seven diatonic degrees.",
     "status": "doing",
     "area": "harmony",
-    "notes": "Shared C triad resolver and saved progression metadata are accepted with public basic arrangement at e78ee13: twelve keys, seven modes, I-VII and an explicit pentatonic parent. Metadata acceptance does not establish actual bass-follow, MIDI events or pad audio; those remain separate pending targets.",
+    "notes": "PR #12 publishes saved Iâ€“VII degrees and current latched C-engine triad metadata. Hosted four-block I/VI/IV/V progression showed C/E/G and queued V G/B/D. Bass-follow and external MIDI/pad connections are not implemented. Seven-note modes and explicit pentatonic parents remain shared resolver rules.",
     "priority": 7,
-    "milestone": "C · Arrangement and harmony",
+    "milestone": "C Â· Arrangement and harmony",
     "depends_on": [
       "FM1-13"
     ],
-    "next_check": "Preserve accepted harmony metadata and connect actual both-bass/MIDI/pad behavior to the same resolver under their separate acceptance targets."
+    "next_check": "Connect both bass followers and dedicated-channel MIDI accompaniment to the shared resolver, with final-note and cleanup acceptance."
   },
   {
     "id": "FM1-15",
     "title": "Chord-following bass generation",
     "acceptance": "Both 303 generators and mutation obey the active chord in strict mode; preserve rhythmic seed, accent/slide controls and octave limits; verify held notes, transitions and MIDI pitch agreement.",
-    "status": "todo",
+    "status": "review",
     "area": "harmony",
-    "notes": "Retain old absolute-note behavior. Scale, Chord only and Root only modes resolve final notes at playback from saved harmonic intent; strict mode must not leak passing tones.",
+    "notes": "Local bass candidate passes the fresh complete required suite, 81,648 native projection cases, 162 focused WASM cases and independently pinned default/Off PCM parity. Independent runtime and additional static-cost reviews pass. Actual browser editing, range rejection, undo/redo, saved reopen, live locks, queued chords, generated held notes, strict MIDI61-only silence and slice sync at90/120/180 BPM pass. Target image581524/581564 (40 spare), RAM97864/98304, pool335712/344064 (160 above reserve); all15 original gates unchanged pass. Software MIDI ownership/pitch agreement is covered; physical receiver and timing remain pending. Shared same-channel/same-pitch notes produce one receiver attack; independent articulation requires separate channels. Publication is held.",
     "priority": 8,
-    "milestone": "C · Arrangement and harmony",
+    "milestone": "C Â· Arrangement and harmony",
     "depends_on": [
       "FM1-14"
     ],
-    "next_check": "Prove both basses follow changing chords without rewriting their rhythm; check mutation, slides, ties, transpose and MIDI."
+    "next_check": "Retain reviewed local checkpoint; implement actual browser MIDI routing, verify external receiver separately, and complete the combined scene and soak without relaxing resource gates."
   },
   {
     "id": "FM1-16",
     "title": "External MIDI pad accompaniment",
     "acceptance": "Progression triggers triads on a dedicated configurable MIDI channel; release the actual previous notes on changes, stop and reset; verify ties, repeated chords, transport and channel isolation.",
-    "status": "todo",
+    "status": "doing",
     "area": "accompaniment",
-    "notes": "External MIDI triads first on a dedicated channel. Track actual held notes; release on chord/transport/project/channel changes and disconnect. Avoid unnecessary repeated-chord retriggers.",
+    "notes": "Fresh complete suite6 and all32 artifact hashes pass at source fcd814466eabaf5513dbde436e0d0dc39948e7e8ad6bc03d475bdbb5082b8359. Restart and late-ACK router fixes independently reviewed/tested. Actual synthetic browser120/180 notes on both bass channels and dedicatedpad with pitch-preserving syncedslices pass; Stop no ownership and352/352,804/804 NoteOn/Off; invalidbytes0. Full scene cannot pass yet: quick virtual-key clicks can be missed, leaving intended drums empty. Fix ongoing. Physical delivery, all-tempo final scene and30minute soak pending. No publication.",
     "priority": 9,
-    "milestone": "C · MIDI accompaniment",
+    "milestone": "C Â· MIDI accompaniment",
     "depends_on": [
       "FM1-14"
     ],
-    "next_check": "Capture chord note events in the browser monitor, then verify a real receiver and all note-cleanup cases."
+    "next_check": "Fix short virtual-key capture and review/test actual firmware scans, rebuild the complete suite, then accept full scene including drums and30minute soak; physical receiver remains pending."
   },
   {
     "id": "FM1-28",
@@ -184,7 +184,7 @@
       "FM1-25"
     ],
     "acceptance": "Run a synthetic four-block C-Am-F-G scene with drums, both chord-following basses, synced slices and MIDI pad events. Verify 90/120/180 BPM, summed-strip ceilings, edit/play/queue independence, save/reopen, MIDI cleanup and a recorded 30-minute browser soak. Attach the exact source/build identity and actual results.",
-    "notes": "Combined browser checkpoint from the expedited plan. Dependencies require their browser behavior and evidence; physical headroom and real MIDI receiver checks remain separately pending under their own targets. Slide note targets obey the chord; intermediate glide pitches are intentional. No whole-song acceptance result is claimed yet.",
+    "notes": "Combined browser checkpoint from the expedited plan. Dependencies require their browser behavior and evidence; physical headroom and real MIDI receiver checks remain separately pending under their own targets. Slide note targets obey the chord; intermediate glide pitches are intentional. No whole-song acceptance result is claimed yet. Suite6 browser120/180 bass/pad/slice checks are partial: intended drums were empty because quick virtual-key clicks were lost. Input fix and full all-tempo scene rerun remain required; no soak acceptance.",
     "next_check": "After individual browser checks pass, record the complete synthetic C-Am-F-G scene at 90/120/180 BPM, save/reopen, MIDI cleanup and a 30-minute soak before publishing the musical alpha."
   },
   {
@@ -195,7 +195,7 @@
     "area": "hardware",
     "notes": "",
     "priority": 10,
-    "milestone": "D · Device qualification",
+    "milestone": "D Â· Device qualification",
     "depends_on": [],
     "next_check": "Record the physical unit identity, installed version, recoverable backups and applicable stock recovery procedure."
   },
@@ -207,7 +207,7 @@
     "area": "hardware",
     "notes": "Browser releases can precede this gate. No Acultur8 hardware release or device installation has been accepted.",
     "priority": 10,
-    "milestone": "D · Device candidate",
+    "milestone": "D Â· Device candidate",
     "depends_on": [
       "FM1-06",
       "FM1-09",
@@ -229,7 +229,7 @@
     "area": "accompaniment",
     "notes": "Optional sine/triangle pad with smooth envelopes, conservative gain and capped release tails. Disabled by default; browser preview does not prove device CPU capacity. Does not hold up browser alpha or external MIDI accompaniment.",
     "priority": null,
-    "milestone": "Later · Internal pad experiment",
+    "milestone": "Later Â· Internal pad experiment",
     "depends_on": [
       "FM1-06",
       "FM1-10"
@@ -244,7 +244,7 @@
     "area": "samples",
     "notes": "Browser WAV/marker import and REX sync are accepted under FM1-19 through FM1-21. Exact-slice transfer to physical FM1 is a separate resource/design task.",
     "priority": null,
-    "milestone": "Later · Hardware samples",
+    "milestone": "Later Â· Hardware samples",
     "depends_on": [
       "FM1-06",
       "FM1-09"
@@ -259,7 +259,7 @@
     "acceptance": "Document permitted converter-source distribution and required notices/dependencies; exclude SDK binaries/headers/fixtures from firmware and browser releases; publish a companion only after the boundary is resolved.",
     "notes": "Current Windows converter remains usable locally. The initial public FM1 alpha can ship the marker format, importer and synthetic examples independently. Process separation alone does not establish license compatibility.",
     "priority": null,
-    "milestone": "Separate · Converter publication",
+    "milestone": "Separate Â· Converter publication",
     "depends_on": [],
     "next_check": "Establish converter reuse permission and SDK distribution terms before preparing a companion package."
   },
@@ -269,9 +269,9 @@
     "status": "done",
     "area": "release",
     "acceptance": "Preserve upstream history/credits, import only reviewed source changes, retain upstream tracking and establish acultur8/main with a clean file manifest.",
-    "notes": "Public fork preserves upstream history and credits; acultur8/main established. Reviewed PRs #1–#3 merged. Alpha source identity: 0487778bf76915c2312644791d92d30378f4ecb5. Reviewed PR #4 published the About page at commit 84d924660522f275baff6c3cd1741479bbe898b1; this is separate from the unchanged alpha.1 tag.",
+    "notes": "Public fork preserves upstream history and credits; acultur8/main established. Reviewed PRs #1â€“#3 merged. Alpha source identity: 0487778bf76915c2312644791d92d30378f4ecb5. Reviewed PR #4 published the About page at commit 84d924660522f275baff6c3cd1741479bbe898b1; this is separate from the unchanged alpha.1 tag.",
     "priority": 1,
-    "milestone": "A · Browser alpha",
+    "milestone": "A Â· Browser alpha",
     "depends_on": [
       "FM1-01"
     ],
@@ -285,7 +285,7 @@
     "area": "foundation",
     "notes": "Clean upstream checkout at 47f8e4c4ad602591b81c21bc5480db7a94f6d6af matches all 230 extracted baseline files exactly. Imported five modified files and eleven additions, with no removals. Originals remain intact. Evidence: variant-import-verification.json and merged PR #1.",
     "priority": 1,
-    "milestone": "A · Browser alpha",
+    "milestone": "A Â· Browser alpha",
     "depends_on": [],
     "next_check": "Baseline accepted; compare future changes against the preserved upstream commit and reviewed variant checkpoints."
   },
@@ -297,7 +297,7 @@
     "acceptance": "A fresh checkout launches the local lab; optional converter/SDK paths are configurable; missing SDK does not prevent emulator or WAV/JSON import; runtime files remain outside published source.",
     "notes": "Portable lab merged in PR #2. Eleven disposable-clone HTTP checks and three packager checks passed. Committed clean clone launched on port 8101 without a configured SDK; state reported runtime healthy and rex_ready=false.",
     "priority": 1,
-    "milestone": "A · Browser alpha",
+    "milestone": "A Â· Browser alpha",
     "depends_on": [
       "FM1-22"
     ],
@@ -311,7 +311,7 @@
     "acceptance": "Publish a tested static demo and complete source with matching build checksums; verify paths and available-feature labels; no device installer is promoted before hardware acceptance.",
     "notes": "Published acultur8-v0.1.0-alpha.1 from 0487778bf76915c2312644791d92d30378f4ecb5. All 21 deployed files matched build hashes. Hosted six-slice demo, audio startup, 90/120/180 BPM, shared stop/restart and saved-import reload/reopen passed with no console warnings/errors. Evidence: hosted-alpha-verification.json. Current Pages also includes the reviewed About page linking Acultur8.com and Traxsource; CI/deployment and hosted links passed (about-publication-verification.json).",
     "priority": 1,
-    "milestone": "A · Browser alpha",
+    "milestone": "A Â· Browser alpha",
     "depends_on": [
       "FM1-22",
       "FM1-23",
@@ -327,7 +327,7 @@
     "acceptance": "Pinned build/reference inputs reproduce the emulator; host audio, slice parser/player/sync/worklet and dashboard checks pass; missing mandatory coverage fails rather than silently skipping.",
     "notes": "Required host/WASM/dashboard/public-package CI passed on the reviewed source and merged alpha. Includes 31 host scenarios, audio parity and slice/import/sync/worklet checks. Missing mandatory inputs fail. External reference engines, native decoder and device checks are explicitly separate. CI: https://github.com/keyboy250/fm1-x0x-acultur8/actions/runs/38361493563",
     "priority": 2,
-    "milestone": "A · Browser alpha",
+    "milestone": "A Â· Browser alpha",
     "depends_on": [
       "FM1-23"
     ],
@@ -341,7 +341,7 @@
     "area": "toolchain",
     "notes": "Fresh native host build and all 31 representative scenarios passed; host/WASM audio parity and sample-slot checks passed in mandatory CI. This accepts the host simulator, not physical hardware.",
     "priority": 2,
-    "milestone": "A · Browser alpha",
+    "milestone": "A Â· Browser alpha",
     "depends_on": [],
     "next_check": "Accepted host setup. Device performance remains under FM1-04/FM1-06/FM1-10."
   },
@@ -376,5 +376,206 @@
     "area": "emulator",
     "acceptance": "Use sequencer audio clock and live tempo for imported slice onsets; unchanged slice playback speed; shared start/stop/restart; next-bar joining, original beat length and overload protection; styled standalone and served FAQ.",
     "notes": "WASM tests passed exact onsets/loop intervals at 90/120/180 BPM with unchanged 440 Hz PCM, live changes, bar joining, restart, independent slice stop, 7/8 and overlap guard. Worklet message/mixing test proved simultaneous audible FM1 pattern and slices, layer/solo options, tempo, stop/original/pads. Browser played official stereo REX at 90/180 BPM and instrument PLAY stopped/restarted both after minimum button-pulse fix. FAQ desktop diagrams, standalone style/CSP and 375px layout verified. Eight HTTP checks and baseline audio/sample-slot regressions passed. Browser internal-clock audition; continuous sustained-audio stretching, external-clock acceptance and hardware integration remain separate."
+  },
+  {
+    "id": "FM1-29",
+    "title": "Proposed: visual sequence and arrangement editor",
+    "acceptance": "Actual-engine grid acknowledgements; selected/playing/queued separation; safe paging during edits; undo/save/reopen and desktop/narrow checks.",
+    "status": "todo",
+    "area": "interface",
+    "notes": "Deferred community research proposal; not promoted into the current acceptance queue. See COMMUNITY_SIDE_NOTES.md. No firmware interoperability or hardware acceptance claimed. User-requested Arpeggio Lab inspiration is now source-audited in ARPEGGIO_LAB_DESIGN.md: grouped TB-3PO/harmony/timing controls and an actual-engine piano roll. Existing ARP is a stored bass-pattern generator; latch/anchor/movement/humanize remain proposed extensions. Community refresh: colour plus labels/symbols; animation follows actual-engine state, never drives audio timing; reduced-motion support. Repeated research creates no duplicate target.",
+    "priority": 20,
+    "milestone": "Deferred community proposals",
+    "depends_on": [
+      "FM1-28"
+    ],
+    "next_check": "Review a small prototype and feasibility after the current combined scene passes; preserve existing firmware and publication hold."
+  },
+  {
+    "id": "FM1-30",
+    "title": "Proposed: contextual control guide and readable layouts",
+    "acceptance": "Browser labels, units and FAQ links pass usability/accessibility checks; hardware HUD requires separate draw/audio/resource qualification.",
+    "status": "todo",
+    "area": "interface",
+    "notes": "Deferred community research proposal; not promoted into the current acceptance queue. See COMMUNITY_SIDE_NOTES.md. No firmware interoperability or hardware acceptance claimed. Community refresh: contextual knob assignments and linked diagrams for every strip/major feature; hardware colour/HUD animation requires separate display/audio/resource acceptance. Six-row/SELECT-HUD and Boldport claims remain unverified.",
+    "priority": 20,
+    "milestone": "Deferred community proposals",
+    "depends_on": [
+      "FM1-28"
+    ],
+    "next_check": "Review a small prototype and feasibility after the current combined scene passes; preserve existing firmware and publication hold."
+  },
+  {
+    "id": "FM1-31",
+    "title": "Proposed: firmware-aware librarian and backup manager",
+    "acceptance": "Capability/version gating, isolated backup roundtrip, corrupt/unsupported rejection and cancellation pass; physical restore remains separately pending.",
+    "status": "todo",
+    "area": "protocol",
+    "notes": "Deferred community research proposal; not promoted into the current acceptance queue. See COMMUNITY_SIDE_NOTES.md. No firmware interoperability or hardware acceptance claimed. Community refresh: compare SLOOP/Melodee backup and migration workflows; retain firmware-specific capability/version validation and explicit browser/device distinction.",
+    "priority": 20,
+    "milestone": "Deferred community proposals",
+    "depends_on": [
+      "FM1-28"
+    ],
+    "next_check": "Review a small prototype and feasibility after the current combined scene passes; preserve existing firmware and publication hold."
+  },
+  {
+    "id": "FM1-32",
+    "title": "Critical: independent sequence-lane rate and step count",
+    "area": "sequencing",
+    "acceptance": "Every intended sequence lane has independently saved rate and step count, editable during running performance through acknowledged browser and MIDI controls. Shared musical clock and arrangement/chord boundaries stay independent of lane wraps. Prove odd lengths and mixed straight/triplet rates, phase policy, no duplicate/missing hits, ties/slide/note cleanup, internal/external clocks, Stop/Continue, migration, undo/save/reopen, default PCM parity and unchanged target resource gates.",
+    "notes": "Reviewed25lane/eightrate/1–64step implementation; currentcombined909+MASTER target all15originalgatesPASS image580884/581564 RAM98184/98304 pool335712/344064. Combinedrequiredsuite12225terminal9PASS; subsequentDOMreadbackfix passesfocusedWASM/freshsuite39773terminal9PASS/actualbrowserreadback. ActualD8browser I/V D Aeolian/13stepCHtriplet/syntheticSliceStop/save/reload/restart andselected303noteexamples recorded. Physical/externalclock/DAW/fullscene acceptanceopen; publicationheld. Latest losslessEXP integration: officialimage579172/581564, RAM98184/98304, pool335712/344064;15staticgatesPASS,2392flashspare. Freshsuite97729terminalexit0/all9PASS;38artifacthashesverified; no physical/fullscene/completeCC promotion. See docs/ACULTUR8_EXP_TABLE_STATIC_COSTS.md.",
+    "next_check": "Preserve headroom for remainingCC features, then complete mixedlane musicalscene/externalclock/physical acceptance.",
+    "status": "doing",
+    "priority": 1,
+    "milestone": "Critical performance sequencing and DAW control",
+    "depends_on": []
+  },
+  {
+    "id": "FM1-33",
+    "title": "Critical: complete real-time MIDI CC performance mapping",
+    "area": "protocol",
+    "acceptance": "Inventory every usereditable musical parameter and assign a stable documented CC/channel mapping with ranges/units/scaling and capability version. Incoming USB/TRS and browser MIDI controls drive the same authoritative engine safely whileplaying, including new lane timing, all25strips, sound/mixer/FX, generators and harmony/bass/pad settings. Prove each map entry, automation under load, bounded latency/coalescing/backpressure, no feedback echo or MIDI-channel collisions, clean active-note transitions, snapshot/readback and save/reopen without per-CC flash writes; physical DAW/device acceptance remains separately pending.",
+    "notes": "652nativecandidates/24directgaps/14explicitnonaddress, all676addressesand690rowsstable. CorrectedMASTER preservesremoteownershipthroughstationarypot/jitter, integratedtargetfitPASS. Requiredsuite12225terminal9PASS withnewnative/actualWASMmastertests; accessiblehitreadbackfix passesfocusedWASM/freshsuite39773terminal9PASS/actualbrowserreadback.11nativeeditingactions and13markedcontrols remainisolated/unimplementedinmain; fineCC/globalsettingshistory/realDAW/device/fullscene open. Publicationheld. Latest losslessEXP integration: officialimage579172/581564, RAM98184/98304, pool335712/344064;15staticgatesPASS,2392flashspare. Freshsuite97729terminalexit0/all9PASS;38artifacthashesverified; no physical/fullscene/completeCC promotion. See docs/ACULTUR8_EXP_TABLE_STATIC_COSTS.md.",
+    "next_check": "Finish explicit native/worklet/action/master/undo contracts without borrowing UIselection; implement full musical coverage, exact/fine ordering and realDAW integration, preserving resource gates.",
+    "status": "doing",
+    "priority": 1,
+    "milestone": "Critical performance sequencing and DAW control",
+    "depends_on": []
+  },
+  {
+    "id": "FM1-34",
+    "title": "Scoped musical randomisation with hierarchical locks and dice controls",
+    "area": "performance",
+    "status": "todo",
+    "priority": 2,
+    "milestone": "Musical performance tools",
+    "depends_on": [
+      "FM1-32",
+      "FM1-33"
+    ],
+    "acceptance": "Every requested scope from composition to parameter respects ancestor/local locks; key/scale/chord constraints, seeded reproduction, bounded variation, all-locked no-op, actual-engine atomic apply/undo/readback/save/reopen and migration pass. Live CC ordering, note cleanup and original firmware resource gates pass; physical timing remains separately pending.",
+    "notes": "Direct user request, not an existing feature. Lock chosen key/scale; configurable progression/timing/sound/step locks, accessible dice graphics and scoped preview. Preserve original loops, routes and file operations. See RANDOMISATION_DESIGN.md; no browser-only prototype counts as firmware persistence.",
+    "next_check": "Audit descriptor eligibility and measured storage/undo costs, then build deterministic lock-preserving candidate generation and an acknowledged browser preview before live apply."
+  },
+  {
+    "id": "FM1-35",
+    "title": "Explore 303 split gate and pitch sequencing mode",
+    "area": "sequencing",
+    "status": "todo",
+    "priority": 20,
+    "milestone": "Requested feasibility explorations",
+    "depends_on": [
+      "FM1-32",
+      "FM1-33"
+    ],
+    "acceptance": "Feasibility accepted only after native one-303 scheduling prototype, deterministic coincident-event and tie/slide policy, measured resource estimate and recoverable persistence design. Runtime completion requires Classic PCM parity, cleanup/clock/CC/undo/save/reopen/migration checks and unchanged resource gates; physical checks pending.",
+    "notes": "Direct user exploration request: optional Classic/Split gate-pitch mode on one 303 initially. Independent gate and MIDI-note sequences with separate rate/length. No physical analogue CV output implied. See CV_GATE_DESIGN.md; proposed, not implemented.",
+    "next_check": "Audit sequencing/storage headroom and prototype 303 A only, preserving 303 B and Classic behaviour; decide held-note pitch/tie/slide policy before live implementation."
+  },
+  {
+    "id": "FM1-36",
+    "title": "Individual sound-variant library slots and compatible save/load",
+    "area": "presets",
+    "status": "doing",
+    "priority": 2,
+    "milestone": "Reusable sound editing",
+    "depends_on": [
+      "FM1-33"
+    ],
+    "acceptance": "Selected voice timbre/strip capture and compatible slot load pass actual-engine readback; preserve other sounds/patterns/timing/harmony/imports. Slot persistence/export/import, version/engine rejection, overwrite recovery, undo/redo and project save/reopen pass. Device slot capacity/menu require separate measured acceptance.",
+    "notes": "Local prototype passes 1053 cases across25 voices using a simulated atomic engine adapter. Runtime capture/apply, persistent browser storage and GUI not implemented. Browser library and device flash slots are distinct; PRESETS still selects patterns. See SOUND_VARIANTS_DESIGN.md. No acceptance promotion.",
+    "next_check": "Implement an authoritative composite sound snapshot and bounded atomic apply/readback; then persistent library transactions and actual-WASM GUI checks. Do not use sequential setters as an atomic preset load."
+  },
+  {
+    "id": "FM1-37",
+    "title": "Optional per-sound bitcrusher in serial processing chain",
+    "area": "audio",
+    "status": "todo",
+    "priority": 2,
+    "milestone": "Sound processing extensions",
+    "depends_on": [
+      "FM1-11",
+      "FM1-33"
+    ],
+    "acceptance": "All25 sound strips support independently saved optional crusher; actual DSP bit-depth/decimation/stereo/block continuity, smooth editing/bypass, tail behaviour and final enabled ceiling bounds pass. Complete CC/preset mapping and unchanged target resource gates required; physical timing pending.",
+    "notes": "Existing some-voice/FX crush shaping is not uniform per-sound strip support. Proposed HPF -> crusher -> LPF -> boost -> ceiling placement with wet/dry before final guard. See SOUND_VARIANTS_DESIGN.md; no physical headroom or scope reduction claim.",
+    "next_check": "Measure reuse of existing crush primitive, config/storage/runtime state and processing costs; one complete prototype then all25 acceptance."
+  },
+  {
+    "id": "FM1-38",
+    "title": "Constrained note range, octave folding and polyphony limits",
+    "area": "harmony",
+    "status": "todo",
+    "priority": 2,
+    "milestone": "Musical performance tools",
+    "depends_on": [
+      "FM1-33",
+      "FM1-34"
+    ],
+    "acceptance": "Pitch-class preserving inclusive folding, no-equivalent policy, duplicate collapse, deterministic voice caps, seeded locks and sustained-note cleanup pass. Disabled-mode parity, actual-engine CC/undo/save/readback and original resource gates required; receiver/device tests separate.",
+    "notes": "User request: fold out-of-range notes to the same note in another octave, for example C2-C4; randomness must obey locks and caps. Existing303engines remainmono. Inversion separate from octave folding. See NOTE_RANGE_POLYPHONY_DESIGN.md; planned only.",
+    "next_check": "Audit compatible melodic generators/output and emitted-note ownership; prototype exhaustive folding and stable voicing without adding internal voices."
+  },
+  {
+    "id": "FM1-39",
+    "title": "Performance clock with explicit leader/follower and MIDI routing",
+    "area": "performance",
+    "status": "doing",
+    "priority": 1,
+    "milestone": "Live multi-device performance",
+    "depends_on": [
+      "FM1-32",
+      "FM1-33"
+    ],
+    "acceptance": "Single-source clock/transport ownership,24PPQN, loop prevention, visible loss/recovery, routing/queue/Stop safety and actual-WASM tests pass; real multi-device jitter/phase/2hour soak and original resource gates required.",
+    "notes": "Direct user liveperformance request; see PERFORMANCE_CLOCK_SET_DESIGN.md. Planned only; ordinary USB device daisychain unsupported; host/router required. No purchases/flashing/publication. Isolated actual-WASM clock testbench started against qualified60c3engine. Initial24PPQN counts, merged source and0.5slegacyfallback observed. Saturatedinput StopBUSY still stopsactualplaying; outputqueue FC absence underinvestigation, no receiverclaim. No newclockruntime/UI integrated.",
+    "next_check": "Audit MIDI source tagging and clock-loss path; create deterministic two-instance router/clock testbench before live routing."
+  },
+  {
+    "id": "FM1-40",
+    "title": "One-to-two-hour set lists and acknowledged scene transitions",
+    "area": "performance",
+    "status": "todo",
+    "priority": 1,
+    "milestone": "Live multi-device performance",
+    "depends_on": [
+      "FM1-32",
+      "FM1-33",
+      "FM1-39"
+    ],
+    "acceptance": "Named saved setlists, bounded preparation, cancelled/acknowledged scene cues and long-capacity transitions pass; simulated and real2hour runs distinguished; actualaudio/clock/receiver/recovery proof required.",
+    "notes": "Direct user liveperformance request; see PERFORMANCE_CLOCK_SET_DESIGN.md. Planned only; ordinary USB device daisychain unsupported; host/router required. No purchases/flashing/publication.",
+    "next_check": "Freeze scene capability/ack contract and current192block constraints; design bounded current/next set manager without assuming seamless live project loads."
+  },
+  {
+    "id": "FM1-41",
+    "title": "Versioned module and device compatibility contracts",
+    "area": "ecosystem",
+    "status": "todo",
+    "priority": 2,
+    "milestone": "Modular device ecology",
+    "depends_on": [
+      "FM1-33"
+    ],
+    "acceptance": "Validated module/capability manifests, stable parameter/protocol/schema contracts and incompatibility rejection pass; thirdparty fixture reintegration with license/migration/render/undo/resource tests required; physical compatibility separate.",
+    "notes": "DirectuserSystem100-inspiredmultiFM1direction; source modulescompiledintooneimage, notruntimeplugins; no analogueCV/extraengines implied. See MODULE_ECOSYSTEM_DESIGN.md.",
+    "next_check": "Inventory current source-module and existing ABI/save/CC contracts; define validated manifest and compatibility matrix without runtime-plugin claims."
+  },
+  {
+    "id": "FM1-42",
+    "title": "Coordinated multi-FM1 performance ensemble",
+    "area": "ecosystem",
+    "status": "todo",
+    "priority": 2,
+    "milestone": "Modular device ecology",
+    "depends_on": [
+      "FM1-39",
+      "FM1-40",
+      "FM1-41"
+    ],
+    "acceptance": "Explicit device roles/routes/identity/capabilities and acknowledged group cue/partialfailure cleanup pass; independent lanes remain timed by oneleader; realmultidevice audio/jitter/2hour/recovery acceptance required.",
+    "notes": "DirectuserSystem100-inspiredmultiFM1direction; source modulescompiledintooneimage, notruntimeplugins; no analogueCV/extraengines implied. See MODULE_ECOSYSTEM_DESIGN.md.",
+    "next_check": "Design topology/role view and capability-specific scene contract; prototype2actualWASMinstances beforephysical routing."
   }
 ]

@@ -26,7 +26,18 @@ class BuildPackagingTest(unittest.TestCase):
             self.assertEqual(page.count('id="arrangement-title"'), 1)
             self.assertEqual(page.count('src="arrangement-ui.js"'), 1)
             self.assertIn('href="arrangement-ui.css"', page)
-            for name in ('variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css'):
+            self.assertEqual(page.count('id="pad-title"'), 1)
+            self.assertEqual(page.count('src="pad-ui.js"'), 1)
+            self.assertIn('href="pad-ui.css"', page)
+            self.assertEqual(page.count('id="lane-title"'), 1)
+            self.assertEqual(page.count('src="lane-ui.js"'), 1)
+            self.assertIn('href="lane-ui.css"', page)
+            self.assertEqual(page.count('id="cc-input-title"'), 1)
+            self.assertEqual(page.count('src="cc-input-ui.js"'), 1)
+            self.assertIn('href="cc-input-ui.css"', page)
+            for name in ('variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css',
+                         'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css',
+                         'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs'):
                 self.assertEqual((output / name).read_bytes(), (WORK / 'web/emu' / name).read_bytes())
             self.assertIn('href="manual.txt"', page)
             self.assertIn('window.fm1SliceSend = send', script)
@@ -37,6 +48,21 @@ class BuildPackagingTest(unittest.TestCase):
             self.assertEqual((output / 'manual.txt').read_bytes(), (WORK / 'docs/MANUAL.md').read_bytes())
             if shutil.which('node'):
                 subprocess.run(['node', '--check', str(output / 'emu.js')], check=True)
+                # Execute the generated input boundary: intent precedes posting,
+                # wrap skips the reserved zero, and engine restart resets tickets.
+                test = r'''
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const js=fs.readFileSync(process.argv[1],'utf8');
+const part=js.slice(js.indexOf('let uiInputTicket ='),js.indexOf('function syncButtons()'));
+const events=[],handlers={},posted=[];
+const context=vm.createContext({node:{port:{postMessage:m=>{assert.equal(events.at(-1).detail.inputTicket,m.inputTicket);posted.push(m);}}},
+  window:{addEventListener:(n,f)=>handlers[n]=f,dispatchEvent:e=>events.push(e)},
+  CustomEvent:class{constructor(type,options){this.type=type;this.detail=options.detail;}}});
+vm.runInContext(part,context);vm.runInContext('uiInputTicket=0xfffffffe; send({type:"buttons",mask:1024}); send({type:"buttons",mask:0});',context);
+assert.equal(posted[0].inputTicket,0xffffffff);assert.equal(posted[1].inputTicket,1);
+handlers['fm1-ready']();vm.runInContext('send({type:"buttons",mask:0})',context);assert.equal(posted[2].inputTicket,1);
+'''
+                subprocess.run(['node', '-e', test, str(output / 'emu.js')], check=True)
 
     def test_static_namespace_and_relative_home(self):
         with tempfile.TemporaryDirectory(prefix='fm1-package-test-') as folder:
@@ -75,6 +101,18 @@ class BuildPackagingTest(unittest.TestCase):
             self.assertEqual(initial, source_hash(root))
             source.write_text('# package two\n', encoding='utf-8')
             self.assertNotEqual(initial, source_hash(root))
+
+    def test_source_hash_tracks_cc_input_modules(self):
+        with tempfile.TemporaryDirectory(prefix='fm1-cc-hash-test-') as folder:
+            root = Path(folder)
+            (root / 'web/emu').mkdir(parents=True)
+            for name in ('cc-input-router.mjs', 'cc-input-worklet.mjs', 'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-panel.html'):
+                before = source_hash(root)
+                (root / 'web/emu' / name).write_text('original', encoding='utf-8')
+                added = source_hash(root)
+                self.assertNotEqual(before, added, name)
+                (root / 'web/emu' / name).write_text('changed', encoding='utf-8')
+                self.assertNotEqual(added, source_hash(root), name)
 
 
 if __name__ == '__main__':

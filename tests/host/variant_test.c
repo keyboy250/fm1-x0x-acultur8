@@ -102,11 +102,11 @@ static void rejected(int kind)
     if (kind == 4) put32(store[OBJ_PAT0] + 4, RAW_LEN - 1);/* malformed length */
     if (kind >= 5 && kind <= 7) {
         uint32_t packed = 0;
-        if (kind == 5) proj.variant.schema = 3;
+        if (kind == 5) proj.variant.schema = 6;
         if (kind == 6) proj.variant.bytes--;
         if (kind == 7) proj.variant.strip[0].boost_db = 25;
-        assert(stream_measure(RAW_LEN, &packed) == 0);
-        assert(save_stream(RAW_LEN, 4, packed) == 0);    /* valid CRC, invalid extension */
+        assert(stream_measure(RAW_LEN,RAW_OFF,&packed) == 0);
+        assert(save_stream(RAW_LEN,RAW_OFF,4,packed) == 0);    /* valid CRC, invalid extension */
         variant_defaults(&proj.variant);
     }
     if (kind == 8) store_len[OBJ_PAT0] = -1;           /* missing first sector, remaining v3 sectors */
@@ -222,7 +222,7 @@ static void controls(void)
     for (t = 0; t < NTARGETS; t++) for (v = 0; v < engine_nvoices(t); v++) bound += engine_nparams(t,v);
     assert(bound + 1u <= 768);                         /* includes arrangement refresh after undo */
     assert(variant_snapshot(VS_INFO, 0, 0, &snapshot) == VR_OK && snapshot.count == 8);
-    assert(snapshot.value[0] == (VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE | VCAP_STRIP_AUDIO | VCAP_ARRANGEMENT | VCAP_HARMONY_METADATA));
+    assert(snapshot.value[0] == (VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE | VCAP_STRIP_AUDIO | VCAP_ARRANGEMENT | VCAP_HARMONY_METADATA | VCAP_BASS_FOLLOW | VCAP_EXTERNAL_PAD | VCAP_LANE_CLOCKS));
     rev = snapshot.revision;
     assert(variant_command(&invalid, &reply) == VR_UNSUPPORTED && reply.request == 77);
     assert(command(VC_SET_STRIP, 25, VP_BOOST, 0) == VR_INVALID);

@@ -42,7 +42,7 @@ static void ed_send(void)
     ota_wire_send(ed_out, ed_n);
 }
 
-static uint32_t ed_unpack7(const uint8_t *a, uint32_t na, uint8_t *out, uint32_t max)
+static POLY_COLD uint32_t ed_unpack7(const uint8_t *a, uint32_t na, uint8_t *out, uint32_t max)
 {
     uint32_t n = 0;
     while (na && n < max) {
@@ -61,7 +61,7 @@ static void ed_smp_inval(uint32_t k)
     fl_inval(ed_smp_slot(k), SMP_USER_SIZE);
     fm1_irq_on();
 }
-static int ed_smp_erase(uint32_t k, uint32_t all)
+static POLY_COLD int ed_smp_erase(uint32_t k, uint32_t all)
 {
     uint32_t i, took;
     int rc = 0;
@@ -75,7 +75,7 @@ static int ed_smp_erase(uint32_t k, uint32_t all)
     ed_smp_inval(k);
     return rc;
 }
-static int ed_smp_end(uint32_t k, const uint8_t *a, uint32_t na)
+static POLY_COLD int ed_smp_end(uint32_t k, const uint8_t *a, uint32_t na)
 {
     const smp_user_hdr_t *h = (const smp_user_hdr_t *)ed_smp_buf;
     if (ed_unpack7(a, na, ed_smp_buf, sizeof(smp_user_hdr_t)) != sizeof(smp_user_hdr_t))
@@ -117,7 +117,7 @@ static void ed_w35(uint32_t v)
     for (k = 0; k < 5u; k++)
         ed_b(v >> (7u * k));
 }
-static int ed_debug(uint32_t cmd, const uint8_t *a, uint32_t na)
+static POLY_COLD int ed_debug(uint32_t cmd, const uint8_t *a, uint32_t na)
 {
     uint32_t addr, i;
 #if X0X_DEBUG > 1                                     /* the clock work's timing loop: level 2 (room) */
@@ -156,7 +156,7 @@ static int ed_debug(uint32_t cmd, const uint8_t *a, uint32_t na)
 }
 #endif
 
-static void ed_handle(const uint8_t *f, uint32_t n)
+static POLY_COLD void ed_handle(const uint8_t *f, uint32_t n)
 {
     uint32_t cmd = f[3], i;
     const uint8_t *a = f + 4;
@@ -269,7 +269,7 @@ static void ed_handle(const uint8_t *f, uint32_t n)
     ed_send();
 }
 
-static void ed_service(void)
+static POLY_COLD void ed_service(void)
 {
     const uint8_t *p;
     uint32_t n;

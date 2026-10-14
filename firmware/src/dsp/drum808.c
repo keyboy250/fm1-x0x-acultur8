@@ -1189,33 +1189,53 @@ D8_TICK float shape(float x, const d8_shp_t *p, int type, float *st)
 /* ======================================================================= */
 
 /* 8W8's pot table (sc808_params.h), per sound and slot: min, max, EXP?, default */
-typedef struct { float min, max; uint8_t exp, def; } d8_spec_t;
-#define TU12 {-12.0f, 12.0f, 0, 64}
-#define TU2 {-2.0f, 2.0f, 0, 64}
-#define TUM {0.5f, 2.0f, 1, 64}
-#define LVL {0.0f, 2.0f, 0, 64}
-#define DRV {0.0f, 10.0f, 0, 0}
-#define DST {0.0f, 6.0f, 0, 0}
-#define SND {0.0f, 1.0f, 0, 0}
-#define NON {0.0f, 1.0f, 0, 0}
+typedef struct { float min, max; uint8_t exp; } d8_range_t;
+typedef struct { uint8_t range, def; } d8_spec_t;
+static const d8_range_t k_ranges[] = {
+    {-12.0f, 12.0f, 0},
+    {-2.0f, 2.0f, 0},
+    {0.5f, 2.0f, 1},
+    {0.0f, 2.0f, 0},
+    {0.0f, 10.0f, 0},
+    {0.0f, 6.0f, 0},
+    {0.0f, 1.0f, 0},
+    {0.1f, 8.0f, 1},
+    {0.06f, 2.0f, 1},
+    {0.005f, 0.2f, 1},
+    {0.01f, 0.3f, 1},
+    {0.35f, 2.8f, 1},
+    {0.1f, 2.0f, 1},
+    {0.03f, 0.5f, 1},
+    {0.08f, 1.5f, 1},
+    {0.4f, 6.0f, 1},
+};
+typedef char d8_range_index_fits_byte[(sizeof k_ranges/sizeof k_ranges[0]<=256)?1:-1];
+#define TU12 {0, 64}
+#define TU2 {1, 64}
+#define TUM {2, 64}
+#define LVL {3, 64}
+#define DRV {4, 0}
+#define DST {5, 0}
+#define SND {6, 0}
+#define NON {6, 0}
 /*                       level tune  decay                    drive dist rev  dly  x1                    x2 */
 static const d8_spec_t k_spec[D8S_NUM][D8P_NUM] = {
-    [D8S_BD] = {LVL, TU12, {0.1f, 8.0f, 1, 87},     DRV, DST, NON, NON, {0.0f, 6.0f, 0, 42}, {0.0f, 1.0f, 0, 24}},
-    [D8S_SD] = {LVL, TU12, {0.1f, 8.0f, 1, 108},    DRV, DST, SND, SND, {0.0f, 1.0f, 0, 89}, {0.0f, 1.0f, 0, 64}},
-    [D8S_LT] = {LVL, TU2,  {0.06f, 2.0f, 1, 68},    DRV, DST, SND, SND, NON, NON},
-    [D8S_MT] = {LVL, TU2,  {0.06f, 2.0f, 1, 56},    DRV, DST, SND, SND, NON, NON},
-    [D8S_HT] = {LVL, TU2,  {0.06f, 2.0f, 1, 53},    DRV, DST, SND, SND, NON, NON},
-    [D8S_LC] = {LVL, TU2,  {0.06f, 2.0f, 1, 58},    DRV, DST, SND, SND, NON, NON},
-    [D8S_MC] = {LVL, TU2,  {0.06f, 2.0f, 1, 36},    DRV, DST, SND, SND, NON, NON},
-    [D8S_HC] = {LVL, TU2,  {0.06f, 2.0f, 1, 34},    DRV, DST, SND, SND, NON, NON},
-    [D8S_RS] = {LVL, TU12, {0.005f, 0.2f, 1, 40},   DRV, DST, SND, SND, NON, NON},
-    [D8S_CL] = {LVL, TU12, {0.0f, 1.0f, 0, 64},     DRV, DST, SND, SND, NON, NON},
-    [D8S_MA] = {LVL, TU12, {0.01f, 0.3f, 1, 51},    DRV, DST, SND, SND, {0.0f, 1.0f, 0, 32}, NON},
-    [D8S_CP] = {LVL, TU12, {0.35f, 2.8f, 1, 64},    DRV, DST, SND, SND, NON, NON},
-    [D8S_CB] = {LVL, TUM,  {0.1f, 2.0f, 1, 62},     DRV, DST, SND, SND, NON, NON},
-    [D8S_CH] = {LVL, TUM,  {0.03f, 0.5f, 1, 47},    DRV, DST, SND, SND, NON, NON},
-    [D8S_OH] = {LVL, TUM,  {0.08f, 1.5f, 1, 74},    DRV, DST, SND, SND, NON, NON},
-    [D8S_CY] = {LVL, TUM,  {0.4f, 6.0f, 1, 70},     DRV, DST, SND, SND, NON, NON},
+    [D8S_BD] = {LVL, TU12, {7, 87},     DRV, DST, NON, NON, {5, 42}, {6, 24}},
+    [D8S_SD] = {LVL, TU12, {7, 108},    DRV, DST, SND, SND, {6, 89}, {6, 64}},
+    [D8S_LT] = {LVL, TU2,  {8, 68},    DRV, DST, SND, SND, NON, NON},
+    [D8S_MT] = {LVL, TU2,  {8, 56},    DRV, DST, SND, SND, NON, NON},
+    [D8S_HT] = {LVL, TU2,  {8, 53},    DRV, DST, SND, SND, NON, NON},
+    [D8S_LC] = {LVL, TU2,  {8, 58},    DRV, DST, SND, SND, NON, NON},
+    [D8S_MC] = {LVL, TU2,  {8, 36},    DRV, DST, SND, SND, NON, NON},
+    [D8S_HC] = {LVL, TU2,  {8, 34},    DRV, DST, SND, SND, NON, NON},
+    [D8S_RS] = {LVL, TU12, {9, 40},   DRV, DST, SND, SND, NON, NON},
+    [D8S_CL] = {LVL, TU12, {6, 64},     DRV, DST, SND, SND, NON, NON},
+    [D8S_MA] = {LVL, TU12, {10, 51},    DRV, DST, SND, SND, {6, 32}, NON},
+    [D8S_CP] = {LVL, TU12, {11, 64},    DRV, DST, SND, SND, NON, NON},
+    [D8S_CB] = {LVL, TUM,  {12, 62},     DRV, DST, SND, SND, NON, NON},
+    [D8S_CH] = {LVL, TUM,  {13, 47},    DRV, DST, SND, SND, NON, NON},
+    [D8S_OH] = {LVL, TUM,  {14, 74},    DRV, DST, SND, SND, NON, NON},
+    [D8S_CY] = {LVL, TUM,  {15, 70},     DRV, DST, SND, SND, NON, NON},
 };
 
 /* the lanes 8W8 balanced the kit with, applied before the drive stage */
@@ -1231,7 +1251,7 @@ static const float k_base_note[D8S_NUM] = {
 
 static float pot_value(int s, int slot, int pot)
 {
-    const d8_spec_t *p = &k_spec[s][slot];
+    const d8_range_t *p = &k_ranges[k_spec[s][slot].range];
     float t = (float)pot / 127.0f;
     if (p->exp && p->min > 0.0f)
         return p->min * d8_pow(p->max / p->min, t);

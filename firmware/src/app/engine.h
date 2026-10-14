@@ -25,8 +25,13 @@ int engine_arrangement_global(uint8_t *dst, uint8_t value, int stopped_only);
 int engine_arrangement_length(uint16_t *dst, uint16_t value);
 int engine_arrangement_refresh(const arrangement_settings_t *intent);
 int engine_arrangement_queue(uint8_t block);
+int engine_lane_set(int pattern,int lane,int index,int value);
+int engine_lane_mode(int enabled);
+int engine_lane_break_step(int pattern,int step,int gate,int slice);
+int engine_cc_refresh(int reconcile);
 /* Main context only. Nested holds permit helper calls after incoming requests defer. */
 int engine_transport_reserve(void);
+void engine_notes_clear(void);
 void engine_transport_release(void);
 
 enum { T_909, T_808, T_303, T_BRK, T_FX, T_MIX, T_MST, NTARGETS };
@@ -102,3 +107,5 @@ float engine_gr_db(void);                                   /* master compressor
 void engine_master_format(int i, char *buf);                /* a master pot in its unit */
 int engine_brk_nslots(void);                                /* built-in loops + user slots */
 const char *const *engine_brk_slot_names(void);
+
+int engine_midi_channel_allowed(int channel); /* saved pad channel remains dedicated */
