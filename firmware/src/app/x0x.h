@@ -79,3 +79,16 @@ void ui_external_saved(void);
 uint8_t *ui_project_stage(uint32_t bytes);
 void ui_project_stage_finish(int loaded);
 void ui_say(const char *a, const char *b);
+
+/* Isolated explicit-context native actions; main producer only. */
+enum { CA_OK,CA_STOP,CA_OWNER,CA_CONTEXT,CA_CONFIRM,CA_PROTECTED,CA_QUEUE,CA_MOTION,CA_JOURNAL,CA_CHECKPOINT,CA_IO,CA_BENCHMARK,CA_SCRATCH,CA_INVALID };
+int ui_cc_action_ready(int act);
+typedef struct { uint32_t revision, transport_epoch, fingerprint; } cc_action_guard_t;
+typedef char cc_action_guard_size[(sizeof(cc_action_guard_t)==12)?1:-1];
+int ui_cc_action_arm(int act,cc_action_guard_t *guard);
+int ui_cc_action(int act,int pattern,int part,int destination,int block,const cc_action_guard_t *guard);
+uint32_t project_fingerprint(void);
+uint32_t variant_current_revision(void);
+void cc_actions_reset(void);
+void project_defaults_into(project_t *destination);
+int project_checkpoint_matches(void);

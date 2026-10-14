@@ -4,7 +4,7 @@
 
 Generated with `python tools/cc_inventory.py --write`; validate with `--check`. No firmware compilation is performed.
 
-690 inventory rows: 676 addressed field templates/descriptor rows and 14 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 643, 'nonmusical': 3, 'diagnostic': 1, 'read_only': 1, 'action': 17, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 12}.
+693 inventory rows: 679 addressed field templates/descriptor rows and 14 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 644, 'nonmusical': 3, 'diagnostic': 1, 'read_only': 1, 'action': 19, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 12}.
 
 ## Source-derived engine descriptor counts
 
@@ -705,6 +705,9 @@ Acceptance: exhaustive registry coverage and endpoint/enum scaling; collision/re
 | lane.rate | Individual sound-lane rate | [0, 7] | 13 / 105 | {"pattern": [0, 31], "strip": [0, 24]} | musical |
 | value.exact_high7 | 21-bit exact value high chunk | [0, 127] | 13 / 106 | {} | musical |
 | lane.mode | Prepared independent clock mode | [0, 1] | 13 / 107 | {} | musical |
+| selector.destination_pattern | Explicit pattern-copy destination | [0, 31] | 13 / 108 | {} | musical |
+| action_control.arm | Arm destructive native action | [0, 11] | 13 / 109 | {} | action |
+| action_control.cancel | Cancel source action arm | [0, 1] | 13 / 110 | {} | action |
 | output.master_knob | MASTER gain Q12 | [0, 4096] | 13 / 76 | {} | musical |
 | slice.level_percent | slice.level_percent | [0, 100] | 13 / 80 | {} | browser_musical |
 | slice.repeat | slice.repeat | [0, 1] | 13 / 81 | {} | browser_musical |

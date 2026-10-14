@@ -1,5 +1,12 @@
 # Acultur8 X0X: implementation and GitHub variant plan
 
+## Current working candidate: native MIDI editing actions
+
+The reviewed eleven-action implementation, shared edit primitives, undo scanner and lossless variable EXP tables are integrated locally on `feat/native-actions-qualified`. The isolated full target passes all 15 original gates at 581492/581564 image bytes (72 spare), 98272/98304 ordinary RAM (32 spare) and 335712/344064 pool bytes (160 above reserve). Existing nine-check software suite and action-specific production-worklet/actual-WASM tests pass. Native and actual-WASM action tests are now mandatory; the fresh integration suite passes all nine checks.
+
+The registry has 693 rows: all 690 prior parameter contracts retained, three selectors added, 666 native implementation candidates, 13 browser slice direct-CC gaps and 14 nonaddressed/nonmusical entries. This is not complete DAW or hardware acceptance. Flash crash behavior, global-settings undo, physical timing/stack, receiver/hearing/click and long-soak work remain open. Clock fixes are a separate unintegrated candidate. GitHub source updates are authorized; Pages deployment remains held. Historical checkpoint paragraphs below do not supersede this section.
+
+
 ## Current execution authority and qualified checkpoint — 2026-10-14
 
 The user explicitly authorises updating GitHub and keeping the variant current. Reviewed/tested source and documentation may now be pushed through the established branch/PR workflow. This overrides the earlier repository-publication hold; it does not make the public repository private. Browser Pages deployment remains separately held in the workflow until publication sign-off. Preserve private loops, credentials, restricted SDK files and unresolved-license converter boundaries.
@@ -357,3 +364,7 @@ ActualfreshEXPbrowserrehearsal: bothkits/both303/BREAK,independenthat13/1-32T, D
 ## Developer compatibility and independent audit
 
 COMPATIBILITY_GUIDE.md defines version 0.1 contribution requirements for humans and coding agents: stable contracts, provenance, migration, MIDI/thread ownership, resource gates, recovery and an evidence matrix. FM1-41 remains todo: machine-readable manifests, automated enforcement and third-party fixture integration are not yet implemented. Physical/ensemble acceptance stays separate. Source guide publication is authorized; Pages remains held.
+
+## Distant future: Paraphonix expression
+
+FM1-43 explores distributing chord voices across compatible devices under the shared progression/key/scale, with range locks, voice leading and global/per-device voice budgets. See PARAPHONIX_EXPRESSION_DESIGN.md. Planned only, after clock and ensemble foundations; note density and audio headroom are separate acceptance concerns.

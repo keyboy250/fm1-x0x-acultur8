@@ -51,32 +51,48 @@ static int arrangement_song_valid(const song_t *song)
 int project_write_protected(void) { return rejected_save != 0; }
 void project_discard_rejected(void) { rejected_save = 0; }
 
-void project_defaults(void)
+void project_defaults_into(project_t *destination)
 {
     int i;
-    engine_notes_clear(); /* validated load/reset: bounded ownership cleanup before canonical mutation */
-    proj.set.magic = PROJ_MAGIC;
-    proj.set.format = PROJ_FORMAT;
-    proj.set.palette = 1;                /* amber */
-    proj.set.keyled = 1;
-    proj.set.keysound = 0;
-    proj.set.autosave_off = 0;
-    proj.set.clk_out = 1;
-    proj.set.notes_out = 0;
-    proj.set.bpm_x10 = 1250;
-    proj.set.accent_q7 = 88;
-    proj.set.stereo = PROJ_STEREO;
-    proj.set.snd_rev = PROJ_SND_REV;
-    engine_sound_defaults(&proj.sound);
-    variant_defaults(&proj.variant);
-    arrange_defaults();
+    destination->set.magic = PROJ_MAGIC;
+    destination->set.format = PROJ_FORMAT;
+    destination->set.palette = 1;                /* amber */
+    destination->set.keyled = 1;
+    destination->set.keysound = 0;
+    destination->set.autosave_off = 0;
+    destination->set.clk_out = 1;
+    destination->set.notes_out = 0;
+    destination->set.bpm_x10 = 1250;
+    destination->set.accent_q7 = 88;
+    destination->set.stereo = PROJ_STEREO;
+    destination->set.snd_rev = PROJ_SND_REV;
+    engine_sound_defaults(&destination->sound);
+    variant_defaults(&destination->variant);
+    memset(&destination->arr,0,sizeof destination->arr);
     /* the 303 lines start empty, like the drums: OCT+ on TB-3PO (or keyboard mode) writes one */
     for (i = 0; i < NPAT; i++)
-        pattern_init(&proj.pat[i], 0x3B0u + (uint32_t)i * 977u, 0x5A1u + (uint32_t)i * 613u);
+        pattern_init(&destination->pat[i], 0x3B0u + (uint32_t)i * 977u, 0x5A1u + (uint32_t)i * 613u);
+}
+
+void project_defaults(void)
+{
+    cc_actions_reset();
+    engine_notes_clear();
+    project_defaults_into(&proj);
 }
 
 /* how full the stream's room is, in % (GLO > ABOUT) */
 int project_mem_pct(void) { return (int)((packed_len * 100u + STREAM_CAP - 1u) / STREAM_CAP); }
+
+static uint32_t checkpoint_hash;
+static uint8_t checkpoint_verified;
+uint32_t project_fingerprint(void)
+{
+    const uint8_t *p=(const uint8_t *)&proj;uint32_t h=2166136261u,i;
+    for(i=0;i<sizeof proj;i++)h=(h^p[i])*16777619u;
+    return h;
+}
+int project_checkpoint_matches(void){return checkpoint_verified && checkpoint_hash==project_fingerprint();}
 
 /* object payload: format word + body */
 static uint8_t io_buf[PLAT_STORE_MAX] __attribute__((aligned(4)));
@@ -555,7 +571,9 @@ int project_load(void)
 {
     int rc;
     if (!engine_transport_reserve()) return -9;
+    cc_actions_reset();
     rc = project_load_impl();
+    checkpoint_verified=(uint8_t)(rc==0);if(!rc){checkpoint_hash=project_fingerprint();cc_actions_reset();}
     engine_transport_release();
     return rc;
 }
@@ -605,6 +623,7 @@ int project_save(void)
     int rc;
     if (!engine_transport_reserve()) return -9;
     rc = project_save_impl();
+    checkpoint_verified=(uint8_t)(rc==0);if(!rc){checkpoint_hash=project_fingerprint();cc_actions_reset();}
     engine_transport_release();
     return rc;
 }

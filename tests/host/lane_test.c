@@ -82,7 +82,7 @@ static void preserved_modes_and_copies(void)
     for(l=0;l<25;l++)assert(poly_length(proj.pat,(uint8_t *)&proj.sound,1,l)==(l<11?1+l*3%64:1+(7+l*3)%64));
     assert(engine_transport_reserve());assert(copy_part(1,0,4)==0);engine_transport_release();
     for(i=0;i<64;i++){assert(poly_break_gate(proj.pat,(uint8_t *)&proj.sound,1,i)==(i&1));assert(poly_break_slice(proj.pat,(uint8_t *)&proj.sound,1,i)==i%9);}
-    clear_part(&proj.pat[1],4);for(i=0;i<64;i++){assert(!poly_break_gate(proj.pat,(uint8_t *)&proj.sound,1,i));assert(!poly_break_slice(proj.pat,(uint8_t *)&proj.sound,1,i));}
+    edit_clear_part(&proj,&proj.pat[1],4);for(i=0;i<64;i++){assert(!poly_break_gate(proj.pat,(uint8_t *)&proj.sound,1,i));assert(!poly_break_slice(proj.pat,(uint8_t *)&proj.sound,1,i));}
     seq_start(&seq);render_block();assert(command(19,0,0,0,0)==VR_QUEUED);render_block();assert(seq.lane_enabled);
     assert(variant_snapshot(11,0,0,&view)==VR_OK && view.value[1]==0 && view.value[2]==1 && view.value[3]==1);
     seq.arrangement.tick=95;seq.arrangement.clock_started=1;seq.clk_to_next=0;seq_advance_poly(&seq,0,&SINK);assert(!seq.lane_enabled);

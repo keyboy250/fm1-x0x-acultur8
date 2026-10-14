@@ -3,6 +3,7 @@
 
 static uint32_t variant_revision;
 void variant_changed(void) { variant_revision++; }
+uint32_t variant_current_revision(void) { return variant_revision; }
 
 void arrangement_defaults(arrangement_settings_t *a)
 {

@@ -841,7 +841,11 @@ static inline __attribute__((always_inline)) void advance_common(seq_t *s, uint3
                 s->t[t].to_next = poly ? seq_step_q8(s,latched_rate(s,t<NKIT?t*11:t+20))/TICKS_PER_STEP[latched_rate(s,t<NKIT?t*11:t+20)] * (TICKS_PER_STEP[latched_rate(s,t<NKIT?t*11:t+20)]-s->t[t].ext_ticks) : 0;
         if(poly && s->lane_enabled)for(t=0;t<20;t++)if(s->playing && s->lane[t].to_next==NEVER){int lane=(t/10)*11+t%10+1,rate=latched_rate(s,lane);s->lane[t].to_next=seq_step_q8(s,rate)/TICKS_PER_STEP[rate]*(TICKS_PER_STEP[rate]-s->lane[t].ext_ticks);}
     }
+    if ((s->req_start || s->req_cont || s->req_stop) && s->transport_epoch != UINT32_MAX)
+        s->transport_epoch++;
     if (s->req_stop) {
+        if (s->stop_epoch != UINT32_MAX) s->stop_epoch++;
+        __asm__ volatile("" ::: "memory");
         s->req_stop = 0;
         s->req_start = s->req_cont = 0;
         if (s->playing)

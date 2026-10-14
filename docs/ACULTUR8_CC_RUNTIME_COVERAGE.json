@@ -1,5 +1,5 @@
 {
-  "registry_map": "draft-1",
+  "registry_map": "draft-1-actions-prototype-1",
   "scope": "native implementation candidate; no browser/target/device acceptance",
   "rows": [
     {
@@ -4038,78 +4038,78 @@
       "id": "action.1",
       "parameter_number": 985,
       "binding": "ACTION",
-      "status": "unimplemented",
-      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+      "status": "native candidate; focused acceptance required",
+      "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
     },
     {
       "id": "action.2",
       "parameter_number": 986,
       "binding": "ACTION",
-      "status": "unimplemented",
-      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+      "status": "native candidate; focused acceptance required",
+      "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
     },
     {
       "id": "action.3",
       "parameter_number": 987,
       "binding": "ACTION",
-      "status": "unimplemented",
-      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+      "status": "native candidate; focused acceptance required",
+      "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
     },
     {
       "id": "action.4",
       "parameter_number": 988,
       "binding": "ACTION",
-      "status": "unimplemented",
-      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+      "status": "native candidate; focused acceptance required",
+      "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
     },
     {
       "id": "action.5",
       "parameter_number": 989,
       "binding": "ACTION",
-      "status": "unimplemented",
-      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+      "status": "native candidate; focused acceptance required",
+      "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
     },
     {
       "id": "action.6",
       "parameter_number": 990,
       "binding": "ACTION",
-      "status": "unimplemented",
-      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+      "status": "native candidate; focused acceptance required",
+      "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
     },
     {
       "id": "action.7",
       "parameter_number": 991,
       "binding": "ACTION",
-      "status": "unimplemented",
-      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+      "status": "native candidate; focused acceptance required",
+      "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
     },
     {
       "id": "action.8",
       "parameter_number": 992,
       "binding": "ACTION",
-      "status": "unimplemented",
-      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+      "status": "native candidate; focused acceptance required",
+      "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
     },
     {
       "id": "action.9",
       "parameter_number": 993,
       "binding": "ACTION",
-      "status": "unimplemented",
-      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+      "status": "native candidate; focused acceptance required",
+      "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
     },
     {
       "id": "action.10",
       "parameter_number": 994,
       "binding": "ACTION",
-      "status": "unimplemented",
-      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+      "status": "native candidate; focused acceptance required",
+      "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
     },
     {
       "id": "action.11",
       "parameter_number": 995,
       "binding": "ACTION",
-      "status": "unimplemented",
-      "reason": "storage/destructive actions require separate preflight; no flash per CC"
+      "status": "native candidate; focused acceptance required",
+      "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
     },
     {
       "id": "selector.pattern",
@@ -4614,6 +4614,27 @@
       "binding": "LANE",
       "status": "native candidate; focused acceptance required",
       "reason": ""
+    },
+    {
+      "id": "selector.destination_pattern",
+      "parameter_number": 1132,
+      "binding": "SELECTOR",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "action_control.arm",
+      "parameter_number": 1133,
+      "binding": "ACTIONCTL",
+      "status": "native candidate; focused acceptance required",
+      "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
+    },
+    {
+      "id": "action_control.cancel",
+      "parameter_number": 1134,
+      "binding": "ACTIONCTL",
+      "status": "native candidate; focused acceptance required",
+      "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
     },
     {
       "id": "output.master_knob",

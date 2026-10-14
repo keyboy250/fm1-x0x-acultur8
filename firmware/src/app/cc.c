@@ -7,9 +7,11 @@
 cc_stats_t cc_stats;
 int cc_recover(void){if(!engine_queue_space())return 0;seq_stop(&seq);return engine_cc_refresh(1);}
 typedef struct {uint8_t pattern,part,drum,bass,step,block_low,block_high,motion_low,motion_high,kit,strip,seed_byte;} cc_context_t;
-typedef struct {cc_context_t draft,applied;uint16_t parameter;uint32_t exact;uint8_t ready,exact_parts,action_high;} cc_source_t;
+typedef struct {cc_context_t draft,applied;uint16_t parameter;uint32_t exact;uint8_t ready,exact_parts,action_high;cc_action_guard_t guard;uint16_t native_high;uint8_t armed,destination_draft,destination_applied,destination_ready;} cc_source_t;
 static cc_source_t cc_sources[CC_SOURCES];
-void cc_reset_source(uint8_t source){if(source<CC_SOURCES){plat_midi_clear_cc_source(source);plat_master_detach(source);memset(&cc_sources[source],0,sizeof cc_sources[source]);}}
+static uint8_t cc_action_reason[CC_SOURCES];
+void cc_actions_reset(void){ui_cc_job_reset();unsigned s;for(s=0;s<CC_SOURCES;s++)cc_sources[s].armed=0;}
+void cc_reset_source(uint8_t source){if(source<CC_SOURCES){plat_midi_clear_cc_source(source);plat_master_detach(source);memset(&cc_sources[source],0,sizeof cc_sources[source]);cc_action_reason[source]=CA_OK;}}
 uint32_t cc_source_field(uint8_t source,unsigned field){
     if(source>=CC_SOURCES)return 0xffffffffu;
     if(field<12)return ((const uint8_t *)&cc_sources[source].applied)[field];
@@ -18,6 +20,10 @@ uint32_t cc_source_field(uint8_t source,unsigned field){
     if(field==14)return cc_sources[source].exact_parts;
     if(field==15)return cc_sources[source].exact;
     if(field<28)return ((const uint8_t *)&cc_sources[source].draft)[field-16];
+    if(field==28)return cc_sources[source].native_high;
+    if(field==29)return cc_sources[source].armed;
+    if(field==30)return cc_sources[source].destination_applied;
+    if(field==31)return cc_action_reason[source];
     return 0xffffffffu;
 }
 static int cc_lookup(uint16_t number,uint32_t *word){
@@ -51,7 +57,7 @@ static int cc_sparse(uint32_t raw,int fine,int kind,int field){
 }
 static POLY_COLD int cc_max(int kind,int a,int b,int c,const cc_context_t *x){
     static const uint8_t genmax[]={100,100,100,2,11,TB3PO_NSCALES-1,4,16};
-    static const uint8_t selectmax[]={31,4,10,1,63,127,1,127,1,1,24,3,1,127,15};
+    static const uint8_t selectmax[]={31,4,10,1,63,127,1,127,1,1,24,3,1,127,15,31};
     static const uint8_t stepmax[]={1,1,127,2,1,1,1,8};
     static const uint8_t prefmax[]={1,1,1,7,1,5,127,127,191,127};
     const x0x_param_t *p;
@@ -64,7 +70,7 @@ static POLY_COLD int cc_max(int kind,int a,int b,int c,const cc_context_t *x){
     case CCK_CHANNEL:return 16;
     case CCK_PREF:return c<10?prefmax[c]:-1;
     case CCK_SONG:return c<5?31:192;
-    case CCK_SELECTOR:return c<15?selectmax[c]:-1;
+    case CCK_SELECTOR:return c<16?selectmax[c]:-1;
     case CCK_STEP:return c<8?stepmax[c]:-1;
     case CCK_MOTION:
         if(!c){const lane_t *l=&proj.arr.lane[cc_lane(x)];if(!l->used)return -1;
@@ -79,8 +85,10 @@ static POLY_COLD int cc_max(int kind,int a,int b,int c,const cc_context_t *x){
     case CCK_FOLLOW:return c==0?2:127;
     case CCK_PAD:return c==0?255:127;
     case CCK_EXACT:return c==2?3:c==3?1:127;
-    case CCK_TRANSPORT:case CCK_HISTORY:return 1;
+    case CCK_ACTION:return c>=1&&c<=11?127:-1;
+    case CCK_ACTIONCTL:return c?1:11;
     case CCK_MASTER:return 4096;
+    case CCK_TRANSPORT:case CCK_HISTORY:return 1;
     case CCK_LANE:return c==0?64:c==1?7:1;
     default:return -1;
     }
@@ -131,8 +139,10 @@ static POLY_COLD int cc_apply(int kind,int a,int b,int c,uint32_t value,cc_sourc
     cc_context_t *x=&source->applied;pattern_t *p=&proj.pat[x->pattern];int k,block=cc_block(x),lane=cc_lane(x);
     uint32_t saved;lane_t target;
     if(kind==CCK_SELECTOR){
+        if(c<13 || c==15)source->armed=0;
+        if(c==15){source->destination_draft=(uint8_t)value;source->destination_ready|=1u;source->ready=0;source->exact_parts=0;return 0;}
         if(c<12){((uint8_t *)&source->draft)[c]=(uint8_t)value;source->ready=0;source->exact_parts=0;return 0;}
-        if(c==12){if(!value)return 0;if(!cc_context_valid(&source->draft))return CC_REJECTED;source->applied=source->draft;source->ready=1;source->exact_parts=0;return 0;}
+        if(c==12){if(!value)return 0;if(!cc_context_valid(&source->draft))return CC_REJECTED;source->applied=source->draft;source->destination_applied=source->destination_draft;source->destination_ready=(uint8_t)((source->destination_ready&1u)?3:0);source->ready=1;source->exact_parts=0;return 0;}
         if(c==13)source->parameter=(uint16_t)((source->parameter&~127u)|value);
         else source->parameter=(uint16_t)((source->parameter&127u)|(value<<7));
         source->exact_parts=0;return 0;
@@ -150,6 +160,26 @@ static POLY_COLD int cc_apply(int kind,int a,int b,int c,uint32_t value,cc_sourc
         if(result!=CC_BUSY)source->exact_parts=0;
         return result;
     }
+    if(kind==CCK_MASTER)return plat_master_remote(value,(unsigned)(source-cc_sources))?CC_REJECTED:CC_APPLIED;
+    if(kind==CCK_ACTIONCTL || kind==CCK_ACTION){
+        unsigned id=(unsigned)(source-cc_sources);int reason=CA_OK;
+        if(kind==CCK_ACTIONCTL && ((c==0&&!value)||(c==1&&value))){source->armed=0;cc_action_reason[id]=CA_OK;return 0;}
+        if(kind==CCK_ACTIONCTL && c==1)return 0;
+        if(kind==CCK_ACTION && !value){source->native_high&=(uint16_t)~(1u<<(c-1));return 0;}
+        if(kind==CCK_ACTION && (source->native_high&(1u<<(c-1))))return 0;
+        int act=kind==CCK_ACTIONCTL?(int)value:c;
+        int destructive=act==2||act==3||act==4||act==5||act==7||act==8||act==9;
+        if(!source->ready || (act==4&&!(source->destination_ready&2u)))reason=CA_CONTEXT;
+        else if(kind==CCK_ACTIONCTL && !destructive)reason=CA_INVALID;
+        else reason=ui_cc_action_ready(act);
+        if(!reason && kind==CCK_ACTIONCTL){reason=ui_cc_action_arm(act,&source->guard);if(!reason)source->armed=(uint8_t)act;}
+        else if(!reason){
+            if(destructive && source->armed!=act)reason=CA_CONFIRM;
+            else reason=ui_cc_action(act,x->pattern,x->part,source->destination_applied,block,destructive?&source->guard:0);
+            if(!reason){source->native_high|=(uint16_t)(1u<<(c-1));source->armed=0;}
+        }
+        cc_action_reason[id]=(uint8_t)reason;return reason?CC_REJECTED:CC_APPLIED;
+    }
     if(kind==CCK_GENACTION || kind==CCK_TRANSPORT || kind==CCK_HISTORY){
         unsigned bit=1u<<(kind==CCK_GENACTION?c:kind==CCK_TRANSPORT?2+c:5+c);
         if(!value){source->action_high&=(uint8_t)~bit;return 0;}
@@ -157,7 +187,6 @@ static POLY_COLD int cc_apply(int kind,int a,int b,int c,uint32_t value,cc_sourc
         /* Set this only after preflight below. Busy/rejected packets remain
          * retryable and cannot consume the edge before canonical acceptance. */
     }
-    if(kind==CCK_MASTER)return plat_master_remote(value,(unsigned)(source-cc_sources))?CC_REJECTED:CC_APPLIED;
     if(kind==CCK_HISTORY){
         /* Owner/recording/transport/capacity refusal is terminal for this
          * request, not a retry barrier ahead of the same source's Stop. */
@@ -207,7 +236,7 @@ static POLY_COLD int cc_apply(int kind,int a,int b,int c,uint32_t value,cc_sourc
         ui_external_changed();return CC_APPLIED;
     }
 
-    if(kind==CCK_UNSUPPORTED||kind==CCK_ACTION)return CC_UNSUPPORTED;
+    if(kind==CCK_UNSUPPORTED)return CC_UNSUPPORTED;
     if(!source->ready && !(kind==CCK_SEQ&&c>=7) && kind!=CCK_CHANNEL && !(kind==CCK_PREF&&c!=2&&c!=3))return CC_REJECTED;
     if(kind==CCK_ARR || kind==CCK_FOLLOW || kind==CCK_PAD)return cc_arrangement(kind,c,value,x);
     if(engine_queue_space()<(uint32_t)(kind==CCK_PREF&&c==9?3:1))return CC_BUSY;
@@ -301,7 +330,7 @@ POLY_COLD int cc_parameter(uint16_t number,uint32_t value,uint8_t source){
     if(source>=CC_SOURCES)return CC_REJECTED;
     if(cc_lookup(number,&word))return CC_UNSUPPORTED;
     s=&cc_sources[source];kind=word&31;a=(word>>5)&31;b=(word>>10)&15;c=(word>>14)&31;
-    if(project_write_protected()&&kind!=CCK_MASTER&&kind!=CCK_SELECTOR&&kind!=CCK_EXACT&&!(kind==CCK_TRANSPORT&&c==1)&&!(kind==CCK_HISTORY&&!value))return CC_REJECTED;
+    if(project_write_protected()&&kind!=CCK_MASTER&&kind!=CCK_SELECTOR&&kind!=CCK_EXACT&&!(kind==CCK_TRANSPORT&&c==1)&&!(kind==CCK_HISTORY&&!value)&&kind!=CCK_ACTION&&kind!=CCK_ACTIONCTL)return CC_REJECTED;
     max=cc_max(kind,a,b,c,&s->applied);
     if(kind==CCK_MOTION&&!c&&value==MOT_NONE)return cc_apply(kind,a,b,c,value,s);
     if(kind==CCK_PAD&&!c){if(value>15&&value!=255)return CC_REJECTED;}

@@ -319,6 +319,9 @@ def build(root=ROOT):
     add('value.exact_high7','21-bit exact value high chunk',127,1130,
         source='CC transaction extension: same low/mid/commit IDs, new high7 address; old high2 retained')
     add('lane.mode','Prepared independent clock mode',1,1131,source='firmware/src/seq/lanes.h',runtime_parameter='engine_lane_mode; first initialization stopped; later Off/On next96-tick bar')
+    add('selector.destination_pattern','Explicit pattern-copy destination',31,1132,source='firmware/src/app/cc.c',action_policy='source draft destination; selector.commit freezes it; never UI focus')
+    add('action_control.arm','Arm destructive native action',11,1133,'action',source='firmware/src/app/cc.c',action_policy='0 cancels; action2/3/4/5/7/8/9 binds source/context/project revision')
+    add('action_control.cancel','Cancel source action arm',1,1134,'action',source='firmware/src/app/cc.c',action_policy='1 cancels source arm; 0 does nothing')
     add('output.master_knob','MASTER gain Q12',4096,1100,source='web/emu/index.html',
         canonical_requirement='define live remote gain vs physical ADC pickup; current pot is runtime, not project intent')
     for i,(key,maximum,category) in enumerate([
@@ -340,7 +343,7 @@ def build(root=ROOT):
         if row['address']:row['parameter_number']=(row['address']['channel']-1)*len(CCS)+CCS.index(row['address']['cc'])
     covered={name:'descriptor or structured field' for name in refs}
     covered.update({'R_NONE':'sentinel','R_HDR':'non-selectable header','R_BATT':'read-only', 'R_ACT':'all ACT_P actions'})
-    result={'schema':1,'map_version':'draft-1','runtime_cc':RUNTIME_NOTE,
+    result={'schema':1,'map_version':'draft-1-actions-prototype-1','runtime_cc':RUNTIME_NOTE,
             'source_hashes':{p:hashlib.sha256(t.encode()).hexdigest() for p,t in raw.items()},
             'descriptor_counts':counts,'ui_ref_coverage':covered,'structured_field_coverage':structured,
             'ingress_context_proof':{'USB':'firmware/src/usb.c:4,960; main_fm1.c:146 TIMER5 ISR, not main loop',
