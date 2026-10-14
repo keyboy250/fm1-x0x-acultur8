@@ -21,7 +21,7 @@ void all909_reference_silence(drum909_t *d,int v) {
 }
 EOF
 FLAGS="-std=c99 -O2 -ffp-contract=off -Wall -Wextra -Wdouble-promotion -Werror -Ifirmware/src -Ifirmware/src/dsp -Ibuild/gen ${ALL909_CFLAGS:-}"
-RENAME="-Dx0x_tanh_tab=legacy_x0x_tanh_tab -Dx0x_pot_exp=legacy_x0x_pot_exp"
+RENAME="-DX0X_EXP_RAW_REFERENCE -Dx0x_pot_exp_value=legacy_x0x_pot_exp_value -Dx0x_tanh_tab=legacy_x0x_tanh_tab -Dx0x_pot_exp=legacy_x0x_pot_exp"
 for fn in init trigger render render_st pan_settle nparams param set get active bd_strip_set bd_strip_meter; do
   RENAME="$RENAME -Ddrum909_$fn=legacy_drum909_$fn"
 done

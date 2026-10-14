@@ -4,6 +4,7 @@
 // input goes in and, about 30 times a second, the screen, the lights and any saved objects go out.
 
 import { MidiWorkletBridge } from './midi-worklet.mjs';
+import { CcInputWorkletBridge } from './cc-input-worklet.mjs';
 const clock = globalThis.performance ? () => globalThis.performance.now() : () => Date.now();
 
 class X0X extends AudioWorkletProcessor {
@@ -24,14 +25,17 @@ class X0X extends AudioWorkletProcessor {
     this.editOwner = null;
     this.rejectedGestures = new Set();
     this.loadGeneration = 0;
+    this.legacyMaster = 2800; // older binaries lack remote MASTER/readback
     this.loading = false;
     this.midi = new MidiWorkletBridge(() => this.ex, m => this.port.postMessage(m));
+    this.ccInput = new CcInputWorkletBridge(() => this.loading ? null : this.ex, m => this.port.postMessage(m));
     this.port.onmessage = (e) => this.onMessage(e.data);
   }
 
   async onMessage(m) {
     if (!m || typeof m !== 'object') return;
     if (this.midi.message(m)) return;
+    if (this.ccInput.message(m)) return;
     if (m.type === 'variant-command' || m.type === 'lane-command') {
       const keys = ['abi', 'op', 'request', 'target', 'voice', 'index', 'value'];
       const valid = keys.every(k => Number.isInteger(m[k])) && m.request >= 0 && m.request <= 0xffffffff &&
@@ -84,6 +88,12 @@ class X0X extends AudioWorkletProcessor {
     }
     if (m.type === "load") {
       const generation = ++this.loadGeneration;
+      const requestedMaster=this.ex?.web_master_state ? this.ex.web_master_state()&8191 : this.ex ? this.legacyMaster : m.master ?? 2800;
+      const masterQ12=Number.isInteger(requestedMaster)&&requestedMaster>=0&&requestedMaster<=4096?requestedMaster:2800;
+      // Reset while the old exports are still visible. Already applied edits
+      // remain; only unreviewed source-2 ingress and its selectors are cleared.
+      this.ccInput.reset();
+      this.port.postMessage({type:'cc-input-reset'});
       this.loading = true;
       let memory;
       const now = () => BigInt(Math.round(currentTime * 1e9));
@@ -110,7 +120,8 @@ class X0X extends AudioWorkletProcessor {
           ex.web_store_set_len(+obj, b.length);
         }
         const writes = ex.web_store_writes();
-        ex.web_master(m.master ?? 2800);
+        ex.web_master(masterQ12);
+        this.legacyMaster=masterQ12;
         ex.web_boot();
         this.ex = ex;
         this.mem = memory;
@@ -119,11 +130,13 @@ class X0X extends AudioWorkletProcessor {
         // Refused legacy BEGIN suffixes belong to their original callers even
         // across replacement. Only their refused END drains the quarantine.
         this.loading = false;
+        this.ccInput.reset();
         this.port.postMessage({ type: "ready" });
       } catch (error) {
         if (generation !== this.loadGeneration) return;
         // Failed replacement keeps the old engine and its gesture ownership.
         this.loading = false;
+        this.ccInput.reset();
         throw error;
       }
     } else if (!this.ex) {
@@ -137,7 +150,12 @@ class X0X extends AudioWorkletProcessor {
     } else if (m.type === "enc") {
       this.ex.web_enc(m.role, m.n | 0);
     } else if (m.type === "master") {
-      this.ex.web_master(m.value | 0);
+      if(!this.loading&&Number.isInteger(m.value)&&m.value>=0&&m.value<=4096){this.ex.web_master(m.value);this.legacyMaster=m.value;}
+    } else if(m.type === "master-step") {
+      if(!this.loading&&Number.isInteger(m.delta)&&m.delta>=-4096&&m.delta<=4096){
+        if(this.ex.web_master_step)this.ex.web_master_step(m.delta);
+        else {this.legacyMaster=Math.max(0,Math.min(4096,this.legacyMaster+m.delta));this.ex.web_master(this.legacyMaster);}
+      }
     } else if (m.type === "marked-load") {
       try {
         const ex=this.ex;
@@ -187,6 +205,8 @@ class X0X extends AudioWorkletProcessor {
     const blits = ex.web_blits();
     const msg = { type: "frame", buttons: ex.web_lit_buttons() >>> 0, keys: ex.web_lit_keys() >>> 0, dim: ex.web_dim_keys() >>> 0 };
     if(ex.web_input_ticket)msg.inputTicket=ex.web_input_ticket()>>>0;
+    if(ex.web_master_state){const s=ex.web_master_state()>>>0;msg.master={q12:s&8191,owner:(s>>>13)&7,pickupPending:!!(s&65536)};}
+    else if(ex.web_master)msg.master={q12:this.legacyMaster,owner:1,pickupPending:false};
     if (ex.web_variant_snapshot) {
       const read = (section,target,voice=0) => {
         const p = ex.web_variant_snapshot(section,target,voice);
@@ -204,6 +224,10 @@ class X0X extends AudioWorkletProcessor {
       }
     }
     msg.sync={state:ex.web_sync_state(),bpm:ex.web_seq_bpm(),playing:!!ex.web_seq_playing(),beat:ex.web_seq_beat()};
+    if (this.ccInput.supported() && typeof ex.web_cc_pending === 'function' && typeof ex.web_cc_stat === 'function') {
+      msg.ccInput = {version:ex.web_cc_version() >>> 0,route:this.ccInput.route,ready:this.ccInput.ready,
+        pending:ex.web_cc_pending() >>> 0,stats:Array.from({length:6},(_,i)=>ex.web_cc_stat(i) >>> 0)};
+    }
     if(ex.web_marked_cursor)msg.marked={cursor:ex.web_marked_cursor(),triggers:ex.web_marked_triggers(),slice:ex.web_marked_last(),playing:!!ex.web_marked_playing()||(ex.web_sync_state()===2&&!!ex.web_seq_playing())};
     if (this.frames >= 44100) {                       // the share of real time spent running the device
       msg.load = Math.round(100 * this.busy / (this.frames / 44.1));

@@ -17,7 +17,7 @@ if [ "$#" -eq 0 ]; then
 fi
 if [ "$#" -gt 0 ]; then
   DEFS=-DKICK_LEGACY_ORACLE
-  RENAME="-Dx0x_tanh_tab=legacy_x0x_tanh_tab -Dx0x_pot_exp=legacy_x0x_pot_exp"
+  RENAME="-DX0X_EXP_RAW_REFERENCE -Dx0x_pot_exp_value=legacy_x0x_pot_exp_value -Dx0x_tanh_tab=legacy_x0x_tanh_tab -Dx0x_pot_exp=legacy_x0x_pot_exp"
   for fn in init trigger render render_st pan_settle nparams param set get active; do
     RENAME="$RENAME -Ddrum909_$fn=legacy_drum909_$fn"
   done

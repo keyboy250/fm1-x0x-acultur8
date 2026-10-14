@@ -96,7 +96,7 @@ static void persistence_commands(void) {
         assert(project_load()==-8 && !memcmp(&before,&proj,sizeof proj) && !memcmp(&journal,&undo,sizeof undo) && store_writes==writes && seq.pad_channel_out==8 && seq.pad_notes_out[0]==0 && project_write_protected());
         seq.pad_channel_out=255;for(int i=0;i<3;i++)seq.pad_notes_out[i]=255;
     }
-    fresh();app_config();assert(command(14,0,0,0,8)==VR_QUEUED);render_block();int ch=seq.ch[0];pref_set((pref_t){R_MIDICH,0},9);assert(seq.ch[0]==ch); /* physical collision rejected */
+    fresh();app_config();assert(command(14,0,0,0,8)==VR_QUEUED);render_block();int ch=seq.ch[0];pref_set(PR(R_MIDICH,0,0,0),9);assert(seq.ch[0]==ch); /* physical collision rejected */
     /* Command15 is undo-tracked by schema4 bit5 although settings precede UNDO_OFF. */
     fresh();assert(!seq.send_notes && !proj.set.notes_out);assert(command(VC_BEGIN_EDIT,0,0,0,0)==VR_OK);
     assert(command(15,0,0,0,1)==VR_QUEUED && !seq.send_notes && !proj.set.notes_out && (proj.variant.arrangement.flags&32));
@@ -106,9 +106,9 @@ static void persistence_commands(void) {
     seq.playing=1;journal=undo;assert(command(VC_UNDO,0,0,0,0)==VR_BUSY && !memcmp(&journal,&undo,sizeof undo));seq.playing=0;
     assert(project_save()==0 && get32(store[OBJ_PAT0])==2);assert(project_load()==0 && seq.send_notes && proj.set.notes_out && (proj.variant.arrangement.flags&32));
     assert(command(15,0,0,0,0)==VR_QUEUED);assert(command(VC_SAVE,0,0,0,0)==VR_OK);assert(project_load()==0);render_block();assert(!seq.send_notes && !proj.set.notes_out); /* save accepted intent before render */
-    pref_set((pref_t){R_NOTEOUT,0},1);assert(seq.send_notes && proj.set.notes_out && (proj.variant.arrangement.flags&32));
+    pref_set(PR(R_NOTEOUT,0,0,0),1);assert(seq.send_notes && proj.set.notes_out && (proj.variant.arrangement.flags&32));
     assert(engine_arrangement_refresh(&proj.variant.arrangement));render_block();assert(seq.send_notes && proj.set.notes_out);
-    pref_set((pref_t){R_NOTEOUT,0},0);assert(engine_arrangement_refresh(&proj.variant.arrangement));render_block();assert(!seq.send_notes && !proj.set.notes_out);
+    pref_set(PR(R_NOTEOUT,0,0,0),0);assert(engine_arrangement_refresh(&proj.variant.arrangement));render_block();assert(!seq.send_notes && !proj.set.notes_out);
     before=proj;rev=ui_revision();while(engine_strip_set(0,VP_BOOST,0)){};q=engine_queue_written();
     assert(command(15,0,0,0,1)==VR_BUSY && !memcmp(&before,&proj,sizeof proj) && ui_revision()==rev && engine_queue_written()==q && !seq.send_notes);
     render_block();

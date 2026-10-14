@@ -129,6 +129,9 @@ static volatile uint32_t so_w, so_r;
 #define MQ 64u
 static uint32_t midi_in_q[MQ], midi_out_q[MQ];
 static volatile uint32_t mi_w, mi_r, mo_w, mo_r;
+#if X0X_CC
+#include "midi_cc_ingress.h"
+#endif
 
 #include "midi_ring.h"
 static int midi_out_event(uint32_t pkt) /* bounded enqueue feedback, audio/main single producer */
@@ -643,11 +646,16 @@ static void ep1_rx(void)
             uint32_t k, nb = cin == 4u || cin == 7u ? 3u : cin == 6u ? 2u : 1u;
             for (k = 0; k < nb; k++)
                 sysex_byte(ep1rx[i + 1 + k]);
-        } else if (((cin >= 8u && cin <= 0xEu) || (cin == 0xFu && ep1rx[i + 1] >= 0xF8u)) && mi_w - mi_r < MQ) {
+        } else if ((cin >= 8u && cin <= 0xEu) || (cin == 0xFu && ep1rx[i + 1] >= 0xF8u)) {
             /* CIN 0xF: a single byte; the real-time ones (clock, start, continue, stop) matter */
-            midi_in_q[mi_w % MQ] = pkt;
-            RING_PUBLISH();
-            mi_w++;
+#if X0X_CC
+            (void)cc_ingress_put(midi_in_q,&mi_w,&mi_r,MQ,pkt,0);
+#else
+            if (mi_w - mi_r < MQ) {
+                midi_in_q[mi_w % MQ] = pkt;
+                RING_PUBLISH();mi_w++;
+            }
+#endif
         }
     }
     usb.rx_pkts++;

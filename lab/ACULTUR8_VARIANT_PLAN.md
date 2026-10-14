@@ -1,5 +1,14 @@
 # Acultur8 X0X: implementation and GitHub variant plan
 
+## Current execution authority and qualified checkpoint — 2026-10-14
+
+The user explicitly authorises updating GitHub and keeping the variant current. Reviewed/tested source and documentation may now be pushed through the established branch/PR workflow. This overrides the earlier repository-publication hold; it does not make the public repository private. Browser Pages deployment remains separately held in the workflow until publication sign-off. Preserve private loops, credentials, restricted SDK files and unresolved-license converter boundaries.
+
+Current qualified integrated runtime: exact EXP packing, D8/D9 dictionaries, independent25lanes, partialCC/history and correctedMASTER. Original15staticgates pass at579172/581564 image bytes,98184/98304 general RAM and335712/344064 pool;2392flash bytes and120RAM bytes spare,160pool above reserve. Fresh9requiredsoftwarechecks and38packagehashes pass at source7124f8a9f2e5060e3cb0c9ac44f831ce9e37ce5d87c3a47dedfadd6c31b548f4 /WASM60c3ab085454ba1d9f392d7ca478fb4787a9a08d1bc0486265c0e05a55a9d842. Actualbrowser syntheticdrums/basses/BREAK+slices125/90/180, independenthat13/1-32T,sharedStop/save/reopen/masterreadback pass as partialscene evidence. CompleteCC24gaps, receiver/hearing/click/longsoak/device qualification remainopen. No editing-action/scanner/clockfix prototype is integrated.
+
+FM1-39/40 cover performanceclock/longsets; FM1-41/42 add versioned modulecompatibility and coordinateddeviceensemble. See PERFORMANCE_CLOCK_SET_DESIGN.md and MODULE_ECOSYSTEM_DESIGN.md. Historical checkpoint text below is preserved as evidence and does not supersede this section.
+
+
 Execution checkpoint: 13 October 2026 UTC. The user authorized an active implementation goal, dependency setup, independent agents, reviewed GitHub merges and browser-alpha publication. The public fork and integration branch now exist; browser alpha.1 is published; device qualification remains pending.
 
 ## Current expedited execution plan â€” 13 October 2026
@@ -336,3 +345,11 @@ Current: fonts and command/save foundation are merged. The audible 909 kick pass
 Reviewed PR #11 merged at `d7c63f5ecee490e275d377fd68005d3328ddcb24`; required CI and Pages passed and 24 hosted hashes match. Noise history remains 256 samples; exact pool saving 1,024 bytes and 33,600 bitwise comparison blocks pass.
 
 Basic arrangement adds 192 paged rows, 1â€“8 musical-bar durations, next-bar queue and shared C triad metadata. Independent review closed the IRQ-start race through bounded locks and nested long-operation reservations. Combined official target: image 576180/581564, RAM 97860/98304, pool 333792/344064; 15 original static gates pass unchanged. New active callee costs are recorded in `lab/ARRANGEMENT.md`. Final integrated browser/hosted checks are pending before this candidate is promoted. Broader row-order/loop controls, all 25 processing paths, both bass followers, MIDI accompaniment and physical qualification remain pending.
+
+### Lossless EXP table integration — 2026-10-13
+
+Reviewed exact2432value table encoding integrated. Official linked image579172/581564, flash2392spare; ordinary RAM98184/98304 and pool335712/344064 unchanged. All15originalstaticgatesPASS; fresh native/WASM suite running, not accepted yet. Conditional20instruction/12Bdecoder cost belongs to parameter paths including audio-boundary CQ; physical timing remains pending. Eleven editing actions stillisolated/nonfit; publication held. PreviousMASTER DOM suite9 and actualHTML slider readback passed; FAQdashboard14PASS.
+
+Fresh EXP combined suite completed exit0: all9requiredchecksPASS; privateartifact build/site-0bl8ejgk, all38filehashes independentlyverified. WASM677897bytes SHA60c3ab085454ba1d9f392d7ca478fb4787a9a08d1bc0486265c0e05a55a9d842, source7124f8a9f2e5060e3cb0c9ac44f831ce9e37ce5d87c3a47dedfadd6c31b548f4. Fullscene/click/hearing/DAW/device stillpending; no publication.
+
+ActualfreshEXPbrowserrehearsal: bothkits/both303/BREAK,independenthat13/1-32T, DminorI/V, public6slice125/90/180,469triggers,sharedStop,savedharmony/lanes/strip/padintent/importreopen,masterreadback pass. NoMIDIpermission/routes, receiver/hearing/underrun/longsoak/allnotes/fullscene acceptance. CurrentFAQclockdiagram visuallyverified;planned39/40 staytodo. See critical-performance-progress.json/data/combined-exp-browser-scene-20261013.json. Publicationheld.

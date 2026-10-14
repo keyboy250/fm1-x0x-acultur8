@@ -32,8 +32,12 @@ class BuildPackagingTest(unittest.TestCase):
             self.assertEqual(page.count('id="lane-title"'), 1)
             self.assertEqual(page.count('src="lane-ui.js"'), 1)
             self.assertIn('href="lane-ui.css"', page)
+            self.assertEqual(page.count('id="cc-input-title"'), 1)
+            self.assertEqual(page.count('src="cc-input-ui.js"'), 1)
+            self.assertIn('href="cc-input-ui.css"', page)
             for name in ('variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css',
-                         'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css', 'midi-router.mjs', 'midi-worklet.mjs'):
+                         'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css',
+                         'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs'):
                 self.assertEqual((output / name).read_bytes(), (WORK / 'web/emu' / name).read_bytes())
             self.assertIn('href="manual.txt"', page)
             self.assertIn('window.fm1SliceSend = send', script)
@@ -97,6 +101,18 @@ handlers['fm1-ready']();vm.runInContext('send({type:"buttons",mask:0})',context)
             self.assertEqual(initial, source_hash(root))
             source.write_text('# package two\n', encoding='utf-8')
             self.assertNotEqual(initial, source_hash(root))
+
+    def test_source_hash_tracks_cc_input_modules(self):
+        with tempfile.TemporaryDirectory(prefix='fm1-cc-hash-test-') as folder:
+            root = Path(folder)
+            (root / 'web/emu').mkdir(parents=True)
+            for name in ('cc-input-router.mjs', 'cc-input-worklet.mjs', 'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-panel.html'):
+                before = source_hash(root)
+                (root / 'web/emu' / name).write_text('original', encoding='utf-8')
+                added = source_hash(root)
+                self.assertNotEqual(before, added, name)
+                (root / 'web/emu' / name).write_text('changed', encoding='utf-8')
+                self.assertNotEqual(added, source_hash(root), name)
 
 
 if __name__ == '__main__':

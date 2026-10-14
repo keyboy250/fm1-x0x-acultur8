@@ -67,8 +67,12 @@ static void lcd_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint1
 
 /* ---------------------------------------------------------- platform --- */
 #include "../firmware/src/app/plat.h"
+#include "../firmware/src/app/cc.h"
+#define RING_PUBLISH() __asm__ volatile("" ::: "memory")
 
-static uint32_t now_ms, held_btn, held_keys, master = 2048;
+#include "../firmware/src/app/master_control.h"
+static master_control_t master_control=MC_INITIAL(2048,MC_POINTER,0);
+static uint32_t now_ms, held_btn, held_keys;
 static int32_t enc_acc[NE];
 static uint32_t lit_btn, lit_keys, dim_keys;
 
@@ -85,7 +89,9 @@ int32_t plat_enc(int role)
     enc_acc[role] = 0;
     return v;
 }
-uint32_t plat_master(void) { return master; }
+uint32_t plat_master(void) { return master_control_target(&master_control); }
+int plat_master_remote(uint32_t value,unsigned source) { return source<3u?master_control_set(&master_control,value,MC_USB+source):-1; }
+void plat_master_detach(unsigned source) { master_control_detach(&master_control,source); }
 int plat_battery(void) { return 3; }    /* the simulator: a full battery */
 void plat_leds(uint32_t b, uint32_t k)
 {
@@ -98,7 +104,9 @@ void plat_play_red(int red) { (void)red; }
 void plat_keys_dim(uint32_t k) { dim_keys = k; }      /* dim keys: "o" in the leds print */      /* the device's PLAY colour: green, red while recording */
 
 #define MQ 256
-static uint32_t min_q[MQ], mi_w, mi_r;
+static uint32_t min_q[MQ];
+static volatile uint32_t mi_w,mi_r;
+#include "../firmware/src/midi_cc_ingress.h"
 static FILE *midi_log;
 #ifdef X0X_WEB
 #include "../firmware/src/midi_ring.h"
@@ -141,11 +149,21 @@ void plat_midi_cancel(void) {}
 int plat_midi_connected(void) { return midi_connected; }
 int plat_midi_in(uint32_t *pkt)
 {
-    if (mi_r == mi_w)
-        return 0;
-    *pkt = min_q[mi_r++ % MQ];
-    return 1;
+    while(mi_r!=mi_ready){*pkt=min_q[mi_r++%MQ];if(*pkt)return 1;}
+    return 0;
 }
+void plat_midi_service(void){cc_ingress_service(min_q,&mi_w,&mi_r,MQ);}
+void plat_midi_clear_cc_source(uint8_t source){cc_ingress_clear_source(min_q,&mi_w,MQ,source);}
+#ifdef X0X_WEB
+WEB_EXPORT int host_web_midi_ingest(uint32_t packet,int source){
+    unsigned status=(packet>>8)&255u,kind=status&240u,cin=packet&15u;
+    if(source<0||source>=CC_SOURCES||status<128u)return CC_REJECTED;
+    if(status>=248u){if(cin!=15u || (status!=248u&&status!=250u&&status!=251u&&status!=252u))return CC_REJECTED;}
+    else if(kind<128u||kind>224u||cin!=kind>>4 || ((packet>>16)&255u)>127u || ((packet>>24)&255u)>127u)return CC_REJECTED;
+    if(!cc_ingress_put(min_q,&mi_w,&mi_r,MQ,packet,(uint8_t)source))return CC_BUSY;
+    plat_midi_service();return CC_APPLIED; /* input-ring acceptance, not receiver/audio proof */
+}
+#endif
 static uint32_t midi_out_count, clock_out_count, note_ons;
 int plat_midi_out(uint32_t pkt)
 {
@@ -311,6 +329,7 @@ void plat_stalls_enable(int on) { (void)on; }
 #include "../firmware/src/app/x0x.h"
 #include "../firmware/src/app/project.c"
 #include "../firmware/src/app/ui.c"
+#include "../firmware/src/app/cc.c"
 
 /* ---------------------------------------------------------- outputs --- */
 static void png_write(const char *path)
@@ -538,6 +557,7 @@ static void run_ms(uint32_t ms)
             last_pat = seq.ppat[TRK_BRK];
             engine_brk_loops();
         }
+        plat_midi_service();
         if (now_ms >= ui_due) {
             ui_due = now_ms + 16;
             ui_frame();
@@ -925,7 +945,7 @@ int main(int argc, char **argv)
             engine_set(t, v, i, val);
             run_ms(1);
         } else if (!strcmp(cmd, "master"))
-            master = (uint32_t)atoi(a);
+            master_control_set(&master_control,(uint32_t)atoi(a),MC_POINTER);
         else if (!strcmp(cmd, "slot")) {                /* slot K NAME a.wav [b.wav ...]: one zone each */
             char *tok, *rest = line + 4;
             int k, z = 0;
@@ -969,7 +989,7 @@ int main(int argc, char **argv)
         } else if (!strcmp(cmd, "midi")) {
             uint32_t s = (uint32_t)strtoul(a, 0, 16), d1 = (uint32_t)strtoul(b, 0, 16), d2 = (uint32_t)strtoul(c, 0, 16);
             uint32_t cin = s >= 0xF0 ? 0x0F : s >> 4;
-            min_q[mi_w++ % MQ] = cin | s << 8 | d1 << 16 | d2 << 24;
+            (void)cc_ingress_put(min_q,&mi_w,&mi_r,MQ,cin | s << 8 | d1 << 16 | d2 << 24,0);
         } else if (!strcmp(cmd, "wav")) {
             snprintf(out, sizeof out, "%s/%s", dir, a);
             wav_open(out);

@@ -24,8 +24,11 @@ int32_t plat_enc(int role)
     return fm1_enc_take(panel.enc[role]) * panel.dir[role];
 }
 
-static volatile uint32_t master_q12 = 2048;
-uint32_t plat_master(void) { return master_q12; }
+#include "master_control.h"
+static master_control_t master_control=MC_INITIAL(2048,MC_ADC,MC_HAS_ADC);
+uint32_t plat_master(void) { return master_control_target(&master_control); }
+int plat_master_remote(uint32_t value,unsigned source) { return source<3u?master_control_set(&master_control,value,MC_USB+source):-1; }
+void plat_master_detach(unsigned source) { master_control_detach(&master_control,source); }
 
 /* the battery: ADC ch3 (its divider), smoothed by the main loop. The stock firmware's thresholds, as
  * melodee and dxsloop use them, give 0-3 bars; there is no charger line, so a USB host means power */
@@ -91,11 +94,15 @@ void plat_leds(uint32_t buttons, uint32_t keys)
 int plat_midi_connected(void) { return usb.config && !usb.suspended; }
 int plat_midi_in(uint32_t *pkt)
 {
-    if (mi_r == mi_w)
-        return 0;
-    *pkt = midi_in_q[mi_r % MQ];
-    mi_r++;
-    return 1;
+    while(mi_r!=mi_ready){*pkt=midi_in_q[mi_r++%MQ];if(*pkt)return 1;}
+    return 0;
+}
+void plat_midi_clear_cc_source(uint8_t source){cc_ingress_clear_source(midi_in_q,&mi_w,MQ,source);}
+void plat_midi_service(void){
+    static uint8_t previous_usb;
+    uint8_t connected=(uint8_t)(usb.config&&!usb.suspended);
+    if(previous_usb&&!connected)cc_reset_source(0);
+    previous_usb=connected;cc_ingress_service(midi_in_q,&mi_w,&mi_r,MQ);
 }
 int plat_midi_out(uint32_t pkt) { return midi_out_event(pkt); }
 int plat_midi_pair(uint32_t first,uint32_t second) { return midi_out_pair(first,second); }

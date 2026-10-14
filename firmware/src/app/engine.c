@@ -246,6 +246,7 @@ POLY_COLD int engine_lane_break_step(int pattern,int step,int gate,int slice)
     poly_break_set(proj.pat,(uint8_t *)&proj.sound,pattern,step,gate,slice);
     cq_put(C_LANE,(uint32_t)pattern,24,2);plat_control_leave(saved);return 1;
 }
+int engine_cc_refresh(int reconcile){return cq_put(C_ARR,(uint32_t)reconcile,0,0);}
 int engine_strip_set(int strip, int index, int value)
 {
     if (strip < 0 || strip >= 25 || index < 0 || index >= 6) return 0;
@@ -676,7 +677,13 @@ static __attribute__((noinline)) void drain(void)
         else if (type == C_BRK && !brk_hold)
             breaks_live(&brk, (int)a, (int)b);
         else if (type == C_LANE) {if(b<25 && v<2 && seq.playing && seq.ppat[poly_part((int)b)]==a)seq.lane_pending|=1u<<b;seq.lane_sound=(proj.variant.arrangement.flags&POLY_FLAG)?(uint8_t *)&proj.sound:0;if(!seq.playing)seq.lane_enabled=(uint8_t)(seq.lane_sound && poly_mode(seq.lane_sound));}
-        else if (type == C_ARR) {seq.lane_sound=(proj.variant.arrangement.flags&POLY_FLAG)?(uint8_t *)&proj.sound:0;if(!seq.playing)seq.lane_enabled=(uint8_t)(seq.lane_sound && poly_mode(seq.lane_sound));seq_arrangement_apply_flags(&seq);seq.send_notes=(uint8_t)((proj.variant.arrangement.flags&ARR_NOTES_OUT)!=0);proj.set.notes_out=seq.send_notes;}
+        else if (type == C_ARR) {
+            if(a==1){seq_notes_clear(&seq,&SINK);bass_held[0]=bass_held[1]=255;for(int key=0;key<8;key++)breaks_live(&brk,key,0);}
+            seq.lane_sound=(proj.variant.arrangement.flags&POLY_FLAG)?(uint8_t *)&proj.sound:0;
+            if(!seq.playing)seq.lane_enabled=(uint8_t)(seq.lane_sound && poly_mode(seq.lane_sound));
+            seq_arrangement_apply_flags(&seq);seq.send_notes=(uint8_t)((proj.variant.arrangement.flags&ARR_NOTES_OUT)!=0);proj.set.notes_out=seq.send_notes;
+            if(a==2)seq_cc_reconcile(&seq,&SINK);
+        }
         else if (type == C_ARR_QUEUE) seq_arrangement_queue(&seq, (uint8_t)a);
         else if (type == C_STRIP && a < 25u) {
             uint32_t val = v | ((b & 15u) << 12);

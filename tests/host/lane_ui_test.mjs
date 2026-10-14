@@ -49,11 +49,19 @@ const select=async(id,value)=>{$(id).value=String(value);fire(id,'change');await
 const editLength=value=>{$('lane-length').value=String(value);fire('lane-length','input');fire('lane-length','change');};
 
 assert.equal($('lane-timing').disabled,true);assert.equal(permissions,0);
-window.dispatchEvent(new Event('fm1-ready'));await pump();caps=511;frame();assert.equal($('lane-mode').disabled,true);assert.match($('lane-availability').textContent,/unavailable/);assert.equal(worker.laneView.viewRevision,1);
-caps=1535;playing=true;frame();assert.equal($('lane-mode').disabled,true,'first initialization requires stopped');
+window.dispatchEvent(new Event('fm1-ready'));assert.match($('lane-status').textContent,/Checking lane support/);
+await pump();caps=511;frame();assert.equal($('lane-mode').disabled,true);assert.match($('lane-availability').textContent,/unavailable/);assert.equal(worker.laneView.viewRevision,1);assert.match($('lane-status').textContent,/Checking lane support/,'unsupported frame cannot finish the selected readback check');
+caps=1535;playing=true;worker.publish();const startup=out.pop();
+for(const patch of [{pattern:1},{lane:1},{page:1},{viewRevision:0}]){
+ const stale=structuredClone(startup);Object.assign(stale.variant.laneView,patch);dispatch(stale);
+ assert.match($('lane-status').textContent,/Checking lane support/,'support alone cannot clear checking for a stale selection');assert.equal($('lane-mode').disabled,true);
+}
+const badStartup=structuredClone(startup);badStartup.variant.laneView.settings.values[1]=0;dispatch(badStartup);assert.match($('lane-status').textContent,/Checking lane support/,'selected timing must also validate');
+dispatch(startup);assert.match($('lane-status').textContent,/Selected sound timing read back/);assert.equal($('lane-mode').disabled,true,'first initialization requires stopped');
 playing=false;frame();assert.equal($('lane-mode').disabled,false);assert.equal($('lane-timing').disabled,true);
 fire('lane-mode');assert.equal(sent.length,1);assert.equal(sent[0].op,3,'BEGIN is acknowledged before value dispatch');await pump();assert.deepEqual(commands.slice(-3).map(m=>m.op),[3,19,4]);assert.equal(gesture,false);
-frame();assert.equal($('lane-mode').disabled,true,'queued mode cannot unlock on revision alone');read=written;frame();assert.equal($('lane-timing').disabled,false);assert.equal($('lane-mode').disabled,false);
+const pendingStatus=$('lane-status').textContent;assert.match(pendingStatus,/waiting for applied ticket/);frame();assert.equal($('lane-status').textContent,pendingStatus,'matching frames preserve a pending transaction status');assert.equal($('lane-mode').disabled,true,'queued mode cannot unlock on revision alone');read=written;frame();assert.equal($('lane-timing').disabled,false);assert.equal($('lane-mode').disabled,false);
+const completeStatus=$('lane-status').textContent;assert.match(completeStatus,/Edit acknowledged/);frame();assert.equal($('lane-status').textContent,completeStatus,'matching frames preserve transaction completion');
 assert.equal($('lane-sound').children.length,25);assert.equal($('lane-pattern').children.length,32);assert.equal($('lane-rate').children.length,8);assert.equal($('lane-grid').children.length,32);
 for(let sound=0;sound<25;sound++){await select('lane-sound',sound);editLength(16);await settle();assert.equal(commands.at(-2).voice,sound);assert.equal(commands.at(-2).target,0);}
 
@@ -63,7 +71,7 @@ $('lane-length').value='6';fire('lane-length','input');frame();assert.equal($('l
 $('lane-pattern').value='2';fire('lane-pattern','change');assert.equal($('lane-pattern').value,'31','selection cannot steal a draft');fire('lane-length','change');
 await pump();assert.deepEqual(commands.slice(-3).map(m=>m.op),[3,18,4]);assert.deepEqual([commands.at(-2).target,commands.at(-2).voice,commands.at(-2).index,commands.at(-2).value],[31,23,0,6]);
 frame();assert.equal($('lane-timing').disabled,true);read=written;frame();assert.equal($('lane-timing').disabled,false);assert.equal($('lane-length').value,'6');
-for(const value of ['',0,65,1.5,'abc']){const n=commands.length;editLength(value);await pump();assert.equal(commands.length,n);assert.match($('lane-status').textContent,/whole number/);assert.equal($('lane-length').value,'6');}
+for(const value of ['',0,65,1.5,'abc']){const n=commands.length;editLength(value);await pump();assert.equal(commands.length,n);assert.match($('lane-status').textContent,/whole number/);assert.equal($('lane-length').value,'6');const error=$('lane-status').textContent;frame();assert.equal($('lane-status').textContent,error,'valid periodic readback preserves validation errors');assert.ok($('lane-status').classes.has('lane-error'));}
 for(const value of [1,64]){editLength(value);await settle();assert.equal($('lane-length').value,String(value));}
 editLength(32);await pump();read=written;const oldRevision=revision;revision=(revision-1)>>>0;frame();assert.equal($('lane-timing').disabled,true,'applied ticket still needs the acknowledged revision');revision=oldRevision;frame();assert.equal($('lane-timing').disabled,false);
 for(let rate=0;rate<8;rate++){$('lane-rate').value=String(rate);fire('lane-rate','change');await settle();assert.equal(commands.at(-2).index,1);assert.equal(commands.at(-2).value,rate);assert.equal($('lane-rate').value,String(rate));}
@@ -120,7 +128,11 @@ protectedProject=1;frame();assert.equal($('lane-timing').disabled,true);assert.e
 // selected generation must be read before replacement controls unlock.
 written=0xfffffffe;read=0xfffffffe;frame();editLength(13);await pump();frame();assert.equal($('lane-timing').disabled,true);read=0xffffffff;frame();assert.equal($('lane-timing').disabled,false);
 editLength(14);await pump();frame();assert.equal($('lane-timing').disabled,true);read=0;frame();assert.equal($('lane-timing').disabled,false);
-editLength(15);const obsolete=sent.shift();window.dispatchEvent(new Event('fm1-ready'));await pump();dispatch({type:'lane-reply',request:obsolete.request,result:0,revision,ticket:written});assert.equal(sent.length,0);assert.equal($('lane-timing').disabled,true);frame();assert.equal($('lane-timing').disabled,false);
+const beforeReload=frame();editLength(15);const obsolete=sent.shift();window.dispatchEvent(new Event('fm1-ready'));assert.match($('lane-status').textContent,/Checking lane support/);assert.ok(!$('lane-status').classes.has('lane-error'));
+dispatch(beforeReload);assert.match($('lane-status').textContent,/Checking lane support/,'old-engine selected view cannot finish a new ready check');assert.equal($('lane-timing').disabled,true);
+await pump();dispatch({type:'lane-reply',request:obsolete.request,result:0,revision,ticket:written});assert.equal(sent.length,0);assert.equal($('lane-timing').disabled,true);assert.match($('lane-status').textContent,/Checking lane support/,'obsolete reply cannot finish readiness');
+worker.publish();const reloaded=out.pop(),invalidReload=structuredClone(reloaded);invalidReload.variant.laneView.settings.values[2]=8;dispatch(invalidReload);assert.match($('lane-status').textContent,/Checking lane support/,'replacement still requires validated selected timing');assert.equal($('lane-timing').disabled,true);
+dispatch(reloaded);assert.equal($('lane-timing').disabled,false);assert.match($('lane-status').textContent,/Selected sound timing read back/);frame();assert.match($('lane-status').textContent,/Selected sound timing read back/);
 editLength(16);assert.ok(sent[0].request>obsolete.request);await settle();
 
 // Worklet scalar/address guard and browser reply separation; no C call on bad input.
@@ -132,4 +144,4 @@ for(const type of ['variant-command','lane-command']){await worker.onMessage({..
 const view={...worker.laneView};for(const patch of [{pattern:32},{lane:25},{page:2},{viewRevision:-1},{viewRevision:2**32},{lane:.5}]){await worker.onMessage({type:'lane-select',...view,...patch});assert.deepEqual(worker.laneView,view);}
 caps=511;snapshots.length=0;worker.publish();assert.equal(out.pop().variant.laneView,undefined);assert.ok(!snapshots.some(v=>v[0]>=10),'old capability never calls new snapshot sections');
 assert.equal(permissions,0);
-console.log('Lane UI/worklet: 25 sounds,32 patterns,8 rates,64 BREAK steps; stopped initialization/live pending modes; ACK/gesture/readback/ticket wrap; drafts/protection/history; namespaces/scalars/stale selection/reset; no MIDI permission PASS');
+console.log('Lane UI/worklet: 25 sounds,32 patterns,8 rates,64 BREAK steps; stopped initialization/live pending modes; ACK/gesture/readback/ticket wrap; drafts/protection/history; startup/reload matching readiness and status preservation; namespaces/scalars/stale selection/reset; no MIDI permission PASS');

@@ -8,10 +8,10 @@ function options(select,labels){select.replaceChildren(...labels.map((label,i)=>
 options($('lane-pattern'),Array.from({length:32},(_,i)=>`Pattern ${i}`));options($('lane-sound'),sounds);options($('lane-rate'),rates);
 let pattern=0,lane=0,page=0,viewRevision=0,request=0;
 let available=false,protectedProject=false,playing=true,caps=0,info=null,settings=null,mode=null,breaks=null;
-let selected=false,draft=null,transaction=null;
+let selected=false,draft=null,transaction=null,checkingSupport=true;
 const pending=new Map(),rows=[];
 const reached=(a,b)=>((a-b)|0)>=0;
-function say(message,failed=false){$('lane-status').textContent=message;$('lane-status').classList.toggle('lane-error',failed);}
+function say(message,failed=false){checkingSupport=false;$('lane-status').textContent=message;$('lane-status').classList.toggle('lane-error',failed);}
 function busy(){return !!transaction||pending.size>0;}
 function editable(){return available&&selected&&!protectedProject&&!busy()&&typeof window.fm1SliceSend==='function';}
 function send(op,target=0,voice=0,index=0,value=0,stage='direct'){
@@ -142,7 +142,7 @@ function validSnapshot(s,section,count){
 }
 window.addEventListener('fm1-ready',()=>{
   pending.clear();transaction=null;draft=null;available=selected=false;protectedProject=false;playing=true;caps=0;info=settings=mode=breaks=null;settingsSnapshot=modeSnapshot=breakSnapshot=null;
-  $('lane-mode-state').textContent='Clock mode unavailable.';$('lane-project').textContent='';say('Checking lane support…');selectView();
+  $('lane-mode-state').textContent='Clock mode unavailable.';$('lane-project').textContent='';say('Checking lane support…');checkingSupport=true;selectView();
 });
 window.addEventListener('fm1-marked',event=>{
   const m=event.detail;if(!m||typeof m!=='object')return;if(m.type==='lane-reply'){reply(m);return;}if(m.type!=='frame')return;
@@ -155,6 +155,10 @@ window.addEventListener('fm1-marked',event=>{
   breakSnapshot=selected&&validSnapshot(view.breaks,12,5)?view.breaks:null;breaks=breakSnapshot?.values??null;
   $('lane-availability').textContent=protectedProject?'Project is protected. Load a supported project before editing.':available?'All 25 sound lanes are supported by this engine.':'Lane editing is unavailable in this engine. Existing instrument controls remain available.';
   $('lane-project').textContent=info?`Project ${info.values[1]?'has unsaved changes':'matches its saved state'} · revision ${info.revision}`:'';
-  settle();render();
+  settle();
+  // Support alone is insufficient: wait for this selection's validated readback.
+  // Any transaction, draft or error message retires the initial checking status.
+  if(checkingSupport&&selected)say('Lane support checked. Selected sound timing read back.');
+  render();
 });
 render();

@@ -95,7 +95,11 @@ class StaticSiteTest(unittest.TestCase):
         self.assertEqual(page.count('id="lane-title"'), 1)
         self.assertIn('src="lane-ui.js"', page)
         self.assertIn('href="lane-ui.css"', page)
-        for name in ('variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css', 'lane-ui.js', 'lane-ui.css'):
+        self.assertEqual(page.count('id="cc-input-title"'), 1)
+        self.assertIn('src="cc-input-ui.js"', page)
+        self.assertIn('href="cc-input-ui.css"', page)
+        for name in ('variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css', 'lane-ui.js', 'lane-ui.css',
+                     'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs'):
             self.assertEqual((out / 'emu' / name).read_bytes(), (ROOT / 'web/emu' / name).read_bytes())
         self.assertNotIn('/api/rex/', (out / 'emu/slice-ui.js').read_text('utf-8'))
         site.validate_site(out)

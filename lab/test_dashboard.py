@@ -92,6 +92,20 @@ class DashboardTest(unittest.TestCase):
         self.assertEqual(self.request('/faq.css')[1].decode('utf-8').replace('\r\n','\n'),css)
         self.assertIn('Play with FM1',page)
 
+    def test_cc_input_assets_are_served_by_local_lab(self):
+        source = Path(__file__).resolve().parent.parent / 'web/emu'
+        output = lab.WORK / 'build/emu'
+        output.mkdir(parents=True, exist_ok=True)
+        for name, mime in [('cc-input-ui.js', 'text/javascript'), ('cc-input-ui.css', 'text/css'),
+                           ('cc-input-router.mjs', 'text/javascript'), ('cc-input-worklet.mjs', 'text/javascript')]:
+            expected = (source / name).read_bytes()
+            (output / name).write_bytes(expected)
+            with urlopen(self.url + '/emu/' + name) as response:
+                self.assertEqual(response.status, 200)
+                self.assertEqual(response.headers['Content-Type'], mime)
+                self.assertEqual(response.read(), expected)
+        self.assertEqual(self.request('/emu/cc-input-panel.html')[0], 404)
+
     def test_rex_boundaries_and_downloads(self):
         self.assertEqual(self.request('/api/rex/status?id=../source')[0],400)
         self.assertEqual(self.request('/api/rex/convert', {'name':'../loop.rx2','data':'AA=='})[0],400)

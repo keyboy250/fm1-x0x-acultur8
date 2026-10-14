@@ -332,6 +332,25 @@ static void bass_retune_held(seq_t *s,int b,const seq_sink_t *o)
         bass_midi_on(s,b,note,accent,0,o);
     }
 }
+void seq_cc_reconcile(seq_t *s,const seq_sink_t *o){
+    const arrangement_settings_t *a=s->arrangement.intent;
+    if(a){s->arrangement.key=a->key;s->arrangement.mode=a->mode;s->arrangement.parent=a->parent;
+        if(s->song && s->song_pos<s->song->len)s->arrangement.degree=a->degree[s->song_pos];}
+    for(int b=0;b<NBASS;b++){
+        seq_track_t *tr=&s->t[TRK_BASS0+b];uint8_t note;
+        if(!tr->sounding)continue; /* never revive a probability/range-rejected NOTE via TIE */
+        if(!bass_follow_note(s,b,tr->source_note,(int)bpart(s,b)->transpose-24,&note)){
+            bass_release(s,b,o);tr->held_note=0;s->arrangement.reserved|=(uint8_t)(FOLLOW_BLOCKED_A<<b);continue;
+        }
+        if(note!=(tr->held_note&127u)){
+            int accent=(s->arrangement.reserved&(FOLLOW_ACCENT_A<<b))!=0;
+            if(o->bass_retune)o->bass_retune(o->ctx,b,note,accent);
+            else if(o->bass_on)o->bass_on(o->ctx,b,note,accent,1);
+            tr->held_note=(uint8_t)(note|(tr->held_note&128u));bass_midi_on(s,b,note,accent,0,o);
+        }
+    }
+    seq_midi_sync(s,s->midi_ready,o);
+}
 
 static void fire_drum_range(seq_t *s, int k, int p, const seq_sink_t *o,int first,int end)
 {
@@ -378,6 +397,7 @@ static __attribute__((noinline)) void fire_bass(seq_t *s,int b,int p,uint32_t st
             int triggered=o->bass_trigger?o->bass_trigger(o->ctx,b,note,accent,slide):1;
             if(!o->bass_trigger && o->bass_on)o->bass_on(o->ctx,b,note,accent,slide);
             if(!triggered) {bass_release(s,b,o);tr->held_note=0;tr->trigger_rejected=1;return;}
+            tr->source_note=st->note;
             bass_midi_on(s,b,note,accent,!slide,o);tr->sounding=1;tr->trigger_rejected=0;
             s->arrangement.reserved=(uint8_t)((s->arrangement.reserved&~(blocked|accentbit))|(accent?accentbit:0));
         }

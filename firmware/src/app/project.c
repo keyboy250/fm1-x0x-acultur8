@@ -120,7 +120,7 @@ static POLY_COLD uint32_t crc32_of(const uint8_t *p, uint32_t n)       /* zlib C
 }
 
 /* the object is the n bytes of io_buf, format word included; written only if they changed */
-static int save_buf(uint32_t obj, uint32_t n)
+static POLY_COLD int save_buf(uint32_t obj, uint32_t n)
 {
     uint32_t h = hash_of(io_buf, n);
     int rc;
@@ -321,7 +321,7 @@ typedef struct {
 #define ARR1_A (PLAT_STORE_MAX - 4u)                 /* format 1's arrangement bytes in OBJ_SONG; the rest in OBJ_MOTION */
 typedef char arr1_room[(ARR1_LEN <= sizeof(arrange_t)) ? 1 : -1];   /* it unpacks in proj.arr */
 
-static void pattern_from1(pattern_t *p, const pattern1_t *o)
+static POLY_COLD void pattern_from1(pattern_t *p, const pattern1_t *o)
 {
     int k, s, v;
     for (k = 0; k < NKIT; k++) {
@@ -349,7 +349,7 @@ static void pattern_from1(pattern_t *p, const pattern1_t *o)
 }
 
 /* OBJ_PAT0 + OBJ_PAT1, format 1 (eight patterns each) onto patterns 1-16 (the defaults are in place) */
-static int load_patterns1(void)
+static POLY_COLD int load_patterns1(void)
 {
     int h, i;
     for (h = 0; h < 2; h++) {
@@ -369,7 +369,7 @@ static int load_patterns1(void)
 
 /* OBJ_SONG + OBJ_MOTION, format 1: the song as it is, the lanes widened to 64 steps (in place, last
  * first: lane k's new place never reaches below its old one) */
-static int load_arrange1(void)
+static POLY_COLD int load_arrange1(void)
 {
     uint8_t *a = (uint8_t *)&proj.arr;
     int k, i;
@@ -400,7 +400,7 @@ static int load_arrange1(void)
 
 /* the 909 SD gained DECAY at pot 3: what was 3.. (LEVEL, DRIVE, DIST, REV, DLY, PAN) moves up one,
  * the knobs' motion with it, and DECAY takes its default (9W9's 340 ms) */
-static void sound_rev1(void)
+static POLY_COLD void sound_rev1(void)
 {
     uint8_t *sd = proj.sound.v[T_909][DR_SD];
     int i, n = engine_nparams(T_909, DR_SD);
@@ -416,7 +416,7 @@ static void sound_rev1(void)
 
 /* the master's one-knob COMP and FILTER and the delay's TAPE arrived: each set to its nearest to what
  * the details say (the details themselves stay, and are applied after: the sound is as it was) */
-static void sound_rev2(void)
+static POLY_COLD void sound_rev2(void)
 {
     uint8_t *m = proj.sound.v[T_MST][0];
     int th = m[MST_THRESH], cut = m[MST_CUTOFF];
@@ -450,7 +450,7 @@ static void patterns_defaults(void)
 }
 
 /* Packed streams are validated in synchronized canvas scratch before changing the live project. */
-static int project_load_impl(void)
+static POLY_COLD int project_load_impl(void)
 {
     int bad = 0, i, sound_ok, n;
     uint32_t format = 0, raw_len = 0, loaded_packed = 0,raw_off=RAW_OFF;
@@ -576,7 +576,7 @@ void project_apply_io(void)
 }
 
 /* 0 = saved and verified; -7 = the patterns, song and motion do not fit (nothing was written) */
-static int project_save_impl(void)
+static POLY_COLD int project_save_impl(void)
 {
     int p;
     uint32_t raw_len, format, measured,raw_off=RAW_OFF;

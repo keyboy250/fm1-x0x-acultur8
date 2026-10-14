@@ -73,6 +73,7 @@ void ui_external_edit(int begin);        /* 1 starts a gesture; 0 commits it */
 void ui_external_changed(void);
 void ui_external_sound(int target, int voice, int index, int value);
 int ui_external_undo(int redo);          /* VR_OK or shared preflight/reservation rejection */
+int ui_cc_undo(int redo);                /* stopped MIDI history; never closes an owned gesture */
 int ui_undo_preflight(int redo);        /* shared command/physical path; no history mutation */
 void ui_external_saved(void);
 uint8_t *ui_project_stage(uint32_t bytes);

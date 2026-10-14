@@ -58,43 +58,48 @@ enum { F_TUNE, F_ATTACK, F_DECAY, F_LEVEL, F_PDEPTH, F_PITCH, F_DRIVE, F_DIST, F
 
 typedef struct {
     x0x_param_t ui;
-    uint8_t field, curve, exp;
-    float lo, hi;
+    uint8_t field, curve, exp, range;
 } d9_pspec_t;
+typedef struct { float lo, hi; } d9_range_t;
+enum { D9_R_ZERO, D9_R_UNIT, D9_R_TUNE, D9_R_LEVEL, D9_R_SD_DECAY, D9_R_ACCENT };
+static const d9_range_t d9_ranges[] = {
+    {0.0f,0.0f}, {0.0f,1.0f}, {6.0f,32.0f}, {0.0f,1.35f}, {120.0f,800.0f}, {1.0f,4.0f}
+};
+typedef char d9_range_ids_fit_byte[(sizeof d9_ranges/sizeof d9_ranges[0]<=256)?1:-1];
 
 static const char *const d9_dist_names[7] = { "Diode", "Clip", "SAT", "BFZ", "PDIST", "Fold", "Crush" };
 
-#define LIN(nm, f, d, lo, hi) { { nm, 127, d, 0 }, f, CV_LIN, 0, lo, hi }
-#define EXP(nm, f, d, tab)    { { nm, 127, d, 0 }, f, CV_EXP, X0X_EXP_##tab, 0.0f, 0.0f }
+#define LIN(nm, f, d, range) { { nm, 127, d, 0 }, f, CV_LIN, 0, range }
+#define EXP(nm, f, d, tab)    { { nm, 127, d, 0 }, f, CV_EXP, X0X_EXP_##tab, D9_R_ZERO }
 #define DRIVE(d)              EXP("Drive", F_DRIVE, d, DRIVE)
-#define DIST                  { { "Dist", 6, 0, d9_dist_names }, F_DIST, CV_SW, 0, 0.0f, 0.0f }
-#define SENDS                 LIN("Rev", F_REV, 0, 0.0f, 1.0f), LIN("Dly", F_DLY, 0, 0.0f, 1.0f)
-#define LEVEL(d)              LIN("Level", F_LEVEL, d, 0.0f, 1.35f)
-#define PAN                   { { "Pan", 127, 64, 0 }, F_PAN, CV_SW, 0, 0.0f, 0.0f }   /* X0X: last on every voice */
+#define DIST                  { { "Dist", 6, 0, d9_dist_names }, F_DIST, CV_SW, 0, D9_R_ZERO }
+#define SENDS                 LIN("Rev", F_REV, 0, D9_R_UNIT), LIN("Dly", F_DLY, 0, D9_R_UNIT)
+#define LEVEL(d)              LIN("Level", F_LEVEL, d, D9_R_LEVEL)
+#define PAN                   { { "Pan", 127, 64, 0 }, F_PAN, CV_SW, 0, D9_R_ZERO }   /* X0X: last on every voice */
 
 /* Pot defaults are the positions 9W9 seeds from its engineering defaults
  * (er99_engine_seed_pots); the engine itself starts on the exact defaults. */
 static const d9_pspec_t d9_bd_p[] = {
-    LIN("Tune", F_TUNE, 34, 6.0f, 32.0f), LIN("Attack", F_ATTACK, 13, 0.0f, 1.0f),
+    LIN("Tune", F_TUNE, 34, D9_R_TUNE), LIN("Attack", F_ATTACK, 13, D9_R_UNIT),
     EXP("Decay", F_DECAY, 90, BD_DECAY), LEVEL(94),
-    LIN("P.Dpth", F_PDEPTH, 0, 0.0f, 1.0f), EXP("Pitch", F_PITCH, 45, BD_PITCH), DRIVE(0), DIST, SENDS, PAN,
+    LIN("P.Dpth", F_PDEPTH, 0, D9_R_UNIT), EXP("Pitch", F_PITCH, 45, BD_PITCH), DRIVE(0), DIST, SENDS, PAN,
 };
 static const d9_pspec_t d9_sd_p[] = {
     EXP("Tune", F_TUNE, 64, SD_TUNE), EXP("Tone", F_TONE, 68, SD_TONE),
-    LIN("Snappy", F_SNAPPY, 64, 0.0f, 1.0f), LIN("Decay", F_DECAY, 41, 120.0f, 800.0f),   /* X0X: 9W9's fixed 340 ms */
+    LIN("Snappy", F_SNAPPY, 64, D9_R_UNIT), LIN("Decay", F_DECAY, 41, D9_R_SD_DECAY),   /* X0X: 9W9's fixed 340 ms */
     LEVEL(58), DRIVE(36), DIST, SENDS, PAN,
 };
 static const d9_pspec_t d9_lt_p[] = {
     EXP("Tune", F_TUNE, 66, LT_TUNE), EXP("Decay", F_DECAY, 111, LT_DECAY), LEVEL(52),
-    LIN("Attack", F_ATTACK, 23, 0.0f, 1.0f), DRIVE(41), DIST, SENDS, PAN,
+    LIN("Attack", F_ATTACK, 23, D9_R_UNIT), DRIVE(41), DIST, SENDS, PAN,
 };
 static const d9_pspec_t d9_mt_p[] = {
     EXP("Tune", F_TUNE, 69, MT_TUNE), EXP("Decay", F_DECAY, 100, MT_DECAY), LEVEL(52),
-    LIN("Attack", F_ATTACK, 23, 0.0f, 1.0f), DRIVE(41), DIST, SENDS, PAN,
+    LIN("Attack", F_ATTACK, 23, D9_R_UNIT), DRIVE(41), DIST, SENDS, PAN,
 };
 static const d9_pspec_t d9_ht_p[] = {
     EXP("Tune", F_TUNE, 53, HT_TUNE), EXP("Decay", F_DECAY, 105, HT_DECAY), LEVEL(52),
-    LIN("Attack", F_ATTACK, 23, 0.0f, 1.0f), DRIVE(41), DIST, SENDS, PAN,
+    LIN("Attack", F_ATTACK, 23, D9_R_UNIT), DRIVE(41), DIST, SENDS, PAN,
 };
 static const d9_pspec_t d9_rs_p[] = {
     LEVEL(103), EXP("Tune", F_TUNE, 62, RS_TUNE), DRIVE(24), DIST, SENDS, PAN,
@@ -115,7 +120,7 @@ static const d9_pspec_t d9_rd_p[] = {
     EXP("Tune", F_TUNE, 64, SMP_PITCH), LEVEL(42), EXP("Decay", F_DECAY, 108, CY_DECAY), DRIVE(0), DIST, SENDS, PAN,
 };
 static const d9_pspec_t d9_kit_p[] = {
-    LIN("Accent", F_ACCENT, 42, 1.0f, 4.0f), LIN("Veloc", F_VEL, 127, 0.0f, 1.0f),
+    LIN("Accent", F_ACCENT, 42, D9_R_ACCENT), LIN("Veloc", F_VEL, 127, D9_R_UNIT),
 };
 
 #define NP(a) ((int)(sizeof(a) / sizeof(a[0])))
@@ -154,11 +159,12 @@ int drum909_get(const drum909_t *d, int voice, int i)
 static float d9_pot_value(const d9_pspec_t *s, int pot)
 {
     if (s->curve == CV_EXP)
-        return x0x_pot_exp[s->exp][pot];
+        return x0x_pot_exp_value(s->exp,pot);
     if (s->curve == CV_SW)
         return (float)pot;
     const float t = (float)pot / 127.0f;
-    return s->lo + (s->hi - s->lo) * t;
+    const d9_range_t *range = &d9_ranges[s->range];
+    return range->lo + (range->hi - range->lo) * t;
 }
 
 /* ===================================================================== */

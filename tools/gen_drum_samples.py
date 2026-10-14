@@ -137,18 +137,57 @@ def main():
     for i, (n, lo, hi) in enumerate(EXP_RANGES):
         t.append(f"#define X0X_EXP_{n} {i}   /* {lo:g} .. {hi:g} */")
     t.append(f"#define X0X_EXP_COUNT {len(EXP_RANGES)}")
-    t.append("#ifdef X0X_DRUM_TABLES_DEFINE")                   # shared: see arr()
+    # Exact IEEE32 words: positive monotonic pot curves fit26-bit offsets.
+    # 128*26 bits =416 bytes; four-byte random access never crosses a row.
+    t.append("#include <stdint.h>")
+    t.append("typedef struct { uint32_t base; uint8_t packed[416]; } x0x_exp_curve_t;")
+    t.append("typedef char x0x_exp_curve_size_check[(sizeof(x0x_exp_curve_t)==420)?1:-1];")
+    t.append("#ifdef X0X_DRUM_TABLES_DEFINE")
+    t.append("#ifdef X0X_EXP_RAW_REFERENCE /* Pinned native oracle only; never firmware. */")
     t.append(f"const float x0x_pot_exp[{len(EXP_RANGES)}][128] = {{")
     for n, lo, hi in EXP_RANGES:
-        vals = [pot_exp(lo, hi, p) for p in range(128)]
-        t.append("    { /* " + n + " */")
-        for i in range(0, 128, 6):
-            t.append("        " + ", ".join(cfloat(v) for v in vals[i:i + 6]) + ",")
+        vals=[pot_exp(lo,hi,p) for p in range(128)]
+        t.append("    { /* "+n+" */")
+        for i in range(0,128,6):
+            t.append("        "+", ".join(cfloat(v) for v in vals[i:i+6])+",")
         t.append("    },")
     t.append("};")
+    t.append("__attribute__((noinline)) float x0x_pot_exp_value(unsigned curve,unsigned pot){return x0x_pot_exp[curve][pot];}")
     t.append("#else")
-    t.append(f"extern const float x0x_pot_exp[{len(EXP_RANGES)}][128];")
-    t.append("#endif")
+    t.append(f"static const x0x_exp_curve_t x0x_exp_curves[{len(EXP_RANGES)}] = {{")
+    for n, lo, hi in EXP_RANGES:
+        words = [struct.unpack('<I',struct.pack('<f',pot_exp(lo,hi,p)))[0] for p in range(128)]
+        base = min(words)
+        packed = bytearray(416)
+        for p, word in enumerate(words):
+            delta = word-base
+            assert 0 <= delta < (1<<26), (n,p,hex(delta))
+            for bit in range(26):
+                if delta & (1<<bit):
+                    position=p*26+bit
+                    packed[position//8] |= 1<<(position%8)
+        t.append(f"    {{ 0x{base:08x}u, {{ /* {n} */")
+        for i in range(0,416,16):
+            t.append("        "+", ".join(f"0x{x:02x}" for x in packed[i:i+16])+",")
+        t.append("    } },")
+    t.append("};")
+    t.extend([
+        "/* Internal control-only accessor; caller validates curve/count and pot0..127.",
+        " * Integer decode restores the original float bits, never interpolates. */",
+        "__attribute__((noinline)) float x0x_pot_exp_value(unsigned curve, unsigned pot)",
+        "{",
+        "    const x0x_exp_curve_t *c=&x0x_exp_curves[curve];",
+        "    unsigned bit=pot*26u; const uint8_t *p=c->packed+(bit>>3);",
+        "    uint32_t word=(uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24);",
+        "    union { uint32_t bits; float value; } result;",
+        "    result.bits=c->base+((word>>(bit&7u))&0x03ffffffu);",
+        "    return result.value;",
+        "}",
+        "#endif /* X0X_EXP_RAW_REFERENCE */",
+        "#else",
+        "float x0x_pot_exp_value(unsigned curve, unsigned pot);",
+        "#endif",
+    ])
     t.append("")
     out_t.write_text("\n".join(t))
     print(f"gen_drum_samples: {total} frames ({total * 2} bytes) -> {out_s.name}; "

@@ -67,10 +67,10 @@ def package_page(work=None, output=None, home_url='/', storage_namespace='acultu
     js += '\nwindow.fm1SliceSend = send;\n'
     html = re.sub(r'<style>.*?</style>', '<link rel="stylesheet" href="emu.css">', html, flags=re.S)
     html = re.sub(r'<script>.*?</script>', '<script src="emu.js"></script>', html, flags=re.S)
-    panels = '\n'.join((work / 'web/emu' / name).read_text('utf-8') for name in ['variant-panel.html', 'arrangement-panel.html', 'bass-panel.html', 'pad-panel.html', 'lane-panel.html', 'slice-panel.html'])
+    panels = '\n'.join((work / 'web/emu' / name).read_text('utf-8') for name in ['variant-panel.html', 'arrangement-panel.html', 'bass-panel.html', 'pad-panel.html', 'lane-panel.html', 'cc-input-panel.html', 'slice-panel.html'])
     html = html.replace('<section class="breaks"', panels + '\n<section class="breaks"', 1)
-    html = html.replace('</head>', '<link rel="stylesheet" href="variant-ui.css">\n<link rel="stylesheet" href="arrangement-ui.css">\n<link rel="stylesheet" href="bass-ui.css">\n<link rel="stylesheet" href="pad-ui.css">\n<link rel="stylesheet" href="lane-ui.css">\n</head>')
-    html = html.replace('</body>', '<script type="module" src="slice-ui.js"></script>\n<script type="module" src="variant-ui.js"></script>\n<script type="module" src="arrangement-ui.js"></script>\n<script type="module" src="bass-ui.js"></script>\n<script type="module" src="pad-ui.js"></script>\n<script type="module" src="lane-ui.js"></script>\n</body>')
+    html = html.replace('</head>', '<link rel="stylesheet" href="variant-ui.css">\n<link rel="stylesheet" href="arrangement-ui.css">\n<link rel="stylesheet" href="bass-ui.css">\n<link rel="stylesheet" href="pad-ui.css">\n<link rel="stylesheet" href="lane-ui.css">\n<link rel="stylesheet" href="cc-input-ui.css">\n</head>')
+    html = html.replace('</body>', '<script type="module" src="slice-ui.js"></script>\n<script type="module" src="variant-ui.js"></script>\n<script type="module" src="arrangement-ui.js"></script>\n<script type="module" src="bass-ui.js"></script>\n<script type="module" src="pad-ui.js"></script>\n<script type="module" src="lane-ui.js"></script>\n<script type="module" src="cc-input-ui.js"></script>\n</body>')
     html = html.replace('<title>X0X', '<title>Acultur8 Mod Lab · X0X')
     html = html.replace('href="../"', 'href="' + home_url + '" target="_top"')
     html = html.replace('<a href="../manual/">Manual</a>', '<a href="manual.txt" target="_blank">Manual</a>')
@@ -84,7 +84,7 @@ def package_page(work=None, output=None, home_url='/', storage_namespace='acultu
     (output / 'emu.css').write_text(css, encoding='utf-8', newline='\n')
     (output / 'emu.js').write_text(js, encoding='utf-8', newline='\n')
     shutil.copy2(work / 'assets/fonts/BarlowSemiCondensed-Medium.ttf', output)
-    for name in ['slice-import.js', 'slice-ui.js', 'variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css', 'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css', 'midi-router.mjs', 'midi-worklet.mjs']:
+    for name in ['slice-import.js', 'slice-ui.js', 'variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css', 'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css', 'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs']:
         shutil.copy2(work / 'web/emu' / name, output)
     if storage_namespace != 'acultur8-fm1-lab':
         slice_ui = output / 'slice-ui.js'
