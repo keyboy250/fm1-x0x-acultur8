@@ -529,8 +529,8 @@
       "FM1-33"
     ],
     "acceptance": "Single-source clock/transport ownership,24PPQN, loop prevention, visible loss/recovery, routing/queue/Stop safety and actual-WASM tests pass; real multi-device jitter/phase/2hour soak and original resource gates required.",
-    "notes": "Direct user liveperformance request; see PERFORMANCE_CLOCK_SET_DESIGN.md. Planned only; ordinary USB device daisychain unsupported; host/router required. No purchases/flashing/publication. Isolated actual-WASM clock testbench started against qualified60c3engine. Initial24PPQN counts, merged source and0.5slegacyfallback observed. Saturatedinput StopBUSY still stopsactualplaying; outputqueue FC absence underinvestigation, no receiverclaim. No newclockruntime/UI integrated.",
-    "next_check": "Audit MIDI source tagging and clock-loss path; create deterministic two-instance router/clock testbench before live routing."
+    "notes": "Performance-clock runtime remains unintegrated. Frozen979259 candidate received conditional native/protocol review PASS: current FC survives PLAY hold, stale FC suppressed, strict versioned acknowledgments, queued Stop preserved during CC reconciliation. Complete isolated base75 target passes15 original gates: image579716, +544 linkedROM; ordinaryRAM98184/pool335712 unchanged. Static sequencer cost12141 is not device CPU measurement. Current main has72ROMbytes spare; combinedfit and actual-WASM qualification remain open. Current-base action epoch/reset preservation and real USB consumer cancellation are being qualified separately. Source/LeadFollow/clock-loss UI, receiver timing and physical2hour soak remain pending. See PERFORMANCE_CLOCK_SET_DESIGN.md.",
+    "next_check": "Review frozen current-base clock/USB reconciliation; qualify exact EXP resource savings, then serialize combined target and actual-WASM/router checks. Complete source ownership and visible loss/recovery before promoting clock target."
   },
   {
     "id": "FM1-40",

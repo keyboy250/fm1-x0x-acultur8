@@ -140,6 +140,52 @@ def pack_exp_curves(rows):
     return descriptors, bytes(blob)
 
 
+EXP_BLOCK_SIZE = 64
+
+
+def pack_exp_affine(rows, block_size=EXP_BLOCK_SIZE):
+    """Lossless block prediction in IEEE word space; explicit 10-byte descriptors.
+
+    Positive integer slopes and nonnegative residuals make every reconstruction
+    addition bounded by the validated original finite IEEE32 word. Four-byte
+    loads may cross blocks inside the single blob; zero guards bound the end.
+    The legacy pack_exp_curves remains available for baseline verification.
+    """
+    if type(block_size) is not int or block_size not in (16, 32, 64, 128):
+        raise ValueError("EXP block size must be 16, 32, 64 or 128")
+    descriptors, blob, read_end = bytearray(), bytearray(), 0
+    for row in rows:
+        if len(row) != 128 or any(type(w) is not int or not 0 <= w <= 0x7f7fffff for w in row):
+            raise ValueError("EXP rows require 128 finite nonnegative IEEE32 words")
+        for start in range(0, 128, block_size):
+            words = row[start:start + block_size]
+            base = words[0]
+            slope = min((word - base) // i for i, word in enumerate(words) if i)
+            if not 0 <= slope <= 0xffffff:
+                raise ValueError("EXP slope exceeds unsigned 24-bit domain")
+            residuals = [word - base - slope * i for i, word in enumerate(words)]
+            width = max(1, max(residuals).bit_length())
+            if min(residuals) < 0 or width > 25:
+                raise ValueError("EXP residual exceeds bounded four-byte decoder domain")
+            offset = len(blob)
+            if offset > 0xffff:
+                raise ValueError("EXP byte offset exceeds uint16_t")
+            descriptors.extend(base.to_bytes(4, "little") + slope.to_bytes(3, "little") +
+                               offset.to_bytes(2, "little") + bytes([width]))
+            packed = bytearray((block_size * width + 7) // 8)
+            for i, residual in enumerate(residuals):
+                for bit in range(width):
+                    if residual & (1 << bit):
+                        position = i * width + bit
+                        packed[position // 8] |= 1 << (position % 8)
+            blob.extend(packed)
+            read_end = max(read_end, offset + ((block_size - 1) * width // 8) + 4)
+    if not descriptors:
+        raise ValueError("EXP packing requires at least one row")
+    blob.extend(bytes(max(0, read_end - len(blob))))
+    return bytes(descriptors), bytes(blob)
+
+
 def main():
     out_s = Path(sys.argv[1]) if len(sys.argv) > 1 else SRC / "build" / "gen" / "x0x_drum_samples.h"
     out_t = out_s.parent / "x0x_drum_tables.h"
@@ -170,11 +216,10 @@ def main():
     for i, (n, lo, hi) in enumerate(EXP_RANGES):
         t.append(f"#define X0X_EXP_{n} {i}   /* {lo:g} .. {hi:g} */")
     t.append(f"#define X0X_EXP_COUNT {len(EXP_RANGES)}")
-    # Exact IEEE32 deltas: each row uses its minimum width, at most 26 bits.
+    # Exact IEEE32 affine blocks: unsigned prediction plus packed residuals.
     # One contiguous byte object permits bounded cross-row four-byte loads.
     t.append("#include <stdint.h>")
-    t.append("typedef struct { uint32_t base; uint16_t offset; uint8_t width; } x0x_exp_curve_t;")
-    t.append("typedef char x0x_exp_curve_size_check[(sizeof(x0x_exp_curve_t)==8)?1:-1];")
+    t.append(f"#define X0X_EXP_BLOCK_SIZE {EXP_BLOCK_SIZE}u")
     t.append("#ifdef X0X_DRUM_TABLES_DEFINE")
     t.append("#ifdef X0X_EXP_RAW_REFERENCE /* Pinned native oracle only; never firmware. */")
     t.append(f"const float x0x_pot_exp[{len(EXP_RANGES)}][128] = {{")
@@ -187,25 +232,26 @@ def main():
     t.append("};")
     t.append("__attribute__((noinline)) float x0x_pot_exp_value(unsigned curve,unsigned pot){return x0x_pot_exp[curve][pot];}")
     t.append("#else")
-    descriptors, packed = pack_exp_curves([
+    descriptors, packed = pack_exp_affine([
         [struct.unpack('<I', struct.pack('<f', pot_exp(lo, hi, p)))[0] for p in range(128)]
         for _, lo, hi in EXP_RANGES
     ])
-    t.append(f"static const x0x_exp_curve_t x0x_exp_curves[{len(EXP_RANGES)}] = {{")
-    for (name, _, _), (base, offset, width) in zip(EXP_RANGES, descriptors):
-        t.append(f"    {{ 0x{base:08x}u, {offset}u, {width}u }}, /* {name} */")
-    t.append("};")
+    t.append(arr("uint8_t", "x0x_exp_blocks", descriptors, lambda x: f"0x{x:02x}", per=10))
     t.append(arr("uint8_t", "x0x_exp_packed", packed, lambda x: f"0x{x:02x}", per=16))
     t.extend([
         "/* Internal control-only accessor; caller validates curve/count and pot0..127.",
         " * Integer decode restores the original float bits, never interpolates. */",
         "__attribute__((noinline)) float x0x_pot_exp_value(unsigned curve, unsigned pot)",
         "{",
-        "    const x0x_exp_curve_t *c=&x0x_exp_curves[curve];",
-        "    unsigned bit=pot*c->width; const uint8_t *p=x0x_exp_packed+c->offset+(bit>>3);",
+        "    const uint8_t *c=x0x_exp_blocks+10u*(curve*(128u/X0X_EXP_BLOCK_SIZE)+pot/X0X_EXP_BLOCK_SIZE);",
+        "    unsigned index=pot%X0X_EXP_BLOCK_SIZE, width=c[9], bit=index*width;",
+        "    uint32_t base=(uint32_t)c[0]|((uint32_t)c[1]<<8)|((uint32_t)c[2]<<16)|((uint32_t)c[3]<<24);",
+        "    uint32_t slope=(uint32_t)c[4]|((uint32_t)c[5]<<8)|((uint32_t)c[6]<<16);",
+        "    unsigned offset=(unsigned)c[7]|((unsigned)c[8]<<8);",
+        "    const uint8_t *p=x0x_exp_packed+offset+(bit>>3);",
         "    uint32_t word=(uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24);",
         "    union { uint32_t bits; float value; } result;",
-        "    result.bits=c->base+((word>>(bit&7u))&((1u<<c->width)-1u));",
+        "    result.bits=base+slope*index+((word>>(bit&7u))&((1u<<width)-1u));",
         "    return result.value;",
         "}",
         "#endif /* X0X_EXP_RAW_REFERENCE */",

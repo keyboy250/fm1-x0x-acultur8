@@ -16,3 +16,6 @@ echo 'EXP immutable tables: all2432 original IEEE32 values, production decoder/r
 
 # Generator layout and future final-row guards through the actual C accessor.
 python3 tests/exp_packing_test.py
+
+# Affine layout, input bounds and adversarial compiled accessor cases.
+python3 tests/exp_affine_test.py
