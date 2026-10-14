@@ -51,7 +51,7 @@ async function command(op,{target=0,voice=0,index=0,value=0}={}){
 }
 async function load(store){await p.onMessage({type:'load',wasm,store});render(35);assert.equal(p.ex.web_cc_version(),0x10001);assert.ok(snap().values[0]&1024);}
 function telemetry(){
-  const cc=frame().ccInput;assert.deepEqual(cc,{version:0x10001,route,ready:p.ccInput.ready,pending:p.ex.web_cc_pending(),stats:stats()});
+  const cc=frame().ccInput;assert.deepEqual(cc,{version:0x10001,route,ready:p.ccInput.ready,pending:p.ex.web_cc_pending(),source:Array.from({length:32},(_,i)=>p.ex.web_cc_source(2,i)>>>0),slice:p.sliceControl.state(),stats:stats()});
   return cc;
 }
 await load();assert.deepEqual(snap(11).values,[0,0,0,0,25,8,64]);await enable();

@@ -102,6 +102,8 @@ class StaticSiteTest(unittest.TestCase):
                      'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs'):
             self.assertEqual((out / 'emu' / name).read_bytes(), (ROOT / 'web/emu' / name).read_bytes())
         self.assertNotIn('/api/rex/', (out / 'emu/slice-ui.js').read_text('utf-8'))
+        self.assertIn('href="../faq/#guide-rex-import"', page)
+        self.assertIn('id="guide-rex-import"', (out / 'faq/index.html').read_text('utf-8'))
         site.validate_site(out)
 
 

@@ -17,6 +17,7 @@ OUT=build/host
 W='-O2 -ffp-contract=off -Wall -Wextra -Wdouble-promotion -Werror'
 run() { name="$1"; shift; printf '\nRequired check: %s\n' "$name"; "$@"; }
 compile() { name="$1"; shift; cc "$@" -o "$OUT/$name"; run "$name" "$OUT/$name"; }
+run portable_alpha_server python3 -m unittest tests.test_serve_alpha
 run bass_follow sh tests/host/run_bass_follow.sh
 run bass_follow_wasm sh tests/host/run_bass_follow_wasm.sh
 run external_pad sh tests/host/run_pad.sh
@@ -43,6 +44,13 @@ run cc_input_router node tests/host/cc_input_router_test.mjs
 run cc_input_ui node tests/host/cc_input_ui_test.mjs
 run cc_input_integration node tests/host/cc_input_integration_test.mjs
 run cc_input_wasm node tests/host/cc_input_wasm_test.mjs build/emu/x0x.wasm
+run slice_host_bridge sh tests/host/run_slice_bridge.sh
+run slice_control node tests/host/slice_control_test.mjs
+run slice_cc_router node tests/host/slice_cc_router_test.mjs
+run slice_ui node tests/host/slice_ui_test.mjs
+run slice_cc_wasm node tests/host/slice_cc_wasm_test.mjs build/emu/x0x.wasm
+run slice_http python3 tests/slice_http_test.py
+run slice_cc_coverage python3 tests/slice_cc_coverage_test.py
 run cc_history_wasm node tests/host/cc_history_wasm_test.mjs build/emu/x0x.wasm
 run cc_actions_wasm node tests/host/cc_actions_wasm_test.mjs build/emu/x0x.wasm
 run arrangement sh tests/host/run_arrangement.sh

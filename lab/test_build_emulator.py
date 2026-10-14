@@ -37,14 +37,18 @@ class BuildPackagingTest(unittest.TestCase):
             self.assertIn('href="cc-input-ui.css"', page)
             for name in ('variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css',
                          'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css',
-                         'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs'):
+                         'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs',
+                         'slice-control.mjs', 'slice-worklet.mjs'):
                 self.assertEqual((output / name).read_bytes(), (WORK / 'web/emu' / name).read_bytes())
             self.assertIn('href="manual.txt"', page)
             self.assertIn('window.fm1SliceSend = send', script)
             self.assertIn('new Event("fm1-ready")', script)
             self.assertIn('new CustomEvent("fm1-marked"', script)
             self.assertIn('acultur8-fm1-lab-store-v1', script)
-            self.assertIn('acultur8-fm1-marked-imports-v1', (output / 'slice-ui.js').read_text('utf-8'))
+            self.assertIn("from './slice-control.mjs'", (output / 'slice-ui.js').read_text('utf-8'))
+            self.assertIn('acultur8-fm1-marked-imports-v1', (output / 'slice-control.mjs').read_text('utf-8'))
+            # The compiler stage copies worklet.js; package_page supplies its dependencies.
+            self.assertIn("from './slice-worklet.mjs'", (WORK / 'web/emu/worklet.js').read_text('utf-8'))
             self.assertEqual((output / 'manual.txt').read_bytes(), (WORK / 'docs/MANUAL.md').read_bytes())
             if shutil.which('node'):
                 subprocess.run(['node', '--check', str(output / 'emu.js')], check=True)
@@ -75,7 +79,10 @@ handlers['fm1-ready']();vm.runInContext('send({type:"buttons",mask:0})',context)
             script = (output / 'emu.js').read_text('utf-8')
             self.assertIn('acultur8-fm1-alpha-store-v1', script)
             self.assertNotIn('acultur8-fm1-lab-store-v1', script)
-            self.assertIn('acultur8-fm1-alpha-marked-imports-v1', (output / 'slice-ui.js').read_text('utf-8'))
+            service = (output / 'slice-control.mjs').read_text('utf-8')
+            self.assertIn('acultur8-fm1-alpha-marked-imports-v1', service)
+            self.assertNotIn('acultur8-fm1-marked-imports-v1', service)
+            self.assertIn("from './slice-control.mjs'", (output / 'slice-ui.js').read_text('utf-8'))
 
     def test_source_fingerprint_uses_portable_case_sensitive_order(self):
         with tempfile.TemporaryDirectory(prefix='fm1-hash-order-') as folder:
@@ -106,7 +113,8 @@ handlers['fm1-ready']();vm.runInContext('send({type:"buttons",mask:0})',context)
         with tempfile.TemporaryDirectory(prefix='fm1-cc-hash-test-') as folder:
             root = Path(folder)
             (root / 'web/emu').mkdir(parents=True)
-            for name in ('cc-input-router.mjs', 'cc-input-worklet.mjs', 'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-panel.html'):
+            for name in ('cc-input-router.mjs', 'cc-input-worklet.mjs', 'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-panel.html',
+                         'slice-control.mjs', 'slice-worklet.mjs'):
                 before = source_hash(root)
                 (root / 'web/emu' / name).write_text('original', encoding='utf-8')
                 added = source_hash(root)

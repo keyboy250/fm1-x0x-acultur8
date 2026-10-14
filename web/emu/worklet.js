@@ -5,6 +5,7 @@
 
 import { MidiWorkletBridge } from './midi-worklet.mjs';
 import { CcInputWorkletBridge } from './cc-input-worklet.mjs';
+import { SliceWorkletControl, validateMarked } from './slice-worklet.mjs';
 const clock = globalThis.performance ? () => globalThis.performance.now() : () => Date.now();
 
 class X0X extends AudioWorkletProcessor {
@@ -29,6 +30,7 @@ class X0X extends AudioWorkletProcessor {
     this.loading = false;
     this.midi = new MidiWorkletBridge(() => this.ex, m => this.port.postMessage(m));
     this.ccInput = new CcInputWorkletBridge(() => this.loading ? null : this.ex, m => this.port.postMessage(m));
+    this.sliceControl = new SliceWorkletControl(this,m=>this.port.postMessage(m));
     this.port.onmessage = (e) => this.onMessage(e.data);
   }
 
@@ -36,6 +38,7 @@ class X0X extends AudioWorkletProcessor {
     if (!m || typeof m !== 'object') return;
     if (this.midi.message(m)) return;
     if (this.ccInput.message(m)) return;
+    if (this.sliceControl.message(m)) return;
     if (m.type === 'variant-command' || m.type === 'lane-command') {
       const keys = ['abi', 'op', 'request', 'target', 'voice', 'index', 'value'];
       const valid = keys.every(k => Number.isInteger(m[k])) && m.request >= 0 && m.request <= 0xffffffff &&
@@ -123,7 +126,7 @@ class X0X extends AudioWorkletProcessor {
         ex.web_master(masterQ12);
         this.legacyMaster=masterQ12;
         ex.web_boot();
-        this.ex = ex;
+        this.ex = ex;this.sliceControl.reset();
         this.mem = memory;
         this.sentWrites = writes;
         this.editOwner = null;
@@ -159,23 +162,24 @@ class X0X extends AudioWorkletProcessor {
     } else if (m.type === "marked-load") {
       try {
         const ex=this.ex;
-        if(m.frames<1||m.frames>1440000||m.channels<1||m.channels>2||m.pcm.length!==m.frames*m.channels||m.slices.length<1||m.slices.length>64)throw Error('Invalid slice audio.');
+        const prepared=validateMarked(m);
         ex.web_sync_off();ex.web_marked_stop();this.markedOn=false;this.syncOn=false;
         new Float32Array(this.mem.buffer,ex.web_marked_pcm(),m.pcm.length).set(m.pcm);
         const meta=new Uint32Array(this.mem.buffer,ex.web_marked_meta(),m.slices.length*3);
         m.slices.forEach((s,i)=>meta.set([s.start,s.end,s.time],i*3));
         const rc=ex.web_marked_load(m.frames,m.rate,m.channels,m.slices.length,m.length);
         if(rc)throw Error('Firmware marker validation failed: '+rc);
+        this.sliceControl.loaded=prepared;this.sliceControl.bpm=m.sourceBpm??null;this.sliceControl.revision++;
         this.port.postMessage({type:'marked-ready'});
       }catch(err){this.port.postMessage({type:'marked-error',message:err.message});}
     } else if (m.type === "marked-sync") {
       const rc=this.ex.web_sync_arm(Number(m.bpm));
       if(rc)this.port.postMessage({type:'marked-error',message:'Enter the original loop BPM (20–300). Sync supports the internal sequencer clock.'});
-      else {this.syncOn=true;this.markedOn=false;this.markedLayer=true;}
+      else {this.syncOn=true;this.markedOn=false;this.markedLayer=true;this.sliceControl.bpm=Number(m.bpm);}
     } else if (m.type === "seq-tempo") {
       this.ex.web_seq_set_bpm(Number(m.bpm));
     } else if (m.type === "marked-play") {
-      this.ex.web_sync_off();this.syncOn=false;this.ex.web_marked_play(m.repeat?1:0);this.markedOn=true;
+      this.ex.web_sync_off();this.syncOn=false;this.ex.web_marked_play(m.repeat?1:0);this.sliceControl.repeat=!!m.repeat;this.markedOn=true;
     } else if (m.type === "marked-pad") {
       this.ex.web_sync_off();this.syncOn=false;this.ex.web_marked_pad(m.slice);this.markedOn=true;
     } else if (m.type === "marked-stop") {
@@ -226,7 +230,7 @@ class X0X extends AudioWorkletProcessor {
     msg.sync={state:ex.web_sync_state(),bpm:ex.web_seq_bpm(),playing:!!ex.web_seq_playing(),beat:ex.web_seq_beat()};
     if (this.ccInput.supported() && typeof ex.web_cc_pending === 'function' && typeof ex.web_cc_stat === 'function') {
       msg.ccInput = {version:ex.web_cc_version() >>> 0,route:this.ccInput.route,ready:this.ccInput.ready,
-        pending:ex.web_cc_pending() >>> 0,stats:Array.from({length:6},(_,i)=>ex.web_cc_stat(i) >>> 0)};
+        pending:ex.web_cc_pending() >>> 0,source:typeof ex.web_cc_source==='function'?Array.from({length:32},(_,i)=>ex.web_cc_source(2,i)>>>0):null,slice:this.sliceControl.state(),stats:Array.from({length:6},(_,i)=>ex.web_cc_stat(i) >>> 0)};
     }
     if(ex.web_marked_cursor)msg.marked={cursor:ex.web_marked_cursor(),triggers:ex.web_marked_triggers(),slice:ex.web_marked_last(),playing:!!ex.web_marked_playing()||(ex.web_sync_state()===2&&!!ex.web_seq_playing())};
     if (this.frames >= 44100) {                       // the share of real time spent running the device

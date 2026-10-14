@@ -30,6 +30,25 @@ __attribute__((used,visibility("default"))) uint32_t web_cc_source(int source,in
 __attribute__((used,visibility("default"))) uint32_t web_cc_stat(int index){return index<0||index>=6?0xffffffffu:((uint32_t *)&cc_stats)[index];}
 __attribute__((used,visibility("default"))) uint32_t web_cc_pending(void){return mi_w-mi_r;}
 __attribute__((used,visibility("default"))) uint32_t web_cc_version(void){return 0x00010001u;} /* ABI1 / map1; partial candidate, not complete coverage */
+/* Browser slice CC ABI1. Host-only: no firmware capability or MIDI-source0/1 claim.
+ * Exact take returns0 success,-1 invalid21-bit domain,-2 mismatch/context.
+ * Route admission belongs to the correlated worklet request, not this C ABI. */
+__attribute__((used,visibility("default"))) uint32_t web_slice_cc_version(void){return 0x00010001u;}
+__attribute__((used,visibility("default"))) int web_cc_take_exact(uint32_t parameter,uint32_t value){
+    cc_source_t *s=&cc_sources[2];
+    if(parameter<1104u||parameter>1116u||value>0x1fffffu)return -1;
+    if(!s->ready||s->exact_parts!=7||s->parameter!=parameter||s->exact!=value)return -2;
+    s->exact_parts=0;return 0; /* selectors/native arm/edge/destination untouched */
+}
+/* Bit0 running,1 pendingtransport,2 reservation/stage,3 C ownership,
+ * 4 benchmark/save job,5 queued audio commands or MIDI ingress. */
+__attribute__((used,visibility("default"))) uint32_t web_slice_control_state(void){
+    return (seq.playing?1u:0u)|((seq.req_start||seq.req_stop||seq.req_cont)?2u:0u)|
+      ((seq.transport_hold||seq.transport_stage)?4u:0u)|
+      ((external_edit||ui.rec||ui.btn||ui.keys||ui.overlay==O_ASK)?8u:0u)|
+      ((perf_testing()||save_wait)?16u:0u)|
+      ((engine_queue_read()!=engine_queue_written()||mi_w!=mi_r)?32u:0u);
+}
 
 /* Fixed-size, shared-engine editor bridge. Never expose live project memory. */
 static variant_reply_t web_variant_reply;
@@ -186,6 +205,14 @@ __attribute__((used, visibility("default"))) float *web_marked_r(void) { return 
 __attribute__((used, visibility("default"))) int web_marked_load(uint32_t frames, uint32_t rate, int channels, int count, uint32_t length)
 { return marked_load(&marked, marked_pcm, frames, rate, channels, marked_meta, count, length); }
 __attribute__((used, visibility("default"))) void web_marked_play(int repeat) { marked_play(&marked, repeat); }
+/* Current cursor and sounding tails survive; flag is used at next loop end.
+ * This controls original audition only. FM1-sync repeats until explicit Stop. */
+__attribute__((used,visibility("default"))) int web_marked_repeat(int repeat){
+    if(repeat<0||repeat>1)return -1;
+    if(!marked.count)return -2;
+    marked.repeat=(uint8_t)repeat;return 0;
+}
+
 __attribute__((used, visibility("default"))) void web_marked_stop(void) { marked_stop(&marked); }
 __attribute__((used, visibility("default"))) int web_marked_pad(int i) { marked_stop(&marked); return marked_trigger(&marked, i); }
 __attribute__((used, visibility("default"))) void web_marked_render(uint32_t n) { marked_render(&marked, marked_l, marked_r, n > 1024 ? 1024 : n); }

@@ -50,7 +50,17 @@ def generate(root=ROOT):
         if kind in ('ACTION','ACTIONCTL'):reason='isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open'
         if kind=='HISTORY':reason='stopped shared project history; rejects owned/recording gestures; global proj.set settings remain outside journal'
         if slot is None:status='explicitly unmapped/read-only/nonmusical';reason='no writable direct CC address in reviewed registry'
-        coverage.append({'id':row['id'],'parameter_number':slot,'binding':kind,'status':status,'reason':reason})
+        entry={'id':row['id'],'parameter_number':slot,'binding':kind,'status':status,'reason':reason}
+        if row['id'].startswith('slice.'):
+            # Overlay only: native MCU table/unsupported status and wire map stay
+            # unchanged. Browser-only source2 routing is a separate capability.
+            entry['reason']='native slice dispatch remains unsupported; separate HOST browser overlay below'
+            entry['browser']={'status':'HOST browser slice ABI1.1; local synthetic acceptance passed',
+                'parameter_number':row['parameter_number'],'source':2,'abi':65537,
+                'ingress':'explicit selected input route; correlated application receipt',
+                'evidence':'docs/ACULTUR8_BROWSER_SLICE_CC.md',
+                'physical_usb_trs':False,'real_daw':False,'real_audio_context':False,'download_delivery':False}
+        coverage.append(entry)
     rows.sort()
     # Exact regular strip grid; every allocated cell is proven against inventory.
     strips=[r for r in data['entries'] if r['id'].startswith('strip.')]
@@ -100,7 +110,7 @@ def generate(root=ROOT):
     header.append('#endif')
     header.append('static const uint16_t cc_cutoff_hz[]={'+','.join(str(round(20*1000**(v/127))) for v in range(128))+'};')
     header.append('#define CC_BINDINGS_COUNT '+str(len(rows)))
-    return '\n'.join(header)+'\n',json.dumps({'registry_map':data['map_version'],'scope':'native implementation candidate; no browser/target/device acceptance','rows':coverage},indent=2)+'\n'
+    return '\n'.join(header)+'\n',json.dumps({'registry_map':data['map_version'],'scope':'native implementation candidate with scoped HOST browser slice evidence; no physical device/DAW acceptance','rows':coverage},indent=2)+'\n'
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--check',action='store_true');args=parser.parse_args();h,j=generate()

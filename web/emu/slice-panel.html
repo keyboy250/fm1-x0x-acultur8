@@ -1,5 +1,6 @@
 <section class="slice-lab" aria-labelledby="slice-title">
 <h2 id="slice-title">WAV + original slice markers</h2>
+<p id="slice-rex-help"><strong>Have a REX file?</strong> Convert it in the local dashboard first, then select its matching <code>_slices.wav</code> and <code>_markers.json</code> here. The converter preserves the original slices and trigger timing. This standalone preview does not decode raw <code>.rx2</code>, <code>.rex</code> or <code>.rcy</code> files. <a href="/faq#guide-rex-import" target="_blank" rel="noopener noreferrer">REX conversion and import guide</a>.</p>
 <p>Import exact cuts and trigger positions for emulator audition. Up to 64 slices, mono/stereo WAV, 30 seconds of audio. This preview lane is separate from the FM1’s three flash slots and legacy eight-slice BREAK controls.</p>
 <div class="slice-files"><label>WAV audio <input type="file" id="slice-audio" accept=".wav,audio/wav"></label><label>Exact slice markers <input type="file" id="slice-markers" accept=".json,.csv,application/json,text/csv"></label></div>
 <div class="bar"><button id="slice-import-button" type="button">Import WAV + markers</button><button id="slice-demo" type="button">Load unequal timing demo</button><button id="slice-reopen" type="button">Reopen saved import</button></div>

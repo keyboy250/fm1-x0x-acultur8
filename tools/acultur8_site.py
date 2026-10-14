@@ -20,7 +20,7 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 REPO = 'https://github.com/keyboy250/fm1-x0x-acultur8'
 EMU_FILES = ('index.html', 'emu.css', 'emu.js', 'worklet.js', 'x0x.wasm',
-             'slice-import.js', 'slice-ui.js', 'variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css', 'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css', 'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs',
+             'slice-import.js', 'slice-ui.js', 'slice-control.mjs', 'slice-worklet.mjs', 'variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css', 'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css', 'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs',
              'BarlowSemiCondensed-Medium.ttf', 'manifest.json')
 
 
@@ -138,6 +138,7 @@ def package(out, emu=None):
         shutil.copy2(emu / name, out / 'emu' / name)
     html = (out / 'emu/index.html').read_text('utf-8')
     html = html.replace('href="/"', 'href="../"').replace('href="/faq"', 'href="../faq/"')
+    html = html.replace('href="/faq#', 'href="../faq/#')
     html = html.replace('href="manual.txt"', 'href="../manual/"')
     html = html.replace('<nav>', '<nav><a href="../about/">About</a>', 1)
     html = html.replace('https://github.com/charlesvestal/fm1-x0x', REPO)
