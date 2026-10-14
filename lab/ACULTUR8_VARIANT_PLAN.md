@@ -353,3 +353,7 @@ Reviewed exact2432value table encoding integrated. Official linked image579172/5
 Fresh EXP combined suite completed exit0: all9requiredchecksPASS; privateartifact build/site-0bl8ejgk, all38filehashes independentlyverified. WASM677897bytes SHA60c3ab085454ba1d9f392d7ca478fb4787a9a08d1bc0486265c0e05a55a9d842, source7124f8a9f2e5060e3cb0c9ac44f831ce9e37ce5d87c3a47dedfadd6c31b548f4. Fullscene/click/hearing/DAW/device stillpending; no publication.
 
 ActualfreshEXPbrowserrehearsal: bothkits/both303/BREAK,independenthat13/1-32T, DminorI/V, public6slice125/90/180,469triggers,sharedStop,savedharmony/lanes/strip/padintent/importreopen,masterreadback pass. NoMIDIpermission/routes, receiver/hearing/underrun/longsoak/allnotes/fullscene acceptance. CurrentFAQclockdiagram visuallyverified;planned39/40 staytodo. See critical-performance-progress.json/data/combined-exp-browser-scene-20261013.json. Publicationheld.
+
+## Developer compatibility and independent audit
+
+COMPATIBILITY_GUIDE.md defines version 0.1 contribution requirements for humans and coding agents: stable contracts, provenance, migration, MIDI/thread ownership, resource gates, recovery and an evidence matrix. FM1-41 remains todo: machine-readable manifests, automated enforcement and third-party fixture integration are not yet implemented. Physical/ensemble acceptance stays separate. Source guide publication is authorized; Pages remains held.
