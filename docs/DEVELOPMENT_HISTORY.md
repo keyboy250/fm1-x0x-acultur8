@@ -79,3 +79,14 @@ The user explicitly authorised keeping GitHub current. This source checkpoint in
 Actualbrowser synthetic909/808/both303/BREAK+6slices ran125/90/180BPM, hat13steps1/32triplet, selectedbass57underAm and50underDm,469slicetriggers,sharedStop/save/reopen/master2800→2864→2800. This is partialscene evidence, nothumanlistening/clickdiagnosis/realreceiver/DAW/30minsoak orhardwarequalification. The earlier published all-sound acceptance receipt is preserved. Browser Pages jobs are explicitly held; newcode doesnotclaim a newhostedrelease.
 
 CompleteCCcoverage stillhas24directgaps (11editingactions and13markedpreviewcontrols). Isolatedediting/undo optimisations andclockStopretry prototypes remain outside this checkpoint. Currentclocktestbench independently confirmed fulloutputqueue canomitStop whilelocalplaybackstops; twoactualWASMinstances ran7260simulatedseconds with348480clocks in87.24wallseconds, not a wall2hour/phasequalification. Performanceclock/setlists/modulecompatibility/multideviceensemble targets remain incomplete. Physicalflashing remains separatelyauthorised.
+
+
+## Historical published acceptance retained during reconciliation
+
+## 2026-10-13 — All-sound browser publication accepted
+
+PR #13 passed independent review and CI run 38395393049; merged CI/Pages run 38395769684 succeeded. The 26 hosted files match source `10533c9fa817a6df5d64b09afcd47c8f75f14da165f9bf1c5c8df8a73e4b5503` and WASM `e765fd3c65b1ba22f311b425cd5bc964462ee0a783a5222069c2d50a3f78d8a0`. Published releases: alpha.strips.1 at `c081d63` (release 411644605) and alpha.arrangement.1 at `e78ee13` (release 411636789). Earlier pending entries remain historical checkpoints.
+
+Actual hosted checks cover all 25 options and prior-project migration retaining boost 18 and arrangement length 4;808 boost 12/ceiling -18; BREAK 6/undo 0/redo 6 and saved reload; public six-slice sync with120BPM source and FM1 at 125 BPM; PLAY stop, live-save rejection and stopped-save acknowledgement. At 390px, document width 375px and panel 343px pass with zero console errors. Private publication verification preserves detailed proof without publishing runtime data.
+
+FM1-12 is complete within browser functional acceptance after ceiling/tails/meter/save/bypass tests. FM1-11 remains in review for its explicit worst-case CPU/physical criterion; FM1-06 remains in review for physical qualification. The 15 unchanged static gates do not prove worst-case physical CPU. Next work remains actual bass/MIDI behavior, broader arrangement order/loop controls and the complete musical scene.
