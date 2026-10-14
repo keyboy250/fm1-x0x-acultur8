@@ -68,6 +68,25 @@ static void ud_drop_oldest(undo_t *u)
     u->cur--;
 }
 
+/* Pure main-only run scan. *at receives the first changed byte, and the
+ * result is the span through the last change before a gap of UNDO_GAP equal
+ * bytes. No region, shadow, journal or history mutation. Zero means exhausted. */
+#ifdef __clang__
+#define UD_SCAN_COLD __attribute__((noinline,minsize))
+#else
+#define UD_SCAN_COLD __attribute__((noinline))
+#endif
+static UD_SCAN_COLD uint32_t ud_run(const uint8_t *a,const uint8_t *b,uint32_t len,uint32_t *at)
+{
+    uint32_t first=*at,end,q;
+    while(first<len && a[first]==b[first])first++;
+    *at=first;
+    if(first==len)return 0;
+    end=first;
+    for(q=first+1;q<len && q-end<=UNDO_GAP;q++)if(a[q]!=b[q])end=q;
+    return end-first+1;
+}
+
 /* the changes since the last commit, as one entry. 1 = an entry was made, 0 = nothing changed,
  * -1 = too big to keep (the history is emptied; the region is the new starting point) */
 static int undo_commit(undo_t *u)
@@ -76,29 +95,11 @@ static int undo_commit(undo_t *u)
     uint8_t *e;
     /* first pass: the runs and the entry's size */
     while (i < u->len) {
-        uint32_t s, end, q;
-        if (u->region[i] == u->shadow[i]) {
-            i++;
-            continue;
-        }
-        s = end = i;
-        while (end + 1u < u->len) {                       /* extend over short gaps */
-            uint32_t nxt = end + 1u, lim = end + 1u + UNDO_GAP, found = 0;
-            for (q = nxt; q < u->len && q < lim; q++)
-                if (u->region[q] != u->shadow[q]) {
-                    found = q;
-                    break;
-                }
-            if (!found)
-                break;
-            end = found;
-        }
-        if (!runs)
-            lo = s;
-        hi = end;
-        runs++;
-        sz += 4u + ((end - s + 1u + 1u) & ~1u);
-        i = end + 1u;
+        uint32_t n=ud_run(u->region,u->shadow,u->len,&i);
+        if(!n)break;
+        if(!runs)lo=i;
+        hi=i+n-1;runs++;
+        sz+=4u+((n+1u)&~1u);i+=n;
     }
     if (!runs)
         return 0;
@@ -119,23 +120,9 @@ static int undo_commit(undo_t *u)
     /* second pass, the same runs: the previous bytes into the entry, the shadow brought up to date */
     i = lo;
     while (i <= hi) {
-        uint32_t s, end, q, k;
-        if (u->region[i] == u->shadow[i]) {
-            i++;
-            continue;
-        }
-        s = end = i;
-        while (end + 1u < u->len) {
-            uint32_t nxt = end + 1u, lim = end + 1u + UNDO_GAP, found = 0;
-            for (q = nxt; q < u->len && q < lim; q++)
-                if (u->region[q] != u->shadow[q]) {
-                    found = q;
-                    break;
-                }
-            if (!found)
-                break;
-            end = found;
-        }
+        uint32_t s,end,k,n=ud_run(u->region,u->shadow,hi+1u,&i);
+        if(!n)break;
+        s=i;end=i+n-1;
         ud_put16(e, s);
         ud_put16(e + 2, end - s + 1u);
         e += 4;

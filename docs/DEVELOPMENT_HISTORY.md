@@ -94,3 +94,13 @@ FM1-12 is complete within browser functional acceptance after ceiling/tails/mete
 ## Developer compatibility guide v0.1
 
 PR #16 merged as `70cbc3cc33ad842155e132420465f32b101eecd0` after required CI and independent review. This separate documentation contribution adds a developer [compatibility guide](COMPATIBILITY_GUIDE.md) that defines contribution contracts and an independent audit checklist for human and coding-agent developers. The guide specifies requirements, not certification: FM1-41 remains open for validated manifests, automated enforcement and a third-party integration fixture. Receiver, physical-device and ensemble acceptance remain pending. Pages publication remains held.
+
+## Distant-future Paraphonix expression proposal
+
+FM1-43 records the requested coordinated multi-device chord expression engine. A shared progression/key/scale would govern bounded distributed voicings, range/role locks and supported expression. Global voice caps need sustain/release and external-note policies; audio headroom remains separate. See [design](PARAPHONIX_EXPRESSION_DESIGN.md). Status todo; no implementation or device acceptance claimed.
+
+## Native MIDI editing integration candidate
+
+Eleven guarded actions, explicit destination/arm/cancel, shared editing primitives and exact undo scanning are locally integrated with reviewed lossless variable EXP tables. Independent reconciliation review and isolated existing nine-check suite pass. Production-worklet/actual-WASM action tests verify selectors, source ownership, undo, save/reset/reopen, benchmark completion/Stop restoration and protected/playing refusal; both native and WASM action checks are now mandatory. Fresh integration suite passes all nine checks; all 38 artifact hashes were independently verified. A separate official build of the integrated source also passes all fifteen original gates. Official isolated linked gates pass at581492image/98272RAM/335712pool (72image/32RAM spare).
+
+693inventory rows preserve all690original parameter contracts;13browser slice direct-CC gaps remain. Complete DAW, physical timing/stack, receiver, listening/click, flash crash behavior and global-settings undo stay open. Source publication awaits final checks; Pages remains held. No clock prototype or restricted SDK/private loops are integrated.

@@ -219,8 +219,15 @@ int plat_store_load(uint32_t obj, void *dst, uint32_t max)
     memcpy(dst, store[obj], (size_t)n);
     return n;
 }
+#ifdef PLAT_STORE_TEST
+static int store_fail_after=-1;
+#endif
 int plat_store_save(uint32_t obj, const void *src, uint32_t len)
 {
+#ifdef PLAT_STORE_TEST
+    if(store_fail_after==0)return -1;
+    if(store_fail_after>0)store_fail_after--;
+#endif
     if (HOST_STORE_PROBE(1)) return -1;
     if (obj >= OBJ_NOBJ || len > PLAT_STORE_MAX)
         return -1;

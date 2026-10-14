@@ -25,16 +25,18 @@ static void decoder_equivalence(void){
     unsigned at=0;for(unsigned n=0;n<=65535u;n++){
         uint32_t word=0xdeadbeefu;int rc=cc_lookup((uint16_t)n,&word);
         int present=at<CC_REFERENCE_COUNT && cc_reference_numbers[at]==n;
-        assert(rc==(present?CC_APPLIED:CC_UNSUPPORTED));
+        int original_present=present;
         uint32_t expected=present?cc_reference_words[at]:0xdeadbeefu;
         /* Only these formerly unsupported rows gain typed history dispatch;
          * preserve the frozen map/holes and every other native descriptor. */
+        if(n>=1132u&&n<=1134u){assert(!present);present=1;expected=n==1132u?10u+(15u<<14):25u+((n-1133u)<<14);}
         if(n==1117u || n==1118u){assert(present && expected==0);expected=24u+((n-1117u)<<14);}
-        assert(word==expected);if(present)at++;
+        assert(rc==(present?CC_APPLIED:CC_UNSUPPORTED));
+        assert(word==expected);if(original_present)at++;
     }
-    assert(at==CC_REFERENCE_COUNT && CC_BINDINGS_COUNT==CC_REFERENCE_COUNT);
+    assert(at==CC_REFERENCE_COUNT && CC_BINDINGS_COUNT==CC_REFERENCE_COUNT+3);
     assert(sizeof cc_binding_runs==CC_RUN_COUNT*8u);
-    puts("CC range decoder: frozen676 addresses/all65536 holes; only1117/1118 promoted from unsupported to history; all other bindings preserved PASS");
+    puts("CC range decoder: frozen676 addresses/all65536 holes; 1117/1118 history plus three explicit action-protocol holes1132..1134; all original bindings preserved PASS");
 }
 int main(void){decoder_equivalence();
     fresh();seq_start(&seq);render();assert(seq.playing);

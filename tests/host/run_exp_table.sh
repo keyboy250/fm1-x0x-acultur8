@@ -13,3 +13,6 @@ for mode in packed raw; do
  done
 cmp build/exp_table_test/packed.bits build/exp_table_test/raw.bits
 echo 'EXP immutable tables: all2432 original IEEE32 values, production decoder/raw oracle, ASan/UBSan PASS'
+
+# Generator layout and future final-row guards through the actual C accessor.
+python3 tests/exp_packing_test.py

@@ -436,8 +436,8 @@
     "title": "Critical: complete real-time MIDI CC performance mapping",
     "area": "protocol",
     "acceptance": "Inventory every usereditable musical parameter and assign a stable documented CC/channel mapping with ranges/units/scaling and capability version. Incoming USB/TRS and browser MIDI controls drive the same authoritative engine safely whileplaying, including new lane timing, all25strips, sound/mixer/FX, generators and harmony/bass/pad settings. Prove each map entry, automation under load, bounded latency/coalescing/backpressure, no feedback echo or MIDI-channel collisions, clean active-note transitions, snapshot/readback and save/reopen without per-CC flash writes; physical DAW/device acceptance remains separately pending.",
-    "notes": "652nativecandidates/24directgaps/14explicitnonaddress, all676addressesand690rowsstable. CorrectedMASTER preservesremoteownershipthroughstationarypot/jitter, integratedtargetfitPASS. Requiredsuite12225terminal9PASS withnewnative/actualWASMmastertests; accessiblehitreadbackfix passesfocusedWASM/freshsuite39773terminal9PASS/actualbrowserreadback.11nativeeditingactions and13markedcontrols remainisolated/unimplementedinmain; fineCC/globalsettingshistory/realDAW/device/fullscene open. Publicationheld. Latest losslessEXP integration: officialimage579172/581564, RAM98184/98304, pool335712/344064;15staticgatesPASS,2392flashspare. Freshsuite97729terminalexit0/all9PASS;38artifacthashesverified; no physical/fullscene/completeCC promotion. See docs/ACULTUR8_EXP_TABLE_STATIC_COSTS.md.",
-    "next_check": "Finish explicit native/worklet/action/master/undo contracts without borrowing UIselection; implement full musical coverage, exact/fine ordering and realDAW integration, preserving resource gates.",
+    "notes": "652nativecandidates/24directgaps/14explicitnonaddress, all676addressesand690rowsstable. CorrectedMASTER preservesremoteownershipthroughstationarypot/jitter, integratedtargetfitPASS. Requiredsuite12225terminal9PASS withnewnative/actualWASMmastertests; accessiblehitreadbackfix passesfocusedWASM/freshsuite39773terminal9PASS/actualbrowserreadback.11nativeeditingactions and13markedcontrols remainisolated/unimplementedinmain; fineCC/globalsettingshistory/realDAW/device/fullscene open. Publicationheld. Latest losslessEXP integration: officialimage579172/581564, RAM98184/98304, pool335712/344064;15staticgatesPASS,2392flashspare. Freshsuite97729terminalexit0/all9PASS;38artifacthashesverified; no physical/fullscene/completeCC promotion. See docs/ACULTUR8_EXP_TABLE_STATIC_COSTS.md. Reviewed11nativeactions+shared/scanner/variableEXP now locally integrated; isolatedexisting9checks and actualWASMactions pass,15targetgates581492/RAM98272. Newactionchecksmandatory; freshmain suite running.693rows/666nativecandidates/13browsergaps/14nonaddressed. No fullCC/device promotion.",
+    "next_check": "Pass fresh mandatory native+actual-WASM action suite on integration and reviewed GitHub CI; implement13browser slice mappings, then complete real DAW/receiver and physical resource/soak acceptance.",
     "status": "doing",
     "priority": 1,
     "milestone": "Critical performance sequencing and DAW control",
@@ -577,5 +577,22 @@
     "acceptance": "Explicit device roles/routes/identity/capabilities and acknowledged group cue/partialfailure cleanup pass; independent lanes remain timed by oneleader; realmultidevice audio/jitter/2hour/recovery acceptance required.",
     "notes": "DirectuserSystem100-inspiredmultiFM1direction; source modulescompiledintooneimage, notruntimeplugins; no analogueCV/extraengines implied. See MODULE_ECOSYSTEM_DESIGN.md.",
     "next_check": "Design topology/role view and capability-specific scene contract; prototype2actualWASMinstances beforephysical routing."
+  },
+  {
+    "id": "FM1-43",
+    "title": "Paraphonix distributed chord expression and global voice budget",
+    "area": "ecosystem",
+    "status": "todo",
+    "priority": 3,
+    "milestone": "Distant-future ensemble expression",
+    "depends_on": [
+      "FM1-38",
+      "FM1-39",
+      "FM1-41",
+      "FM1-42"
+    ],
+    "acceptance": "Capability-validated chord allocation, key/scale and range locks, global/per-device sounding-voice caps, deterministic voice leading and sustained-note cleanup pass; actual engine/receiver, persistence, original resource gates and physical ensemble timing/audio/soak required.",
+    "notes": "User distant-future concept. Shared progression conductor with distributed voices and coordinated supported expression. Note caps do not guarantee audio headroom; no shared physical filter, MPE support or additional onboard voices assumed. See PARAPHONIX_EXPRESSION_DESIGN.md.",
+    "next_check": "After clock/compatibility/ensemble foundations, inventory receiver capabilities and model bounded host-side chord allocation with explicit release-tail and external-note policies."
   }
 ]

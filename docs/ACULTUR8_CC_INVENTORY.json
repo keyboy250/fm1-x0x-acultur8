@@ -1,17 +1,17 @@
 {
   "schema": 1,
-  "map_version": "draft-1",
+  "map_version": "draft-1-actions-prototype-1",
   "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
   "source_hashes": {
     "firmware/src/app/engine.c": "e0985fff17eafb9bf018f41d193fd9c5673465110f7e3007433456992f974a3d",
     "firmware/src/app/engine.h": "d413c0ac2785feb9169cde27167e8f5093db18426063bf65397a702c54062f75",
-    "firmware/src/app/ui.c": "2a271dbcdbf6d3f83720778919ba5194408fc585d1e6df0470b953cd4d9f602c",
-    "firmware/src/app/x0x.h": "3aa0b28201efa0f91ef03bd204802d57dc8352ad5c8083d43c638f6ecdd8a052",
-    "firmware/src/app/variant.c": "f595750b8bf4e1f5c4e37feeb20a1987bd54a96f41e894deff024bab86b7baec",
+    "firmware/src/app/ui.c": "705cba3d6b59ae8c03d36f7adef3019d12632d7e3138683e5bdd1aa2e0cd23e8",
+    "firmware/src/app/x0x.h": "8c26b1b9f15bcca7603c4e15706b2e4eb9dae07ce223023f50a5a846da868235",
+    "firmware/src/app/variant.c": "3572c385718d1e921ca8175ebdaee94af6106ce5a2690fe391415d97758ded8d",
     "firmware/src/app/variant.h": "4e3e76f3c63db31ee686feb9190cfe83eb50bd153df793744cbaa8d040644045",
     "firmware/src/seq/pattern.h": "c8f7aeee9c1fd96571ce65afa65f149ec89ac2e9521276fbf2728df9fb641b93",
     "firmware/src/seq/lanes.h": "e616c7fac61ff8dfdde17269a54e6a8456641fdc8a945c0e99dea5080d97efed",
-    "firmware/src/seq/sequencer.h": "6f45b5fa70d789f49b2ccba46e0a4d44982a89157aa57bd1e50ee77c15ccfc16",
+    "firmware/src/seq/sequencer.h": "507af5b7dacc97726fa00cbefa7325a8bac03455280f5718849e0b5ddd70ef8a",
     "firmware/src/seq/motion.h": "ac88bf9e4532f50f7d157a7b15c60c72118078a1bd5ac6cee1a6cf74ceaa585e",
     "firmware/src/seq/motion.c": "5cf517f38b6653f142b663af7a7179e0fcc92db3c390dcd9dc2949036b03a7c4",
     "firmware/src/seq/tb3po.h": "7dd646a572129fc8df5628f6111f68fef6b54476446f75cc5f583b6f110f0073",
@@ -22521,6 +22521,72 @@
       "scaling": "round(min + cc7 * (max-min) / 127)",
       "runtime_parameter": "engine_lane_mode; first initialization stopped; later Off/On next96-tick bar",
       "parameter_number": 1131
+    },
+    {
+      "id": "selector.destination_pattern",
+      "name": "Explicit pattern-copy destination",
+      "category": "musical",
+      "range": [
+        0,
+        31
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 13,
+        "cc": 108
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "source draft destination; selector.commit freezes it; never UI focus",
+      "parameter_number": 1132
+    },
+    {
+      "id": "action_control.arm",
+      "name": "Arm destructive native action",
+      "category": "action",
+      "range": [
+        0,
+        11
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 13,
+        "cc": 109
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "0 cancels; action2/3/4/5/7/8/9 binds source/context/project revision",
+      "parameter_number": 1133
+    },
+    {
+      "id": "action_control.cancel",
+      "name": "Cancel source action arm",
+      "category": "action",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 13,
+        "cc": 110
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "1 cancels source arm; 0 does nothing",
+      "parameter_number": 1134
     },
     {
       "id": "output.master_knob",

@@ -163,6 +163,9 @@ typedef struct {
     uint32_t ext_since;               /* samples since the last external clock (tempo estimate) */
     uint32_t ext_period;              /* smoothed samples per external clock, Q8 */
     volatile uint32_t ext_pending;    /* external clocks received, not yet consumed */
+    /* Audio-owner publication; main reads under stopped reservation. Saturate
+     * at UINT32_MAX so old confirmations can never revive after wrap. */
+    volatile uint32_t transport_epoch, stop_epoch;
     volatile uint8_t req_start, req_stop, req_cont; /* transport requests from the UI / MIDI */
     uint32_t mut_rng[NBASS];          /* auto-mutate random streams */
     uint8_t bass_notes_out[NBASS], bass_channels_out[NBASS]; /* actually emitted ownership;255 inactive */
@@ -171,6 +174,7 @@ typedef struct {
     volatile uint8_t transport_hold, transport_stage; /* main-only nested count; audio defers requests while nonzero */
     volatile arrangement_runtime_t arrangement; /* 20 bytes on target 32-bit ABI; ISR/main snapshots */
 } seq_t;
+typedef char seq_transport_epochs_aligned[((__builtin_offsetof(seq_t,transport_epoch)|__builtin_offsetof(seq_t,stop_epoch))&3u)==0?1:-1];
 
 /* Audio owner: a single effective flag proves pointer/nonempty-song prerequisites. */
 static inline __attribute__((always_inline)) void seq_arrangement_apply_flags(seq_t *s)

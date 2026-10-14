@@ -109,13 +109,14 @@ static struct {
     int8_t test, phase;                /* test: PT_IDLE, a scenario 0..2, PT_DONE (when phase is 4);
                                         * phase: 0 stop, 1 settle, 2 measure, 3 put back, 4 done */
     uint32_t test_t0;
+    uint32_t cc_stop_epoch;            /* main-owned CC job guard; MAX = legacy/no CC job */
     uint16_t res_load[3], res_cps[3];  /* per scenario: the render's share x 10, cycles per sample */
     uint8_t res_peak[3];
     pattern_t *pat;                    /* what the test changes, to put back */
     uint8_t ppat[NPARTS], song_on, ca, cb;
     uint32_t mute;
     float bpm;
-} perf = {.test = PT_IDLE};
+} perf = {.test = PT_IDLE, .cc_stop_epoch = UINT32_MAX};
 
 static pattern_t *pat_of(int part) { return &proj.pat[seq.ppat[part]]; }
 static pattern_t *cur_pat(void) { return pat_of(ui.part); }    /* the pattern the part on screen plays */
@@ -1060,54 +1061,14 @@ static POLY_COLD void clear_lanes(int pat, int part)
     }
 }
 
-/* part `part` of pattern src onto pattern dst, its lanes too; 0 = done, -1 = lanes did not fit */
-static POLY_COLD int copy_part(int dst, int src, int part)
-{
-    pattern_t *d = &proj.pat[dst];
-    const pattern_t *a = &proj.pat[src];
-    int k, rc = 0;
-    if (part < NKIT) {
-        if(proj.variant.arrangement.flags&POLY_FLAG){int v,w;for(v=0;v<NDRUM;v++){for(w=0;w<NSW;w++)d->drum[part].hit[v][w]=a->drum[part].hit[v][w];poly_set(proj.pat,(uint8_t *)&proj.sound,dst,part*11+v,poly_length(proj.pat,(const uint8_t *)&proj.sound,src,part*11+v),poly_rate(proj.pat,(const uint8_t *)&proj.sound,src,part*11+v));}for(w=0;w<NSW;w++)d->drum[part].accent[w]=a->drum[part].accent[w];}
-        else d->drum[part] = a->drum[part];
-        if (part == PART_909)
-            d->swing = a->swing;                      /* the 909 is the bar: its groove goes with it */
-    } else if (part < PART_BRK)
-        d->bass[part - NKIT] = a->bass[part - NKIT];
-    else if(proj.variant.arrangement.flags&POLY_FLAG){int st;for(st=0;st<BRK_NSET;st++)d->brk.set[st]=a->brk.set[st];d->brk.slot_a=a->brk.slot_a;d->brk.slot_b=a->brk.slot_b;poly_set(proj.pat,(uint8_t *)&proj.sound,dst,24,poly_length(proj.pat,(const uint8_t *)&proj.sound,src,24),poly_rate(proj.pat,(const uint8_t *)&proj.sound,src,24));for(st=0;st<64;st++)poly_break_set(proj.pat,(uint8_t *)&proj.sound,dst,st,poly_break_gate(proj.pat,(const uint8_t *)&proj.sound,src,st),poly_break_slice(proj.pat,(const uint8_t *)&proj.sound,src,st));}
-    else d->brk = a->brk;
-    clear_lanes(dst, part);
-    for (k = 0; k < NLANE; k++) {                     /* a copy lands on pattern dst: never copied again */
-        const lane_t *l = &proj.arr.lane[k];
-        int n, i;
-        if (!l->used || l->pat != src || l->part != part)
-            continue;
-        if ((n = motion_alloc(proj.arr.lane, dst, part, l->t, l->v, l->i)) < 0) {
-            rc = -1;
-            break;
-        }
-        for (i = 0; i < NSTEPS; i++)
-            proj.arr.lane[n].val[i] = l->val[i];
-    }
-    return rc;
-}
+#include "edit_primitives.inc"
 
-static POLY_COLD void clear_part(pattern_t *p, int part)
+/* Keep legacy publication exactly between note copy and motion allocation. */
+static POLY_COLD int copy_part(int dst,int src,int part)
 {
-    int i;
-    if (part < NKIT) {
-        int w;
-        for (w = 0; w < NSW; w++) {
-            for (i = 0; i < NDRUM; i++)
-                p->drum[part].hit[i][w] = 0;
-            p->drum[part].accent[w] = 0;
-        }
-    } else if (part < PART_BRK) {
-        for (i = 0; i < NSTEPS; i++)
-            p->bass[part - NKIT].step[i].flags = G_REST;
-    } else {
-        if(proj.variant.arrangement.flags&POLY_FLAG)for(i=0;i<64;i++)poly_break_set(proj.pat,(uint8_t *)&proj.sound,(int)(p-proj.pat),i,0,0);
-        else {p->brk.steps = 0;for (i = 0; i < 16; i++)p->brk.slice[i] = 0;}
-    }
+    edit_copy_notes(&proj,dst,src,part);
+    clear_lanes(dst,part);
+    return edit_copy_motion(&proj,dst,src,part);
 }
 
 /* ============================================================ help cards === */
@@ -1231,7 +1192,7 @@ static POLY_COLD void help_tick(uint32_t btn, uint32_t keys)
 static undo_t undo X0X_POOL;
 static uint8_t undo_shadow[sizeof(project_t) - UNDO_OFF] X0X_POOL __attribute__((aligned(4)));
 static uint8_t undo_lanes;             /* the last undo / redo touched the knob motion */
-static uint8_t undo_ready, external_edit;
+static uint8_t undo_ready, external_edit, reset_checkpoint_hold;
 static void ui_draw_invalidate(void);
 
 static void undo_start(void) { undo_init(&undo, (uint8_t *)&proj + UNDO_OFF, undo_shadow, sizeof undo_shadow); undo_ready = 1; external_edit = 0; }
@@ -1248,6 +1209,7 @@ uint8_t *ui_project_stage(uint32_t bytes)
 void ui_project_stage_finish(int loaded)
 {
     ui_draw_invalidate();
+    if (loaded) { cc_actions_reset(); reset_checkpoint_hold=0; }
     if (loaded && undo_ready) { undo_reset(&undo); external_edit = 0; }
     if (seq.transport_stage) { seq.transport_stage = 0; engine_transport_release(); }
 }
@@ -1262,7 +1224,7 @@ void ui_external_sound(int target, int voice, int index, int value)
 {
     pref_set(PR(R_ENG, target, voice, index), value); ui.act_t = plat_ms();
 }
-void ui_external_saved(void) { ui.dirty = 0; }
+void ui_external_saved(void) { ui.dirty = 0; reset_checkpoint_hold=0; }
 
 static void undo_tick(void)
 {
@@ -1447,7 +1409,7 @@ static POLY_COLD void save_project(void)
     engine_transport_release();
     say(rc == -8 ? "SAVE PROTECTED" : rc == -7 ? "MEMORY FULL: NOT SAVED" : rc ? "SAVE FAILED" : "SAVED", 0);
     if (!rc)
-        ui.dirty = 0;
+        ui_external_saved();
 }
 
 /* ============================================================ performance === */
@@ -1564,6 +1526,7 @@ static POLY_COLD void perf_test_start(void)
     int p;
     if (perf.test >= 0 && perf.phase != 4)
         return;
+    perf.cc_stop_epoch=UINT32_MAX;
     perf.pat = seq.pat;
     for (p = 0; p < NPARTS; p++)
         perf.ppat[p] = seq.ppat[p];
@@ -1596,6 +1559,8 @@ static POLY_COLD void perf_test_tick(void)
     int p;
     if (perf.test < 0 || perf.phase == 4)
         return;
+    if(perf.cc_stop_epoch!=UINT32_MAX && perf.phase<3 &&
+       (seq.req_stop || seq.stop_epoch!=perf.cc_stop_epoch)){perf_test_abort();return;}
     switch (perf.phase) {
     case 0:                                           /* stopped: swap in the test's patterns and sound */
         if (seq.playing || seq.req_stop)              /* (a pending stop would cancel the start below) */
@@ -1657,6 +1622,7 @@ static POLY_COLD void perf_test_tick(void)
         if (seq.playing || seq.req_stop)
             return;
         perf_restore();
+        perf.cc_stop_epoch=UINT32_MAX;
         perf.phase = 4;
         if (perf.test == 3) {
             perf.test = PT_DONE;
@@ -1683,7 +1649,7 @@ static POLY_COLD void run_action(int act, int arg)
     switch (act) {
     case ACT_SAVE: save_project(); break;
     case ACT_CLEAR_PART:
-        clear_part(pat_of(arg), arg);
+        edit_clear_part(&proj,pat_of(arg),arg);
         clear_lanes(seq.ppat[arg], arg);
         mark_dirty();
         say("CLEARED ", PART_N[arg]);
@@ -1691,7 +1657,7 @@ static POLY_COLD void run_action(int act, int arg)
     case ACT_CLEAR_PAT: {
         int i;
         for (i = 0; i < NPARTS; i++) {
-            clear_part(pat_of(i), i);
+            edit_clear_part(&proj,pat_of(i),i);
             clear_lanes(seq.ppat[i], i);
         }
         mark_dirty();
@@ -1713,18 +1679,11 @@ static POLY_COLD void run_action(int act, int arg)
     case ACT_SONG_INS:
     case ACT_SONG_DEL: {
         song_t *sg = song();
-        int k = ui.song_sel, i;
+        int k = ui.song_sel;
         if (k >= sg->len)
             break;
-        if (act == ACT_SONG_INS && sg->len < NSONG) {
-            for (i = sg->len; i > k; i--)
-                sg->bar[i] = sg->bar[i - 1];
-            sg->len++;
-        } else if (act == ACT_SONG_DEL) {
-            for (i = k; i + 1 < sg->len; i++)
-                sg->bar[i] = sg->bar[i + 1];
-            sg->len--;
-        }
+        /* Legacy grouped editor leaves dormant harmony degrees untouched. */
+        edit_song_shift(sg,0,k,act==ACT_SONG_INS);
         mark_dirty();
         say(act == ACT_SONG_INS ? "BAR INSERTED" : "BAR DELETED", 0);
         break;
@@ -1765,6 +1724,8 @@ static POLY_COLD void run_action(int act, int arg)
     default: break;
     }
 }
+
+#include "cc_actions.inc"
 
 /* ===================================================================== input === */
 /* knob acceleration by speed: a slow turn is one step a detent (fine detail), a quick one up to 8,
@@ -4287,7 +4248,7 @@ static POLY_COLD void autosave(void)
         save_project();
         return;
     }
-    if (!ui.dirty || external_edit || (proj.set.autosave_off && !ui.last_autosave) || seq.playing || seq.req_stop || ui.rec || perf_testing() ||
+    if (!ui.dirty || reset_checkpoint_hold || external_edit || (proj.set.autosave_off && !ui.last_autosave) || seq.playing || seq.req_stop || ui.rec || perf_testing() ||
         ui.overlay == O_ASK || now - ui.act_t < AUTOSAVE_QUIET || (ui.saved_t && now - ui.saved_t < AUTOSAVE_GAP))
         return;
     ui.saved_t = now;

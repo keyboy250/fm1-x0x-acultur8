@@ -3,7 +3,7 @@
 import argparse,json,math
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-KINDS=['UNSUPPORTED','SOUND','STRIP','SEQ','GEN','BRKGEN','CHANNEL','PREF','SONG','ACTION','SELECTOR','STEP','MOTION','PROB','PERF','GENACTION','SEED','ARR','FOLLOW','PAD','EXACT','MASTER','TRANSPORT','LANE','HISTORY']
+KINDS=['UNSUPPORTED','SOUND','STRIP','SEQ','GEN','BRKGEN','CHANNEL','PREF','SONG','ACTION','SELECTOR','STEP','MOTION','PROB','PERF','GENACTION','SEED','ARR','FOLLOW','PAD','EXACT','MASTER','TRANSPORT','LANE','HISTORY','ACTIONCTL']
 
 def binding(row):
     key=row['id'];parts=key.split('.');a=b=c=0;kind='UNSUPPORTED'
@@ -18,7 +18,8 @@ def binding(row):
         if parts[1] in names:kind='PREF';c=names.index(parts[1])
     elif parts[0]=='song':kind='SONG';c=int(parts[1])
     elif parts[0]=='action':kind='ACTION';c=int(parts[1])
-    elif parts[0]=='selector':kind='SELECTOR';c=['pattern','part','drum','bass','step','block_low','block_high','motion_low','motion_high','kit','strip','seed_byte','commit','parameter_low','parameter_high'].index(parts[1])
+    elif parts[0]=='selector':kind='SELECTOR';c=['pattern','part','drum','bass','step','block_low','block_high','motion_low','motion_high','kit','strip','seed_byte','commit','parameter_low','parameter_high','destination_pattern'].index(parts[1])
+    elif parts[0]=='action_control':kind='ACTIONCTL';c=['arm','cancel'].index(parts[1])
     elif parts[0]=='step':kind='STEP';c=['drum_hit','drum_accent','bass_note','bass_gate','bass_accent','bass_slide','break_allowed','break_slice'].index(parts[1])
     elif parts[0]=='motion':kind='MOTION';c=['value','target','voice','param','pattern','part','record','hold','clear'].index(parts[1])
     elif parts[0]=='probability':kind='PROB'
@@ -44,8 +45,9 @@ def generate(root=ROOT):
             # 5-bit kind + 5-bit target + 4-bit voice + 5-bit index in uint32.
             if a>31 or b>15 or c>31:raise ValueError('Packed binding exceeded')
             rows.append((slot,KINDS.index(kind)|(a<<5)|(b<<10)|(c<<14)))
-        status='native candidate; focused acceptance required' if kind not in ('UNSUPPORTED','ACTION') else 'unimplemented'
+        status='native candidate; focused acceptance required' if kind not in ('UNSUPPORTED',) else 'unimplemented'
         reason='runtime Q12 gain, source-owned ADC pickup; physical acceptance pending' if kind=='MASTER' else 'storage/destructive actions require separate preflight; no flash per CC' if kind=='ACTION' else 'browser/nonmusical callback absent' if kind=='UNSUPPORTED' else ''
+        if kind in ('ACTION','ACTIONCTL'):reason='isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open'
         if kind=='HISTORY':reason='stopped shared project history; rejects owned/recording gestures; global proj.set settings remain outside journal'
         if slot is None:status='explicitly unmapped/read-only/nonmusical';reason='no writable direct CC address in reviewed registry'
         coverage.append({'id':row['id'],'parameter_number':slot,'binding':kind,'status':status,'reason':reason})
