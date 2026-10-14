@@ -559,8 +559,8 @@
       "FM1-33"
     ],
     "acceptance": "Validated module/capability manifests, stable parameter/protocol/schema contracts and incompatibility rejection pass; thirdparty fixture reintegration with license/migration/render/undo/resource tests required; physical compatibility separate.",
-    "notes": "DirectuserSystem100-inspiredmultiFM1direction; source modulescompiledintooneimage, notruntimeplugins; no analogueCV/extraengines implied. See MODULE_ECOSYSTEM_DESIGN.md.",
-    "next_check": "Inventory current source-module and existing ABI/save/CC contracts; define validated manifest and compatibility matrix without runtime-plugin claims."
+    "notes": "DirectuserSystem100-inspiredmultiFM1direction; source modulescompiledintooneimage, notruntimeplugins; no analogueCV/extraengines implied. See MODULE_ECOSYSTEM_DESIGN.md. COMPATIBILITY_GUIDE.md v0.1 now defines normative developer requirements and independent evidence audit; schema/validator and fixture integration remain pending.",
+    "next_check": "Implement validated manifests and compatibility matrix against the v0.1 guide; audit a third-party fixture without claiming physical acceptance."
   },
   {
     "id": "FM1-42",
