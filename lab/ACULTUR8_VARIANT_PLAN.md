@@ -1,6 +1,13 @@
 # Acultur8 X0X: implementation and GitHub variant plan
 
-## Current working candidate: native MIDI editing actions
+## Current working candidate: lossless affine EXP resource recovery
+
+Reviewed exact affine tables are integrated locally after a recoverable source/document checkpoint. The isolated candidate passes all nine required software checks, all 38 artifact hashes and all fifteen original firmware gates. Fresh integrated target verification also passes at 580484/581564 image bytes (1080 spare), 98272/98304 ordinary RAM (32 spare) and 335712/344064 pool bytes (160 above reserve). This recovers exactly 1008 linked bytes while preserving all 2432 original IEEE values. The accessor frame grows from 16 to 20 bytes; physical control-path timing and stack qualification remain open. Fresh main software qualification passes all nine checks; source PR is next; no new Pages release is claimed.
+
+Clock/USB reconciliation and thirteen browser slice CC controls remain independent unaccepted candidates. Review caught a reset-observation race and offline slice-button/server-module integration defects; fixes require frozen re-review and actual engine/browser proof. Full clock role/source/loss, receiver, human listening/click diagnosis, long sets and physical tests remain open.
+
+## Qualified native MIDI editing source checkpoint: PR18
+
 
 The reviewed eleven-action implementation, shared edit primitives, undo scanner and lossless variable EXP tables are integrated locally on `feat/native-actions-qualified`. The isolated full target passes all 15 original gates at 581492/581564 image bytes (72 spare), 98272/98304 ordinary RAM (32 spare) and 335712/344064 pool bytes (160 above reserve). Existing nine-check software suite and action-specific production-worklet/actual-WASM tests pass. Native and actual-WASM action tests are now mandatory; the fresh integration suite passes all nine checks.
 
@@ -11,7 +18,7 @@ The registry has 693 rows: all 690 prior parameter contracts retained, three sel
 
 The user explicitly authorises updating GitHub and keeping the variant current. Reviewed/tested source and documentation may now be pushed through the established branch/PR workflow. This overrides the earlier repository-publication hold; it does not make the public repository private. Browser Pages deployment remains separately held in the workflow until publication sign-off. Preserve private loops, credentials, restricted SDK files and unresolved-license converter boundaries.
 
-Current qualified integrated runtime: exact EXP packing, D8/D9 dictionaries, independent25lanes, partialCC/history and correctedMASTER. Original15staticgates pass at579172/581564 image bytes,98184/98304 general RAM and335712/344064 pool;2392flash bytes and120RAM bytes spare,160pool above reserve. Fresh9requiredsoftwarechecks and38packagehashes pass at source7124f8a9f2e5060e3cb0c9ac44f831ce9e37ce5d87c3a47dedfadd6c31b548f4 /WASM60c3ab085454ba1d9f392d7ca478fb4787a9a08d1bc0486265c0e05a55a9d842. Actualbrowser syntheticdrums/basses/BREAK+slices125/90/180, independenthat13/1-32T,sharedStop/save/reopen/masterreadback pass as partialscene evidence. CompleteCC24gaps, receiver/hearing/click/longsoak/device qualification remainopen. No editing-action/scanner/clockfix prototype is integrated.
+Historical pre-action runtime checkpoint (superseded by the sections above): exact EXP packing, D8/D9 dictionaries, independent25lanes, partialCC/history and correctedMASTER. Original15staticgates pass at579172/581564 image bytes,98184/98304 general RAM and335712/344064 pool;2392flash bytes and120RAM bytes spare,160pool above reserve. Fresh9requiredsoftwarechecks and38packagehashes pass at source7124f8a9f2e5060e3cb0c9ac44f831ce9e37ce5d87c3a47dedfadd6c31b548f4 /WASM60c3ab085454ba1d9f392d7ca478fb4787a9a08d1bc0486265c0e05a55a9d842. Actualbrowser syntheticdrums/basses/BREAK+slices125/90/180, independenthat13/1-32T,sharedStop/save/reopen/masterreadback pass as partialscene evidence. CompleteCC24gaps, receiver/hearing/click/longsoak/device qualification remainopen. No editing-action/scanner/clockfix prototype is integrated.
 
 FM1-39/40 cover performanceclock/longsets; FM1-41/42 add versioned modulecompatibility and coordinateddeviceensemble. See PERFORMANCE_CLOCK_SET_DESIGN.md and MODULE_ECOSYSTEM_DESIGN.md. Historical checkpoint text below is preserved as evidence and does not supersede this section.
 
