@@ -1,0 +1,49 @@
+<!doctype html><meta charset="utf-8"><title>Isolated browser slice CC acceptance</title><pre id="result">Running actual HOST WASM / production service / genuine disposable IndexedDB…</pre>
+<script type="module">
+import {SliceService} from '../../web/emu/slice-control.mjs';
+import {CcInputRouter} from '../../web/emu/cc-input-router.mjs';
+const line=document.querySelector('#result'),checks=[];const ok=(condition,name)=>{if(!condition)throw Error(name);checks.push(name);line.textContent=checks.join('\n');};
+const dbName='acultur8-slice-test-'+crypto.randomUUID();let service,Processor,port,router,storageFailure=false,db;
+const openDb=()=>new Promise((resolve,reject)=>{const q=indexedDB.open(dbName,1);q.onupgradeneeded=()=>q.result.createObjectStore('imports');q.onsuccess=()=>{db=q.result;if(!storageFailure){resolve(db);return;}resolve({close:()=>db.close(),transaction:(...a)=>{const tx=db.transaction(...a);queueMicrotask(()=>tx.abort());return tx;}});};q.onerror=()=>reject(q.error);});
+window.currentTime=0;window.AudioWorkletProcessor=class{constructor(){this.messages=[];this.port={postMessage:m=>{this.messages.push(m);service?.onMessage(m);if(m.type==='frame')router?.engineState(m.ccInput);else router?.message(m);}};}};
+window.registerProcessor=(_,C)=>Processor=C;
+try{
+ await import('../../web/emu/worklet.js');const p=new Processor(),wasm=await(await fetch('../../build/emu/x0x.wasm')).arrayBuffer();
+ const render=(n=1)=>{let out;for(let i=0;i<n;i++){window.currentTime+=128/44100;out=[[new Float32Array(128),new Float32Array(128)]];p.process([],out);}return out[0][0];};
+ await p.onMessage({type:'load',wasm});render(180);ok(p.ex.web_slice_cc_version?.()===0x10001,'new HOST ABI');
+ const frames=4410,b=new ArrayBuffer(44+frames*2),v=new DataView(b),s=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i));};
+ s(0,'RIFF');v.setUint32(4,b.byteLength-8,true);s(8,'WAVE');s(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,44100,true);v.setUint32(28,88200,true);v.setUint16(32,2,true);v.setUint16(34,16,true);s(36,'data');v.setUint32(40,frames*2,true);for(let i=0;i<frames;i++)v.setInt16(44+i*2,6553,true);
+ const wav=new File([b],'synthetic.wav',{type:'audio/wav'}),marker=new File([JSON.stringify({audioFile:wav.name,sampleRate:44100,loopDuration:.1,bpm:123.456789,slices:[{start:0,end:.1,label:'Synthetic'}]})],'synthetic.json',{type:'application/json'});
+ let files=[wav,marker],downloadRequests=0;
+ service=new SliceService({send:m=>p.onMessage(m),files:()=>files,databaseOpen:openDb,download:(json,cc)=>{ok(JSON.parse(json).slices.length>0,'JSON export prepared');if(!cc)downloadRequests++;return !cc;}});service.powered=true;service.state=p.sliceControl.state();
+ // Explicit synthetic input route, real producer/renderer; no MIDI permission or device.
+ port=new EventTarget();port.id='synthetic';port.name='Synthetic test only';port.state='connected';port.open=port.close=async()=>port;
+ const access=new EventTarget();access.inputs=new Map([[port.id,port]]);
+ router=new CcInputRouter({send:m=>p.onMessage(m),requestAccess:async()=>access,browserApply:(packet,ctx)=>service.applyPacket(packet,ctx)});
+ await router.connect();p.publish();ok(await router.activate(port.id),'explicit synthetic input activation');
+ const cc=async(i,raw=127)=>{const old=router.browserApplied+router.browserRejected+router.browserNoop,e=new Event('midimessage');e.data=[0xbc,80+i,raw];port.dispatchEvent(e);for(let k=0;k<250;k++){render();await new Promise(r=>setTimeout(r,2));if(router.browserApplied+router.browserRejected+router.browserNoop>old)return router.browserStatus;}throw Error('receipt timeout');};
+ const fire=async(i)=>{await cc(i,0);return cc(i,127);};
+ ok((await fire(8)).startsWith('applied'),'CC import selected synthetic WAV+markers');const imported=service.imported;
+ ok(imported.markers.bpm===123.456789,'import fine BPM preserved');
+ ok((await cc(0,64)).startsWith('applied')&&p.markedGain===.5,'CC level rounded registry scale');
+ ok((await cc(1,0)).startsWith('applied')&&!p.sliceControl.repeat,'CC repeat');
+ ok((await cc(2,0)).startsWith('applied')&&!p.markedLayer,'CC layer');
+ ok((await cc(3,64)).startsWith('applied')&&service.state.bpmMilli===161102,'CC source BPM milli scaling');
+ ok((await cc(4,0)).startsWith('applied')&&p.ex.web_marked_triggers()>0,'CC original slice audition');render(40);
+ ok((await fire(5)).startsWith('applied'),'CC play');ok(render().some(x=>x>.09),'actual production mixed PCM');
+ ok((await fire(6)).startsWith('applied')&&!p.ex.web_marked_playing(),'CC slice stop');
+ ok((await fire(7)).startsWith('applied'),'CC sync arm');render(950);ok(p.ex.web_sync_state()===2&&p.ex.web_marked_triggers()>1,'actual sync musical bar scheduling');
+ await fire(6);p.ex.web_seq_play(0);render(35);
+ ok((await fire(10)).startsWith('applied'),'CC real IndexedDB save completion');
+ ok((await fire(9)).startsWith('applied')&&service.imported.name.includes('synthetic'),'CC demo');
+ ok((await fire(11)).startsWith('applied')&&service.imported.name==='synthetic.wav','CC real IndexedDB reopen');
+ ok((await fire(12)).startsWith('applied')&&downloadRequests===0,'CC export prepared without file delivery claim');
+ const retained=service.imported;files=[];ok((await fire(8)).includes('select-matching-files-first')&&service.imported===retained,'missing files preserve import');
+ storageFailure=true;ok((await fire(10)).startsWith('rejected'),'actual IndexedDB aborted transaction rejected');storageFailure=false;
+ await fire(9);ok((await fire(11)).startsWith('applied')&&service.imported.name==='synthetic.wav','failed save retains prior committed import');
+ await p.onMessage({type:'variant-command',abi:1,request:900,op:3,target:0,voice:0,index:0,value:0});ok((await fire(9)).includes('owned-gesture'),'owned native gesture rejects destructive demo');await p.onMessage({type:'variant-command',abi:1,request:901,op:4,target:0,voice:0,index:0,value:0});
+ await router.disconnect();ok(!router.active,'explicit route disconnect');
+ window.sliceAcceptance={pass:true,checks,physicalMidi:false,realAudioContext:false,genuineIndexedDB:true};line.textContent='PASS\n'+checks.join('\n')+'\nNo physical MIDI/AudioContext/deployment acceptance.';
+}catch(e){window.sliceAcceptance={pass:false,error:e.stack,checks};line.textContent='FAIL\n'+e.stack+'\n'+checks.join('\n');}
+finally{db?.close();indexedDB.deleteDatabase(dbName);}
+</script>

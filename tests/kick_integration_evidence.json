@@ -1,0 +1,55 @@
+{
+  "checkpoint": "2026-10-13",
+  "scope": "909 kick browser prototype; physical device pending",
+  "wasm_sha256": "fd8f1221180df959e9e979f0dd4533adadbf52f3d52de45fec468bebad15c6a1",
+  "mandatory_suite": "passed including 31 scenarios and real kick worklet tests",
+  "independent_review": "kick_integrated_review no blockers",
+  "browser": {
+    "numericEdits": "HP80 LP6000 boost12 ceiling-12 accepted; HP arrow editing86 passed",
+    "undoRedo": "12->18 undo12 redo18 and mobile18->24 undo18 redo24",
+    "saveReopen": "settings and flags retained across reload",
+    "busySave": "rejected during playing; no hidden transport stop",
+    "sliceCoexistence": "public six-slice demo follows playing/stopped FM1",
+    "viewport": {
+      "width": 390,
+      "documentScrollWidth": 375
+    },
+    "consoleErrorsWarnings": 0,
+    "priorEngine": "explicit audio unavailable; controls disabled"
+  },
+  "target": {
+    "imageBytes": 570020,
+    "imageLimit": 581564,
+    "ramBytes": 97636,
+    "ramLimit": 98304,
+    "poolBytes": 334612,
+    "poolLimit": 344064,
+    "poolReserve": 8192,
+    "originalStaticGates": "all15 passed unchanged",
+    "additionalFunctions": {
+      "d9_render_bd_strip": {
+        "instructions": 499,
+        "loopInstructions": 302,
+        "loopCalls": 3
+      },
+      "sound_strip_process": {
+        "instructions": 349,
+        "loopInstructions": 315,
+        "loopCalls": 0
+      }
+    },
+    "activeStripCalls": "one per processed sample, including tails/fades",
+    "hardwareTiming": "pending"
+  },
+  "hosted": {
+    "commit": "9ab26cd78e3331ee3df1c115be8ba6ffdcd7d725",
+    "ciPages": "38373885337",
+    "all24FileHashes": "passed",
+    "wasmMatchesLocal": true,
+    "editorSaveUndoRedoReload": "passed",
+    "filtersAndStages": "passed",
+    "busySaveAndSliceTransport": "passed",
+    "mobile390": "passed",
+    "consoleErrorsWarnings": 0
+  }
+}

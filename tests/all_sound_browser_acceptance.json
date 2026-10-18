@@ -1,0 +1,175 @@
+{
+  "at": "2026-10-13T12:17:07.014226+00:00",
+  "commit": "c081d6306de301a7b75ba4ab146ac0c0237fb844",
+  "pr": 13,
+  "ci": 38395393049,
+  "pages": 38395769684,
+  "emulator": {
+    "built_at": "2026-10-13T12:15:07Z",
+    "source_sha256": "10533c9fa817a6df5d64b09afcd47c8f75f14da165f9bf1c5c8df8a73e4b5503",
+    "wasm_sha256": "e765fd3c65b1ba22f311b425cd5bc964462ee0a783a5222069c2d50a3f78d8a0",
+    "wasm_bytes": 655058,
+    "compiler": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.12 (5488e0871d46d19a3209988190fa6a653126256f)",
+    "image_id": "sha256:4db41b950d433f6cb41ad9f60c36201958177ccd65c8b41367392fa31cd98e7b"
+  },
+  "files": [
+    {
+      "path": ".nojekyll",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "pass"
+    },
+    {
+      "path": "CREDITS.txt",
+      "sha256": "187e81a2da0447cd3783eb53ffce9c63aac22a56a7a688b591ea2dbc5c528f31",
+      "status": "pass"
+    },
+    {
+      "path": "LICENSE.txt",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "status": "pass"
+    },
+    {
+      "path": "about/index.html",
+      "sha256": "776064f2cd24a7514d8ae919d20199d28e9f215689eaa6f2ab38449633bca123",
+      "status": "pass"
+    },
+    {
+      "path": "demo/README.txt",
+      "sha256": "a0140784494c1d25eb4475cefd9fab9979341c565d9764981853bfcc907fc221",
+      "status": "pass"
+    },
+    {
+      "path": "demo/acultur8-demo_markers.json",
+      "sha256": "3429ccda285529cdd104aeb0d42d0887ec53393b13745e6a33a392f2bcfcf44b",
+      "status": "pass"
+    },
+    {
+      "path": "demo/acultur8-demo_slices.wav",
+      "sha256": "36bd3c99bdd6f9a2b404ee62349a429d2a97d7835110a4be73ef9005089a6bf6",
+      "status": "pass"
+    },
+    {
+      "path": "emu/Barlow-OFL.txt",
+      "sha256": "186d750eb496a4c17a76385f82be6aea2ac1cf2de074a811d63786cf374ea73f",
+      "status": "pass"
+    },
+    {
+      "path": "emu/BarlowSemiCondensed-Medium.ttf",
+      "sha256": "4998b693a190b76f2b11315844345a8546c1e2e6a320905507a9eed04edf8b48",
+      "status": "pass"
+    },
+    {
+      "path": "emu/arrangement-ui.css",
+      "sha256": "c5b71d226373461db6f025753694abfbf867c9db52e6290311237acc17f56646",
+      "status": "pass"
+    },
+    {
+      "path": "emu/arrangement-ui.js",
+      "sha256": "c67e61c2c6ba76372556ba6018ff11baac92ce69ed936eb8952cd65eb5de4b1f",
+      "status": "pass"
+    },
+    {
+      "path": "emu/emu.css",
+      "sha256": "13183f896758c7626bc3937fdaf876984bdb8b0a6fa051d508c08d25ad921b78",
+      "status": "pass"
+    },
+    {
+      "path": "emu/emu.js",
+      "sha256": "a45517eb79c031027a0257dace448abb88c02385070e495e46c6c1c9380a190a",
+      "status": "pass"
+    },
+    {
+      "path": "emu/index.html",
+      "sha256": "3d2b22a4096e3b95ed1d1a47eeef3442fc3a59a81a8db19ab5d2881fdf68c1b4",
+      "status": "pass"
+    },
+    {
+      "path": "emu/manifest.json",
+      "sha256": "ade091836022920f553b05c400ba3e8e2ffba181c1559c86c8923732fd5305f5",
+      "status": "pass"
+    },
+    {
+      "path": "emu/public-demo.js",
+      "sha256": "291de8480f4560437ce5da498af7292893954d3f7bfe03abfa260edfe45673f4",
+      "status": "pass"
+    },
+    {
+      "path": "emu/slice-import.js",
+      "sha256": "a2fa6be721444bdf682df03f0e35fdb74cbe5c11588c6bb5d4ea62b72ee7d0a9",
+      "status": "pass"
+    },
+    {
+      "path": "emu/slice-ui.js",
+      "sha256": "5b390a09306a5f2559de637ff2d6c6dbfdd0a59e498f2f31318d09b6550476ef",
+      "status": "pass"
+    },
+    {
+      "path": "emu/variant-ui.css",
+      "sha256": "2cdc749288f07b644ed1b88895e2fb3c19faea133e351b5436874ce9e6093e0e",
+      "status": "pass"
+    },
+    {
+      "path": "emu/variant-ui.js",
+      "sha256": "e0b05e8f7534002ed1f41a5adb001dd24e99094abbe7b9eb24096db221a93827",
+      "status": "pass"
+    },
+    {
+      "path": "emu/worklet.js",
+      "sha256": "f956641d25802dc0003341226994a88788677bf91aea28aa0162d3bceab5b02d",
+      "status": "pass"
+    },
+    {
+      "path": "emu/x0x.wasm",
+      "sha256": "e765fd3c65b1ba22f311b425cd5bc964462ee0a783a5222069c2d50a3f78d8a0",
+      "status": "pass"
+    },
+    {
+      "path": "faq/index.html",
+      "sha256": "9cf6a0d4537732e050d77a93b06a6c2610c00e54907eefef2ed562286c3b3c50",
+      "status": "pass"
+    },
+    {
+      "path": "index.html",
+      "sha256": "7541d2463d1e9d626df00fa64b314f182581c4635eea0e680d53d950c5464578",
+      "status": "pass"
+    },
+    {
+      "path": "manual/index.html",
+      "sha256": "83cc71214ab58f6584b96a182a052dd5bea6b62abec52a507633b01b56fd72ed",
+      "status": "pass"
+    },
+    {
+      "path": "site.css",
+      "sha256": "9df123b4f65985ffd69a40bfe96f857222dd4d59d5dc07dfcb6665082df60253",
+      "status": "pass"
+    }
+  ],
+  "target": {
+    "image": 579636,
+    "ram": 97860,
+    "pool": 335712,
+    "original_gates": 15,
+    "reserve_margin": 160
+  },
+  "browser": {
+    "status": "pass",
+    "checks": [
+      "all25 selectable after engine activation",
+      "prior kick boost18 and four-block arrangement retained",
+      "808 boost12 limiter ceiling-18 acknowledged and saved",
+      "draft locks sound selector",
+      "BREAK initialboost0 isolated, edit6 undo0 redo6",
+      "saved reload retains 80812/-18 and BREAK6 and arrangement4",
+      "public synthetic120BPM six-slice loop follows FM1125BPM originalpitch",
+      "liveSave busy while synced, PLAY stopsboth, stoppedSave acknowledged",
+      "actual hosted mobile viewport390/document375/panel343",
+      "selected view loading status clears",
+      "no captured browser warnings/errors"
+    ],
+    "listening": "human listening not claimed"
+  },
+  "physical": "pending",
+  "verified_at": "2026-10-13T12:21:41.881034+00:00",
+  "kind": "accepted-browser-prototype-checkpoint",
+  "checkpoint": "acultur8-v0.1.0-alpha.strips.1"
+}

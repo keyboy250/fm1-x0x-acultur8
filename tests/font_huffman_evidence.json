@@ -1,0 +1,88 @@
+{
+  "glyphs": 439,
+  "old_packet_bytes": 25514,
+  "huffman_bytes": 17877,
+  "table_bytes": 864,
+  "saved_before_decoder": 6773,
+  "render_results": {
+    "raw": {
+      "pixels_sha256": "e971afab542cff352576dc573b4459322a7e2bce477c4bcaa8589ec1c70290d8",
+      "pixel_stream_bytes": 17191240,
+      "result": "frames=1756 checksum=183297732"
+    },
+    "rle": {
+      "pixels_sha256": "e971afab542cff352576dc573b4459322a7e2bce477c4bcaa8589ec1c70290d8",
+      "pixel_stream_bytes": 17191240,
+      "result": "frames=1756 checksum=183297732"
+    },
+    "huffman": {
+      "pixels_sha256": "e971afab542cff352576dc573b4459322a7e2bce477c4bcaa8589ec1c70290d8",
+      "pixel_stream_bytes": 17191240,
+      "result": "frames=1756 checksum=183297732"
+    }
+  },
+  "schema": 1,
+  "measured_at": "2026-10-13",
+  "status": "focused-lossless-font-huffman-checks-passed",
+  "physical_draw_timing": "pending",
+  "integrated_target_build": "owned by parent; see separate integrated evidence",
+  "sanitizers": "AddressSanitizer and UndefinedBehaviorSanitizer passed actual production gfx.c",
+  "encoding": "Canonical Huffman over unchanged per-glyph PackBits; MSB first, independent byte alignment; maximum15bit code, 8bit flash prefix lookup",
+  "persistent_ram_added": 0,
+  "benchmark_samples": {
+    "raw": [
+      "frames=351200 seconds=0.240681 checksum=2267411336",
+      "frames=351200 seconds=0.240893 checksum=2267411336",
+      "frames=351200 seconds=0.239784 checksum=2267411336"
+    ],
+    "rle": [
+      "frames=351200 seconds=0.274859 checksum=2267411336",
+      "frames=351200 seconds=0.276640 checksum=2267411336",
+      "frames=351200 seconds=0.273773 checksum=2267411336"
+    ],
+    "huffman": [
+      "frames=351200 seconds=0.408431 checksum=2267411336",
+      "frames=351200 seconds=0.412349 checksum=2267411336",
+      "frames=351200 seconds=0.411221 checksum=2267411336"
+    ]
+  },
+  "sha256": {
+    "tools/gen_font.py": "294a023ebc2b21bffcde0c9460708680e77674f90cc4eab468a875c2e3673b67",
+    "firmware/src/gfx.c": "71b7575ccfbf24a79a78fcd76c7339bf5c6ec0c9e6d03dc1f2e558ccef7082f2",
+    "tests/test_font_packing.py": "7d9e997ba4599896caf6176b4235b50dd546740069b2b3c01c2479caf0738e6c",
+    "tests/host/font_render_test.c": "dd8cc3158fbd1f954e36777cb1195aca31ee8e68e9f35840d15c052cd990a911",
+    "assets/fonts/BarlowSemiCondensed-Bold.ttf": "5bd6757e459a110da81b44532f0f43058e2dab2401688abca84f2fdbde193cbb",
+    "assets/fonts/BarlowSemiCondensed-Medium.ttf": "4998b693a190b76f2b11315844345a8546c1e2e6a320905507a9eed04edf8b48",
+    "assets/fonts/BarlowSemiCondensed-SemiBold.ttf": "bd299f4bc5b44d30be8d42e9bad3a5df7d66af1cd55d0ed72a8b8916360a1424",
+    "assets/fonts/ter-u12n.bdf": "9e942cad8173fddf34fc8a784e9ec6d2d4cfb8b82363faf65f43b236fe2f5a99",
+    "assets/fonts/ter-u16b.bdf": "92861fecd6f94c5ecc764fc43df5a69eb000ae13a75f652c6525db0495274f0a",
+    "assets/fonts/ter-u16n.bdf": "5197662b22bf9f3e68d4af9f969a7fefa3edae40dd82ae969a147381130fb4ae",
+    "assets/fonts/ter-u24b.bdf": "759e0dbbd137d0132cee5d83b681cea1c8a656f161e04f83e121525ea4eb1824",
+    "assets/fonts/ter-u32b.bdf": "f6295e92ebbf95afbb6274f4621608d255c1287ec90d3fefbc50f077bf09dab4",
+    "tests/test_font_pinned_oracle.py": "914ebfb06c577af42f8ae3babaf5e0cab456329467db9941f756ef0378977a8c",
+    "firmware/src/app/ui.c": "a9e45785568df7cf07202eb4b30af14874ff2e4606687dc313e1d5119f6bf92c"
+  },
+  "generated_header_sha256": {
+    "raw": "208a59e7d7e9d62a0982eda45e88b2dc7d5b454d0118134c91720bc15f5e1195",
+    "rle": "0d6246818ef0a772bceac8f60d4d4830fbf223469cedff9c21a96e063405e5ed",
+    "huffman": "577cbc66e1e3042bff43a7d19f7b01c58b0403908811e8eb87ef4f0975465a7a"
+  },
+  "pinned_oracle": {
+    "git_commit": "e78ee13c60116e5b352d73b537cdf1f0980d9d8e",
+    "result": {
+      "raw": {
+        "pixels_sha256": "e971afab542cff352576dc573b4459322a7e2bce477c4bcaa8589ec1c70290d8",
+        "bytes": 17191240,
+        "generator_sha256": "3ac6e6b6246733313ef254d4441877245ef46fdbd17266708c3b591edbb4eb61",
+        "gfx_sha256": "7fc1abdeef80b9155a8e248feaebb6e932527d0e62deb381af4c74292e38fc9e"
+      },
+      "rle": {
+        "pixels_sha256": "e971afab542cff352576dc573b4459322a7e2bce477c4bcaa8589ec1c70290d8",
+        "bytes": 17191240,
+        "generator_sha256": "3ac6e6b6246733313ef254d4441877245ef46fdbd17266708c3b591edbb4eb61",
+        "gfx_sha256": "7fc1abdeef80b9155a8e248feaebb6e932527d0e62deb381af4c74292e38fc9e"
+      }
+    }
+  },
+  "malformed_coverage": "All256 symbols; incomplete long codes; empty control; missing repeat value; truncated literal;128repeat; every byte truncation of all439 actual glyphs"
+}

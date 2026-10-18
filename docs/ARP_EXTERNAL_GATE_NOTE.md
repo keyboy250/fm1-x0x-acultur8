@@ -1,0 +1,15 @@
+# External MIDI gate for arpeggiator stepping
+
+Requested 2026-10-16. Status: recorded proposal, FM1-46; not implemented or accepted. Keep the current defaults qualification priority and Pages hold.
+
+The DAW sends a grooved pulse as a MIDI Note On on a configured input channel and trigger note, for example the note labelled C-2 in the user's DAW. Each matching Note On with velocity greater than zero advances the arpeggiator exactly one position. Pulse spacing determines the groove; external-gate mode does not free-run or quantize advancement to a division such as1/16. With no incoming trigger, the step position stays where it is. Internal straight/dotted/triplet timing remains a separate selectable mode.
+
+Persist the selected input source, channel and MIDI note number. DAWs use different octave labels, so show both the note name and numeric MIDI note; do not hardcode a number from the label C-2. Explicit source/channel/note filtering prevents unrelated MIDI notes from advancing the arp. Matching trigger notes act as control pulses rather than unintended pitched input. Note Off and velocity-zero Note On never advance the step. Every qualifying Note On counts once, including repeated triggers on the same key.
+
+Advancement must use the real firmware arpeggio/sequence engine and its current position, direction, wrap, rest/tie/slide and note-release ownership. It must not regenerate a TB-3PO line, reset the position on each pulse, change the global arrangement clock, or simulate timing in browser timers. The current ARP button opens a stored bass-pattern generator; this request needs an explicit playback/stepping extension. The browser's existing CC-only input route ignores notes, so it does not already supply this gate ingress.
+
+Implementation decisions to resolve before promotion: which arp/bass lane receives the gate, first-trigger/retrigger behavior, note duration (gate-off versus existing note-length policy), maximum supported pulse rate, bounded queue handling and source/transport loss cleanup. Stop/disconnect must release owned notes; new clocks alone must not revive retired transport. No analogue CV input or extra hardware is implied by this MIDI gate proposal.
+
+Acceptance: deliver deliberately uneven pulse times, for example0,90,235,310,540ms, and observe exactly five engine advances at those incoming events, without a free-running extra step or grid rounding. Check wrong source/channel/key and release/velocity-zero events do not advance; repeated same-key Note Ons count correctly. Verify pattern wrap/direction, silence between pulses, Start/Stop/reconnect, persistence, readback, Undo where applicable, native/WASM parity and original resource gates. Real DAW-to-browser/FM1 timing, receiver delivery and jitter require separate physical acceptance.
+
+Next: design the note-ingress and selected-lane stepping contract after the current defaults work; then build a bounded native/WASM prototype. This entry records the user's requested behavior and does not claim runtime support or deployment.

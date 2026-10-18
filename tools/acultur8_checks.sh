@@ -1,0 +1,122 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-only
+# Required self-contained browser-alpha checks. A missing compiler, Node, test or
+# fixture is an error. Optional external reference engines and device/SDK tests
+# are separate suites and never contribute to this suite's pass count.
+set -eu
+cd "$(dirname "$0")/.."
+command -v cc >/dev/null
+command -v node >/dev/null
+command -v python3 >/dev/null
+test -s build/emu/x0x.wasm
+test -x build/host/x0x_host
+node --check build/emu/emu.js
+node --input-type=module --check < web/acultur8/public-demo.js
+mkdir -p build/host build/scenarios
+OUT=build/host
+W='-O2 -ffp-contract=off -Wall -Wextra -Wdouble-promotion -Werror'
+run() { name="$1"; shift; printf '\nRequired check: %s\n' "$name"; "$@"; }
+compile() { name="$1"; shift; cc "$@" -o "$OUT/$name"; run "$name" "$OUT/$name"; }
+run fastmath_sanitizers sh tests/host/run_fastmath_sanitizers.sh
+run native_message_bounds sh tests/host/run_message_bounds.sh
+run strip_query sh tests/host/run_strip_query.sh
+run upstream_integration sh tests/host/run_upstream_integration.sh
+run boot_intro sh tests/host/run_boot_intro.sh
+run portable_alpha_server python3 -m unittest tests.test_serve_alpha
+run clock_transport sh tests/host/run_clock.sh
+run clock_roles_wasm node tests/host/clock_roles_wasm_test.mjs build/emu/x0x.wasm
+run bass_follow sh tests/host/run_bass_follow.sh
+run bass_follow_wasm sh tests/host/run_bass_follow_wasm.sh
+run external_pad sh tests/host/run_pad.sh
+run external_pad_bridge sh tests/host/run_pad_bridge.sh
+run external_pad_wasm sh tests/host/run_pad_wasm.sh
+run midi_router node tests/host/midi_router_test.mjs
+run pad_ui node tests/host/pad_ui_test.mjs
+run pointer_keys node tests/host/pointer_keys_test.mjs build/emu/x0x.wasm
+run individual_lanes sh tests/host/run_lane.sh
+run individual_lanes_off_pcm sh tests/host/run_lane_off_pcm.sh
+run individual_lanes_wasm sh tests/host/run_lane_wasm.sh
+run expanded_rate_families sh tests/host/run_rate_families.sh
+run lane_ui node tests/host/lane_ui_test.mjs
+run worklet_gesture node tests/host/worklet_gesture_test.mjs build/emu/x0x.wasm
+run cc_inventory python3 tools/cc_inventory.py --check
+run cc_inventory_tests python3 tests/cc_inventory_test.py
+run live_cc sh tests/host/run_live_cc.sh
+run cc_history sh tests/host/run_cc_history.sh
+run cc_actions sh tests/host/run_cc_actions.sh
+run canonical_setters sh tests/host/run_canonical_setter.sh
+run master_control sh tests/host/run_master_control.sh
+run master_control_wasm node tests/host/master_control_wasm_test.mjs build/emu/x0x.wasm
+run cc_input_worklet node tests/host/cc_input_worklet_test.mjs
+run cc_input_router node tests/host/cc_input_router_test.mjs
+run cc_input_ui node tests/host/cc_input_ui_test.mjs
+run cc_input_integration node tests/host/cc_input_integration_test.mjs
+run cc_input_wasm node tests/host/cc_input_wasm_test.mjs build/emu/x0x.wasm
+run slice_host_bridge sh tests/host/run_slice_bridge.sh
+run slice_control node tests/host/slice_control_test.mjs
+run slice_cc_router node tests/host/slice_cc_router_test.mjs
+run slice_ui node tests/host/slice_ui_test.mjs
+run slice_cc_wasm node tests/host/slice_cc_wasm_test.mjs build/emu/x0x.wasm
+run slice_http python3 tests/slice_http_test.py
+run slice_cc_coverage python3 tests/slice_cc_coverage_test.py
+run cc_history_wasm node tests/host/cc_history_wasm_test.mjs build/emu/x0x.wasm
+run cc_actions_wasm node tests/host/cc_actions_wasm_test.mjs build/emu/x0x.wasm
+run arrangement sh tests/host/run_arrangement.sh
+run arrangement_wasm node tests/host/arrangement_wasm_test.mjs build/emu/x0x.wasm build/host/arrangement_schema1_store.bin
+run variant sh tests/host/run_variant.sh
+run variant_wasm node tests/host/variant_wasm_test.mjs build/emu/x0x.wasm
+run strip_defaults sh tests/host/run_strip_defaults.sh
+run host_store_compat python3 tests/host_store_compat_test.py build/host/x0x_host
+run kick_wasm node tests/host/kick_wasm_test.mjs build/emu/x0x.wasm
+run all909_strip sh tests/host/run_all909_strip.sh
+run drum909_ranges sh tests/host/run_d9_range.sh
+run exp_tables sh tests/host/run_exp_table.sh
+run drum808_strip sh tests/host/run_drum808_strip.sh
+run drum808_ranges sh tests/host/run_d8_range.sh
+run all_strip sh tests/host/run_all_strip.sh
+run all_strip_wasm sh tests/host/run_all_strip_wasm.sh
+run sound_strip sh tests/host/run_sound_strip.sh
+run kick_strip sh tests/host/run_kick_strip.sh
+run noise_history env NOISE_SKIP_BENCH=1 sh tests/host/run_noise_history.sh
+run font_packing python3 tests/test_font_packing.py
+run font_pinned_oracle python3 tests/test_font_pinned_oracle.py
+compile harmony $W -std=c99 -pedantic tests/host/harmony_test.c firmware/src/seq/harmony.c
+compile fastmath -O2 -ffp-contract=off -Wall -Wextra -Werror tests/host/fastmath_test.c -lm
+compile sequencer -O2 -ffp-contract=off -Wall -Wextra tests/host/seq_test.c tests/host/control_guard_stub.c firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c firmware/src/seq/pattern.c firmware/src/seq/harmony.c
+compile encoder -O2 -w -Ifirmware/hal tests/host/encoder_test.c
+compile bass303_lite -std=c99 -O2 -ffp-contract=off -w -Ifirmware/src/dsp -Ifirmware/src tests/host/bass303_lite_test.c firmware/src/dsp/bass303.c -lm
+compile uac -O2 -w -Ifirmware/src -Ifirmware/hal tests/host/uac_test.c -lm
+compile trs -O2 -w -Ifirmware/src tests/host/trs_test.c
+compile undo -O2 -Wall -Wextra -Wno-unused-function tests/host/undo_test.c
+compile lz $W tests/host/lz_test.c
+compile motion $W tests/host/motion_test.c firmware/src/seq/motion.c
+compile drum_pan -O2 -ffp-contract=off -w -Ifirmware/src/dsp -Ifirmware/src -Ibuild/gen tests/host/drum_pan_test.c firmware/src/dsp/drum909.c firmware/src/dsp/drum808.c firmware/src/dsp/sound_strip.c -lm
+compile stereo -O2 -ffp-contract=off -w -Ifirmware/src/dsp -Ifirmware/src -Ibuild/gen tests/host/stereo_test.c firmware/src/dsp/master.c firmware/src/dsp/fxbus.c -lm
+compile master $W -Wno-double-promotion tests/host/master_test.c firmware/src/dsp/master.c -lm
+compile storage -O2 tests/storage_test.c
+compile marked_player $W tests/host/marked_player_test.c firmware/src/dsp/marked_player.c -lm
+run breaks sh tests/host/run_breaks.sh
+run synthetic-upload-fixtures python3 tests/host/make_test_loops.py build/test_loops
+run upload-images python3 tools/upload_breaks.py --dry-run build/test_upload build/test_loops/loop*.wav
+run breaks-web node web/test_breaks.mjs
+printf 'wav emu_ref.wav\nwait 500\ntapkey b0\ntapkey w0\ntapkey w8\ntap PLAY\nwait 2960\nwavstop\n' > "$OUT/emu_ref.x0x"
+run host-reference build/host/x0x_host "$OUT/emu_ref.x0x" "$OUT"
+run wasm-host-parity node tests/host/emu_test.mjs build/emu/x0x.wasm "$OUT/emu_ref.wav"
+run wasm-slots node tests/host/emu_slots_test.mjs build/emu/x0x.wasm build/test_loops/loop1.wav
+run marker-import node tests/host/marked_import_test.mjs
+run marked-wasm node tests/host/marked_wasm_test.mjs build/emu/x0x.wasm
+run marked-sync node tests/host/marked_sync_test.mjs build/emu/x0x.wasm
+run actual-worklet node tests/host/worklet_sync_test.mjs build/emu/x0x.wasm
+count=0
+for required in autosave extclock freeplay getting_started groove guard help jam keysound knobs migrate migrate0102 patterns perf plock prob probcond probreset savewait showcase slices song songrep step303 steps64 stereo tb3po tour trackmute undo upload; do
+    test -f "tests/scenarios/$required.x0x"
+done
+for scenario in tests/scenarios/*.x0x; do
+    test -f "$scenario"
+    name=$(basename "$scenario" .x0x)
+    mkdir -p "build/scenarios/$name"
+    run "scenario-$name" build/host/x0x_host "$scenario" "build/scenarios/$name"
+    count=$((count + 1))
+done
+test "$count" -ge 31
+printf '\nRequired engine checks passed, including %s host scenarios.\n' "$count"

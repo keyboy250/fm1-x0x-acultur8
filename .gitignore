@@ -1,0 +1,14 @@
+build/
+.DS_Store
+__pycache__/
+*.o
+lab/data/
+lab/.runtime/
+lab/.baseline/
+.acultur8-lab/
+lab/local-config.json
+lab/build-emulator-container.sh
+*.log
+.env
+.env.*
+!.env.example
