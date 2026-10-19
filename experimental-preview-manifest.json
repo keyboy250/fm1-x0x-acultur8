@@ -1,0 +1,22 @@
+{
+  "authorization": "User approved FAQ/art and requested live GitHub site preview on 2026-10-19 UTC",
+  "preview_url": "https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.5-beta1/",
+  "previous_browser_commit": "ec3e2bb6b4e6818f0f5c672b60fe39f248893b50",
+  "previous_live_files_verified": 26,
+  "changed_existing_files": [
+    "index.html"
+  ],
+  "release_scope": "documentation and poster preview; no firmware/tag/release upload",
+  "files": {
+    "index.html": "48a135ef1b4cf4edbbfd38499d61d168dd281eac34a2b13b8c488dd64645c09a",
+    "INSTALL_AND_ROLLBACK.txt": "0b8582177e2ab5f218e817dedee34a76aae8596fda3011e2eab357d2ca10c841",
+    "KNOWN_ISSUES.txt": "e1974b5edf7be8c309d6731db7ae001684d70791a6ce1289caca67e0afb71326",
+    "README_FIRST.txt": "9859d226988ceb5c17299623bef42fca62483f7381b3e3c830601c703c47dc22",
+    "x0x-0.1.5-beta1-FAQ.zip": "0eb9031ad1f72a4376b13dbe11b15fe3097c009fceaf47e8dfc5f065cc425c2d",
+    "docs/faq-search.js": "be33fed918cda4c86b2b8783ad21f3f5b42efb38ed772845f363fbfbfa207893",
+    "docs/faq-site.css": "b357e241df26017d6616126aa98a20fe527752e192803bcfd07a1197bc7539e1",
+    "docs/FAQ.html": "d34f683e344385fc7d3bb15d334c9c5721421918e0ed00ee66a1144769b9b35f",
+    "docs/POSTER_PROMPT.txt": "09af2d2b4d4771e353c9e6b2b8a36526f6a89a5c12feaa7ff174771ddc192969",
+    "docs/release-poster.png": "21ce6fd27a34af45399bbd172b51b3565d711d0db55c356e9d2fae66bc862fa7"
+  }
+}

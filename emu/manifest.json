@@ -1,0 +1,8 @@
+{
+  "built_at": "2026-10-13T12:34:22Z",
+  "source_sha256": "10533c9fa817a6df5d64b09afcd47c8f75f14da165f9bf1c5c8df8a73e4b5503",
+  "wasm_sha256": "e765fd3c65b1ba22f311b425cd5bc964462ee0a783a5222069c2d50a3f78d8a0",
+  "wasm_bytes": 655058,
+  "compiler": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.12 (5488e0871d46d19a3209988190fa6a653126256f)",
+  "image_id": "sha256:39bbad76ae83627bc32ff987c5b30a1bfb73f9b66b8fb242c72c57da7f363bf0"
+}

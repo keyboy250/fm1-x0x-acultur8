@@ -1,0 +1,68 @@
+@font-face{font-family:Barlow;src:url(BarlowSemiCondensed-Medium.ttf)}
+
+:root { --ground: #f4f5f6; --ink: #1c1f23; --muted: #5b626a; --rule: #d9dde1; --accent: #c8700a; --card: #fff; color-scheme: light; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ground: #131518; --ink: #e6e8eb; --muted: #9aa1a9; --rule: #2d3137; --accent: #f0a043; --card: #1a1d21; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --ground: #131518; --ink: #e6e8eb; --muted: #9aa1a9; --rule: #2d3137; --accent: #f0a043; --card: #1a1d21; color-scheme: dark; }
+body { background: var(--ground); color: var(--ink); margin: 0; padding-inline: 16px; padding-block: 28px 48px;
+       font: 400 16px/1.55 "Barlow", "Helvetica Neue", Arial, sans-serif; }
+main { max-width: 1040px; margin: 0 auto; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.2rem; margin: 0 0 1rem; }
+h1 { font: 700 2rem/1.1 "Barlow Semi Condensed", "Barlow", sans-serif; margin: 0; }
+header p { margin: 0; color: var(--muted); }
+header nav { margin-left: auto; display: flex; gap: 1rem; }
+a { color: var(--accent); }
+.device { position: relative; width: 100%; aspect-ratio: 1000 / 640; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.device svg { pointer-events: none; }
+.hit { position: absolute; touch-action: none; cursor: pointer; -webkit-tap-highlight-color: transparent; border-radius: 12px; }
+.hit.knob { cursor: ns-resize; border-radius: 50%; }
+.hit:focus-visible { outline: 2px solid #f0a043; outline-offset: 2px; }
+.device svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.device canvas { position: absolute; left: 31.8%; top: 9.6875%; width: 20%; height: 31.25%; image-rendering: pixelated; background: #000; border-radius: 2px; }
+.ctl { cursor: pointer; }
+.ctl.knob { cursor: ns-resize; }
+.btnface { transition: fill .06s; }
+.lit .btnface { fill: #f0a043; }
+.lit text.btn { fill: #1b1205; }
+.held .btnface, .held .keyface { stroke: #f0a043; stroke-width: 3; }
+.latched .btnface { stroke: #6fc3ff; stroke-width: 3; }
+.keyface { transition: fill .06s; }
+.lit .keyface.white { fill: #f3b25c; }
+.lit .keyface.black { fill: #e0902c; }
+.dim .keyface.white { fill: #f6dcb6; }
+.dim .keyface.black { fill: #7a5326; }
+.start { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 13, .55); border-radius: 4.4% / 6.9%; }
+.start button { font: 600 1.25rem "Barlow Semi Condensed", "Barlow", sans-serif; letter-spacing: .04em; padding: .7em 1.6em;
+                border-radius: 999px; border: 0; background: #f0a043; color: #1b1205; cursor: pointer; }
+.start[hidden] { display: none; }
+.turn { display: none; margin: 0 0 .8rem; color: var(--muted); font-size: .92rem; }
+@media (orientation: portrait) and (max-width: 700px) { .turn { display: block; } }
+.start button:disabled { opacity: .6; cursor: progress; }
+.bar { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center; margin: .9rem 0 0; color: var(--muted); font-size: .92rem; }
+.bar button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--rule); border-radius: 8px; padding: .3em .8em; cursor: pointer; }
+.bar .cpu { font-variant-numeric: tabular-nums; }
+.breaks { margin: 1.6rem 0 0; }
+.breaks h2, .help h2 { font: 600 1.1rem "Barlow Semi Condensed", "Barlow", sans-serif; margin: 0 0 .3rem; }
+.breaks > p { margin: 0 0 .8rem; color: var(--muted); max-width: 70ch; }
+.slots { display: grid; gap: .5rem; }
+.slot { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; padding: .55rem .8rem; border: 1px solid var(--rule);
+        border-radius: 8px; background: var(--card); }
+.slot.over { border-color: var(--accent); }
+.slot b { font-weight: 600; min-width: 3.5rem; }
+.slot .sname { flex: 1 1 12rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.slot .sname strong { color: var(--ink); font-weight: 600; }
+.slot label, .slot button { font: inherit; font-size: .92rem; color: var(--ink); background: transparent; border: 1px solid var(--rule);
+        border-radius: 8px; padding: .25em .8em; cursor: pointer; }
+.slot input[type=file] { display: none; }
+.help { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem 2rem; margin: 1.6rem 0 0; }
+.help h2 { font: 600 1.1rem "Barlow Semi Condensed", "Barlow", sans-serif; margin: 0 0 .3rem; }
+.help p, .help ul { margin: 0; color: var(--muted); max-width: 60ch; }
+.help ul { padding-left: 1.1rem; }
+kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); border: 1px solid var(--rule); border-radius: 4px; padding: 0 .3em; color: var(--ink); }
+
+.help{grid-template-columns:repeat(auto-fit,minmax(min(100%,16rem),1fr))}main{min-width:0;overflow-wrap:anywhere}header{flex-wrap:wrap}.slot{min-width:0}
+
+.slice-lab{margin:24px 0;padding:18px;border:1px solid #45413a;border-radius:10px;background:#17191d}.slice-files{display:flex;flex-wrap:wrap;gap:12px}.slice-files label{display:grid;gap:6px;min-width:0;flex:1}.slice-files input{max-width:100%;color:#bbb}.slice-lab p{font-size:13px;color:#a6aab1}.slice-lab .slice-error{color:#f0a29d}.slice-lab canvas{display:block;width:100%;height:140px;background:#0b0e12;border-radius:6px}#slice-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:6px;margin:12px 0}#slice-list button{font:11px monospace;text-align:left;padding:9px;background:#23262b;color:#ddd;border:1px solid #444;border-radius:5px}#slice-list .slice-active{border-color:#f0a043;color:#f0a043}.slice-lab button:disabled{opacity:.4}.slice-lab details{font-size:12px}.slice-lab input[type=range]{width:100px}.slice-lab summary{cursor:pointer}
+#slice-export-json{display:block;box-sizing:border-box;width:100%;background:#0b0e12;color:#ddd;font:11px monospace;padding:12px;border:1px solid #555;border-radius:5px}
+.slice-files label{grid-template-columns:minmax(0,1fr)}.slice-files input{min-width:0;width:100%;box-sizing:border-box}

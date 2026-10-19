@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "sampleRate": 44100,
+  "channels": 1,
+  "audioFrames": 60858,
+  "bpm": 120,
+  "loopDuration": 2,
+  "audioSha256": "36bd3c99bdd6f9a2b404ee62349a429d2a97d7835110a4be73ef9005089a6bf6",
+  "slices": [
+    {
+      "label": "Low pulse",
+      "startSample": 0,
+      "endSample": 16758,
+      "time": 0
+    },
+    {
+      "label": "Tick",
+      "startSample": 16758,
+      "endSample": 22050,
+      "time": 0.255
+    },
+    {
+      "label": "Mid pulse",
+      "startSample": 22050,
+      "endSample": 34398,
+      "time": 0.735
+    },
+    {
+      "label": "Tick two",
+      "startSample": 34398,
+      "endSample": 38367,
+      "time": 1.01
+    },
+    {
+      "label": "Warm pulse",
+      "startSample": 38367,
+      "endSample": 52038,
+      "time": 1.26
+    },
+    {
+      "label": "High pulse",
+      "startSample": 52038,
+      "endSample": 60858,
+      "time": 1.755
+    }
+  ]
+}

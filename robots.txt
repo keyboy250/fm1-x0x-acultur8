@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://keyboy250.github.io/fm1-x0x-acultur8/sitemap.xml

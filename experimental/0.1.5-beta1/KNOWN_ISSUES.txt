@@ -1,0 +1,44 @@
+0.1.5-beta1 KNOWN ISSUES AND ACCEPTANCE LIMITS - 2026-10-19
+
+1 AUDIO PROCESSING HEADROOM
+Heavy active-strip/effect workloads may glitch. No safe universal strip-count
+limit is established. Short125BPM clapOFF/ON and requestedfive-minuteclapON
+checks added0dropouts; quiet listening was normal. Guard remained active.
+These are bounded tests on one device, not all-workload or overnight acceptance.
+The rejected mono0.1.4candidate is not included.
+
+2 SAVING DURING EXTERNAL MIDI
+A user heard a glitch near autosave and observed one new dropout during an
+editing interval. Causation is not instrumented proof, but source explicitly
+documents audio interruption during flash erase. Existing AUTOSAVE OFF is
+available; switch it while the DAW is stopped and save manually between takes.
+Changing OFF schedules one last save to retain the preference.
+
+3 TIMING UNDER INVESTIGATION
+Perceived whole-kit hesitation improved with strips bypassed. Isolatedkick
+recordings did not show clear extra fixed attack delay with its stripON.
+167matchedattacks/take had about5.6..5.9ms offset standard deviation across
+the MIDI/device/analog capture chain. Changing Reasonbuffer1024to256 did not
+materially reduce it. Digital loopback reproduced all167attacks with one fixed
+27sample shift and no added variation detected. Cause is unresolved; do not
+present it as proven FM1-only jitter or apply a global30ms correction.
+
+4 INDEPENDENT-LANE DISPLAY / COMPATIBILITY
+Drum grid shading and playhead use the selected drum's length/position; they do
+not show every row's independent clock accurately. EXPAND is a one-way timing
+format conversion, not a reversible toggle. Older firmware may reject expanded
+projects. The upstream one-knob BREAK filter remains deferred due to storage
+conflict; existing BREAK stripHP/LP controls remain.
+
+5 BACKUP AND COVERAGE
+Current project export does not include the reusable strip-default bank, private
+sample loops or calibration. Reusable defaults and sample assets need separate
+preservation. No intentional physical power-loss testing or exhaustive restore
+qualification is claimed. FullTRS/allCC/channel remap/thermal/maximumIRQ/overnight
+soak acceptance remains open. Current measuredIRQhigh-water1052/7936bytes is a
+bounded observation, not maximum possible stack usage.
+
+6 FEATURES STILL PROPOSED
+Per-drum input-note mapping, MIDI-file import with groove preservation, automatic
+latency calibration, selectable compression/FX routing, visible overload warning
+and expanded on-device About/limitations copy are not implemented by this build.

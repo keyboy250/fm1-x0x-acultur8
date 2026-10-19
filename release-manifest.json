@@ -1,0 +1,41 @@
+{
+  "kind": "browser-alpha",
+  "commit": "ec3e2bb6b4e6818f0f5c672b60fe39f248893b50",
+  "workingTreeDirty": false,
+  "emulator": {
+    "built_at": "2026-10-13T12:34:22Z",
+    "source_sha256": "10533c9fa817a6df5d64b09afcd47c8f75f14da165f9bf1c5c8df8a73e4b5503",
+    "wasm_sha256": "e765fd3c65b1ba22f311b425cd5bc964462ee0a783a5222069c2d50a3f78d8a0",
+    "wasm_bytes": 655058,
+    "compiler": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.12 (5488e0871d46d19a3209988190fa6a653126256f)",
+    "image_id": "sha256:39bbad76ae83627bc32ff987c5b30a1bfb73f9b66b8fb242c72c57da7f363bf0"
+  },
+  "files": {
+    ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "CREDITS.txt": "187e81a2da0447cd3783eb53ffce9c63aac22a56a7a688b591ea2dbc5c528f31",
+    "LICENSE.txt": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+    "about/index.html": "776064f2cd24a7514d8ae919d20199d28e9f215689eaa6f2ab38449633bca123",
+    "demo/README.txt": "a0140784494c1d25eb4475cefd9fab9979341c565d9764981853bfcc907fc221",
+    "demo/acultur8-demo_markers.json": "3429ccda285529cdd104aeb0d42d0887ec53393b13745e6a33a392f2bcfcf44b",
+    "demo/acultur8-demo_slices.wav": "36bd3c99bdd6f9a2b404ee62349a429d2a97d7835110a4be73ef9005089a6bf6",
+    "emu/Barlow-OFL.txt": "186d750eb496a4c17a76385f82be6aea2ac1cf2de074a811d63786cf374ea73f",
+    "emu/BarlowSemiCondensed-Medium.ttf": "4998b693a190b76f2b11315844345a8546c1e2e6a320905507a9eed04edf8b48",
+    "emu/arrangement-ui.css": "c5b71d226373461db6f025753694abfbf867c9db52e6290311237acc17f56646",
+    "emu/arrangement-ui.js": "c67e61c2c6ba76372556ba6018ff11baac92ce69ed936eb8952cd65eb5de4b1f",
+    "emu/emu.css": "13183f896758c7626bc3937fdaf876984bdb8b0a6fa051d508c08d25ad921b78",
+    "emu/emu.js": "a45517eb79c031027a0257dace448abb88c02385070e495e46c6c1c9380a190a",
+    "emu/index.html": "3d2b22a4096e3b95ed1d1a47eeef3442fc3a59a81a8db19ab5d2881fdf68c1b4",
+    "emu/manifest.json": "7b3335ca4ebfc65f5477b0669ada8dd57e444e32edc30c8e5971361a6bc7e270",
+    "emu/public-demo.js": "291de8480f4560437ce5da498af7292893954d3f7bfe03abfa260edfe45673f4",
+    "emu/slice-import.js": "a2fa6be721444bdf682df03f0e35fdb74cbe5c11588c6bb5d4ea62b72ee7d0a9",
+    "emu/slice-ui.js": "5b390a09306a5f2559de637ff2d6c6dbfdd0a59e498f2f31318d09b6550476ef",
+    "emu/variant-ui.css": "2cdc749288f07b644ed1b88895e2fb3c19faea133e351b5436874ce9e6093e0e",
+    "emu/variant-ui.js": "e0b05e8f7534002ed1f41a5adb001dd24e99094abbe7b9eb24096db221a93827",
+    "emu/worklet.js": "f956641d25802dc0003341226994a88788677bf91aea28aa0162d3bceab5b02d",
+    "emu/x0x.wasm": "e765fd3c65b1ba22f311b425cd5bc964462ee0a783a5222069c2d50a3f78d8a0",
+    "faq/index.html": "07bcc9a6ebb71d1f33144e1ffc61e2292d66504aa2faef873a92f2dc4927805b",
+    "index.html": "7541d2463d1e9d626df00fa64b314f182581c4635eea0e680d53d950c5464578",
+    "manual/index.html": "83cc71214ab58f6584b96a182a052dd5bea6b62abec52a507633b01b56fd72ed",
+    "site.css": "9df123b4f65985ffd69a40bfe96f857222dd4d59d5dc07dfcb6665082df60253"
+  }
+}
