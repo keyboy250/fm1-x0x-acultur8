@@ -545,10 +545,14 @@ typedef struct {
     float dpl, dpr;           /* the pans' glide per sample this block (0 settled) */
     sound_strip_t *strip;     /* NULL in the original renderer: compiled-out bypass work */
     sound_strip_meter_t *meter;
+    float *raw;              /* caller-owned scratch: collect before strip/pan/sends */
 } d9_bus_t;
 
-static inline void d9_emit(const d9_bus_t *b, int i, float y)
+/* Keep routing policy visible in each synthesis loop: outlining this emitter
+ * introduces a call per sample even for the original bypass-only route. */
+D9_INLINE void d9_emit(const d9_bus_t *b, int i, float y)
 {
+    if (b->raw) { b->raw[i] = y; return; }
     if (b->strip) {
         sound_strip_meter_t sample;
         sound_strip_process(b->strip, &y, &y, 1, &sample);
@@ -814,6 +818,7 @@ static inline void d9_bus(d9_bus_t *b, drum909_t *d, int voice, float *dry, floa
 {
     b->strip = 0;
     b->meter = 0;
+    b->raw = 0;
     b->dry = dry;
     b->dry_r = d9_dry_r;
     b->pl = d9_pl0[voice];                         /* the pan glides from here over this block */
@@ -883,7 +888,38 @@ D9_NOINLINE void d9_render_strips(drum909_t *d, const float *nz,
     }
 }
 
-static void d9_render(drum909_t *d, float *dry, float *rev, float *dly, int n)
+/* Separate route keeps generic strip calls out of this function's sample
+ * loops. The legacy per-sample route remains available to old API callers. */
+D9_NOINLINE void d9_render_strips_batch(drum909_t *d, const float *nz,
+                                      float *dry, float *rev, float *dly,
+                                      int n, float *scratch)
+{
+    static const uint8_t order[DR_NUM] = {DR_BD, DR_SD, DR_LT, DR_MT, DR_HT, DR_RS, DR_CP, DR_OH, DR_RD, DR_CR, DR_CH};
+    for (int k = 0; k < DR_NUM; ++k) {
+        int voice = order[k], m = d9_voice_count(d, voice, n);
+        sound_strip_t *s = d9_strip_state(d, voice);
+        if (m > 0 || sound_strip_active(s)) {
+            d9_bus_t bus;
+            d9_bus(&bus, d, voice, dry, rev, dly);
+            int bypass = sound_strip_bypassed(s);
+            bus.raw = bypass ? 0 : scratch;
+            /* One synthesis expansion; the emitter has no strip call here. */
+            if (m > 0) d9_voice_render(d, voice, nz, &bus, n);
+            if (!bypass) {
+                sound_strip_meter_t block;
+                sound_strip_meter_t *total = voice == 0 ? &d->bd_strip_meter : &d->strip_meter_extra[voice - 1];
+                /* Keep synthesis/noise warm-up at the original block size. */
+                for (int i = m; i < n; ++i) scratch[i] = 0.0f;
+                sound_strip_process(s, scratch, scratch, (uint32_t)n, &block);
+                sound_strip_meter_merge(total, &block);
+                bus.raw = 0;
+                for (int i = 0; i < n; ++i) d9_emit(&bus, i, scratch[i]);
+            }
+        }
+    }
+}
+
+static void d9_render(drum909_t *d, float *dry, float *rev, float *dly, int n, float *scratch)
 {
     d9_bus_t bus;
     if (n > 256)
@@ -903,7 +939,8 @@ static void d9_render(drum909_t *d, float *dry, float *rev, float *dly, int n)
         nz[i] = d9_noise(&d->noise);
 
     if (!d9_strips_bypassed(d)) {
-        d9_render_strips(d, nz, dry, rev, dly, n);
+        if (scratch) d9_render_strips_batch(d, nz, dry, rev, dly, n, scratch);
+        else d9_render_strips(d, nz, dry, rev, dly, n);
         return;
     }
 
@@ -942,10 +979,16 @@ static void d9_render(drum909_t *d, float *dry, float *rev, float *dly, int n)
 void drum909_render(drum909_t *d, float *dry, float *rev, float *dly, int n)
 {
     d9_dry_r = 0;
-    d9_render(d, dry, rev, dly, n);
+    d9_render(d, dry, rev, dly, n, 0);
 }
 
 void drum909_render_st(drum909_t *d, float *dry_l, float *dry_r, float *rev, float *dly, int n)
+{
+    drum909_render_st_scratch(d, dry_l, dry_r, rev, dly, n, 0);
+}
+
+void drum909_render_st_scratch(drum909_t *d, float *dry_l, float *dry_r,
+                               float *rev, float *dly, int n, float *scratch)
 {
     d9_dry_r = dry_r;
     for (int v = 0; v < DR_NUM; ++v) {             /* every voice's pan glides, sounding or not */
@@ -954,7 +997,7 @@ void drum909_render_st(drum909_t *d, float *dry_l, float *dry_r, float *rev, flo
         d->pan_dl[v] = x0x_glide_block(&d->pan_lc[v], d->pan_l[v], n > 256 ? 256 : n);
         d->pan_dr[v] = x0x_glide_block(&d->pan_rc[v], d->pan_r[v], n > 256 ? 256 : n);
     }
-    d9_render(d, dry_l, rev, dly, n);
+    d9_render(d, dry_l, rev, dly, n, scratch);
     d9_dry_r = 0;
 }
 

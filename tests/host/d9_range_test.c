@@ -2,6 +2,14 @@
 #define _POSIX_C_SOURCE 200809L
 #ifdef D9_ORACLE_REFERENCE
 #include D9_REFERENCE_C
+/* Test-only compatibility for the immutable pre-batch oracle. The reference
+ * still renders through its original path; its pinned source/hash is untouched. */
+void drum909_render_st_scratch(drum909_t *d, float *l, float *r, float *rev,
+                               float *dly, int n, float *scratch)
+{
+    (void)scratch;
+    drum909_render_st(d, l, r, rev, dly, n);
+}
 #else
 #include "../../firmware/src/dsp/drum909.c"
 #endif

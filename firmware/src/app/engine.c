@@ -944,7 +944,9 @@ static void render_sub(float *out_l, float *out_r, uint32_t n)
             drum909_render(&d909, mono, mono, mono, (int)n);   /* writes nothing; advances the noise */
             drum909_pan_settle(&d909);                    /* silent: pans move at once, no glide */
         } else {
-            drum909_render_st(&d909, dry_l, dry_r, rev, dly, (int)n);
+            /* mono is first-core scratch here; core2 owns t0/t1/t2/tr/kbuf.
+             * It is filled with the completed kit mix immediately afterward. */
+            drum909_render_st_scratch(&d909, dry_l, dry_r, rev, dly, (int)n, mono);
             mix_targets(PART_909, mix_level[PART_909]);
             for (i = 0; i < n; i++)                       /* the kit send: the whole machine, both sides */
                 mono[i] = (dry_l[i] + dry_r[i]) * 0.5f;   /* (centred: L exactly) */

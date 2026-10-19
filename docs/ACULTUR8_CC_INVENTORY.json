@@ -3,7 +3,7 @@
   "map_version": "draft-1-actions-prototype-1",
   "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
   "source_hashes": {
-    "firmware/src/app/engine.c": "74c6592353ce1633c6e933c43d2c5906206bc1ca766b72ba3854ae3fb3c4b803",
+    "firmware/src/app/engine.c": "38cb88849496e5e97c182df7cc9d335cfd0700d135d6cadd3f2945fa00560047",
     "firmware/src/app/engine.h": "ce6c85391601439e9b1836c5c917b5b3376e135bee4e3710fcd4bcb5aa76c5e0",
     "firmware/src/app/ui.c": "5023ad7a3804c018cdb9cd235d54b89cac1c8db594520721f5b777766bb16997",
     "firmware/src/app/x0x.h": "6768c0ba96f9ac246692c269cf8c0ae44c1820932b4e45b1f9a16592efa1267b",
@@ -16,7 +16,7 @@
     "firmware/src/seq/motion.c": "5cf517f38b6653f142b663af7a7179e0fcc92db3c390dcd9dc2949036b03a7c4",
     "firmware/src/seq/tb3po.h": "7dd646a572129fc8df5628f6111f68fef6b54476446f75cc5f583b6f110f0073",
     "firmware/src/seq/harmony.h": "8b0d03a6d3bc713078f14259d9e2dc04b1432dde8b0e2fadc9d8cf5ded4529ff",
-    "firmware/src/dsp/drum909.c": "526455019a1d2871c2a15a16e819f69bf001ca24f468c6e235cf249530e244bc",
+    "firmware/src/dsp/drum909.c": "3a333fc53aac44118ed6e419b4ff9c04117ec1cda81e64ece5ae80accc15a27d",
     "firmware/src/dsp/drum808.c": "5734da993ce4741708519688877bd33a379806b93a95a2d7ef0edca72f5ba66a",
     "firmware/src/dsp/bass303.c": "ace73e02cd21376902af70005011fcbbfe15b58219192fc42f912519d47faf9d",
     "firmware/src/dsp/fxbus.c": "8a7c6ef75b8405883f8d3f307333b6f9911c0c4ff6d5cc970b750d4c296c4246",
