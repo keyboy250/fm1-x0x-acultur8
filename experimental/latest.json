@@ -1,0 +1,14 @@
+{
+  "channel": "experimental",
+  "version": "0.1.5-beta1",
+  "tag": "v0.1.5-beta1",
+  "device_identity": "FM-1_9000105",
+  "source_commit": "550446822545695afb0334f8ca52a920bc082c1c",
+  "release_url": "https://github.com/keyboy250/fm1-x0x-acultur8/releases/tag/v0.1.5-beta1",
+  "release_page": "https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.5-beta1/",
+  "firmware_url": "https://github.com/keyboy250/fm1-x0x-acultur8/releases/download/v0.1.5-beta1/x0x-0.1.5-beta1.fwsc",
+  "firmware_sha256": "2e33b454da962ba368cd7b1b539e8ea20fcc2ad0e5c127df83ba98e5b45eccda",
+  "bundle_url": "https://github.com/keyboy250/fm1-x0x-acultur8/releases/download/v0.1.5-beta1/x0x-0.1.5-beta1-experimental.zip",
+  "source_url": "https://github.com/keyboy250/fm1-x0x-acultur8/releases/download/v0.1.5-beta1/x0x-0.1.5-beta1-source.zip",
+  "checksums_url": "https://github.com/keyboy250/fm1-x0x-acultur8/releases/download/v0.1.5-beta1/SHA256SUMS.txt"
+}

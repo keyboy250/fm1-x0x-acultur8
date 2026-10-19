@@ -1,33 +1,34 @@
-X0X Extended Edition 0.1.5-beta1 - Experimental prerelease
+X0X Extended Edition 0.1.5-beta1 — EXPERIMENTAL FM-1 firmware
 USB identity: FM-1_9000105
-Prepared2026-10-19UTC. Local review packet; not yet published.
+Published package prepared 19 October 2026 UTC.
 
-This build is for exploratory testing and feedback, not stable production use.
-It retains per-sound processing, saved strip defaults, independent lane timing,
-expanded rates, arrangement/harmony and the Extended Edition startup display.
-The new909optimization batches strip work while preserving the shared DSP.
-The installed test build and the firmware in this packet are byte-identical.
+START HERE
+1. Read KNOWN_ISSUES.txt and INSTALL_AND_ROLLBACK.txt.
+2. Back up projects, private samples and reusable strip defaults separately.
+3. Verify the firmware against SHA256SUMS.txt before installing.
+4. Use the included fm1_install.py; installation requires Python 3, mido and
+   python-rtmidi. This is a command-line installer, not a one-click application.
 
-READ KNOWN_ISSUES.txt and INSTALL_AND_ROLLBACK.txt before installation.
-Keep project, samples and preset/default backups separately. This packet contains
-no user's project, recordings, flash dump, calibration or credentials.
+The .fwsc file is firmware, not an application to double-click. The complete
+release ZIP includes that firmware, installer script, matching source ZIP,
+offline searchable illustrated FAQ, warnings and comparison rollback files.
+Extract x0x-0.1.5-beta1-source.zip to inspect/build the complete matching source.
 
-Performance warning: heavy combinations of enabled strips/effects can cause
-audio glitches. Reduce processing and check PERF for new dropout counts.
-Further improvements are planned, without a promised completion date.
+This is an experimental prerelease for testing and feedback. Heavy combinations
+of enabled strips/effects may glitch. Disable AUTOSAVE while stopped before
+external MIDI performance, then save manually between takes. Unsaved edits can
+be lost on power-off. MIDI timing variation remains under investigation.
 
-For external MIDI performance, set GLO > PROJECT > AUTOSAVE to OFF while the
-external DAW is stopped, and allow its final preference save to finish. Save
-edits manually after stopping playback. OFF means unsaved edits may be lost
-on power-off. The existing guard checks internal transport, not MIDI activity.
+The firmware is byte-identical to the 0.1.5-beta1 build installed and tested on
+one FM-1. Testing is bounded and does not qualify every combination or session.
+The isolated 909 block-processing optimization preserves the existing strip DSP.
+No new routing switch, MIDI importer, note-remapping UI or on-device About FAQ
+is included. See the FAQ for current features versus proposals.
 
-This packet changes no routing, defaults, warning UI or on-device About page.
-The warning is documentation, not an implemented automatic overload message.
-Pages and public publication remain held pending review of these exact assets.
+Release: https://github.com/keyboy250/fm1-x0x-acultur8/releases/tag/v0.1.5-beta1
+Website: https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.5-beta1/
+Offline FAQ: docs/FAQ.html (open in a browser; no network needed for search).
+The separately hosted browser alpha is an earlier build.
 
-FAQ: open docs/FAQ.html in a browser. It includes the release-specific FAQ
-and the complete maintained illustrated guide, with historical checkpoints marked.
-
-FAQ revision 3 adds offline topic search across current and historical guidance,
-descriptive/search/social metadata, and conceptual experimental-release poster art.
-Public indexing and social preview image URLs depend on approved hosting; Pages held.
+GPL-3.0-only and component notices are retained in the source archive.
+No private projects, samples, recordings, calibration or credentials are included.

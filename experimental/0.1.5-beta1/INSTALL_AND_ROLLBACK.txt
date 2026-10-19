@@ -1,14 +1,15 @@
 0.1.5-beta1 INSTALL / ROLLBACK GUIDANCE
 
-1Preserve projects, samples and separate reusable strip defaults. Stop the DAW
+1. Preserve projects, samples and separate reusable strip defaults. Stop the DAW
  and FM1 transport, lower MASTER, keep stableUSBpower and avoid concurrent MIDI
  apps accessing the updater port. Review the backup exclusions in KNOWN_ISSUES.
-2Verify the package SHA256 against SHA256SUMS.txt.
-3Use the supplied source/tools/fm1_install.py with Python3,mido and python-rtmidi:
- python tools/fm1_install.py x0x-0.1.5-beta1.fwsc --port "X0X FM-1"
+2. Verify the package SHA256 against SHA256SUMS.txt.
+3. Install Python 3 and the MIDI dependencies, then use the included script:
+ python -m pip install mido python-rtmidi
+ python fm1_install.py x0x-0.1.5-beta1.fwsc --port "X0X FM-1"
  Follow its prompt. Do not add --force merely to bypass an unexpected error.
-4After restart, independently query:
- python tools/fm1_install.py --info --port "X0X FM-1"
+4. After restart, independently query:
+ python fm1_install.py --info --port "X0X FM-1"
  Expected identity:FM-1_9000105. Begin quiet, bounded testing before important use.
 
 Prior baseline package x0x-0.1.3-beta1.fwsc is supplied under rollback/ with its
