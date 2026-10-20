@@ -1,0 +1,24 @@
+﻿Capability,Upstream X0X reviewed baseline,Extended Edition 0.1.6-beta1,Status
+"909, 808, two 303s and break player",Present,Retained; upstream engines and authors credited,Inherited
+"Stereo, reverb, tape delay and master compressor",Present,"Retained, with per-sound strip processing",Inherited + Extended
+Pattern storage,32 banks; up to 64 steps,32 banks; up to 64 steps. Longer blocks repeat patterns,Retained
+"Part lengths, rates, probability, p-locks and motion",Present,Retained; individual sound lanes and 21 rate divisions,Extended firmware
+Pattern copying,Present,Retained; independent whole-block variations added,New in 0.1.6
+Song chaining and block duration,192 rows; repeats 1–8,"Musical-bar arrangement; 1–32 bars per block, part mutes and chord metadata",Expanded in 0.1.6
+Editable bridge and fill variations,Existing song/pattern controls,"Duplicate as variation, edit copied notes and queue the next block at a bar boundary",New in 0.1.6
+Delete block while keeping its patterns,Equivalent semantics not established in this review,"Confirmed structural deletion with Undo/Redo; patterns, sounds and motion retained",New in 0.1.6
+TB-3PO generation and harmonic following,Line generation and mutation present,Retained; arrangement root/chord following plus shared-key/scale-safe 303 transposition,Expanded in 0.1.6
+"Per-sound filters, limiter and reusable defaults",No equivalent 25-sound Extended strip system in reviewed baseline,25 sound strips; saved defaults applied explicitly,Extended firmware
+909 strip processing,Upstream render path,Batching optimisation retained from 0.1.5; same strip DSP,Extended firmware
+Autosave OFF,Present,Retained. Separate note/tail-aware autosave fix is not included,Inherited
+"USB/TRS MIDI, clock and transport",Present,Retained; accompaniment/routing and lane controls included; physical coverage varies by workflow,Inherited + Extended
+Computer backup/restore,Present,Retained. One active project/song; sample WAVs need separate backup,Retained
+"Templates, whole-song Save As and set lists",Named on-device library not established by this review,Proposed; computer project backups remain available,Future
+Assignable 64/128-bar LFO,Existing motion is a different workflow,Proposed,Future
+Within-block chord progression lane,Not established in reviewed baseline,Proposed; current chord metadata belongs to arrangement blocks,Future
+MIDI note remap and direct MIDI-clip import,Existing triggering is a different workflow,Proposed,Future
+Searchable release FAQ,"Own manual, release notes and help","Offline searchable illustrated FAQ, controls and release guidance",Extended documentation
+Browser WAV and marker slice workbench,Break uploader and emulator available,Earlier marker audition and pitch-preserving scheduling retained; emulator unchanged for 0.1.6,Earlier browser build
+Frequency-guided slice detection and shaping,Not assessed as equivalent in the reviewed baseline,"Separate Slice Profiles companion: spectrum, band RMS gate, coloured matches, Active/Length/Hold/Decay/Level and saved review projects",New browser companion
+Shaped slices inside the emulator,Not assessed,Integration deferred to stable-release development; marker export carries cuts/timing only,Future
+"128-step lanes, weighted blocks and alternate engines",Not assessed as these proposed workflows,Requested future work; not included in 0.1.6,Future
