@@ -1,0 +1,63 @@
+{
+  "update": "browser-shaped-slices-20261020",
+  "wasm_unchanged": true,
+  "firmware_unchanged": true,
+  "engine_checks": {
+    "status": "PASS",
+    "checks": [
+      "real-WASM stereo PCM equals editor Hold/Decay/Level render",
+      "Length cutoff and silence after envelope",
+      "legacy markers neutral PCM",
+      "inactive skipped in group but individually playable",
+      "all-inactive group refused",
+      "zero-length envelope silent",
+      "review JSON round trip",
+      "wrong WAV refused",
+      "source PCM unchanged",
+      "stop silence",
+      "90/120/180 BPM real sequencer sync"
+    ],
+    "syncResults": [
+      {
+        "bpm": 90,
+        "triggers": 6,
+        "state": 2
+      },
+      {
+        "bpm": 120,
+        "triggers": 8,
+        "state": 2
+      },
+      {
+        "bpm": 180,
+        "triggers": 12,
+        "state": 2
+      }
+    ]
+  },
+  "browser_checks": {
+    "status": "PASS",
+    "url": "http://127.0.0.1:8147/emu/",
+    "checks": [
+      "actual AudioWorklet/WASM boot",
+      "legacy marker demo",
+      "per-slice recall",
+      "inactive individual audition",
+      "review export/import with WAV validation",
+      "IndexedDB save/reload",
+      "shaped original timing playback/stop",
+      "sequencer sync and layering",
+      "wrong WAV and invalid level preserve current import",
+      "mobile slice controls fit",
+      "no missing assets/page errors"
+    ],
+    "slices": 6
+  },
+  "hashes": {
+    "x0x.wasm": "e765fd3c65b1ba22f311b425cd5bc964462ee0a783a5222069c2d50a3f78d8a0",
+    "worklet.js": "62668310970c26eef3e0a476092f456cfbd8fd37520b38d73ccbbf1ef8137f35",
+    "shaped-bank.mjs": "278468cfa282383fc20338cb07f25b79591e14b3ca8fb3ec564cf58b8feea06b",
+    "slice-shaped-ui.js": "fa60baa900387ffac68e4e24a7730804364a77e87baec0a4c16dfd1c4a2a28e1",
+    "slice-core.mjs": "e98d4b0149dd663881c16587af9e81bb49c752371bd09b28ff0231606c934a42"
+  }
+}

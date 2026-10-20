@@ -81,9 +81,22 @@ class X0X extends AudioWorkletProcessor {
       this.ex.web_enc(m.role, m.n | 0);
     } else if (m.type === "master") {
       this.ex.web_master(m.value | 0);
+    } else if (m.type === "marked-shaped-load") {
+      try {
+        if(!(m.pcm instanceof Float32Array)||!Number.isInteger(m.frames)||m.frames<1||m.frames>1440000||![1,2].includes(m.channels)||m.pcm.length!==m.frames*m.channels||!Array.isArray(m.slices)||m.slices.length<1||m.slices.length>64)throw Error('Invalid shaped slice bank.');
+        if(!Number.isInteger(m.rate)||m.rate<8000||m.rate>48000||!Number.isInteger(m.length)||m.length<1||m.length>2646000)throw Error('Invalid shaped slice timing.');
+        if(m.pcm.some(v=>!Number.isFinite(v)||Math.abs(v)>1))throw Error('Invalid shaped audio samples.');
+        let previous=-1;
+        for(const s of m.slices){if(!Number.isInteger(s.start)||!Number.isInteger(s.end)||s.start<=previous||s.start<0||s.start>=s.end||s.end>m.frames||!Number.isInteger(s.time)||s.time<0||s.time>=m.length||typeof s.active!=='boolean')throw Error('Invalid shaped slice bounds.');previous=s.start;}
+        this.ex.web_sync_off();this.ex.web_marked_stop();this.markedOn=this.syncOn=false;
+        new Float32Array(this.mem.buffer,this.ex.web_marked_pcm(),m.pcm.length).set(m.pcm);
+        this.shapedBank={frames:m.frames,rate:m.rate,channels:m.channels,slices:m.slices,length:m.length};
+        this.selectShaped();
+        this.port.postMessage({type:'marked-ready',revision:m.revision});
+      }catch(err){this.port.postMessage({type:'marked-error',revision:m.revision,message:err.message});}
     } else if (m.type === "marked-load") {
       try {
-        const ex=this.ex;
+        const ex=this.ex;this.shapedBank=null;this.markedMap=null;
         if(m.frames<1||m.frames>1440000||m.channels<1||m.channels>2||m.pcm.length!==m.frames*m.channels||m.slices.length<1||m.slices.length>64)throw Error('Invalid slice audio.');
         ex.web_sync_off();ex.web_marked_stop();this.markedOn=false;this.syncOn=false;
         new Float32Array(this.mem.buffer,ex.web_marked_pcm(),m.pcm.length).set(m.pcm);
@@ -94,15 +107,20 @@ class X0X extends AudioWorkletProcessor {
         this.port.postMessage({type:'marked-ready'});
       }catch(err){this.port.postMessage({type:'marked-error',message:err.message});}
     } else if (m.type === "marked-sync") {
+      if(this.shapedBank&&!this.selectShaped()){this.port.postMessage({type:'marked-action-error',message:'Activate at least one slice for group playback.'});return;}
       const rc=this.ex.web_sync_arm(Number(m.bpm));
       if(rc)this.port.postMessage({type:'marked-error',message:'Enter the original loop BPM (20–300). Sync supports the internal sequencer clock.'});
       else {this.syncOn=true;this.markedOn=false;this.markedLayer=true;}
     } else if (m.type === "seq-tempo") {
       this.ex.web_seq_set_bpm(Number(m.bpm));
     } else if (m.type === "marked-play") {
+      if(this.shapedBank&&!this.selectShaped()){this.port.postMessage({type:'marked-action-error',message:'Activate at least one slice for group playback.'});return;}
       this.ex.web_sync_off();this.syncOn=false;this.ex.web_marked_play(m.repeat?1:0);this.markedOn=true;
     } else if (m.type === "marked-pad") {
-      this.ex.web_sync_off();this.syncOn=false;this.ex.web_marked_pad(m.slice);this.markedOn=true;
+      if(this.shapedBank&&(!Number.isInteger(m.slice)||!this.shapedBank.slices[m.slice]))return;
+      this.ex.web_sync_off();this.syncOn=false;
+      if(this.shapedBank)this.selectShaped(m.slice);
+      this.ex.web_marked_pad(this.shapedBank?0:m.slice);this.markedOn=true;
     } else if (m.type === "marked-stop") {
       this.ex.web_sync_off();this.ex.web_marked_stop();this.markedOn=false;this.syncOn=false;
     } else if (m.type === "marked-level") {
@@ -125,6 +143,18 @@ class X0X extends AudioWorkletProcessor {
     }
   }
 
+  selectShaped(index=null) {
+    const b=this.shapedBank,ex=this.ex;
+    ex.web_sync_off();ex.web_marked_stop();this.markedOn=this.syncOn=false;
+    this.markedMap=b.slices.map((_,i)=>i).filter(i=>index===null?b.slices[i].active:i===index);
+    if(!this.markedMap.length)return false;
+    const meta=new Uint32Array(this.mem.buffer,ex.web_marked_meta(),this.markedMap.length*3);
+    this.markedMap.forEach((j,i)=>{const s=b.slices[j];meta.set([s.start,s.end,s.time],i*3);});
+    const rc=ex.web_marked_load(b.frames,b.rate,b.channels,this.markedMap.length,b.length);
+    if(rc)throw Error('Shaped marker validation failed: '+rc);
+    return true;
+  }
+
   publish() {
     const ex = this.ex;
     const blits = ex.web_blits();
@@ -141,7 +171,7 @@ class X0X extends AudioWorkletProcessor {
         arrangement,block:arrangement ? read(4,arrangement.values[2]) : null,chord:read(6,0)};
     }
     msg.sync={state:ex.web_sync_state(),bpm:ex.web_seq_bpm(),playing:!!ex.web_seq_playing(),beat:ex.web_seq_beat()};
-    if(ex.web_marked_cursor)msg.marked={cursor:ex.web_marked_cursor(),triggers:ex.web_marked_triggers(),slice:ex.web_marked_last(),playing:!!ex.web_marked_playing()||(ex.web_sync_state()===2&&!!ex.web_seq_playing())};
+    if(ex.web_marked_cursor)msg.marked={cursor:ex.web_marked_cursor(),triggers:ex.web_marked_triggers(),slice:this.markedMap?(this.markedMap[ex.web_marked_last()]??-1):ex.web_marked_last(),playing:!!ex.web_marked_playing()||(ex.web_sync_state()===2&&!!ex.web_seq_playing())};
     if (this.frames >= 44100) {                       // the share of real time spent running the device
       msg.load = Math.round(100 * this.busy / (this.frames / 44.1));
       this.busy = this.frames = 0;

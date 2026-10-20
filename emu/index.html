@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Acultur8 Mod Lab · X0X in the browser</title>
-<meta name="description" content="Play X0X, the groovebox firmware for the M-VAVE FM-1, in your browser: the same code the FM-1 runs.">
+<meta name="description" content="Play X0X, the groovebox firmware for the M-VAVE FM-1, in your browser: an earlier shared firmware engine plus browser slice-sound integration.">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="emu.css">
+<link rel="stylesheet" href="emu.css?v=shaped-slices-1">
 <link rel="stylesheet" href="variant-ui.css">
 <link rel="stylesheet" href="arrangement-ui.css">
 </head>
@@ -14,7 +14,7 @@
 <main>
 <header>
   <h1><a href="../" target="_top" style="color:inherit;text-decoration:none" title="X0X home">X0X</a></h1>
-  <p>Acultur8 working firmware · browser simulation · no device connection</p>
+  <p>Earlier browser engine + shaped slice playback · no device connection</p>
   <nav><a href="../about/">About</a><a href="../manual/" target="_blank">Manual</a><a href="https://github.com/keyboy250/fm1-x0x-acultur8">Source</a></nav>
 </header>
 
@@ -92,17 +92,27 @@
 </section>
 
 <section class="slice-lab" aria-labelledby="slice-title">
-<h2 id="slice-title">WAV + original slice markers</h2>
-<p>Import exact cuts and trigger positions for emulator audition. Up to 64 slices, mono/stereo WAV, 30 seconds of audio. This preview lane is separate from the FM1’s three flash slots and legacy eight-slice BREAK controls.</p>
-<div class="slice-files"><label>WAV audio <input type="file" id="slice-audio" accept=".wav,audio/wav"></label><label>Exact slice markers <input type="file" id="slice-markers" accept=".json,.csv,application/json,text/csv"></label></div>
-<div class="bar"><button id="slice-import-button" type="button">Import WAV + markers</button><button id="slice-demo" type="button">Load unequal timing demo</button><button id="slice-reopen" type="button">Reopen saved import</button></div>
+<h2 id="slice-title">WAV slices + sound settings</h2>
+<p>Import exact cuts and trigger positions for emulator audition. Up to 64 slices, mono/stereo WAV, 30 seconds of audio. Sound settings are applied in this browser. This preview lane is separate from the FM1’s three flash slots and legacy eight-slice BREAK controls.</p>
+<div class="slice-files"><label>WAV audio <input type="file" id="slice-audio" accept=".wav,audio/wav"></label><label>Markers or Slice Review JSON <input type="file" id="slice-markers" accept=".json,.csv,application/json,text/csv"></label></div>
+<div class="bar"><button id="slice-import-button" type="button">Import WAV + slice settings</button><button id="slice-demo" type="button">Load unequal timing demo</button><button id="slice-reopen" type="button">Reopen saved import</button></div>
 <p id="slice-status" role="status">Choose WAV + CSV/JSON. Audio stays on this computer; no hardware upload occurs.</p><p id="slice-info"></p>
 <canvas id="slice-wave" width="900" height="140" aria-label="Imported waveform with original slice boundaries"></canvas>
 <div class="bar"><button id="slice-preview-play" type="button" disabled>Play original timing</button><button id="slice-preview-stop" type="button" disabled>Stop slices</button><label><input id="slice-repeat" type="checkbox" checked> Loop original audition</label><label><input id="slice-layer" type="checkbox"> Layer with FM1 audio</label><label>Preview level <input id="slice-volume" type="range" min="0" max="1" step=".01" value=".5"></label><button id="slice-save" type="button" disabled>Save import in browser</button><button id="slice-export" type="button" disabled>Export markers</button></div>
 <div class="bar slice-sync"><label>Original loop BPM <input id="slice-source-bpm" type="number" min="20" max="300" step="0.001" placeholder="From REX markers"></label><button id="slice-sync-play" type="button" disabled>Play with FM1 · keep pitch</button><label>FM1 tempo (BPM) <input id="slice-seq-bpm" type="number" min="20" max="275" step="1" value="125"></label><button id="slice-tempo-set" type="button">Set FM1 tempo</button></div><p id="slice-sync-status" role="status">Sync starts both transports, or joins the next 4-beat bar if FM1 is playing. Instrument PLAY then controls both. Slice pitch stays unchanged.</p>
+<p><a href="../experimental/0.1.6-beta1/browser-slice-editor/" target="_blank" rel="noopener">Open Slice Profiles</a> to detect and shape hits, then export a review project. Import that JSON here with the same WAV to play its sounds alongside the emulator instruments. The existing emulator engine is an earlier build, not the 0.1.6 device firmware.</p>
+<fieldset id="slice-sound" disabled><legend id="slice-selected">Select a slice</legend><div class="slice-sound-fields">
+<label><input id="slice-active-setting" type="checkbox" checked> Active in group playback</label>
+<label>Length (ms)<input id="slice-length-setting" type="number" min="0.001" max="30000" step="0.001"></label>
+<label><input id="slice-envelope-setting" type="checkbox"> Hold + Decay enabled</label>
+<label>Hold (ms)<input id="slice-hold-setting" type="number" min="0" max="30000" step="1"></label>
+<label>Decay (ms)<input id="slice-decay-setting" type="number" min="0" max="30000" step="1"></label>
+<label>Level (dB)<input id="slice-level-setting" type="number" min="-60" max="0" step="0.5"></label></div>
+<div class="bar"><button id="slice-apply-sound" type="button">Apply slice sound</button><button id="slice-audition" type="button" disabled>Audition selected</button><button id="slice-export-project" type="button" disabled>Export review project</button></div>
+<p>Apply commits this slice's edits and stops slice playback; select another slice to recall its settings. Inactive slices remain auditionable. Length stops at the next slice start or WAV end. Hold/Decay and Level use the same renderer as Slice Profiles. Save import keeps audio and settings in this browser; review JSON needs its matching WAV. Marker export is cuts-only.</p></fieldset>
 <p id="slice-playhead">Stopped</p><div id="slice-list"></div>
 <details id="slice-export-output" hidden><summary>Exported marker JSON</summary><label>Marker JSON <textarea id="slice-export-json" readonly rows="12" spellcheck="false"></textarea></label><p>This contains exact source sample bounds and original trigger times. Copy it into a .json file if your browser blocks the download.</p></details>
-<details><summary>Marker formats and REX conversion</summary><p>CSV uses seconds: <code>Slice,Start,End,Time</code>. End and Time are optional: End defaults to the next start, Time to Start. JSON supports <code>sampleRate</code>, <code>loopDuration</code>, optional <code>bpm</code>, and <code>slices: [{startSample, endSample, time, label}]</code>. Source positions are WAV samples; time is the original onset in seconds. WAV sample rate must match the marker sampleRate.</p><p>Use the dashboard REX converter for original loops, or import its matching <code>_slices.wav</code> and <code>_markers.json</code>. Old <code>Slice,Duration,Total</code> CSV files do not contain original onset timing and are rejected; reconvert the REX. <a href="../faq/" target="_blank">Read the illustrated FAQ</a>. No cuts are guessed or reduced to eight.</p><p>Play with FM1 follows the internal sequencer clock and tempo, repeating the loop with its original beat length. It moves slice onsets while retaining their original pitch and duration; slower tempos can reveal gaps, faster tempos overlap tails. It does not stretch sustained audio. Physical FM1 storage is not implemented. Overlaps use up to eight voices and are validated. Source audio is not normalized; preview level is separate. Original timing is rounded only to the nearest 44.1 kHz output sample.</p></details>
+<details><summary>Marker formats and REX conversion</summary><p>CSV uses seconds: <code>Slice,Start,End,Time</code>. End and Time are optional: End defaults to the next start, Time to Start. JSON supports <code>sampleRate</code>, <code>loopDuration</code>, optional <code>bpm</code>, and <code>slices: [{startSample, endSample, time, label}]</code>. Source positions are WAV samples; time is the original onset in seconds. WAV sample rate must match the marker sampleRate.</p><p>Use the dashboard REX converter for original loops, or import its matching <code>_slices.wav</code> and <code>_markers.json</code>. Old <code>Slice,Duration,Total</code> CSV files do not contain original onset timing and are rejected; reconvert the REX. <a href="../faq/" target="_blank">Read the illustrated FAQ</a>. No cuts are guessed or reduced to eight.</p><p>Play with FM1 follows the internal sequencer clock and tempo, repeating the loop with its original beat length. It moves slice onsets while retaining their original pitch and duration; slower tempos can reveal gaps, faster tempos overlap tails. It does not stretch sustained audio. Physical FM1 storage is not implemented. Overlaps use up to eight voices and are validated. Source audio is not normalized; preview level is separate. Packed shaped slices have a 1,440,000-frame limit; long overlapping cuts may need shortening. No audio is truncated to fit. Original timing is rounded only to the nearest 44.1 kHz output sample.</p></details>
 </section>
 
 <section class="breaks" aria-labelledby="breaks-h">
@@ -140,8 +150,8 @@
 </section>
 </main>
 
-<script src="emu.js"></script>
-<script type="module" src="slice-ui.js"></script>
+<script src="emu.js?v=shaped-slices-1"></script>
+<script type="module" src="slice-shaped-ui.js"></script>
 <script type="module" src="variant-ui.js"></script>
 <script type="module" src="arrangement-ui.js"></script>
 <script type="module" src="public-demo.js"></script>

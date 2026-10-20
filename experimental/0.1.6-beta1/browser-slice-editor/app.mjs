@@ -110,7 +110,7 @@ async function play(items,originalTiming,source=audio){
 
 $('audition').onclick=guarded(()=>play([slices[selected]],false));$('play').onclick=guarded(()=>play(slices.filter(s=>s.active),true));
 
-$('export-markers').onclick=guarded(()=>{const markers=exportActive(audio,slices);parseMarkers(JSON.stringify(markers),'markers.json',audio);download(base()+'_markers.json',markers);status('Cuts-only markers exported. Hold, Decay and Level are not applied by the existing marker player; export a review project to preserve them.');});
+$('export-markers').onclick=guarded(()=>{const markers=exportActive(audio,slices);parseMarkers(JSON.stringify(markers),'markers.json',audio);download(base()+'_markers.json',markers);status('Cuts-only markers exported. Markers omit sound settings. Export a review project and import it with the original WAV in the emulator to play Hold, Decay and Level.');});
 
 $('export-project').onclick=guarded(()=>download(base()+'_slice-review.json',{type:'acultur8-slice-review',version:2,audio:{name:sourceName,sha256:fingerprint,rate:audio.rate,channels:audio.channels,frames:audio.frames},profile:profile(),slices:validateSlices(slices,audio)}));
 

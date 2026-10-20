@@ -18,7 +18,7 @@ Assignable 64/128-bar LFO,Existing motion is a different workflow,Proposed,Futur
 Within-block chord progression lane,Not established in reviewed baseline,Proposed; current chord metadata belongs to arrangement blocks,Future
 MIDI note remap and direct MIDI-clip import,Existing triggering is a different workflow,Proposed,Future
 Searchable release FAQ,"Own manual, release notes and help","Offline searchable illustrated FAQ, controls and release guidance",Extended documentation
-Browser WAV and marker slice workbench,Break uploader and emulator available,Earlier marker audition and pitch-preserving scheduling retained; emulator unchanged for 0.1.6,Earlier browser build
+Browser WAV and marker slice workbench,Break uploader and emulator available,Earlier marker audition and pitch-preserving scheduling retained; review-project sound integration added as a browser update,Earlier browser build
 Frequency-guided slice detection and shaping,Not assessed as equivalent in the reviewed baseline,"Separate Slice Profiles companion: spectrum, band RMS gate, coloured matches, Active/Length/Hold/Decay/Level and saved review projects",New browser companion
-Shaped slices inside the emulator,Not assessed,Integration deferred to stable-release development; marker export carries cuts/timing only,Future
+Shaped slices inside the emulator,Not assessed,Browser emulator applies Active/Length/Hold/Decay/Level from review JSON + matching WAV; marker export remains cuts/timing only,Browser update
 "128-step lanes, weighted blocks and alternate engines",Not assessed as these proposed workflows,Requested future work; not included in 0.1.6,Future
