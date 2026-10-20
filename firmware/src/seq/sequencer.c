@@ -332,9 +332,13 @@ void seq_midi_sync(seq_t *s,int connected,const seq_sink_t *o)
     }
     pad_sync(s,o);
 }
-static int bass_follow_note(seq_t *s,int b,int source,int transpose,uint8_t *note)
+int seq_bass_resolve(seq_t *s,int b,int source,int transpose,uint8_t *note)
 {
     unsigned mode=arrangement_bass_mode(s->arrangement.flags,b);
+    if(mode==BASS_FOLLOW_SCALE){
+        const arrangement_settings_t *a=s->arrangement.intent;
+        return a && harmony_scale_note(a->key,a->mode,source,transpose,a->bass_low[b],a->bass_high[b],note);
+    }
     if(!(s->arrangement.flags&ARR_ENABLED) || !mode || !s->arrangement.degree) {
         int n=source+transpose;*note=(uint8_t)(n<0?0:n>127?127:n);return 1;
     }
@@ -352,9 +356,10 @@ static void bass_retune_held(seq_t *s,int b,const seq_sink_t *o)
     if(!(s->arrangement.reserved&bit))return;
     s->arrangement.reserved &= (uint8_t)~bit;
     if(s->mute&(1u<<(MUTE_BASS0+b))) {bass_release(s,b,o);return;}
-    if(!tr->sounding || !(s->arrangement.flags&ARR_ENABLED) ||
-        !arrangement_bass_mode(s->arrangement.flags,b) || !s->arrangement.degree)return;
-    if(!bass_follow_note(s,b,tr->held_note&127u,0,&note)) {
+    if(!tr->sounding)return;
+    if(arrangement_bass_mode(s->arrangement.flags,b)!=BASS_FOLLOW_SCALE &&
+       (!(s->arrangement.flags&ARR_ENABLED) || !arrangement_bass_mode(s->arrangement.flags,b) || !s->arrangement.degree))return;
+    if(!seq_bass_resolve(s,b,tr->held_note&127u,0,&note)) {
         bass_release(s,b,o);tr->held_note=0;s->arrangement.reserved|=(uint8_t)(FOLLOW_BLOCKED_A<<b);return;
     }
     if(note!=(tr->held_note&127u)) {
@@ -368,11 +373,11 @@ static void bass_retune_held(seq_t *s,int b,const seq_sink_t *o)
 void seq_cc_reconcile(seq_t *s,const seq_sink_t *o){
     const arrangement_settings_t *a=s->arrangement.intent;
     if(a){s->arrangement.key=a->key;s->arrangement.mode=a->mode;s->arrangement.parent=a->parent;
-        if(s->song && s->song_pos<s->song->len)s->arrangement.degree=a->degree[s->song_pos];}
+        if(s->song && s->song_pos<s->song->len)s->arrangement.degree=ARR_DEGREE(a->degree[s->song_pos]);}
     for(int b=0;b<NBASS;b++){
         seq_track_t *tr=&s->t[TRK_BASS0+b];uint8_t note;
         if(!tr->sounding)continue; /* never revive a probability/range-rejected NOTE via TIE */
-        if(!bass_follow_note(s,b,tr->source_note,(int)bpart(s,b)->transpose-24,&note)){
+        if(!seq_bass_resolve(s,b,tr->source_note,(int)bpart(s,b)->transpose-24,&note)){
             bass_release(s,b,o);tr->held_note=0;s->arrangement.reserved|=(uint8_t)(FOLLOW_BLOCKED_A<<b);continue;
         }
         if(note!=(tr->held_note&127u)){
@@ -421,7 +426,7 @@ static __attribute__((noinline)) void fire_bass(seq_t *s,int b,int p,uint32_t st
         (!tr->sounding && (s->arrangement.flags&ARR_ENABLED) && s->arrangement.degree && arrangement_bass_mode(s->arrangement.flags,b))))return;
     if(gate==G_TIE && tr->sounding)note=tr->held_note&127u; /* TIE's stored note is not played */
     else {
-        if(!bass_follow_note(s,b,st->note,(int)bp->transpose-24,&note)) {
+        if(!seq_bass_resolve(s,b,st->note,(int)bp->transpose-24,&note)) {
             bass_release(s,b,o);tr->held_note=0;s->arrangement.reserved|=(uint8_t)blocked;return;
         }
         s->arrangement.reserved&=(uint8_t)~blocked; /* successful projection; chance rejection is separate */
@@ -526,10 +531,11 @@ static void arrangement_latch(seq_t *s, uint16_t block)
     s->song_pos = block;
     song_read(s, block, next);
     a->mute = s->song->bar[block].mute;
-    a->degree = a->intent->degree[block];
+    a->degree = ARR_DEGREE(a->intent->degree[block]);
+    a->clock_started=(uint8_t)((a->clock_started&1u)|((a->intent->degree[block]&24u)>>2));
     a->key = a->intent->key; a->mode = a->intent->mode; a->parent = a->intent->parent;
     a->reserved |= FOLLOW_RETUNE_A | (FOLLOW_RETUNE_A<<1);
-    s->song_rep = (uint8_t)SONG_REP(&s->song->bar[block]);
+    s->song_rep = (uint8_t)ARR_BARS(&s->song->bar[block],a->intent->degree[block]);
     for (t = 0; t < NTRACKS; t++) {
         a->pat[t] = next[t];
         if (next[t] != s->ppat[t]) {
@@ -554,7 +560,7 @@ static void arrangement_tick(seq_t *s)
     volatile arrangement_runtime_t *a = &s->arrangement;
     if(!arrangement_active(s)){if(s->lane_sound)poly_musical_tick(s);return;}
     if(!s->playing)return;
-    if (!a->clock_started) { a->clock_started = 1; return; }
+    if (!(a->clock_started&1u)) { a->clock_started |= 1u; return; }
     if (++a->tick < 96) return;
     a->tick = 0;
     poly_mode_boundary(s);rate_bar(s);
@@ -799,7 +805,7 @@ static __attribute__((noinline)) void poly_musical_tick(seq_t *s)
 {
     volatile arrangement_runtime_t *a=&s->arrangement;uint32_t changed;int t;
     if(!s->playing)return;
-    if(!a->clock_started){a->clock_started=1;return;}
+    if(!(a->clock_started&1u)){a->clock_started|=1u;return;}
     if(++a->tick<96)return;
     a->tick=0;poly_mode_boundary(s);rate_bar(s);changed=bar_end(s,0);
     for(t=0;t<NTRACKS;t++)if(changed&(1u<<t)){
@@ -1070,7 +1076,7 @@ static __attribute__((noinline)) void run_request(seq_t *s,int from_top)
     RUN_REQUEST_BOUNDARY(s);
     saved=plat_control_enter();
     if(!s->clock.pending && retired==(s->clock.flags&CLOCK_RETIRED) &&
-       generation!=UINT32_MAX && generation==s->clock.generation){
+       generation!=UINT32_MAX && generation==s->clock.generation && !seq_arrangement_empty(s)){
         if(from_top){if(s->playing)s->req_stop=1;s->req_cont=0;s->req_start=1;}
         else if(!s->playing || s->req_stop){s->req_start=0;s->req_cont=1;}
     }

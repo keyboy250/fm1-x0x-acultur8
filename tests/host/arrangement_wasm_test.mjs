@@ -47,7 +47,7 @@ assert.equal(frame.variant.arrangement.values[2],191);
 assert.deepEqual(frame.variant.block.values,[31,30,29,28,27,31,8,0]);
 assert.equal(frame.variant.block.revision,selected.revision);
 const before=snap(p,5),savedBefore=objects(p);
-for(const args of [[8,192,0,0,0],[8,0,64,0,0],[8,0,0,32,0],[8,0,0,0,2**25],
+for(const args of [[8,192,0,0,0],[8,0,0,0,-1],[8,0,0,32,0],[8,0,0,0,2**25],
   [9,0,0,1,12],[9,0,0,2,9],[10,0,0,0,193],[11,192,0,0,0],[12,192,0,0,0]]) {
   assert.equal((await command(p,...args)).result,-1);assert.deepEqual(snap(p,5),before);assert.deepEqual(objects(p),savedBefore);
 }

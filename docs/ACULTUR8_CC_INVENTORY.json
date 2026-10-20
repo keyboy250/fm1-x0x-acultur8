@@ -3,19 +3,20 @@
   "map_version": "draft-1-actions-prototype-1",
   "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
   "source_hashes": {
-    "firmware/src/app/engine.c": "38cb88849496e5e97c182df7cc9d335cfd0700d135d6cadd3f2945fa00560047",
+    "firmware/src/app/engine.c": "ec13ec6b1f724f152c0f81d37779284a8c69ddedb36833c9c4cab57ccf298abe",
     "firmware/src/app/engine.h": "ce6c85391601439e9b1836c5c917b5b3376e135bee4e3710fcd4bcb5aa76c5e0",
-    "firmware/src/app/ui.c": "5023ad7a3804c018cdb9cd235d54b89cac1c8db594520721f5b777766bb16997",
-    "firmware/src/app/x0x.h": "6768c0ba96f9ac246692c269cf8c0ae44c1820932b4e45b1f9a16592efa1267b",
-    "firmware/src/app/variant.c": "276fcfba7f5bef20e6efcf67c8a8489e0bef1e22bb661fbfe4df07e8825cf991",
+    "firmware/src/app/ui.c": "a157b85d6f35ef900850b3c213196d359536557c3118df3e1af97eaa32a547b9",
+    "firmware/src/app/x0x.h": "467bda542b0b04e501569cdd6ca7eab654406de6017fbdcda867115e87bcb32f",
+    "firmware/src/app/block_bridge.inc": "03ccb0ec7f1364bc6e9c3a03c80f6302ce156ef9f71d0dbdc27696923a8060f1",
+    "firmware/src/app/variant.c": "b0eb98dfc22bc6597607ad5e36df3416f1d1437ff37344d8f6ad12f50dc5629a",
     "firmware/src/app/variant.h": "cf296a6870b5715ef7cc1934827e6439408858440577a05bf7f566a857df3e5f",
     "firmware/src/seq/pattern.h": "c8f7aeee9c1fd96571ce65afa65f149ec89ac2e9521276fbf2728df9fb641b93",
     "firmware/src/seq/lanes.h": "4645f81d5ce69cb00c315cf7a9f6eebe21caee180caedf33e9e0f99fb394b45e",
-    "firmware/src/seq/sequencer.h": "c17d2c2a9c760aed6799d9f8e40bb5f055ed886e3b15efaae43b9c8cae31c74e",
+    "firmware/src/seq/sequencer.h": "84e00c5b08f4d962286514d46caea280ff57cd49c03daa35b891789ed84b37af",
     "firmware/src/seq/motion.h": "ac88bf9e4532f50f7d157a7b15c60c72118078a1bd5ac6cee1a6cf74ceaa585e",
     "firmware/src/seq/motion.c": "5cf517f38b6653f142b663af7a7179e0fcc92db3c390dcd9dc2949036b03a7c4",
     "firmware/src/seq/tb3po.h": "7dd646a572129fc8df5628f6111f68fef6b54476446f75cc5f583b6f110f0073",
-    "firmware/src/seq/harmony.h": "8b0d03a6d3bc713078f14259d9e2dc04b1432dde8b0e2fadc9d8cf5ded4529ff",
+    "firmware/src/seq/harmony.h": "69b7c2f454f3ed784036522e1147a20343e64d11738d4c7d00315a2edaa689a4",
     "firmware/src/dsp/drum909.c": "3a333fc53aac44118ed6e419b4ff9c04117ec1cda81e64ece5ae80accc15a27d",
     "firmware/src/dsp/drum808.c": "5734da993ce4741708519688877bd33a379806b93a95a2d7ef0edca72f5ba66a",
     "firmware/src/dsp/bass303.c": "ace73e02cd21376902af70005011fcbbfe15b58219192fc42f912519d47faf9d",
@@ -101,7 +102,7 @@
     "R_KEYLED": "descriptor or structured field",
     "R_KEYSOUND": "descriptor or structured field",
     "R_AUTOSAVE": "descriptor or structured field",
-    "R_ACT": "all ACT_P actions",
+    "R_ACT": "all ACT_P actions; block actions 12-15 and Undo action 16 native only",
     "R_SBAR": "descriptor or structured field",
     "R_SPAT": "descriptor or structured field",
     "R_SLEN": "descriptor or structured field",
@@ -122,7 +123,13 @@
     "R_STRIP": "descriptor or structured field",
     "R_STRIPFLAG": "descriptor or structured field",
     "R_STRIPDEFAULT": "descriptor or structured field",
-    "R_CORES": "descriptor or structured field"
+    "R_CORES": "descriptor or structured field",
+    "R_BMODE": "alias arrangement.enabled",
+    "R_BDEGREE": "alias arrangement.degree",
+    "R_BMUTE": "alias arrangement.mute",
+    "R_AKEY": "descriptor or structured field",
+    "R_ASCALE": "descriptor or structured field",
+    "R_AFOLLOW": "descriptor or structured field"
   },
   "structured_field_coverage": {
     "tb3po_cfg_t": {
@@ -17907,6 +17914,161 @@
       "parameter_number": 995
     },
     {
+      "id": "action.12",
+      "name": "DUP AS VARIATION",
+      "category": "action",
+      "range": [
+        0,
+        127
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {
+        "pattern": [
+          0,
+          31
+        ],
+        "part": [
+          0,
+          4
+        ],
+        "block": [
+          0,
+          191
+        ]
+      },
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": null,
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "edge-trigger; explicit safety/preflight; no storage operation in audio callback"
+    },
+    {
+      "id": "action.13",
+      "name": "EDIT BLOCK NOTES",
+      "category": "action",
+      "range": [
+        0,
+        127
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {
+        "pattern": [
+          0,
+          31
+        ],
+        "part": [
+          0,
+          4
+        ],
+        "block": [
+          0,
+          191
+        ]
+      },
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": null,
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "edge-trigger; explicit safety/preflight; no storage operation in audio callback"
+    },
+    {
+      "id": "action.14",
+      "name": "QUEUE BLOCK",
+      "category": "action",
+      "range": [
+        0,
+        127
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {
+        "pattern": [
+          0,
+          31
+        ],
+        "part": [
+          0,
+          4
+        ],
+        "block": [
+          0,
+          191
+        ]
+      },
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": null,
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "edge-trigger; explicit safety/preflight; no storage operation in audio callback"
+    },
+    {
+      "id": "action.15",
+      "name": "DELETE BLOCK",
+      "category": "action",
+      "range": [
+        0,
+        127
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {
+        "pattern": [
+          0,
+          31
+        ],
+        "part": [
+          0,
+          4
+        ],
+        "block": [
+          0,
+          191
+        ]
+      },
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": null,
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "edge-trigger; explicit safety/preflight; no storage operation in audio callback"
+    },
+    {
+      "id": "action.16",
+      "name": "UNDO",
+      "category": "action",
+      "range": [
+        0,
+        127
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {
+        "pattern": [
+          0,
+          31
+        ],
+        "part": [
+          0,
+          4
+        ],
+        "block": [
+          0,
+          191
+        ]
+      },
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": null,
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "edge-trigger; explicit safety/preflight; no storage operation in audio callback"
+    },
+    {
       "id": "system.one_core",
       "name": "Second core disabled at next power-on",
       "category": "nonmusical",
@@ -21753,7 +21915,7 @@
       "category": "musical",
       "range": [
         1,
-        8
+        32
       ],
       "default": null,
       "source": "firmware/src/seq/sequencer.h",
@@ -21770,7 +21932,7 @@
         "channel": 13,
         "cc": 1
       },
-      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "scaling": "Preserve legacy coarse range; full semantic range is available through exact-value transactions and native/browser controls",
       "optional_cc14": {
         "msb": 1,
         "lsb": 33,
@@ -21780,6 +21942,10 @@
       },
       "validity": "semantic validation required: enum holes, range ordering, slot availability, channel conflicts and selected extent",
       "cleanup": null,
+      "coarse_range": [
+        1,
+        8
+      ],
       "parameter_number": 1057
     },
     {
@@ -21896,7 +22062,7 @@
       "category": "musical",
       "range": [
         0,
-        2
+        3
       ],
       "default": null,
       "source": "firmware/src/seq/sequencer.h",
@@ -21913,7 +22079,7 @@
         "channel": 13,
         "cc": 5
       },
-      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "scaling": "Preserve legacy coarse range; full semantic range is available through exact-value transactions and native/browser controls",
       "optional_cc14": {
         "msb": 5,
         "lsb": 37,
@@ -21923,6 +22089,10 @@
       },
       "validity": "semantic validation required: enum holes, range ordering, slot availability, channel conflicts and selected extent",
       "cleanup": "reconcile old-channel owned notes before any replacement attack",
+      "coarse_range": [
+        0,
+        2
+      ],
       "parameter_number": 1061
     },
     {

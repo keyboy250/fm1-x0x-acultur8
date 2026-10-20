@@ -31,7 +31,7 @@ static const char *const PART_S[NPARTS] = {"909", "808", "303A", "303B", "BRK"};
 /* overlays drawn over the main area */
 enum { O_NONE, O_LIST, O_ASK };
 enum { ACT_NONE, ACT_SAVE, ACT_CLEAR_PART, ACT_CLEAR_PAT, ACT_COPY, ACT_RESET, ACT_ABOUT, ACT_SONG_INS,
-       ACT_SONG_DEL, ACT_SONG_CLR, ACT_PERF, ACT_PERF_TEST };
+       ACT_SONG_DEL, ACT_SONG_CLR, ACT_PERF, ACT_PERF_TEST, ACT_BLOCK_DUP, ACT_BLOCK_NOTES, ACT_BLOCK_QUEUE, ACT_BLOCK_DEL, ACT_UNDO };
 
 typedef struct {
     uint8_t view, part, prev_view;
@@ -196,6 +196,9 @@ static int arrangement_panel_locked(void)
 {
     return ((proj.variant.arrangement.flags | seq.arrangement.flags) & ARR_ENABLED) != 0;
 }
+static int bridge_native_block(int kind,int value,int part);
+static void bridge_native_action(int act);
+static void bridge_history_remap(unsigned structural,int redo);
 static int arrangement_panel_refuse(void)
 {
     if (!arrangement_panel_locked()) return 0;
@@ -206,7 +209,7 @@ static int arrangement_panel_refuse(void)
 /* =============================================================== param refs === */
 enum { R_NONE, R_ENG, R_SWING, R_DLEN, R_DRATE, R_BLEN, R_BRATE, R_BDIR, R_BTRANS, R_GEN, R_BRKSET,
        R_BRKSLOT, R_TEMPO, R_ACCENT, R_CLKOUT, R_NOTEOUT, R_PALETTE, R_KEYLED, R_KEYSOUND, R_AUTOSAVE, R_ACT, R_SBAR, R_SPAT,
-       R_SLEN, R_STALLS, R_HDR, R_TAPE, R_MIDICH, R_OUTLOUD, R_SREP, R_BATT, R_USBFULL, R_FREEPLAY, R_RATEENABLE, R_RATEFAMILY, R_RATEBOUNDARY, R_RATEHYST, R_RATEEXACT, R_STRIP, R_STRIPFLAG, R_STRIPDEFAULT, R_CORES };   /* R_TAPE: FX's one-knob TAPE (DIGI .. worn tape) */          /* R_HDR: a list's section header (a = its group), never selected */
+       R_SLEN, R_STALLS, R_HDR, R_TAPE, R_MIDICH, R_OUTLOUD, R_SREP, R_BATT, R_USBFULL, R_FREEPLAY, R_RATEENABLE, R_RATEFAMILY, R_RATEBOUNDARY, R_RATEHYST, R_RATEEXACT, R_STRIP, R_STRIPFLAG, R_STRIPDEFAULT, R_CORES, R_BMODE, R_BDEGREE, R_BMUTE, R_AKEY, R_ASCALE, R_AFOLLOW };   /* R_TAPE: FX's one-knob TAPE (DIGI .. worn tape) */          /* R_HDR: a list's section header (a = its group), never selected */
 /* Four logical bytes; scalar helper ABI avoids aggregate copy temporaries.
  * Explicit unsigned casts preserve the original uint8_t initializer behavior. */
 typedef uint32_t pref_t;
@@ -249,6 +252,8 @@ static const x0x_param_t ACT_P[] = {
     {"", 0, 0, 0}, {"SAVE PROJECT", 0, 0, 0}, {"CLEAR THIS PART", 0, 0, 0}, {"CLEAR PATTERN", 0, 0, 0},
     {"COPY PATTERN", 0, 0, 0}, {"FACTORY RESET", 0, 0, 0}, {"ABOUT X0X", 0, 0, 0}, {"INSERT BAR", 0, 0, 0},
     {"DELETE BAR", 0, 0, 0}, {"CLEAR SONG", 0, 0, 0}, {"PERFORMANCE", 0, 0, 0}, {"RUN PERF TEST", 0, 0, 0},
+    {"DUP AS VARIATION",0,0,0}, {"EDIT BLOCK NOTES",0,0,0}, {"QUEUE BLOCK",0,0,0}, {"DELETE BLOCK",0,0,0},
+    {"UNDO",0,0,0},
 };
 static const x0x_param_t STALLS_P = {"STALLS", 1, 0, ONOFF_N};
 static const x0x_param_t MIDICH_P[NPARTS] = {   /* 0 = OFF (no notes in or out), 1-16 */
@@ -345,6 +350,7 @@ static POLY_COLD const x0x_param_t *pref_desc(pref_t r)
     case R_ACT: return &ACT_P[P_A(r)];
     case R_SBAR: {
         static x0x_param_t d = {"BAR", 0, 0, 0};
+        d.name=arrangement_panel_locked()?"BLOCK":"BAR";
         d.max = (uint8_t)(song()->len < NSONG ? song()->len : NSONG - 1);
         return &d;
     }
@@ -354,7 +360,12 @@ static POLY_COLD const x0x_param_t *pref_desc(pref_t r)
     case R_USBFULL: return &USBA_P;
     case R_CORES: return &CORES_P;
     case R_FREEPLAY: return &FREEPLAY_P;
-    case R_SREP: return &SREP_P;
+    case R_BMODE: { static const x0x_param_t p={"ARRANGEMENT",1,0,ONOFF_N}; return &p; }
+    case R_BDEGREE: { static const char *const n[]={"NONE","I","II","III","IV","V","VI","VII"}; static const x0x_param_t p={"DEGREE",7,0,n}; return &p; }
+    case R_AKEY: {static const char *const n[]={"C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"};static const x0x_param_t p={"KEY",11,0,n};return &p;}
+    case R_ASCALE: {static const char *const n[]={"IONIAN","DORIAN","PHRYGIAN","LYDIAN","MIXOLYDIAN","AEOLIAN","LOCRIAN","MAJ PENT","MIN PENT","CHROMATIC"};static const x0x_param_t p={"SCALE",9,0,n};return &p;}
+    case R_AFOLLOW: {static const char *const n[]={"OFF","ROOT","CHORD","SCALE"};static const x0x_param_t p[2]={{"303A ADHERE",3,0,n},{"303B ADHERE",3,0,n}};return &p[P_A(r)&1];}
+    case R_SREP: {static const x0x_param_t bars={"BARS",31,0,0}; return arrangement_panel_locked()?&bars:&SREP_P;}
     case R_BATT: return &BATT_P;
     case R_SLEN: return &SONG_P[5];
     case R_STALLS: return &STALLS_P;
@@ -401,6 +412,11 @@ static POLY_COLD int pref_get(pref_t r)
     case R_KEYLED: return proj.set.keyled;
     case R_KEYSOUND: return proj.set.keysound;
     case R_AUTOSAVE: return !proj.set.autosave_off;
+    case R_BMODE: return (proj.variant.arrangement.flags&ARR_ENABLED)!=0;
+    case R_AKEY: return proj.variant.arrangement.key;
+    case R_ASCALE: return proj.variant.arrangement.mode;
+    case R_AFOLLOW: return arrangement_bass_mode(proj.variant.arrangement.flags,P_A(r));
+    case R_BDEGREE: return ui.song_sel<NSONG?ARR_DEGREE(proj.variant.arrangement.degree[ui.song_sel]):0;
     case R_SBAR: return ui.song_sel;
     case R_SPAT: {
         const song_t *sg = song();
@@ -412,7 +428,7 @@ static POLY_COLD int pref_get(pref_t r)
     case R_USBFULL: return proj.set.usb_full;
     case R_CORES: return proj.set.one_core;
     case R_FREEPLAY: return ui.freeplay[P_A(r)];
-    case R_SREP: return ui.song_sel < song()->len ? song()->bar[ui.song_sel].mute >> 5 : 0;
+    case R_SREP: return ui.song_sel < song()->len ? (arrangement_panel_locked()?(int)ARR_BARS(&song()->bar[ui.song_sel],proj.variant.arrangement.degree[ui.song_sel])-1:song()->bar[ui.song_sel].mute>>5):0;
     case R_BATT: return plat_battery() < 0 ? 5 : plat_battery();
     case R_SLEN: return song()->len;
     case R_STALLS: return perf.stalls_on;
@@ -451,7 +467,22 @@ static POLY_COLD void pref_set(pref_t r, int v)
         int part=drum?P_A(r):NKIT+P_A(r),lane=drum?P_A(r)*11+ui.sel[P_A(r)]:22+P_A(r);
         if((rate && poly_expanded((const uint8_t *)&proj.sound))?engine_rate_set(seq.ppat[part],lane,1,v):engine_lane_set(seq.ppat[part],lane,rate,rate?v:v+1))mark_dirty();else say("CONTROL QUEUE BUSY",0);return;
     }
-    if ((P_KIND(r) == R_SPAT || P_KIND(r) == R_SREP || P_KIND(r) == R_SLEN) && arrangement_panel_refuse()) return;
+    if(P_KIND(r)==R_AKEY || P_KIND(r)==R_ASCALE || P_KIND(r)==R_AFOLLOW){
+        variant_command_t c={VARIANT_ABI,VC_SET_ARR_GLOBAL,0,0,0,0,0,v};variant_reply_t reply;
+        if(P_KIND(r)==R_AFOLLOW){c.op=VC_SET_BASS_FOLLOW;c.target=(uint8_t)P_A(r);}
+        else c.index=(uint8_t)(P_KIND(r)==R_AKEY?1:2);
+        if(variant_command(&c,&reply)<0)say("HARMONY EDIT REFUSED","STOP / CHECK CHORDS");return;
+    }
+    if(P_KIND(r)==R_BMODE || P_KIND(r)==R_BDEGREE ||
+       (arrangement_panel_locked() && (P_KIND(r)==R_SPAT || P_KIND(r)==R_SREP || P_KIND(r)==R_SLEN))){
+        variant_command_t c={VARIANT_ABI,VC_SET_ARR_GLOBAL,0,0,0,0,0,v};variant_reply_t reply;
+        int rc;
+        if(P_KIND(r)==R_BMODE)rc=variant_command(&c,&reply);
+        else if(P_KIND(r)==R_SLEN){c.op=VC_SET_ARR_LENGTH;rc=variant_command(&c,&reply);}
+        else rc=bridge_native_block(P_KIND(r),v,P_A(r));
+        if(rc<0)say("BLOCK EDIT REFUSED",rc==VR_BUSY?"STOP / WAIT AND RETRY":0);
+        return;
+    }
     v = v < 0 ? 0 : v > d->max ? d->max : v;
     mark_dirty();
     switch (P_KIND(r)) {
@@ -499,7 +530,7 @@ static POLY_COLD void pref_set(pref_t r, int v)
     case R_KEYLED: proj.set.keyled = (uint8_t)v; break;
     case R_KEYSOUND: proj.set.keysound = (uint8_t)v; break;
     case R_AUTOSAVE: proj.set.autosave_off = (uint8_t)!v; ui.last_autosave = (uint8_t)!v; break;
-    case R_SBAR: ui.song_sel = (uint8_t)v; break;
+    case R_SBAR: ui.song_sel = (uint8_t)v; if(arrangement_panel_locked())seq.arrangement.editing=(uint8_t)v; break;
     case R_SPAT:
         song_fill(ui.song_sel);
         song()->bar[ui.song_sel].pat[P_A(r)] = (uint8_t)v;
@@ -527,6 +558,7 @@ static POLY_COLD void pref_set(pref_t r, int v)
             song_fill(ui.song_sel);
             b = &song()->bar[ui.song_sel];
             b->mute = (uint8_t)((b->mute & 0x1Fu) | v << 5);
+            proj.variant.arrangement.degree[ui.song_sel]&=7u;
         }
         break;
     case R_TAPE: canonical_tape_set((unsigned)v); break;
@@ -737,7 +769,7 @@ static POLY_COLD void pref_value_of(pref_t r, int v, char *num, char *unit)
     case R_SPAT: num[0] = 'P'; put_i(num + 1, v + 1); return;
     case R_MIDICH: if (v) put_i(num, v); else put_s(num, "OFF"); return;
     case R_SREP: num[0] = 'x'; put_i(num + 1, v + 1); return;
-    case R_SLEN: put_i(num, v); put_s(unit, "bar"); return;
+    case R_SLEN: put_i(num, v); put_s(unit, arrangement_panel_locked()?"blk":"bar"); return;
     default: put_i(num, v); return;
     }
 }
@@ -959,10 +991,11 @@ static POLY_COLD void build_pages(void)
         add_page("PERF", PR(R_STALLS, 0, 0, 0), NONE, NONE, NONE);
         break;
     case V_SONG:
-        add_page("BAR", PR(R_SBAR, 0, 0, 0), PR(R_SPAT, PART_909, 0, 0), PR(R_SPAT, PART_808, 0, 0),
+        add_page(arrangement_panel_locked()?"BLOCK":"BAR", PR(R_SBAR, 0, 0, 0), PR(R_SPAT, PART_909, 0, 0), PR(R_SPAT, PART_808, 0, 0),
                  PR(R_SPAT, PART_303A, 0, 0));
-        add_page("BAR", PR(R_SBAR, 0, 0, 0), PR(R_SPAT, PART_303B, 0, 0), PR(R_SPAT, PART_BRK, 0, 0),
+        add_page(arrangement_panel_locked()?"BLOCK":"BAR", PR(R_SBAR, 0, 0, 0), PR(R_SPAT, PART_303B, 0, 0), PR(R_SPAT, PART_BRK, 0, 0),
                  PR(R_SREP, 0, 0, 0));
+        add_page("BLOCK",PR(R_SBAR,0,0,0),PR(R_BMODE,0,0,0),PR(R_BDEGREE,0,0,0),PR(R_SLEN,0,0,0));
         break;
     default: break;
     }
@@ -1048,10 +1081,16 @@ static POLY_COLD void open_list_of_pages(void)
     if (ui.view == V_PERF)
         list_add(PR(R_ACT, ACT_PERF_TEST, 0, 0));
     if (ui.view == V_SONG) {
+        list_add(PR(R_ACT, ACT_BLOCK_DUP,0,0));
+        list_add(PR(R_ACT, ACT_BLOCK_NOTES,0,0));
+        list_add(PR(R_ACT, ACT_BLOCK_QUEUE,0,0));
+        list_add(PR(R_ACT, ACT_BLOCK_DEL,0,0));
         list_add(PR(R_SLEN, 0, 0, 0));
         list_add(PR(R_ACT, ACT_SONG_INS, 0, 0));
-        list_add(PR(R_ACT, ACT_SONG_DEL, 0, 0));
         list_add(PR(R_ACT, ACT_SONG_CLR, 0, 0));
+        list_add(PR(R_AKEY,0,0,0));list_add(PR(R_ASCALE,0,0,0));
+        list_add(PR(R_AFOLLOW,0,0,0));list_add(PR(R_AFOLLOW,1,0,0));
+        list_add(PR(R_ACT,ACT_UNDO,0,0));
     }
     if (ui.view == V_SEQ)
         put_s(put_s(list_title, PART_N[ui.part]), " SEQ");
@@ -1376,6 +1415,7 @@ static POLY_COLD int undo_arrangement_intent(int redo)
     if (k < 0 || k >= undo.n) return 0;
     if (undo.at[k] > undo.at[k+1] || undo.at[k+1] > undo.used || undo.at[k+1] - undo.at[k] < 8u) return 1;
     entry = undo.pool + undo.at[k]; end = undo.pool + undo.at[k+1];
+    if(ud_get16(entry+6)&1u)return 1; /* structural copy */
     runs = ud_get16(entry); entry += 8;
     for (run = 0; run < runs; run++) {
         uint32_t off, n, padded;
@@ -1430,6 +1470,7 @@ static POLY_COLD void undo_name(uint32_t lo, uint32_t hi, char *t)
 static POLY_COLD int do_undo(int redo)
 {
     uint32_t lo, hi;
+    unsigned structural=0;
     char t[24];
     int held = 0, ready = ui_undo_preflight(redo);
     if (ready == VR_OK && undo_arrangement_intent(redo)) {
@@ -1444,12 +1485,16 @@ static POLY_COLD int do_undo(int redo)
     }
     external_edit = 0;
     undo_commit(&undo);                              /* what was just done is a step too */
+    {int k=redo?undo.cur:undo.cur-1;
+     if(k>=0 && k<undo.n && undo.at[k+1]>=undo.at[k]+8u && undo.at[k+1]<=undo.used)
+         structural=ud_get16(undo.pool+undo.at[k]+6);}
     undo_lanes = 0;
     if (!(redo ? undo_redo : undo_undo)(&undo, undo_changed, &lo, &hi)) {
         say(redo ? "NOTHING TO REDO" : "NOTHING TO UNDO", 0);
         if (held) engine_transport_release();
         return VR_OK;
     }
+    if(structural&1u)bridge_history_remap(structural,redo);
     if (undo_lanes & 1u)
         engine_motion_reset();
     if (undo_lanes & 2u)
@@ -1730,6 +1775,7 @@ static void set_view(int v);
 static POLY_COLD void run_action(int act, int arg)
 {
     char t[28], *q;
+    if(act>=ACT_BLOCK_DUP && act<=ACT_BLOCK_DEL){bridge_native_action(act);return;}
     if ((act == ACT_SONG_INS || act == ACT_SONG_DEL || act == ACT_SONG_CLR) && arrangement_panel_refuse()) return;
     int reset_held = 0,copy_held=0;
     if(act==ACT_COPY && (proj.variant.arrangement.flags&POLY_FLAG) && !(copy_held=engine_transport_reserve())){say("STOP FOR LANE PATTERN COPY",0);return;}
@@ -1738,6 +1784,7 @@ static POLY_COLD void run_action(int act, int arg)
     }
     if(act==ACT_PERF_TEST && (proj.variant.arrangement.flags&POLY_FLAG)){say("USE LEGACY PROJECT FOR TEST",0);return;}
     switch (act) {
+    case ACT_UNDO: do_undo(0); break;
     case ACT_SAVE: save_project(); break;
     case ACT_CLEAR_PART:
         edit_clear_part(&proj,pat_of(arg),arg);
@@ -1820,6 +1867,7 @@ static POLY_COLD void run_action(int act, int arg)
 }
 
 #include "cc_actions.inc"
+#include "block_bridge.inc"
 
 /* ===================================================================== input === */
 /* knob acceleration by speed: a slow turn is one step a detent (fine detail), a quick one up to 8,
@@ -2289,7 +2337,11 @@ static POLY_COLD void key_event(int k, int down)
         int k = ui.song_sel;
         if (!down || k >= NSONG || (w < 0 && bl >= NPARTS))
             return;
-        if (arrangement_panel_refuse()) return;
+        if(arrangement_panel_locked()){
+            if(w<0){if(bridge_native_block(R_BMUTE,0,bl)<0)say("BLOCK EDIT REFUSED",0);}
+            else say("USE BLOCK PATTERN KNOBS",0);
+            return;
+        }
         song_fill(k);
         if (w >= 0) {
             int p;
@@ -2435,7 +2487,11 @@ static POLY_COLD void list_enter(void)
     pref_t r = list_rows[ui.list_sel];
     if (P_KIND(r) != R_ACT)
         return;
-    if (P_A(r) == ACT_CLEAR_PAT)
+    if(P_A(r)==ACT_BLOCK_DEL)
+        ask(ACT_BLOCK_DEL,0,"DELETE THIS BLOCK?","KEEP PATTERNS AND SOUNDS");
+    else if(P_A(r)==ACT_BLOCK_DUP)
+        ask(ACT_BLOCK_DUP,0,"DUPLICATE BLOCK?","NEW PATTERNS; INSERT AFTER");
+    else if (P_A(r) == ACT_CLEAR_PAT)
         ask(ACT_CLEAR_PAT, 0, "CLEAR THIS PATTERN?", "ALL FIVE PARTS");
     else if (P_A(r) == ACT_RESET)
         ask(ACT_RESET, 0, "FACTORY RESET?", "SOUND, PATTERNS, SONG");
@@ -2485,6 +2541,7 @@ static POLY_COLD void button_tap(int b)
         if (seq.playing)
             seq_stop(&seq);
         else {
+            if(arrangement_panel_locked() && !song()->len){say("ARRANGEMENT IS EMPTY",0);break;}
             seq.song_start = ui.song_sel < song()->len ? ui.song_sel : 0;
             seq_start(&seq);
         }
@@ -2649,8 +2706,8 @@ static POLY_COLD void input(void)
         if (ch & (1u << i))
             key_event((int)i, (keys >> i) & 1u);
     build_pages();
-    if (!seq.playing)                                  /* PLAY plays what is on screen: the song on SONG, */
-        seq.song_on = ui.view == V_SONG;               /* else the patterns; playing, it keeps going */
+    if (arrangement_panel_locked() || !seq.playing) /* Arrangement owns playback in every view; legacy follows the start view. */
+        seq.song_on = (uint8_t)(arrangement_panel_locked() || ui.view == V_SONG);
     seq.song_rec = (uint8_t)(seq.song_on && ui.rec && !arrangement_panel_locked()); /* arrangement uses acknowledged lab edits */
     if (ui.overlay == O_ASK) {                         /* a question: the knobs wait */
         for (i = 0; i < NE; i++)
@@ -3475,7 +3532,7 @@ static POLY_COLD void draw_song(int band)
         int row = band * 6 + r, y = r * 11, k = top + row - 1;
         char t[8];
         if (row == 0) {                                /* the heading */
-            cv_text(4, vc(&FONT_XS, y, 11), &FONT_XS, "BAR", C_GRAY);
+            cv_text(4, vc(&FONT_XS, y, 11), &FONT_XS, arrangement_panel_locked()?"BLOCK":"BAR", C_GRAY);
             for (p = 0; p < NPARTS; p++)
                 text_c(58 + p * 36, vc(&FONT_XS, y, 11), &FONT_XS, PART_S[p], PART_COL[p]);
             continue;
@@ -3488,6 +3545,8 @@ static POLY_COLD void draw_song(int band)
         cv_text(4, vc(&FONT_XS, y, 11), &FONT_XS, t, k == ui.song_sel ? C_WHITE : C_GRAY);
         if (seq.song_on && seq.playing && k == seq.song_pos)
             play_icon(26, y + 1, seq.song_rec ? RGB(255, 80, 70) : C_WHITE);
+        if(arrangement_panel_locked() && seq.playing && k==seq.arrangement.queued)
+            cv_text(36,vc(&FONT_XS,y,11),&FONT_XS,"Q",C_WHITE);
         if (k == sg->len) {                            /* one past the end: where the song grows */
             cv_text(50, vc(&FONT_XS, y, 11), &FONT_XS, k ? "END" : "EMPTY: WHITE KEYS ADD BARS", C_DIM);
             continue;
@@ -3498,9 +3557,10 @@ static POLY_COLD void draw_song(int band)
             put_i(t + 1, sg->bar[k].pat[p] + 1);
             text_c(58 + p * 36, vc(&FONT_XS, y, 11), &FONT_XS, muted ? "-" : t, muted ? C_DIM : PART_COL[p]);
         }
-        if (SONG_REP(&sg->bar[k]) > 1) {               /* a bar played more than once: x2 .. x8 */
+        int repeats=arrangement_panel_locked()?(int)ARR_BARS(&sg->bar[k],proj.variant.arrangement.degree[k]):SONG_REP(&sg->bar[k]);
+        if (repeats > 1) {               /* a bar played more than once: x2 .. x8 */
             t[0] = 'x';
-            put_i(t + 1, SONG_REP(&sg->bar[k]));
+            put_i(t + 1, repeats);
             text_r(238, vc(&FONT_XS, y, 11), &FONT_XS, t, C_WHITE);
         }
     }

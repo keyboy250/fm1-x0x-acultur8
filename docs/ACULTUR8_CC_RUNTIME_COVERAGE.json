@@ -4112,6 +4112,41 @@
       "reason": "isolated source-confirmed explicit-context stopped action candidate; storage atomicity and device acceptance open"
     },
     {
+      "id": "action.12",
+      "parameter_number": null,
+      "binding": "ACTION",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "action.13",
+      "parameter_number": null,
+      "binding": "ACTION",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "action.14",
+      "parameter_number": null,
+      "binding": "ACTION",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "action.15",
+      "parameter_number": null,
+      "binding": "ACTION",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "action.16",
+      "parameter_number": null,
+      "binding": "ACTION",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
       "id": "system.one_core",
       "parameter_number": null,
       "binding": "UNSUPPORTED",

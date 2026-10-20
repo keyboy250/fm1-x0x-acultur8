@@ -38,6 +38,22 @@ static int abs_distance(int a, int b)
     return a > b ? a - b : b - a;
 }
 
+int harmony_scale_note(int key,int mode,int source,int transpose,int low,int high,uint8_t *out)
+{
+    unsigned mask=0;int i,n,desired,best=-1,distance=256;
+    if(!out || key<0 || key>11 || mode<0 || mode>HARMONY_CHROMATIC ||
+       source<0 || source>127 || transpose < -127 || transpose>127 || !valid_range(low,high))return 0;
+    if(mode<HARMONY_MAJOR_PENTATONIC)for(i=0;i<7;i++)mask|=1u<<modes[mode][i];
+    else mask=mode==HARMONY_MAJOR_PENTATONIC?0x295u:mode==HARMONY_MINOR_PENTATONIC?0x4a9u:0xfffu;
+    desired=source+transpose;
+    for(n=low;n<=high;n++)if(mask&(1u<<((n+12-key)%12))){
+        int d=abs_distance(n,desired);
+        if(d<distance){best=n;distance=d;}
+    }
+    if(best<0)return 0;
+    *out=(uint8_t)best;return 1;
+}
+
 int harmony_resolve(const harmony_spec_t *spec, int root_hint,
                     int low, int high, harmony_triad_t *out)
 {

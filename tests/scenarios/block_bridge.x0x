@@ -1,0 +1,98 @@
+# Actual button/encoder route: A -> independent four-bar fill -> B.
+wait 300
+tapkey b0
+tapkey w0
+tapkey w4
+tapkey w8
+tapkey w12
+tap HOME
+tap HOME
+expect view 6
+tapkey w0
+tapkey w1
+expect songlen 2
+turn K1 -2
+turn SELECT 2
+turn K2 1
+wait 100
+expect songon 1
+shot bridge_arrangement.png
+turn SELECT -2
+tap SEL
+turn SELECT 10
+shot bridge_menu.png
+tap SEL
+shot bridge_confirm.png
+tap SEL
+wait 100
+expect songlen 3
+expect songbar1.0 1
+expect songbar2.0 3
+expect songbar3.0 2
+turn SELECT 1
+turn K4 3
+wait 100
+expect songbar2.5 96
+shot bridge_four_bars.png
+turn SELECT 1
+shot bridge_arrangement.png
+turn SELECT -1
+# Select the new row's notes through its native menu and add a final snare.
+tap SEL
+turn SELECT 11
+shot bridge_notes_menu.png
+tap SEL
+wait 100
+expect view 0
+expect ppat0 3
+tap EDIT
+tapkey b1
+tapkey w15
+expect hit0.1.15 1
+turn PRESET -2
+expect ppat0 1
+expect hit0.1.15 0
+turn PRESET 2
+expect ppat0 3
+expect hit0.1.15 1
+tap HOME
+tap HOME
+turn K1 -1
+tap PLAY
+wait 100
+expect songpos 1
+expect ppat0 1
+wait 2000
+expect songpos 2
+expect ppat0 3
+wait 7300
+expect songpos 2
+wait 400
+expect songpos 3
+expect ppat0 2
+wait 1920
+expect songpos 1
+expect ppat0 1
+tap PLAY
+# A second start proves native next-bar queuing and its persistent Q marker.
+tap PLAY
+turn K1 2
+tap SEL
+turn SELECT 12
+tap SEL
+tap HOME
+wait 100
+shot bridge_queued.png
+wait 1000
+expect songpos 3
+expect ppat0 2
+tap PLAY
+tap SAVE
+wait 200
+reboot
+expect songlen 3
+expect songbar2.0 3
+expect songbar2.5 96
+expect hit0.1.15 0
+turn PRESET 2
+expect hit0.1.15 1

@@ -31,7 +31,7 @@ class InventoryTest(unittest.TestCase):
             '303':[12,12],'BREAK':[2],'FX':[16],'MIX':[4]*5,'MASTER':[14]})
         byid={x['id']:x for x in self.data['entries']}
         self.assertEqual(byid['arrangement.mode']['range'],[0,9])
-        self.assertEqual(byid['arrangement.duration']['range'],[1,8])
+        self.assertEqual(byid['arrangement.duration']['range'],[1,32])
         self.assertEqual(byid['pad.channel']['allowed_values'],list(range(16))+[255])
         self.assertIn('allowed_values[round',byid['pad.channel']['scaling'])
         self.assertEqual(byid['generator.3']['semantic_offset'],1)
@@ -104,6 +104,14 @@ class InventoryTest(unittest.TestCase):
             if row.get('optional_cc14'):self.assertIn('allowed_values',row['optional_cc14']['scaling'])
             self.assertIn(cc.scaled_value(row,8192,14),allowed)
         self.assertNotEqual(cc.scaled_value(rows['pad.channel'],8192,14),128)
+
+    def test_long_blocks_and_scale_keep_legacy_coarse_values(self):
+        rows={x['id']:x for x in self.data['entries']}
+        for raw in range(128):
+            self.assertEqual(cc.scaled_value(rows['follow.mode'],raw),(raw*2+63)//127)
+            self.assertEqual(cc.scaled_value(rows['arrangement.duration'],raw),1+(raw*7+63)//127)
+        self.assertEqual(cc.exact_value(rows['follow.mode'],3),3)
+        self.assertEqual(cc.exact_value(rows['arrangement.duration'],32),32)
 
     def test_motion_target_domains_and_all_condition_exact_transactions(self):
         rows={x['id']:x for x in self.data['entries']};motion=rows['motion.value']

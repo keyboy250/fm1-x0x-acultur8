@@ -54,14 +54,15 @@ static inline uint32_t seq_part_mask(int p)
 #define NSONG 192
 #define ARR_ENABLED 1u
 #define ARR_NOTES_OUT 32u /* schema4 tracked mirror; settings_t is outside undo journal */
-#define ARR_FLAGS (63u | POLY_FLAG)
-enum { BASS_FOLLOW_OFF, BASS_FOLLOW_ROOT, BASS_FOLLOW_CHORD };
+#define ARR_EXTENDED 64u /* fail-closed marker for packed 9-32 bar durations */
+#define ARR_FLAGS (63u | ARR_EXTENDED | POLY_FLAG)
+enum { BASS_FOLLOW_OFF, BASS_FOLLOW_ROOT, BASS_FOLLOW_CHORD, BASS_FOLLOW_SCALE };
 static inline unsigned arrangement_bass_mode(unsigned flags,int b) { return (flags >> (1+2*b)) & 3u; }
 typedef struct {
     uint8_t flags, key, mode, parent;
     uint8_t bass_low[2], bass_high[2];
     uint8_t pad_channel, pad_root, pad_low, pad_high;
-    uint8_t degree[NSONG];
+    uint8_t degree[NSONG]; /* low3: degree; bits3-4: upper two duration bits */
 } arrangement_settings_t;
 typedef char arrangement_settings_size_204[(sizeof(arrangement_settings_t) == 204) ? 1 : -1];
 /* Current block/global intent is latched on musical boundaries; never a second song table. */
@@ -69,7 +70,7 @@ typedef struct {
     const arrangement_settings_t *intent;
     uint8_t flags, key, mode, parent;
     uint8_t pat[NTRACKS], mute, degree, tick;
-    uint8_t queued, editing, clock_started, reserved;
+    uint8_t queued, editing, clock_started, reserved; /* clock_started: bit0 clock; bits1-2 latched duration high */
 } arrangement_runtime_t;
 #define SEQ_CH_OFF 0xFFu
 /* a step's chance (the T_PROB lanes): 1-100 = that percentage, PROB_COND + k = the cycle k in the order
@@ -86,6 +87,8 @@ static inline void prob_cond(int k, int *a, int *b)
     *a = k + 1;
     *b = n;
 }
+#define ARR_DEGREE(meta) ((meta)&7u)
+#define ARR_BARS(b,meta) (1u+((b)->mute>>5)+(((meta)&24u)<<0))
 #define SONG_REP(b) (((b)->mute >> 5) + 1)    /* a bar plays 1-8 times: mute's bits 5-7 (the parts use 0-4) */
 typedef struct {
     uint8_t pat[NTRACKS];             /* each part's pattern */
@@ -193,6 +196,10 @@ typedef struct {
 typedef char seq_transport_epochs_aligned[((__builtin_offsetof(seq_t,transport_epoch)|__builtin_offsetof(seq_t,stop_epoch))&3u)==0?1:-1];
 
 /* Audio owner: a single effective flag proves pointer/nonempty-song prerequisites. */
+static inline int seq_arrangement_empty(const seq_t *s)
+{
+    return s->arrangement.intent && (s->arrangement.intent->flags&ARR_ENABLED) && s->song && !s->song->len;
+}
 static inline __attribute__((always_inline)) void seq_arrangement_apply_flags(seq_t *s)
 {
     const arrangement_settings_t *intent = s->arrangement.intent;
@@ -200,6 +207,7 @@ static inline __attribute__((always_inline)) void seq_arrangement_apply_flags(se
     if (!s->playing && intent) {
         if (s->song && s->song_start >= s->song->len) s->song_start = 0;
         s->arrangement.queued = 255;
+        if(seq_arrangement_empty(s))s->req_start=s->req_cont=0;
     }
 }
 static inline __attribute__((always_inline)) void seq_arrangement_apply(seq_t *s, const arrangement_settings_t *intent)
@@ -213,6 +221,7 @@ static inline __attribute__((always_inline)) void seq_arrangement_queue(seq_t *s
     else { s->song_start = block; s->arrangement.queued = 255; }
 }
 
+int seq_bass_resolve(seq_t *s,int b,int source,int transpose,uint8_t *note);
 void seq_init(seq_t *s, pattern_t *patterns);
 uint32_t seq_until_event(seq_t *s, uint32_t n);
 void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o);

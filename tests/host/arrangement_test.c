@@ -82,7 +82,7 @@ static void command_storage(void)
     assert(cmd(VC_SET_STRIP,24,0,VP_BOOST,9)==VR_QUEUED);
     assert(variant_snapshot(VS_BLOCK,2,0,&view)==VR_OK && view.count==8 && view.value[6]==8 && view.value[7]==6);
     before=proj;
-    assert(cmd(VC_SET_BLOCK,2,64,0,0)==VR_INVALID);
+    assert(cmd(VC_SET_BLOCK,2,0,0,-1)==VR_INVALID);
     assert(cmd(VC_SET_BLOCK,2,0,32,0)==VR_INVALID);
     assert(cmd(VC_SET_BLOCK,2,0,0,1<<25)==VR_INVALID);
     assert(cmd(VC_SET_ARR_GLOBAL,0,0,2,HARMONY_CHROMATIC)==VR_INVALID);
@@ -134,7 +134,7 @@ static void reject_format4(void)
         fresh();assert(cmd(VC_SET_ARR_LENGTH,0,0,0,2)==VR_QUEUED);
         assert(cmd(VC_SET_BLOCK,0,1<<3,0,0)==VR_QUEUED);drain();
         before=proj;
-        if(kind==0)proj.variant.arrangement.flags=64;
+        if(kind==0)proj.variant.arrangement.degree[0]=32;
         if(kind==1)proj.variant.arrangement.key=12;
         if(kind==2)proj.variant.arrangement.mode=HARMONY_CHROMATIC;
         if(kind==3)proj.variant.arrangement.parent=7;
@@ -204,12 +204,15 @@ static void undo_and_panel_safety(void)
     assert(!memcmp(&before,&proj,sizeof proj) && !memcmp(&journal,&undo,sizeof undo));
     assert(!memcmp(shadow,undo_shadow,sizeof shadow) && external_edit && writes==store_writes);
     assert(strstr(ui.msg,"PROJECT PROTECTED"));
-    /* Exercise every legacy SONG mutation entry point against the real UI. */
+    /* Native block controls now route through the same acknowledged commands.
+     * Unsupported legacy structural/recording paths remain protected. */
     fresh();assert(cmd(VC_SET_ARR_LENGTH,0,0,0,3)==VR_QUEUED);
     assert(cmd(VC_SET_ARR_GLOBAL,0,0,0,1)==VR_QUEUED);drain();
-    ui.song_sel=1;ui.view=V_SONG;ui.overlay=O_NONE;ui.btn=0;before=proj;revision=ui_revision();
-    pref_set(PR(R_SPAT,0,0,0),3);pref_set(PR(R_SREP,0,0,0),7);pref_set(PR(R_SLEN,0,0,0),10);
-    key_event(0,1);key_event(1,1);song_fill(10);
+    ui.song_sel=1;ui.view=V_SONG;ui.overlay=O_NONE;ui.btn=0;
+    pref_set(PR(R_SPAT,0,0,0),3);pref_set(PR(R_SREP,0,0,0),7);pref_set(PR(R_SLEN,0,0,0),10);drain();
+    assert(proj.arr.song.len==10 && proj.arr.song.bar[1].pat[0]==3 && SONG_REP(&proj.arr.song.bar[1])==8);
+    key_event(1,1);drain();assert(proj.arr.song.bar[1].mute&1u);
+    before=proj;revision=ui_revision();key_event(0,1);song_fill(10);
     run_action(ACT_SONG_INS,0);run_action(ACT_SONG_DEL,0);run_action(ACT_SONG_CLR,0);
     button_tap(B_REC);
     assert(!ui.rec && !memcmp(&before,&proj,sizeof proj) && ui_revision()==revision);

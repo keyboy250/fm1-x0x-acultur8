@@ -1,0 +1,114 @@
+# Native deletion, cancellation, Undo/Redo, retained patterns and empty transport.
+wait 300
+tapkey b0
+tapkey w0
+tap HOME
+tap HOME
+tapkey w0
+tapkey w1
+turn K1 -2
+turn SELECT 2
+turn K2 1
+turn SELECT -2
+tap SEL
+turn SELECT 10
+tap SEL
+tap SEL
+wait 100
+expect songlen 3
+expect songbar2.0 3
+tap SEL
+turn SELECT 11
+tap SEL
+tap EDIT
+tapkey b1
+tapkey w15
+expect hit0.1.15 1
+tap HOME
+tap HOME
+tap SEL
+turn SELECT 13
+shot delete_menu.png
+tap SEL
+shot delete_confirm.png
+tap HOME
+expect songlen 3
+tap SEL
+turn SELECT 13
+tap SEL
+tap SEL
+wait 100
+expect songlen 2
+expect songbar1.0 1
+expect songbar2.0 2
+shot delete_after.png
+press HOME
+tap REC
+release HOME
+wait 100
+expect songlen 3
+expect songbar2.0 3
+shot delete_undo.png
+press HOME
+tap PLAY
+release HOME
+wait 100
+expect songlen 2
+tap SEL
+turn SELECT 20
+shot delete_undo_menu.png
+tap SEL
+wait 100
+expect songlen 3
+expect songbar2.0 3
+press HOME
+tap PLAY
+release HOME
+wait 100
+expect songlen 2
+tap SAVE
+wait 200
+reboot
+expect songlen 2
+turn PRESET 2
+expect hit0.1.15 1
+# Remove both remaining rows without erasing any pattern bank.
+tap HOME
+tap HOME
+tap SEL
+turn SELECT 13
+tap SEL
+tap SEL
+wait 100
+expect songlen 1
+tap SEL
+turn SELECT 13
+tap SEL
+tap SEL
+wait 100
+expect songlen 0
+shot delete_empty.png
+tap PLAY
+expect playing 0
+midi FA 00 00
+wait 100
+expect playing 0
+midi FB 00 00
+wait 100
+expect playing 0
+press HOME
+tap REC
+release HOME
+wait 100
+expect songlen 1
+press HOME
+tap PLAY
+release HOME
+wait 100
+expect songlen 0
+tap SAVE
+wait 200
+reboot
+expect songlen 0
+turn PRESET 2
+expect hit0.1.15 1

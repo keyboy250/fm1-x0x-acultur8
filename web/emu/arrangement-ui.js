@@ -13,7 +13,7 @@ function options(select,labels,start=0){select.replaceChildren(...labels.map((la
 options($('arrangement-key'),notes);options($('arrangement-mode'),modes);
 options($('arrangement-parent'),['None']);$('arrangement-parent').firstChild.value='255';
 for(let i=0;i<7;i++){const option=document.createElement('option');option.value=String(i);option.textContent=modes[i];$('arrangement-parent').append(option);}
-options($('arrangement-duration'),Array.from({length:8},(_,i)=>String(i+1)),1);
+options($('arrangement-duration'),Array.from({length:32},(_,i)=>String(i+1)),1);
 options($('arrangement-degree'),degrees);
 const patternInputs=[],muteInputs=[];
 for(let i=0;i<5;i++){
@@ -53,7 +53,7 @@ function editBlock(kind,index,value){
   if(kind==='duration')duration=value;
   if(kind==='degree')degree=value;
   let packed=0;for(let i=0;i<5;i++)packed|=patterns[i]<<(i*5);
-  grouped(8,arrangement[2],(duration-1)|(degree<<3),mutes,packed,'block');
+  grouped(8,arrangement[2],((duration-1)&7)|(degree<<3)|(((duration-1)>>3)<<6),mutes,packed,'block');
 }
 $('arrangement-duration').addEventListener('change',()=>editBlock('duration',0,Number($('arrangement-duration').value)));
 $('arrangement-degree').addEventListener('change',()=>editBlock('degree',0,Number($('arrangement-degree').value)));

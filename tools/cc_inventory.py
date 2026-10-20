@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = Path('docs/ACULTUR8_CC_INVENTORY.json')
 MD_PATH = Path('docs/ACULTUR8_CC_INVENTORY.md')
 FILES = ['firmware/src/app/engine.c', 'firmware/src/app/engine.h', 'firmware/src/app/ui.c',
-         'firmware/src/app/x0x.h', 'firmware/src/app/variant.c', 'firmware/src/app/variant.h',
+         'firmware/src/app/x0x.h', 'firmware/src/app/block_bridge.inc', 'firmware/src/app/variant.c', 'firmware/src/app/variant.h',
          'firmware/src/seq/pattern.h', 'firmware/src/seq/lanes.h', 'firmware/src/seq/sequencer.h', 'firmware/src/seq/motion.h', 'firmware/src/seq/motion.c',
          'firmware/src/seq/tb3po.h', 'firmware/src/seq/harmony.h', 'firmware/src/dsp/drum909.c', 'firmware/src/dsp/drum808.c',
          'firmware/src/dsp/bass303.c', 'firmware/src/dsp/fxbus.c', 'firmware/src/dsp/master.c',
@@ -233,7 +233,8 @@ def build(root=ROOT):
                 scaling='log-frequency proposal; endpoints exact' if i<2 else 'round(min + cc7 * (max-min) / 127)')
     ui=texts['firmware/src/app/ui.c']
     refs=enum_names(ui,'R_NONE')
-    expected='R_NONE R_ENG R_SWING R_DLEN R_DRATE R_BLEN R_BRATE R_BDIR R_BTRANS R_GEN R_BRKSET R_BRKSLOT R_TEMPO R_ACCENT R_CLKOUT R_NOTEOUT R_PALETTE R_KEYLED R_KEYSOUND R_AUTOSAVE R_ACT R_SBAR R_SPAT R_SLEN R_STALLS R_HDR R_TAPE R_MIDICH R_OUTLOUD R_SREP R_BATT R_USBFULL R_FREEPLAY R_RATEENABLE R_RATEFAMILY R_RATEBOUNDARY R_RATEHYST R_RATEEXACT R_STRIP R_STRIPFLAG R_STRIPDEFAULT R_CORES'.split()
+    expected='R_NONE R_ENG R_SWING R_DLEN R_DRATE R_BLEN R_BRATE R_BDIR R_BTRANS R_GEN R_BRKSET R_BRKSLOT R_TEMPO R_ACCENT R_CLKOUT R_NOTEOUT R_PALETTE R_KEYLED R_KEYSOUND R_AUTOSAVE R_ACT R_SBAR R_SPAT R_SLEN R_STALLS R_HDR R_TAPE R_MIDICH R_OUTLOUD R_SREP R_BATT R_USBFULL R_FREEPLAY R_RATEENABLE R_RATEFAMILY R_RATEBOUNDARY R_RATEHYST R_RATEEXACT R_STRIP R_STRIPFLAG R_STRIPDEFAULT R_CORES R_BMODE R_BDEGREE R_BMUTE'.split()
+    expected+=['R_AKEY','R_ASCALE','R_AFOLLOW'] # native aliases of existing harmony fields
     if refs!=expected:raise ValueError('UI reference coverage must be updated')
     # Every pref kind accounted for, including nonmusical/read-only rows.
     seq=descriptors(ui,'SEQ_P',symbols); sq=enum_names(ui,'SQ_SWING')[:-1]
@@ -259,7 +260,7 @@ def build(root=ROOT):
     for i,d in enumerate(descriptors(ui,'SONG_P',symbols)):
         add(f'song.{i}',d['name'],d['max'],972+i,default=d['default'],context={'block':[0,191]} if i<5 else {})
     for i,d in enumerate(descriptors(ui,'ACT_P',symbols)):
-        add(f'action.{i}',d['name'] or 'No action',127,None if i==0 else 984+i,'action',
+        add(f'action.{i}',d['name'] or 'No action',127,None if i==0 or i>=12 else 984+i,'action',
             action_policy='edge-trigger; explicit safety/preflight; no storage operation in audio callback',context={'pattern':[0,31],'part':[0,4],'block':[0,191]})
     add('system.one_core','Second core disabled at next power-on',1,None,'nonmusical',source='firmware/src/app/x0x.h',runtime_parameter='Native settings control only; no CC address; next power-on')
     # Structured data and controls not represented by x0x_param_t.
@@ -280,9 +281,9 @@ def build(root=ROOT):
            ('generator.new',1,{'pattern':[0,31],'bass':[0,1]}),('generator.mutate',1,{'pattern':[0,31],'bass':[0,1]}),
            ('generator.seed_byte',255,{'pattern':[0,31],'bass':[0,1],'seed_byte':[0,3]}),
            ('arrangement.enabled',1,{}),('arrangement.length',192,{}),('arrangement.key',11,{}),('arrangement.mode',9,{}),('arrangement.parent',255,{}),
-           ('arrangement.degree',7,{'block':[0,191]}),('arrangement.duration',8,{'block':[0,191]}),('arrangement.pattern',31,{'block':[0,191],'part':[0,4]}),
+           ('arrangement.degree',7,{'block':[0,191]}),('arrangement.duration',32,{'block':[0,191]}),('arrangement.pattern',31,{'block':[0,191],'part':[0,4]}),
            ('arrangement.mute',1,{'block':[0,191],'part':[0,4]}),('arrangement.queue',191,{}),
-           ('follow.mode',2,{'bass':[0,1]}),('follow.low',127,{'bass':[0,1]}),('follow.high',127,{'bass':[0,1]}),
+           ('follow.mode',3,{'bass':[0,1]}),('follow.low',127,{'bass':[0,1]}),('follow.high',127,{'bass':[0,1]}),
            ('pad.channel',255,{}),('pad.root',127,{}),('pad.low',127,{}),('pad.high',127,{}),
            ('selector.kit',1,{}),('selector.strip',24,{}),('selector.seed_byte',3,{}),
            ('selector.commit',1,{}),('selector.parameter_low',127,{}),('selector.parameter_high',15,{}),
@@ -296,6 +297,9 @@ def build(root=ROOT):
         if row['id'] in ('pref.SQ_DRATE','pref.SQ_BRATE'):row['dynamic_max']='7 with initialized typed lane storage; original descriptor max3 for legacy projects; next local step'
         if row['id']=='arrangement.mode': row['range'][1]=symbols['HARMONY_CHROMATIC']
         if row['id']=='arrangement.duration':row['range'][0]=1
+        if row['id'] in ('arrangement.duration','follow.mode'):
+            row['coarse_range']=[1,8] if row['id']=='arrangement.duration' else [0,2]
+            row['scaling']='Preserve legacy coarse range; full semantic range is available through exact-value transactions and native/browser controls'
         if row['id']=='arrangement.parent':row['allowed_values']=list(range(7))+[symbols['HARMONY_NO_PARENT']]
         if row['id']=='pad.channel':row['allowed_values']=list(range(16))+[255]
         if row['id']=='motion.value':
@@ -346,7 +350,7 @@ def build(root=ROOT):
     for row in rows:
         if row['address']:row['parameter_number']=(row['address']['channel']-1)*len(CCS)+CCS.index(row['address']['cc'])
     covered={name:'descriptor or structured field' for name in refs}
-    covered.update({'R_NONE':'sentinel','R_HDR':'non-selectable header','R_BATT':'read-only', 'R_ACT':'all ACT_P actions'})
+    covered.update({'R_NONE':'sentinel','R_HDR':'non-selectable header','R_BATT':'read-only', 'R_ACT':'all ACT_P actions; block actions 12-15 and Undo action 16 native only', 'R_BMODE':'alias arrangement.enabled', 'R_BDEGREE':'alias arrangement.degree', 'R_BMUTE':'alias arrangement.mute'})
     result={'schema':1,'map_version':'draft-1-actions-prototype-1','runtime_cc':RUNTIME_NOTE,
             'source_hashes':{p:hashlib.sha256(t.encode()).hexdigest() for p,t in raw.items()},
             'descriptor_counts':counts,'ui_ref_coverage':covered,'structured_field_coverage':structured,
@@ -399,6 +403,8 @@ def value_domain(row, target=None):
 def scaled_value(row, raw, bits=7, target=None):
     if bits not in (7,14) or type(raw) is not int or not 0<=raw<1<<bits:raise ValueError('Invalid CC precision/value')
     values=value_domain(row,target);den=(1<<bits)-1
+    if bits==7 and 'coarse_range' in row:
+        low,high=row['coarse_range'];values=list(range(low,high+1))
     return values[(raw*(len(values)-1)+den//2)//den]
 
 

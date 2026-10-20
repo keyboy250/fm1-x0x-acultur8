@@ -18,6 +18,10 @@ W='-O2 -ffp-contract=off -Wall -Wextra -Wdouble-promotion -Werror'
 run() { name="$1"; shift; printf '\nRequired check: %s\n' "$name"; "$@"; }
 compile() { name="$1"; shift; cc "$@" -o "$OUT/$name"; run "$name" "$OUT/$name"; }
 run fastmath_sanitizers sh tests/host/run_fastmath_sanitizers.sh
+run block_bridge sh tests/host/run_block_bridge.sh
+run block_delete sh tests/host/run_block_delete.sh
+run long_scale sh tests/host/run_long_scale.sh
+run long_scale_wasm node tests/host/long_scale_wasm_test.mjs build/emu/x0x.wasm
 run native_message_bounds sh tests/host/run_message_bounds.sh
 run strip_query sh tests/host/run_strip_query.sh
 run upstream_integration sh tests/host/run_upstream_integration.sh

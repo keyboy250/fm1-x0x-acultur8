@@ -207,7 +207,8 @@ int engine_arrangement_block(song_bar_t *dst, uint8_t *degree, const song_bar_t 
     int i;
     if (!engine_queue_space()) return 0;
     saved = plat_control_enter();
-    /* Exactly seven canonical bytes. The ISR cannot observe them before publication. */
+    /* Publish row, packed degree/duration and extension marker atomically. */
+    if(chord&24u)proj.variant.arrangement.flags|=ARR_EXTENDED;
     for (i = 0; i < NTRACKS; i++) dst->pat[i] = src->pat[i];
     dst->mute = src->mute; *degree = chord;
     cq_put(C_ARR, 0, 0, 0);
@@ -530,6 +531,7 @@ void engine_drum(int kit, int voice, float vel)
 }
 void engine_bass_on(int part, int note, int accent, int slide)
 {
+    note=note<0?0:note>127?127:note;
     cq_put(C_BON, (uint32_t)part, (uint32_t)note, (uint32_t)((accent ? 1 : 0) | (slide ? 2 : 0)));
 }
 void engine_bass_off(int part) { cq_put(C_BOFF, (uint32_t)part, 0, 0); }
@@ -706,7 +708,11 @@ static void midi_in(uint32_t pkt)
     for (k = 0; k < NBASS; k++)                         /* the 303s: overlapping notes slide */
         if (seq.ch[TRK_BASS0 + k] == ch) {
             if (ty == 0x90) {
-                bass303_note_on(&b303[k], d1, d2 >= 100, bass_held[k] != 255);
+                uint8_t note=d1;
+                if(arrangement_bass_mode(seq.arrangement.flags,k)==BASS_FOLLOW_SCALE && !seq_bass_resolve(&seq,k,d1,0,&note)){
+                    bass303_note_off(&b303[k]);bass_held[k]=255;continue;
+                }
+                bass303_note_on(&b303[k], note, d2 >= 100, bass_held[k] != 255);
                 bass_held[k] = d1;
             } else if (ty == 0x80 && bass_held[k] == d1) {
                 bass303_note_off(&b303[k]);
@@ -732,8 +738,12 @@ static __attribute__((noinline)) void drain(void)
             apply_param((int)type, (int)a, (int)b, (int)v);
         else if (type == C_DRUM)
             s_drum(0, (int)a, (int)b, (float)v / 4095.0f);
-        else if (type == C_BON && a < NBASS)
-            bass303_note_on(&b303[a], (int)b, (int)(v & 1u), (int)((v >> 1) & 1u));
+        else if (type == C_BON && a < NBASS) {
+            uint8_t note=(uint8_t)(b>127?127:b);
+            if(arrangement_bass_mode(seq.arrangement.flags,a)!=BASS_FOLLOW_SCALE || seq_bass_resolve(&seq,(int)a,note,0,&note))
+                bass303_note_on(&b303[a],note,(int)(v&1u),(int)((v>>1)&1u));
+            else bass303_note_off(&b303[a]);
+        }
         else if (type == C_BOFF && a < NBASS)
             bass303_note_off(&b303[a]);
         else if (type == C_BRK && !brk_hold)

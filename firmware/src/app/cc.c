@@ -82,8 +82,8 @@ static POLY_COLD int cc_max(int kind,int a,int b,int c,const cc_context_t *x){
     case CCK_PERF:return c==2||c==3||c==4?31:1;
     case CCK_GENACTION:return 1;
     case CCK_SEED:return 255;
-    case CCK_ARR:return c==0?1:c==1?192:c==2?11:c==3?HARMONY_CHROMATIC:c==4?255:c==5?7:c==6?8:c==7?31:c==8?1:191;
-    case CCK_FOLLOW:return c==0?2:127;
+    case CCK_ARR:return c==0?1:c==1?192:c==2?11:c==3?HARMONY_CHROMATIC:c==4?255:c==5?7:c==6?32:c==7?31:c==8?1:191;
+    case CCK_FOLLOW:return c==0?3:127;
     case CCK_PAD:return c==0?255:127;
     case CCK_EXACT:return c==2?3:c==3?1:127;
     case CCK_ACTION:return c>=1&&c<=11?127:-1;
@@ -112,7 +112,7 @@ static POLY_COLD int cc_arrangement(int kind,int field,uint32_t value,const cc_c
         else if(field==2)changed=&candidate.key;
         else if(field==3)changed=&candidate.mode;
         else if(field==4)changed=&candidate.parent;
-        else if(field==5)changed=&candidate.degree[block];
+        else if(field==5){changed=&candidate.degree[block];value|=candidate.degree[block]&24u;}
         if(changed)*changed=(uint8_t)value;
         if(!arrangement_valid(&candidate))return CC_REJECTED;
     }
@@ -131,7 +131,12 @@ static POLY_COLD int cc_arrangement(int kind,int field,uint32_t value,const cc_c
     }else if(changed){
         ((uint8_t *)&proj.variant.arrangement)[changed-(uint8_t *)&candidate]=(uint8_t)value;
     }else if(field==1)proj.arr.song.len=(uint16_t)value;
-    else if(field==6)proj.arr.song.bar[block].mute=(uint8_t)((proj.arr.song.bar[block].mute&31u)|((value-1)<<5));
+    else if(field==6){
+        unsigned bars=value-1;
+        proj.arr.song.bar[block].mute=(uint8_t)((proj.arr.song.bar[block].mute&31u)|((bars&7u)<<5));
+        proj.variant.arrangement.degree[block]=(uint8_t)((proj.variant.arrangement.degree[block]&7u)|(bars&24u));
+        if(bars&24u)proj.variant.arrangement.flags|=ARR_EXTENDED;
+    }
     else if(field==7)proj.arr.song.bar[block].pat[x->part]=(uint8_t)value;
     else if(field==8){unsigned mask=1u<<x->part;uint8_t *mute=&proj.arr.song.bar[block].mute;*mute=(uint8_t)((*mute&~mask)|(value?mask:0));}
     (void)engine_cc_refresh(2); /* capacity reserved, sole main producer */
@@ -291,7 +296,7 @@ static POLY_COLD int cc_apply(int kind,int a,int b,int c,uint32_t value,cc_sourc
         if(c==0){proj.set.out_loud=(uint8_t)value;engine_out_loud(value);}
         else if(c==1){proj.set.usb_full=(uint8_t)value;engine_usb_full(value);}
         else if(c==2)ui.freeplay[x->bass]=(uint8_t)value;
-        else if(c==3)proj.arr.song.bar[block].mute=(uint8_t)((proj.arr.song.bar[block].mute&31u)|(value<<5));
+        else if(c==3){proj.arr.song.bar[block].mute=(uint8_t)((proj.arr.song.bar[block].mute&31u)|(value<<5));proj.variant.arrangement.degree[block]&=7u;}
         else if(c==4){perf.stalls_on=(uint8_t)value;plat_stalls_enable(value);}
         else if(c==6||c==7){if(value>=(uint32_t)engine_brk_nslots())goto invalid; if(c==6)p->brk.slot_a=(uint8_t)value;else p->brk.slot_b=(uint8_t)value;}
         else if(c==8){source->draft.block_low=(uint8_t)(value&127u);source->draft.block_high=(uint8_t)(value>>7);source->ready=0;}
@@ -375,6 +380,7 @@ POLY_COLD int cc_message(uint32_t packet,uint8_t source){
     else value=max<0?0:(int)(((uint32_t)raw*(uint32_t)max+63)/127);
     if(kind==CCK_STRIP&&c==4)value=10+(raw*240+63)/127;
     if(kind==CCK_ARR&&c==6)value=1+(raw*7+63)/127;
+    if(kind==CCK_FOLLOW&&!c)value=(raw*2+63)/127; /* preserve legacy coarse mapping; Scale uses exact value3 */
     if(kind==CCK_LANE&&!c)value=1+(raw*63+63)/127;
     result=cc_parameter(number,(uint32_t)value,source);
     if(result==CC_APPLIED)cc_stats.accepted++;else if(result==CC_BUSY)cc_stats.busy++;else if(result==CC_UNSUPPORTED)cc_stats.unsupported++;else cc_stats.rejected++;

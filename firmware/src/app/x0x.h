@@ -68,6 +68,8 @@ void project_discard_rejected(void);     /* explicit factory reset only */
 int project_save_settings(void);
 void project_flash_changed(void);
 
+int ui_delete_block(int block); /* stopped, arrangement row only; preserves patterns/sounds */
+int ui_duplicate_block(int block); /* stopped, independent patterns; bank or VR_* */
 void ui_init(void);
 void ui_frame(void);
 void ui_input_only(void);

@@ -4,7 +4,7 @@
 
 Generated with `python tools/cc_inventory.py --write`; validate with `--check`. No firmware compilation is performed.
 
-700 inventory rows: 685 addressed field templates/descriptor rows and 15 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 650, 'nonmusical': 4, 'diagnostic': 1, 'read_only': 1, 'action': 19, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 12}.
+705 inventory rows: 685 addressed field templates/descriptor rows and 20 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 650, 'nonmusical': 4, 'diagnostic': 1, 'read_only': 1, 'action': 24, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 12}.
 
 ## Source-derived engine descriptor counts
 
@@ -633,6 +633,11 @@ Acceptance: exhaustive registry coverage and endpoint/enum scaling; collision/re
 | action.9 | CLEAR SONG | [0, 127] | 12 / 25 | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
 | action.10 | PERFORMANCE | [0, 127] | 12 / 26 | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
 | action.11 | RUN PERF TEST | [0, 127] | 12 / 27 | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.12 | DUP AS VARIATION | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.13 | EDIT BLOCK NOTES | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.14 | QUEUE BLOCK | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.15 | DELETE BLOCK | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.16 | UNDO | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
 | system.one_core | Second core disabled at next power-on | [0, 1] | none | {} | nonmusical |
 | selector.pattern | selector.pattern | [0, 31] | 12 / 74 | {} | musical |
 | selector.part | selector.part | [0, 4] | 12 / 75 | {} | musical |
@@ -681,11 +686,11 @@ Acceptance: exhaustive registry coverage and endpoint/enum scaling; collision/re
 | arrangement.mode | arrangement.mode | [0, 9] | 12 / 118 | {} | musical |
 | arrangement.parent | arrangement.parent | [0, 255] | 12 / 119 | {} | musical |
 | arrangement.degree | arrangement.degree | [0, 7] | 13 / 0 | {"block": [0, 191]} | musical |
-| arrangement.duration | arrangement.duration | [1, 8] | 13 / 1 | {"block": [0, 191]} | musical |
+| arrangement.duration | arrangement.duration | [1, 32] | 13 / 1 | {"block": [0, 191]} | musical |
 | arrangement.pattern | arrangement.pattern | [0, 31] | 13 / 2 | {"block": [0, 191], "part": [0, 4]} | musical |
 | arrangement.mute | arrangement.mute | [0, 1] | 13 / 3 | {"block": [0, 191], "part": [0, 4]} | musical |
 | arrangement.queue | arrangement.queue | [0, 191] | 13 / 4 | {} | musical |
-| follow.mode | follow.mode | [0, 2] | 13 / 5 | {"bass": [0, 1]} | musical |
+| follow.mode | follow.mode | [0, 3] | 13 / 5 | {"bass": [0, 1]} | musical |
 | follow.low | follow.low | [0, 127] | 13 / 6 | {"bass": [0, 1]} | musical |
 | follow.high | follow.high | [0, 127] | 13 / 7 | {"bass": [0, 1]} | musical |
 | pad.channel | pad.channel | [0, 255] | 13 / 8 | {} | musical |

@@ -71,7 +71,7 @@ static void storage_commands(void) {
     assert(variant_snapshot(VS_BASS_FOLLOW,0,0,&view)==VR_OK && view.count==10 && view.value[0]==1 && view.value[5]==255 && view.value[6]==255 && view.value[7]==255);
     assert(variant_snapshot(VS_BASS_FOLLOW,2,0,&view)==VR_INVALID);
     before=proj;journal=undo;memcpy(shadow,undo_shadow,sizeof shadow);revision=ui_revision();queued=engine_queue_written();
-    int bad[][4]={{2,0,0,1},{0,1,0,1},{0,0,3,1},{0,0,0,3},{0,0,1,-1},{0,0,2,128},{0,0,1,73},{0,0,2,23}};
+    int bad[][4]={{2,0,0,1},{0,1,0,1},{0,0,3,1},{0,0,0,4},{0,0,1,-1},{0,0,2,128},{0,0,1,73},{0,0,2,23}};
     for(unsigned i=0;i<sizeof bad/sizeof bad[0];i++)assert(command(13,bad[i][0],bad[i][1],bad[i][2],bad[i][3])==VR_INVALID);
     variant_command_t reserved={1,13,91,0,0,0,1,1};variant_reply_t reply;
     assert(variant_command(&reserved,&reply)==VR_INVALID);
@@ -96,9 +96,9 @@ static void storage_commands(void) {
     fresh();assert(project_save()==0 && get32(store[OBJ_PAT0])==2); /* canonical default stays legacy byte format */
     for(int kind=0;kind<9;kind++) {
         fresh();app_config();before=proj;
-        if(kind==0)proj.variant.arrangement.flags|=64;
-        if(kind==1)proj.variant.arrangement.flags=(uint8_t)((19&~6)|6);
-        if(kind==2)proj.variant.arrangement.flags=(uint8_t)((19&~24)|24);
+        if(kind==0)proj.variant.arrangement.degree[0]=8; /* duration bits need extension marker */
+        if(kind==1)proj.variant.arrangement.degree[0]=32; /* still reserved metadata */
+        if(kind==2){proj.variant.schema=3;proj.variant.arrangement.flags=(uint8_t)((19&~24)|24);} /* old schema cannot opt into Scale */
         if(kind==3)proj.variant.arrangement.bass_high[0]=128;
         if(kind==4)proj.variant.arrangement.bass_low[1]=73;
         if(kind==5)proj.variant.schema=6;

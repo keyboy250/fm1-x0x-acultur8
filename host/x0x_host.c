@@ -948,6 +948,13 @@ static int expect(const char *what, const char *val)
         got = seq.song_on;
     else if (!strcmp(what, "songlen"))
         got = proj.arr.song.len;
+    else if (!strncmp(what,"blockbars",9)) {
+        int k=atoi(what+9)-1;
+        got=k>=0&&k<NSONG?(int)ARR_BARS(&proj.arr.song.bar[k],proj.variant.arrangement.degree[k]):-1;
+    } else if (!strcmp(what,"follow0"))
+        got=(int)arrangement_bass_mode(proj.variant.arrangement.flags,0);
+    else if (!strcmp(what,"hkey"))got=proj.variant.arrangement.key;
+    else if (!strcmp(what,"hscale"))got=proj.variant.arrangement.mode;
     else if (!strcmp(what, "songpos"))
         got = seq.song_pos + 1;
     else if (!strncmp(what, "songbar", 7)) {       /* songbarK.P: bar K (1-based) part P's pattern, 1-based; P 5 = mutes */
