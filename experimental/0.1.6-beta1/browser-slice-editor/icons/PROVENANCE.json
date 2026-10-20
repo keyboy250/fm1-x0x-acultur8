@@ -1,0 +1,30 @@
+{
+  "name": "Font Awesome Free",
+  "version": "5.15.4",
+  "source": "https://github.com/FortAwesome/Font-Awesome/tree/5.15.4/svgs/solid",
+  "license": "CC BY 4.0 for SVG icons; full upstream license included in LICENSE.txt",
+  "modification": "Selected paths assembled as local SVG symbols; original SVGs retained",
+  "sha256": {
+    "check.svg": "8c9654f69ad8c997513eaa4c6dc231eb98eb3117b9b150206ce082fdafd76c27",
+    "chevron-left.svg": "fa6ddb6d040f6332fd106a1c93fdb5cd9cd8550903dc60c70a45f9d900a6bf3d",
+    "chevron-right.svg": "f993c47194ef99a22c8ac520c0daaa9f7e17526872daa84184d3a113fda39601",
+    "copy.svg": "12ea0d5f529778d1b4327ec4323e517c89f5f44a2fc4149feefdf6ff9466b251",
+    "cut.svg": "31215dd8910e249a9dfb4de7f77e122a69a995877d1080623ad029017242d73b",
+    "edit.svg": "9a44f94367c2af03b4b03e9c00ff3743c45bb7249501daeb349ac600904de3aa",
+    "file-export.svg": "87cf3118875bfa120b341f4f7f04cc6c107d41141fdde8db56637b3e046b299f",
+    "file-import.svg": "7596beae756bffa2a07a39f001a2bdedfcfc2caf30a0175dd8288269998dd645",
+    "folder-open.svg": "e51227877851e2fc0da423feba01df891ffdea33af9909ebd15171ad9cf2d249",
+    "headphones.svg": "bccfa4289973ef9f40bf4560727fbea5a2a6681c07e9f01917715fec380b95ff",
+    "music.svg": "db1d4d9dfa03960fbdde205e3329eab67026eeb08aaeff65991a0ee2eefa4b74",
+    "paste.svg": "3007ee99d87a028de5c959e221242dfdbadf3ebfc0d7f98e3d9018ccc85bf087",
+    "play.svg": "42b50476e6dc7775f5eb81acbeef0f30ccb889bbb5256d4ac214c7c218106fce",
+    "save.svg": "f5e47cd3256e2ac76340d76b04e74bbaf7c837b746eb29bceaf231abc68b7abe",
+    "search.svg": "4235a85f4af49e827fed03dc92630935e98abb8b969465711ee253ccfa7e5082",
+    "sliders-h.svg": "f984e49955e45f655ad769304d11092f689e67116a79661c847ac34226e95829",
+    "stop.svg": "c7c65ebcd2f8221aeed356fcf439b195dcab04d80ab1cb1644ba65156c77170f",
+    "times.svg": "cd860d334c121b3c4101b9701899f1fced8164d8ed58ce5e65ae0ad54133cd2d",
+    "undo.svg": "497f93cce854c619b9afdb41257ee86f00713e12d24a2b96e8970ed161e588a1",
+    "volume-up.svg": "8945c56625d0f600fc587ee371ea5b0f2f1bbafb95e9f1d60c386726f748b58f",
+    "wave-square.svg": "0ef1208d6e6fa7d34d577012620f57f40a58fd7175ab9507eefe69a2221feb01"
+  }
+}

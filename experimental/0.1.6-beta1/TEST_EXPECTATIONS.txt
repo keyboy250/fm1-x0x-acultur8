@@ -1,0 +1,27 @@
+SMALL EXPERIMENTAL TEST ROUND - REPORT YOUR BUILD AND OBSERVATIONS
+Use backed-up work. Accepted checks need not be repeated on this development unit
+unless something changes; these steps invite independent beta feedback.
+
+FIRMWARE: confirm identity 9000106; create an independent block variation; edit one
+step and verify the original is unchanged; delete/Undo/Redo while stopped; save
+and restart; verify arrangement order; test a longer duration at a known tempo.
+At 121 BPM, 32 four-quarter bars should be about 63.47 seconds. Unequal lanes do
+not extend the block until every lane lines up. Test Scale transposition with a
+known note/key/scale and compare Off, then restore desired output settings.
+
+BROWSER: load a WAV, tune band and minimum RMS dBFS, inspect/audition candidates,
+accept useful cuts, disable an unwanted slice, shorten a tail, enable Hold+Decay
+on one snare, adjust Level, and confirm another slice retains its own values.
+Export/reopen the review project with the original WAV. Cuts-only marker export
+does not apply sound envelopes/level in the older marker player.
+
+OPEN PERFORMANCE CHECK: if comfortable, compare PERF dropout count before/after
+your usual busier arrangement/effects and listen quietly for glitches. Report
+tempo, duration, parts/effects and whether the count increased; avoid attributing
+an existing count to this run. Broad/heavy-load tests are not yet accepted.
+
+Report: version/identity, OS/browser, input file duration/rate/channels (no need to
+share private or unlicensed audio), exact settings/steps, expected and actual result,
+and optional screenshot/log. Feedback can be filed at:
+https://github.com/keyboy250/fm1-x0x-acultur8/issues
+An acultur8.com feedback form is planned, not deployed by this packet.

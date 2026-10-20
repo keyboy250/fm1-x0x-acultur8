@@ -1,0 +1,32 @@
+0.1.6-beta1 EXPERIMENTAL LIMITS
+Hardware evidence is bounded to one device and the performed tests. No universal
+heavy-strip/effect workload, external MIDI rig, overnight soak or power-loss
+guarantee is claimed. Sparse playback added no dropouts; one pre-existing dropout
+had unknown cause/time. Two arrangement cycles were reported clean by ear.
+
+Autosave: the separate fix is NOT merged. For external MIDI sessions, stop the
+DAW, set AUTOSAVE OFF, allow its final preference save, then save manually between
+takes. Flash erase can interrupt audio; unsaved edits can be lost on power-off.
+
+Compatibility: 9-32-bar or Scale-mode saves may be rejected by older firmware.
+Keep a pre-update project backup and sample WAVs separately. Project backup omits
+sample audio, calibration and the separate reusable strip-default bank.
+No new-to-old project restore or complete device restore qualification is claimed.
+
+Blocks repeat stored patterns; they do not create 32 bars of unique step storage.
+Lanes remain at 64 steps. Block boundaries follow four-quarter musical bars, not
+the alignment of all unequal lane loops. Base sounds/strips/FX remain shared;
+duplicating sequencing data does not duplicate independent sound presets.
+
+Structural block copy/delete/Undo is stopped-only. Undo means latest undoable edit,
+not always deletion. Manual queueing changes blocks at a musical bar boundary.
+No random/weighted arrangement or independent song/preset library is added.
+
+The browser sampler is separate from firmware. Its markers help find hits, not
+separate overlapping instruments. A selected snare workflow was accepted; arbitrary
+libraries, MIDI velocity control and every browser have not been qualified.
+Marker exports carry cuts/timing only; per-slice envelope/level is saved in review
+projects. No direct native sampler upload, USB recording or raw REX decoding.
+
+Historical timing/processing limitations from the previous experimental release
+remain relevant. Do not treat this build as a fix for all jitter or heavy-load audio.

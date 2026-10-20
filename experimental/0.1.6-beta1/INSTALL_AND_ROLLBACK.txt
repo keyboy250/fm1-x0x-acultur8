@@ -1,0 +1,27 @@
+INSTALL / ROLLBACK - 0.1.6-beta1
+1. Back up the current project and retain the PRE-UPDATE backup. Preserve sample
+WAVs and reusable strip defaults separately. Stop the DAW/FM1 transport, lower
+MASTER, use stable USB power and close other MIDI/backup tabs for exclusive access.
+2. Verify firmware SHA256 against SHA256SUMS.txt (release download) or CONTENTS_SHA256.txt (inside the ZIP). Do not factory-reset the unit.
+3. With Python 3 and MIDI dependencies available:
+   python -m pip install mido python-rtmidi
+   python fm1_install.py x0x-0.1.6-beta1.fwsc --port "X0X FM-1"
+Follow its confirmation. Do not use --force to bypass an unexpected error.
+4. After restart:
+   python fm1_install.py --info --port "X0X FM-1"
+Expected identity: FM-1_9000106. Start with quiet, bounded tests on backed-up work.
+
+Working project backup tool: https://charlesvestal.github.io/fm1-x0x/backup/
+Use Chrome/Edge, allow MIDI/SysEx, save the project, stop playback, download backup,
+then close that tab before updater access. The Acultur8 /backup/ route was not
+working in the earlier review; this packet does not claim to deploy that route.
+
+ROLLBACK: rollback/x0x-0.1.5-beta1.fwsc is the exact previous comparison package,
+identity FM-1_9000105, with matching source. Use the same installer to install it.
+New-format 9-32-bar/Scale saves can be rejected by older firmware; restore the
+PRE-UPDATE project backup if needed, not a new-format backup. Restore replaces
+the current project and should be intentional. Keep both versions of backups.
+The supplied rollback hash is verified; the full downgrade/restore procedure has
+not been physically tested for this candidate. No factory firmware or private
+flash dump is bundled. For failures retain logs and consult the upstream manual:
+https://github.com/charlesvestal/fm1-x0x/blob/main/docs/MANUAL.md
