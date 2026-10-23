@@ -1,0 +1,13 @@
+EXPERIMENTAL SCOPE AND LIMITS
+Only bounded workflows were physically tested on one FM1. All 25 copy scopes passed
+local native/sanitizer and production WASM tests; this is not all 25 hardware acceptance.
+One active project; BREAK-only copy is not a menu scope (BREAK is included in ALL PARTS).
+Shared drum-kit accents and pattern swing stay at destination; bass note accents/slides/ties copy.
+Legacy kit timing is shared and retained for drum-row-only copy; independent lane timing copies.
+The query requires stopped/idle state; busy, unsupported, corrupt or mixed scans fail closed.
+Autosave remains independent; the separate note/tail-aware autosave fix is not included.
+No internal-sound-only bypass, named-device routing UI, Pi router, weighted blocks or evolving
+probabilities is included. Ordinary part mute also suppresses its sequence MIDI.
+Current firmware MIDI output is USB; the TRS jack is input. Actual TD-3 delivery is not qualified.
+The existing browser emulator and Slice Profiles tool keep their separate build/acceptance state.
+Heavy-load, full physical scope coverage, receiver timing, soak and power-loss tests remain open.

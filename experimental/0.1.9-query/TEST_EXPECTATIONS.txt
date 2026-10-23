@@ -1,0 +1,8 @@
+Use a backed-up test project and a destination whose contents may be replaced.
+GLOBAL > COPY/PASTE SEQUENCES: choose source, destination and scope; choose PASTE KEEP ACC/SW,
+inspect confirmation, then SEL to apply (HOME cancels). Compare source and destination.
+With playback stopped and after leaving Global, HOME+REC undoes; HOME+PLAY redoes.
+Give destination accents/swing distinct values to test preservation. SAVE is explicit;
+normal autosave remains independent. Undo history does not survive reboot.
+Use command 49 snapshots to compare musical data without triggering export/save.
+Report version, scope, pattern slots and exact steps. Keep private projects/recordings private.

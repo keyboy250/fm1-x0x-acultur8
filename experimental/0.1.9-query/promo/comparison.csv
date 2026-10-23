@@ -1,0 +1,25 @@
+Feature,Upstream baseline,Extended Edition 0.1.9-query,Status
+909 / 808 / two 303 s / BREAK,Available,Retained; original authors credited,Inherited
+32 pattern slots; up to 64 steps,Available,Retained; not 128-step lanes,Retained
+Song blocks and variation editing,Earlier song controls,"Retained 1–32-bar blocks, variations, queue, delete and Undo/Redo",Retained from 0.1.6
+Full sequence-pattern copy,Copying already exists,Nested source/destination workflow; ALL PARTS; destination sharedAC and swing retained,Expanded workflow
+Individual drum-row copy,Exact equivalent not established,All 11 rows on 909 and all 11 on 808; same-lane replacement,New in 0.1.7–0.1.9
+Independent 303 copy,Exact equivalent not established,"303 A or 303 B separately; notes, articulation, timing, generator and motion",New in 0.1.8
+Copy scope count,No 25-choice equivalent established,25 choices: ALL PARTS +22 drum rows +303 A/B; BREAK withinALL PARTS,New
+Destination groove preservation,Not assessed for this workflow,Shared kit accents and swing retained; bass note accents copy with notes,New workflow
+Paste Undo/Redo,History already exists,"One paste transaction; HOME+REC Undo, HOME+PLAY Redo while stopped",Integrated
+Read-only pattern inspection,Project export can save dirty edits,"Command 49 reads current RAM, including unsaved edits, without save/export",New in 0.1.9
+Computer snapshot comparison,No equivalent established,"CLI compares notes, gates, lane settings, accents, swing and motion",New in 0.1.9
+Read integrity,Not assessed,"CRC32, coherent scan stamps, bounded pages; rejects busy/mixed/incomplete scans",New in 0.1.9
+Per-sound strips and defaults,No equivalent 25-sound strip system established,25 filters/limiters and explicit reusable defaults retained,Extended firmware
+Rates and musical following,Existing rates/generation,21 divisions and scale-safe arrangement following retained,Extended firmware
+Saving copied sequences,Project storage available,Bounded 909 full-copy save/restart passed with AC step 2 and 60%swing,Physical subset
+Physical copy isolation / Undo,Not compared,909 full/kick/snare visual checks;303 A and 808 kick direct readback checks,Physical subset
+USB MIDI sequence output,Available,"Retained; channels 1–16 / OFF, clock and notes controls",Existing; receiver test pending
+Original TRS jack direction,Input,Input; no software-onlyOUT feature included,Hardware limitation/evidence
+Internal synthesis bypass / TD-3,No claim,Planned; ordinary mute also stopsMIDI,Future
+Standalone Raspberry Pi MIDI router,External hardware,Planned using user-ownedPi andUSB-MIDI interface; noPi setup included,Future
+Weighted block selection / evolving weights,Not assessed,Priority development targets; no weighted-block feature included,Future
+Named devices / externalCC orLFO,Not assessed,Planned receiver-specific mappings and routes,Future
+Slice Profiles browser workflow,Separate browser tools,Existing browser/emulator integration stays available; no native upload added,Browser only
+FAQ and release guidance,Upstream manual/help,"Searchable release FAQ, copy steps, query usage, comparisonCSV and source",Updated

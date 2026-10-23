@@ -1,0 +1,15 @@
+INSTALLATION AND ROLLBACK / 0.1.9-query
+1. Back up the current project with tools/x0x_backup.py and retain sample WAVs separately.
+   A stopped backup/export can save dirty edits. It is not a read-only RAM query.
+   Project backup does not cover samples, calibration or the separate reusable defaults bank.
+2. Stop playback, lower MASTER, use a reliable USB data connection and verify SHA256.
+3. Install Python 3 and the mido/python-rtmidi dependencies if not already available.
+4. From the extracted bundle: python fm1_install.py x0x-0.1.9-query.fwsc
+   The installer asks for confirmation. Leave power/USB connected until it finishes.
+5. Check expected identity FM-1_9000109 and project recall before working on originals.
+
+The rollback folder contains the previous public 0.1.6-beta1 and its source, not factory firmware.
+Install it using the same tool with rollback/x0x-0.1.6-beta1.fwsc and restore the matching
+pre-update project if needed. Downgrade/restore has not been physically exercised here.
+Old firmware may not understand newer project data. Never overwrite your only backup.
+This release does not install anything on a Raspberry Pi or change the FM1 TRS jack.
