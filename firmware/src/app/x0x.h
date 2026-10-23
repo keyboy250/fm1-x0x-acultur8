@@ -68,12 +68,16 @@ void project_discard_rejected(void);     /* explicit factory reset only */
 int project_save_settings(void);
 void project_flash_changed(void);
 
+/* Stopped scoped copy: 0 all, 1/2 909 kick/snare, 3/4 808 kick/snare.
+ * Always preserves destination shared accent and swing. No clipboard snapshot. */
+int ui_pattern_copy(int source,int destination,int scope);
 int ui_delete_block(int block); /* stopped, arrangement row only; preserves patterns/sounds */
 int ui_duplicate_block(int block); /* stopped, independent patterns; bank or VR_* */
 void ui_init(void);
 void ui_frame(void);
 void ui_input_only(void);
 int ui_dirty(void);
+int ui_pattern_query_busy(void); /* read-only preflight; never reserves or flushes */
 void ui_external_edit(int begin);        /* 1 starts a gesture; 0 commits it */
 void ui_external_changed(void);
 void ui_external_sound(int target, int voice, int index, int value);

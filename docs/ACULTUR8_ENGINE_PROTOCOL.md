@@ -93,3 +93,13 @@ numeric input/output suffixes may differ. The tool sends command48 only. It does
 not fall back to CC, sample, debug, save or firmware-update commands. Earlier
 firmware does not answer this query; a timeout must not be reported as a zero
 value or a passed readback check.
+
+
+## Candidate command49: unsaved pattern readback
+
+The separate query candidate adds bounded, CRC-protected RAM pages for all32
+patterns, all25 lanes, shared accents/swing and pattern motion/probability.
+It never calls the project backup/export flush or a save/setter/transport action.
+See [the complete ABI and nonmutation contract](PATTERN_QUERY_PROTOCOL.md) and
+`tools/fm1_pattern_read.py`. The current physical 0.1.8 predecessor does not
+support command49; local query tests are not device acceptance.

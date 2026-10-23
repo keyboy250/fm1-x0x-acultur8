@@ -234,7 +234,7 @@ def build(root=ROOT):
     ui=texts['firmware/src/app/ui.c']
     refs=enum_names(ui,'R_NONE')
     expected='R_NONE R_ENG R_SWING R_DLEN R_DRATE R_BLEN R_BRATE R_BDIR R_BTRANS R_GEN R_BRKSET R_BRKSLOT R_TEMPO R_ACCENT R_CLKOUT R_NOTEOUT R_PALETTE R_KEYLED R_KEYSOUND R_AUTOSAVE R_ACT R_SBAR R_SPAT R_SLEN R_STALLS R_HDR R_TAPE R_MIDICH R_OUTLOUD R_SREP R_BATT R_USBFULL R_FREEPLAY R_RATEENABLE R_RATEFAMILY R_RATEBOUNDARY R_RATEHYST R_RATEEXACT R_STRIP R_STRIPFLAG R_STRIPDEFAULT R_CORES R_BMODE R_BDEGREE R_BMUTE'.split()
-    expected+=['R_AKEY','R_ASCALE','R_AFOLLOW'] # native aliases of existing harmony fields
+    expected+=['R_AKEY','R_ASCALE','R_AFOLLOW','R_COPYCFG'] # native aliases of existing harmony fields
     if refs!=expected:raise ValueError('UI reference coverage must be updated')
     # Every pref kind accounted for, including nonmusical/read-only rows.
     seq=descriptors(ui,'SEQ_P',symbols); sq=enum_names(ui,'SQ_SWING')[:-1]
@@ -350,7 +350,9 @@ def build(root=ROOT):
     for row in rows:
         if row['address']:row['parameter_number']=(row['address']['channel']-1)*len(CCS)+CCS.index(row['address']['cc'])
     covered={name:'descriptor or structured field' for name in refs}
-    covered.update({'R_NONE':'sentinel','R_HDR':'non-selectable header','R_BATT':'read-only', 'R_ACT':'all ACT_P actions; block actions 12-15 and Undo action 16 native only', 'R_BMODE':'alias arrangement.enabled', 'R_BDEGREE':'alias arrangement.degree', 'R_BMUTE':'alias arrangement.mute'})
+    for field,maximum in [('source',31),('destination',31),('scope',24)]:
+        add('ui.pattern_copy.'+field,'Stopped copy '+field,maximum,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native UI only; confirmed staged paste; no new remote CC binding')
+    covered.update({'R_COPYCFG':'native-only source/destination/scope; no MIDI binding', 'R_NONE':'sentinel','R_HDR':'non-selectable header','R_BATT':'read-only', 'R_ACT':'all ACT_P actions; block actions 12-15 and Undo action 16 and scoped paste action 17 and copy submenu action 18 native only', 'R_BMODE':'alias arrangement.enabled', 'R_BDEGREE':'alias arrangement.degree', 'R_BMUTE':'alias arrangement.mute'})
     result={'schema':1,'map_version':'draft-1-actions-prototype-1','runtime_cc':RUNTIME_NOTE,
             'source_hashes':{p:hashlib.sha256(t.encode()).hexdigest() for p,t in raw.items()},
             'descriptor_counts':counts,'ui_ref_coverage':covered,'structured_field_coverage':structured,

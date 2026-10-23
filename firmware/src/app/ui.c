@@ -31,7 +31,7 @@ static const char *const PART_S[NPARTS] = {"909", "808", "303A", "303B", "BRK"};
 /* overlays drawn over the main area */
 enum { O_NONE, O_LIST, O_ASK };
 enum { ACT_NONE, ACT_SAVE, ACT_CLEAR_PART, ACT_CLEAR_PAT, ACT_COPY, ACT_RESET, ACT_ABOUT, ACT_SONG_INS,
-       ACT_SONG_DEL, ACT_SONG_CLR, ACT_PERF, ACT_PERF_TEST, ACT_BLOCK_DUP, ACT_BLOCK_NOTES, ACT_BLOCK_QUEUE, ACT_BLOCK_DEL, ACT_UNDO };
+       ACT_SONG_DEL, ACT_SONG_CLR, ACT_PERF, ACT_PERF_TEST, ACT_BLOCK_DUP, ACT_BLOCK_NOTES, ACT_BLOCK_QUEUE, ACT_BLOCK_DEL, ACT_UNDO, ACT_SCOPED_PASTE, ACT_COPY_SEQUENCES };
 
 typedef struct {
     uint8_t view, part, prev_view;
@@ -81,6 +81,9 @@ typedef struct {
     uint8_t song_sel;                  /* the SONG screen's bar */
 } ui_t;
 static ui_t ui;
+static uint8_t copy_config[3] = {0,1,0}; /* source, destination, scope; UI only */
+static uint32_t copy_fingerprint,copy_epoch;
+static POLY_COLD void copy_native_action(int confirm,int arg);
 static uint8_t any_button;             /* a button has been pressed since power-on (the footer's first line) */
 #define FOOT_GAP 7                     /* between the footer's parts */
 static uint16_t footer_text(const char **a, const char **b, const char **c);
@@ -209,7 +212,7 @@ static int arrangement_panel_refuse(void)
 /* =============================================================== param refs === */
 enum { R_NONE, R_ENG, R_SWING, R_DLEN, R_DRATE, R_BLEN, R_BRATE, R_BDIR, R_BTRANS, R_GEN, R_BRKSET,
        R_BRKSLOT, R_TEMPO, R_ACCENT, R_CLKOUT, R_NOTEOUT, R_PALETTE, R_KEYLED, R_KEYSOUND, R_AUTOSAVE, R_ACT, R_SBAR, R_SPAT,
-       R_SLEN, R_STALLS, R_HDR, R_TAPE, R_MIDICH, R_OUTLOUD, R_SREP, R_BATT, R_USBFULL, R_FREEPLAY, R_RATEENABLE, R_RATEFAMILY, R_RATEBOUNDARY, R_RATEHYST, R_RATEEXACT, R_STRIP, R_STRIPFLAG, R_STRIPDEFAULT, R_CORES, R_BMODE, R_BDEGREE, R_BMUTE, R_AKEY, R_ASCALE, R_AFOLLOW };   /* R_TAPE: FX's one-knob TAPE (DIGI .. worn tape) */          /* R_HDR: a list's section header (a = its group), never selected */
+       R_SLEN, R_STALLS, R_HDR, R_TAPE, R_MIDICH, R_OUTLOUD, R_SREP, R_BATT, R_USBFULL, R_FREEPLAY, R_RATEENABLE, R_RATEFAMILY, R_RATEBOUNDARY, R_RATEHYST, R_RATEEXACT, R_STRIP, R_STRIPFLAG, R_STRIPDEFAULT, R_CORES, R_BMODE, R_BDEGREE, R_BMUTE, R_AKEY, R_ASCALE, R_AFOLLOW, R_COPYCFG };   /* R_TAPE: FX's one-knob TAPE (DIGI .. worn tape) */          /* R_HDR: a list's section header (a = its group), never selected */
 /* Four logical bytes; scalar helper ABI avoids aggregate copy temporaries.
  * Explicit unsigned casts preserve the original uint8_t initializer behavior. */
 typedef uint32_t pref_t;
@@ -253,8 +256,23 @@ static const x0x_param_t ACT_P[] = {
     {"COPY PATTERN", 0, 0, 0}, {"FACTORY RESET", 0, 0, 0}, {"ABOUT X0X", 0, 0, 0}, {"INSERT BAR", 0, 0, 0},
     {"DELETE BAR", 0, 0, 0}, {"CLEAR SONG", 0, 0, 0}, {"PERFORMANCE", 0, 0, 0}, {"RUN PERF TEST", 0, 0, 0},
     {"DUP AS VARIATION",0,0,0}, {"EDIT BLOCK NOTES",0,0,0}, {"QUEUE BLOCK",0,0,0}, {"DELETE BLOCK",0,0,0},
-    {"UNDO",0,0,0},
+    {"UNDO",0,0,0}, {"PASTE KEEP ACC/SW",0,0,0}, {"COPY/PASTE SEQUENCES",0,0,0},
 };
+/* Scope IDs are transient UI choices, never stored or sent over MIDI. */
+enum { PCOPY_303A=23, PCOPY_303B, PCOPY_COUNT };
+static const char *const COPY_SCOPE_N[] = {
+    "ALL PARTS",
+    "909 KICK","909 SNARE","909 LOW TOM","909 MID TOM","909 HIGH TOM",
+    "909 RIMSHOT","909 CLAP","909 CL HAT","909 OP HAT","909 CRASH","909 RIDE",
+    "808 KICK","808 SNARE","808 LOW TOM","808 MID TOM","808 HIGH TOM",
+    "808 RS/CLAVE","808 CP/MARACAS","808 COWBELL","808 CYMBAL","808 OP HAT","808 CL HAT",
+    "303 A","303 B"
+};
+static int pc_scope_part(int scope)
+{return scope<PCOPY_303A?(scope-1)/NDRUM:scope-21;}
+static int pc_scope_voice(int scope)
+{return scope<PCOPY_303A?(scope-1)%NDRUM:scope-PCOPY_303A;}
+static const x0x_param_t COPY_P[] = {{"COPY FROM",31,0,0},{"PASTE INTO",31,1,0},{"COPY SCOPE",PCOPY_COUNT-1,0,COPY_SCOPE_N}};
 static const x0x_param_t STALLS_P = {"STALLS", 1, 0, ONOFF_N};
 static const x0x_param_t MIDICH_P[NPARTS] = {   /* 0 = OFF (no notes in or out), 1-16 */
     {"909 MIDI CH", 16, 10, 0}, {"808 MIDI CH", 16, 11, 0}, {"303A MIDI CH", 16, 2, 0}, {"303B MIDI CH", 16, 3, 0},
@@ -347,6 +365,7 @@ static POLY_COLD const x0x_param_t *pref_desc(pref_t r)
         d.names = engine_brk_slot_names();
         return &d;
     }
+    case R_COPYCFG: return P_A(r)<3?&COPY_P[P_A(r)]:0;
     case R_ACT: return &ACT_P[P_A(r)];
     case R_SBAR: {
         static x0x_param_t d = {"BAR", 0, 0, 0};
@@ -424,6 +443,7 @@ static POLY_COLD int pref_get(pref_t r)
         return k >= 0 ? sg->bar[k].pat[P_A(r)] : seq.ppat[P_A(r)];
     }
     case R_MIDICH: return seq.ch[P_A(r) % NPARTS] == SEQ_CH_OFF ? 0 : seq.ch[P_A(r) % NPARTS] + 1;
+    case R_COPYCFG: return P_A(r)<3?copy_config[P_A(r)]:0;
     case R_OUTLOUD: return proj.set.out_loud;
     case R_USBFULL: return proj.set.usb_full;
     case R_CORES: return proj.set.one_core;
@@ -444,6 +464,7 @@ static POLY_COLD void pref_set(pref_t r, int v)
     if (!d || P_KIND(r) == R_ACT)
         return;
     v = v < 0 ? 0 : v > d->max ? d->max : v;
+    if(P_KIND(r)==R_COPYCFG){if(P_A(r)<3)copy_config[P_A(r)]=(uint8_t)v;return;}
     if(P_KIND(r)==R_STRIPDEFAULT){
         if(v){int rc=ui_strip_default_action(P_A(r),P_C(r)!=0);
             say(rc==VR_OK?(P_C(r)?"DEFAULT APPLIED":"DEFAULT SAVED"):rc==VR_MISSING?"NO SAVED DEFAULT":rc==VR_BUSY?"STOP AND RELEASE KEYS":rc==VR_IO?"DEFAULT SAVE FAILED":"DEFAULT REFUSED",0);}
@@ -766,6 +787,7 @@ static POLY_COLD void pref_value_of(pref_t r, int v, char *num, char *unit)
     case R_BRKSET: put_i(num, v); put_s(unit, "%"); return;
     case R_TEMPO: put_i(num, v + 20); put_s(unit, "bpm"); return;
     case R_SBAR: put_i(num, v + 1); return;
+    case R_COPYCFG: num[0]='P';put_i(num+1,v+1);return;
     case R_SPAT: num[0] = 'P'; put_i(num + 1, v + 1); return;
     case R_MIDICH: if (v) put_i(num, v); else put_s(num, "OFF"); return;
     case R_SREP: num[0] = 'x'; put_i(num + 1, v + 1); return;
@@ -779,7 +801,7 @@ static void pref_value(pref_t r, char *num, char *unit) { pref_value_of(r, pref_
 #define MAXPAGES 14
 /* page groups: whose values a page holds (the SEL list's headers, the header's colour) */
 enum { GR_NONE, GR_TRACK, GR_TMIX, GR_KIT, GR_PAT, GR_SOUND, GR_MORE,
-       GR_MIDI, GR_AUDIO, GR_KEYS, GR_PROJECT, GR_SYSTEM };   /* (the last five: GLO's sections) */
+       GR_MIDI, GR_AUDIO, GR_KEYS, GR_PROJECT, GR_SYSTEM, GR_COPY };   /* (the last five: GLO's sections) */
 #define MAXMORE 14
 typedef struct {
     pref_t r[MAXPAGES][4];
@@ -1049,6 +1071,7 @@ static POLY_COLD void hdr_name(int g, char *t)
     case GR_KIT: put_s(put_s(t, PART_N[ui.part]), ": ALL TRACKS"); break;
     case GR_PAT: put_s(put_i(put_s(t, "P"), seq.ppat[ui.part] + 1), ": THE PATTERN"); break;
     case GR_MORE: put_s(t, "MORE"); break;
+    case GR_COPY: put_s(t,"COPY/PASTE SEQUENCES");break;
     case GR_MIDI: put_s(t, "MIDI"); break;
     case GR_AUDIO: put_s(t, "AUDIO"); break;
     case GR_KEYS: put_s(t, "KEYS AND SCREEN"); break;
@@ -1105,6 +1128,7 @@ static POLY_COLD void open_list_of_pages(void)
 static POLY_COLD void open_global(void)
 {
     ui.list_n = 0;
+    list_add(PR(R_ACT,ACT_COPY_SEQUENCES,0,0));
     list_rows[ui.list_n++] = PR(R_HDR, GR_MIDI, 0, 0);
     list_add(PR(R_CLKOUT, 0, 0, 0));
     list_add(PR(R_NOTEOUT, 0, 0, 0));
@@ -1132,6 +1156,19 @@ static POLY_COLD void open_global(void)
     while (list_skip(ui.list_sel))
         ui.list_sel++;
     ui.overlay = O_LIST;
+}
+
+/* Nested list state uses the existing title, not another persistent UI buffer. */
+static int copy_sequences_open(void)
+{return ui.view==V_GLO && list_rows[0]==PR(R_HDR,GR_COPY,0,0);}
+static POLY_COLD void open_copy_sequences(void)
+{
+    ui.list_n=0;
+    list_rows[ui.list_n++]=PR(R_HDR,GR_COPY,0,0);
+    for(int k=0;k<3;k++)list_add(PR(R_COPYCFG,k,0,0));
+    list_add(PR(R_ACT,ACT_SCOPED_PASTE,0,0));
+    put_s(list_title,"COPY/PASTE SEQ");
+    ui.list_sel=1;ui.list_top=0;ui.overlay=O_LIST;
 }
 
 /* ================================================================ questions === */
@@ -1415,7 +1452,7 @@ static POLY_COLD int undo_arrangement_intent(int redo)
     if (k < 0 || k >= undo.n) return 0;
     if (undo.at[k] > undo.at[k+1] || undo.at[k+1] > undo.used || undo.at[k+1] - undo.at[k] < 8u) return 1;
     entry = undo.pool + undo.at[k]; end = undo.pool + undo.at[k+1];
-    if(ud_get16(entry+6)&1u)return 1; /* structural copy */
+    if(ud_get16(entry+6)&4097u)return 1; /* structural copy */
     runs = ud_get16(entry); entry += 8;
     for (run = 0; run < runs; run++) {
         uint32_t off, n, padded;
@@ -1775,6 +1812,7 @@ static void set_view(int v);
 static POLY_COLD void run_action(int act, int arg)
 {
     char t[28], *q;
+    if(act==ACT_SCOPED_PASTE){copy_native_action(1,arg);return;}
     if(act>=ACT_BLOCK_DUP && act<=ACT_BLOCK_DEL){bridge_native_action(act);return;}
     if ((act == ACT_SONG_INS || act == ACT_SONG_DEL || act == ACT_SONG_CLR) && arrangement_panel_refuse()) return;
     int reset_held = 0,copy_held=0;
@@ -1868,6 +1906,7 @@ static POLY_COLD void run_action(int act, int arg)
 
 #include "cc_actions.inc"
 #include "block_bridge.inc"
+#include "pattern_copy.inc"
 
 /* ===================================================================== input === */
 /* knob acceleration by speed: a slow turn is one step a detent (fine detail), a quick one up to 8,
@@ -2487,7 +2526,9 @@ static POLY_COLD void list_enter(void)
     pref_t r = list_rows[ui.list_sel];
     if (P_KIND(r) != R_ACT)
         return;
-    if(P_A(r)==ACT_BLOCK_DEL)
+    if(P_A(r)==ACT_COPY_SEQUENCES)open_copy_sequences();
+    else if(P_A(r)==ACT_SCOPED_PASTE)copy_native_action(0,0);
+    else if(P_A(r)==ACT_BLOCK_DEL)
         ask(ACT_BLOCK_DEL,0,"DELETE THIS BLOCK?","KEEP PATTERNS AND SOUNDS");
     else if(P_A(r)==ACT_BLOCK_DUP)
         ask(ACT_BLOCK_DUP,0,"DUPLICATE BLOCK?","NEW PATTERNS; INSERT AFTER");
@@ -2503,6 +2544,7 @@ static POLY_COLD void list_enter(void)
 
 static void close_overlay(void)
 {
+    if(copy_sequences_open()){open_global();return;}
     if (ui.view == V_GLO) {
         ui.overlay = O_NONE;
         set_view(ui.prev_view == V_GLO ? V_PART : ui.prev_view);
@@ -4901,6 +4943,13 @@ POLY_COLD void ui_frame(void)
 
 void ui_input_only(void) { input(); }
 int ui_dirty(void) { return ui.dirty != 0; }
+int ui_pattern_query_busy(void)
+{
+    return seq.playing || seq.req_start || seq.req_stop || seq.req_cont ||
+        seq.transport_stage || seq.transport_hold || ui.rec || ui.keys || ui.btn ||
+        external_edit || perf_testing() || save_wait || ui_saves_held() ||
+        engine_queue_read()!=engine_queue_written();
+}
 void ui_say(const char *a, const char *b) { say(a, b); }
 
 POLY_COLD int ui_strip_default_action(unsigned strip,int apply)

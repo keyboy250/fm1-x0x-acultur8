@@ -162,7 +162,8 @@ static float d8_exp2_cr(float x)
     for (k = 10; k >= 0; k--)
         s = ff_add(ff_mul(s, r), k_ifact[k]);
     b.f = s.hi + s.lo;
-    b.i += (int32_t)n << 23;
+    /* Preserve the two's-complement exponent adjustment without shifting a negative signed value. */
+    b.i += (int32_t)((uint32_t)(int32_t)n << 23);
     return b.f;
 }
 

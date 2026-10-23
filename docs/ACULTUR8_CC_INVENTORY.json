@@ -5,8 +5,8 @@
   "source_hashes": {
     "firmware/src/app/engine.c": "ec13ec6b1f724f152c0f81d37779284a8c69ddedb36833c9c4cab57ccf298abe",
     "firmware/src/app/engine.h": "ce6c85391601439e9b1836c5c917b5b3376e135bee4e3710fcd4bcb5aa76c5e0",
-    "firmware/src/app/ui.c": "a157b85d6f35ef900850b3c213196d359536557c3118df3e1af97eaa32a547b9",
-    "firmware/src/app/x0x.h": "467bda542b0b04e501569cdd6ca7eab654406de6017fbdcda867115e87bcb32f",
+    "firmware/src/app/ui.c": "66fcbc7550e8756105e8e5fb638da17314ec303762b2fd1abf727b4831aad1ea",
+    "firmware/src/app/x0x.h": "256446d43a173dfdd6920bcf727fc611925b8a5a5e11da4098c92e4b7b794c57",
     "firmware/src/app/block_bridge.inc": "03ccb0ec7f1364bc6e9c3a03c80f6302ce156ef9f71d0dbdc27696923a8060f1",
     "firmware/src/app/variant.c": "b0eb98dfc22bc6597607ad5e36df3416f1d1437ff37344d8f6ad12f50dc5629a",
     "firmware/src/app/variant.h": "cf296a6870b5715ef7cc1934827e6439408858440577a05bf7f566a857df3e5f",
@@ -18,7 +18,7 @@
     "firmware/src/seq/tb3po.h": "7dd646a572129fc8df5628f6111f68fef6b54476446f75cc5f583b6f110f0073",
     "firmware/src/seq/harmony.h": "69b7c2f454f3ed784036522e1147a20343e64d11738d4c7d00315a2edaa689a4",
     "firmware/src/dsp/drum909.c": "3a333fc53aac44118ed6e419b4ff9c04117ec1cda81e64ece5ae80accc15a27d",
-    "firmware/src/dsp/drum808.c": "5734da993ce4741708519688877bd33a379806b93a95a2d7ef0edca72f5ba66a",
+    "firmware/src/dsp/drum808.c": "6b86f83b7adea57c615d71f611c81eb16b73a4a1fcf0012dbc52eacb369a950f",
     "firmware/src/dsp/bass303.c": "ace73e02cd21376902af70005011fcbbfe15b58219192fc42f912519d47faf9d",
     "firmware/src/dsp/fxbus.c": "8a7c6ef75b8405883f8d3f307333b6f9911c0c4ff6d5cc970b750d4c296c4246",
     "firmware/src/dsp/master.c": "5064bd16121c0a0e3a789b37a067425b3d2f069848a32b8305f8c2be0a044d30",
@@ -102,7 +102,7 @@
     "R_KEYLED": "descriptor or structured field",
     "R_KEYSOUND": "descriptor or structured field",
     "R_AUTOSAVE": "descriptor or structured field",
-    "R_ACT": "all ACT_P actions; block actions 12-15 and Undo action 16 native only",
+    "R_ACT": "all ACT_P actions; block actions 12-15 and Undo action 16 and scoped paste action 17 and copy submenu action 18 native only",
     "R_SBAR": "descriptor or structured field",
     "R_SPAT": "descriptor or structured field",
     "R_SLEN": "descriptor or structured field",
@@ -129,7 +129,8 @@
     "R_BMUTE": "alias arrangement.mute",
     "R_AKEY": "descriptor or structured field",
     "R_ASCALE": "descriptor or structured field",
-    "R_AFOLLOW": "descriptor or structured field"
+    "R_AFOLLOW": "descriptor or structured field",
+    "R_COPYCFG": "native-only source/destination/scope; no MIDI binding"
   },
   "structured_field_coverage": {
     "tb3po_cfg_t": {
@@ -18069,6 +18070,68 @@
       "action_policy": "edge-trigger; explicit safety/preflight; no storage operation in audio callback"
     },
     {
+      "id": "action.17",
+      "name": "PASTE KEEP ACC/SW",
+      "category": "action",
+      "range": [
+        0,
+        127
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {
+        "pattern": [
+          0,
+          31
+        ],
+        "part": [
+          0,
+          4
+        ],
+        "block": [
+          0,
+          191
+        ]
+      },
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": null,
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "edge-trigger; explicit safety/preflight; no storage operation in audio callback"
+    },
+    {
+      "id": "action.18",
+      "name": "COPY/PASTE SEQUENCES",
+      "category": "action",
+      "range": [
+        0,
+        127
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {
+        "pattern": [
+          0,
+          31
+        ],
+        "part": [
+          0,
+          4
+        ],
+        "block": [
+          0,
+          191
+        ]
+      },
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": null,
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "edge-trigger; explicit safety/preflight; no storage operation in audio callback"
+    },
+    {
       "id": "system.one_core",
       "name": "Second core disabled at next power-on",
       "category": "nonmusical",
@@ -23585,6 +23648,60 @@
       "address": null,
       "scaling": "round(min + cc7 * (max-min) / 127)",
       "action_policy": "explicitly inventoried; no automatic permission/file/dialog/device selection over CC; runtime policy not implemented"
+    },
+    {
+      "id": "ui.pattern_copy.source",
+      "name": "Stopped copy source",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        31
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": null,
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Native UI only; confirmed staged paste; no new remote CC binding"
+    },
+    {
+      "id": "ui.pattern_copy.destination",
+      "name": "Stopped copy destination",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        31
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": null,
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Native UI only; confirmed staged paste; no new remote CC binding"
+    },
+    {
+      "id": "ui.pattern_copy.scope",
+      "name": "Stopped copy scope",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        24
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": null,
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Native UI only; confirmed staged paste; no new remote CC binding"
     }
   ]
 }

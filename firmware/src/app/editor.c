@@ -10,7 +10,7 @@
 #define ED_HDR0 0x7D
 #define ED_HDR1 0x46
 #define ED_HDR2 0x4C
-enum { ED_INFO = 1, ED_SMP_BEGIN = 11, ED_SMP_WRITE, ED_SMP_END, ED_SMP_ERASE, ED_SMP_INFO, ED_SMP_READ, ED_PING = 25, ED_STRIP_QUERY = 48 };
+enum { ED_INFO = 1, ED_SMP_BEGIN = 11, ED_SMP_WRITE, ED_SMP_END, ED_SMP_ERASE, ED_SMP_INFO, ED_SMP_READ, ED_PING = 25, ED_STRIP_QUERY = 48, ED_PATTERN_QUERY = 49 };
 #define ED_READ_MAX 224u                     /* X0X: SMP_READ's bytes a frame (the break page draws the slots) */
 
 static uint8_t ed_out[288];
@@ -187,6 +187,8 @@ static POLY_COLD int ed_debug(uint32_t cmd, const uint8_t *a, uint32_t na)
 }
 #endif
 
+#include "pattern_query.inc"
+
 static POLY_COLD void ed_handle(const uint8_t *f, uint32_t n)
 {
     uint32_t cmd = f[3], i;
@@ -227,6 +229,9 @@ static POLY_COLD void ed_handle(const uint8_t *f, uint32_t n)
         }
         break;
     }
+    case ED_PATTERN_QUERY:
+        ed_pattern_query(a,na);
+        break;
     case ED_SMP_BEGIN:
     case ED_SMP_ERASE:
         if (na < 1u || a[0] >= SMP_USER_SLOTS || !flash_ok)

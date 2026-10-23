@@ -4,7 +4,7 @@
 
 Generated with `python tools/cc_inventory.py --write`; validate with `--check`. No firmware compilation is performed.
 
-705 inventory rows: 685 addressed field templates/descriptor rows and 20 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 650, 'nonmusical': 4, 'diagnostic': 1, 'read_only': 1, 'action': 24, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 12}.
+710 inventory rows: 685 addressed field templates/descriptor rows and 25 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 650, 'nonmusical': 4, 'diagnostic': 1, 'read_only': 1, 'action': 26, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 15}.
 
 ## Source-derived engine descriptor counts
 
@@ -638,6 +638,8 @@ Acceptance: exhaustive registry coverage and endpoint/enum scaling; collision/re
 | action.14 | QUEUE BLOCK | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
 | action.15 | DELETE BLOCK | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
 | action.16 | UNDO | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.17 | PASTE KEEP ACC/SW | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.18 | COPY/PASTE SEQUENCES | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
 | system.one_core | Second core disabled at next power-on | [0, 1] | none | {} | nonmusical |
 | selector.pattern | selector.pattern | [0, 31] | 12 / 74 | {} | musical |
 | selector.part | selector.part | [0, 4] | 12 / 75 | {} | musical |
@@ -751,3 +753,6 @@ Acceptance: exhaustive registry coverage and endpoint/enum scaling; collision/re
 | ui.navigation | ui.navigation | [0, 1] | none | {} | nonmusical_action |
 | ui.keyboard_latch | ui.keyboard_latch | [0, 1] | none | {} | nonmusical_action |
 | ui.factory_reset | ui.factory_reset | [0, 1] | none | {} | nonmusical_action |
+| ui.pattern_copy.source | Stopped copy source | [0, 31] | none | {} | nonmusical_action |
+| ui.pattern_copy.destination | Stopped copy destination | [0, 31] | none | {} | nonmusical_action |
+| ui.pattern_copy.scope | Stopped copy scope | [0, 24] | none | {} | nonmusical_action |

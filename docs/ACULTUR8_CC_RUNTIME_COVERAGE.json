@@ -4147,6 +4147,20 @@
       "reason": "no writable direct CC address in reviewed registry"
     },
     {
+      "id": "action.17",
+      "parameter_number": null,
+      "binding": "ACTION",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "action.18",
+      "parameter_number": null,
+      "binding": "ACTION",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
       "id": "system.one_core",
       "parameter_number": null,
       "binding": "UNSUPPORTED",
@@ -5088,6 +5102,27 @@
     },
     {
       "id": "ui.factory_reset",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "ui.pattern_copy.source",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "ui.pattern_copy.destination",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "ui.pattern_copy.scope",
       "parameter_number": null,
       "binding": "UNSUPPORTED",
       "status": "explicitly unmapped/read-only/nonmusical",
