@@ -38,8 +38,10 @@
     "manual/index.html": "83cc71214ab58f6584b96a182a052dd5bea6b62abec52a507633b01b56fd72ed",
     "site.css": "9df123b4f65985ffd69a40bfe96f857222dd4d59d5dc07dfcb6665082df60253",
     "experimental/0.1.9-query/index.html": "4668463833612e15f36048889efe07994607a54e43420dd9b5e4f00b1c671c8a",
-    "experimental/0.1.9-query/promo/index.html": "94ec57fc52f5c38c8f643917877e7af386a35412445e49a237eb6796d0091fde",
-    "experimental/0.1.9-query/docs/FAQ.html": "2c1934ffaff016f3c51c92b6d9d79ccdd8cc9399d90c28ddc2bb9f9f553befca"
+    "experimental/0.1.9-query/promo/index.html": "1be64bc5a0b809f105fb06f3f2e07cf20e29c92984c1e096529699bd940f84ef",
+    "experimental/0.1.9-query/docs/FAQ.html": "2c1934ffaff016f3c51c92b6d9d79ccdd8cc9399d90c28ddc2bb9f9f553befca",
+    "experimental/0.1.9-query/promo/promo.css": "1b33acec8fe9fe426d250749f4f0daec8e91e602e40435adeb461a36887d8e9a",
+    "experimental/0.1.9-query/promo/rhythm-lattice-fm1-v1.png": "7b7d18f45b0d472d3937adfc442f574c8c116214b6c298cdb793f7a27316e96b"
   },
   "website_update_20261024": {
     "scope": "Cross-project invitation and upstream credits only;existing public0.1.9 downloads and emulator retained",
@@ -54,5 +56,14 @@
     "original_project": "https://github.com/charlesvestal/fm1-x0x",
     "acultur8_projects": "https://acultur8.com/",
     "unpublished_0126_excluded": true
+  },
+  "website_artwork_20261025": {
+    "scope": "Rhythm Lattice promo header only; original release poster, credits,0.1.9 downloads and emulator retained",
+    "files": [
+      "experimental/0.1.9-query/promo/index.html",
+      "experimental/0.1.9-query/promo/promo.css",
+      "experimental/0.1.9-query/promo/rhythm-lattice-fm1-v1.png"
+    ],
+    "candidate0126_published": false
   }
 }
