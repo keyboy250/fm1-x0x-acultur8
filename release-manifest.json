@@ -34,14 +34,16 @@
     "emu/worklet.js": "f956641d25802dc0003341226994a88788677bf91aea28aa0162d3bceab5b02d",
     "emu/x0x.wasm": "e765fd3c65b1ba22f311b425cd5bc964462ee0a783a5222069c2d50a3f78d8a0",
     "faq/index.html": "07bcc9a6ebb71d1f33144e1ffc61e2292d66504aa2faef873a92f2dc4927805b",
-    "index.html": "4e3f6abf1d46cf10e4f9ac2031b1294d670b3ad319597a284258864ea377a351",
+    "index.html": "f3e48e823f72c5fefe922a0ade183d5444b6a7648d242934a4b474df9c191395",
     "manual/index.html": "83cc71214ab58f6584b96a182a052dd5bea6b62abec52a507633b01b56fd72ed",
     "site.css": "9df123b4f65985ffd69a40bfe96f857222dd4d59d5dc07dfcb6665082df60253",
-    "experimental/0.1.9-query/index.html": "4668463833612e15f36048889efe07994607a54e43420dd9b5e4f00b1c671c8a",
-    "experimental/0.1.9-query/promo/index.html": "72cbd5d3e7e12a4c2b05da25d7971423f93c221573234fd00ac080ddd1b7b831",
+    "experimental/0.1.9-query/index.html": "924850bd30c5ec6eff936fbf1d9c1d060d0aa592d1ae453f3d4cdef750c89c11",
+    "experimental/0.1.9-query/promo/index.html": "a3f5c72a5a5d05af32ff89ace3830175842cb3fdcc2c0f1e2c10f5ef9e721fb9",
     "experimental/0.1.9-query/docs/FAQ.html": "2c1934ffaff016f3c51c92b6d9d79ccdd8cc9399d90c28ddc2bb9f9f553befca",
     "experimental/0.1.9-query/promo/promo.css": "959564939e371c24b5c3696be6538ca0c75d0b36c25d09826c725791f4c5244d",
-    "experimental/0.1.9-query/promo/rhythm-lattice-fm1-v1.png": "7b7d18f45b0d472d3937adfc442f574c8c116214b6c298cdb793f7a27316e96b"
+    "experimental/0.1.9-query/promo/rhythm-lattice-fm1-v1.png": "7b7d18f45b0d472d3937adfc442f574c8c116214b6c298cdb793f7a27316e96b",
+    "brand/studio-precision-concept.png": "22d5ff38fb1d6eb77368f7b9b6d781d9eed8a8a5350aedfc599960b4e1869127",
+    "brand/studio-precision.css": "02267f41e3399e9ea941e856359d4119a62354b9dcf6a3a1fd2ea572bfbc6ce9"
   },
   "website_update_20261024": {
     "scope": "Cross-project invitation and upstream credits only;existing public0.1.9 downloads and emulator retained",
@@ -65,5 +67,11 @@
       "experimental/0.1.9-query/promo/rhythm-lattice-fm1-v1.png"
     ],
     "candidate0126_published": false
+  },
+  "branding": {
+    "name": "Studio precision",
+    "approved_utc": "2026-10-25T07:55:59.642107+00:00",
+    "scope": "FM-1 project homepage, experimental download and comparison pages",
+    "firmware_release_unchanged": true
   }
 }
