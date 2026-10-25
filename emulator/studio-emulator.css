@@ -1,0 +1,22 @@
+html:root:not([data-theme="light"]),html:root[data-theme="dark"],html:root[data-theme="light"]{--ground:#111313;--ink:#f3eddf;--muted:#b8bdb8;--rule:#3d4543;--accent:#ff671c;--card:#1a1e1e;color-scheme:dark}
+body{padding:0 18px 50px;font-family:Arial,Helvetica,sans-serif}
+main{max-width:1120px;padding:28px 0 40px}
+.studio-header{align-items:center;flex-wrap:nowrap;gap:18px;margin-bottom:22px}
+.studio-home{font-family:Arial,Helvetica,sans-serif}
+.studio-hero{margin-bottom:28px}.studio-hero img{height:auto}
+header.beta-header{display:block;margin:26px 0 24px;padding:0;border:0;background:transparent}
+header.beta-header h1{font:800 clamp(30px,5vw,52px)/1.07 Arial,Helvetica,sans-serif;letter-spacing:-.035em;margin:14px 0;max-width:800px}
+.beta-header .beta-badge{display:inline-block;background:transparent;color:var(--accent);border:0;padding:0;font:12px/1.5 monospace;letter-spacing:.12em}
+header.beta-header nav{margin:20px 0 0;gap:12px 24px;flex-wrap:wrap;justify-content:flex-start}
+.beta-header p{color:var(--muted)}
+.beta-intro{background:var(--card);border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:4px;padding:22px;margin:24px 0}
+.beta-intro h2{margin:0 0 12px;color:var(--ink)}
+.beta-note{color:var(--muted)}
+main>section{border-radius:4px}
+button:not(.hit),select,input[type="number"]{border-radius:3px}
+button:not(.hit):not(:disabled):hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.bar{padding:14px 0;border-bottom:1px solid var(--rule)}
+.bar #mute{color:var(--ink);border-color:var(--accent)}
+section h2{font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.25}
+@media(max-width:600px){body{padding-inline:16px}main{padding-top:22px}.studio-header{gap:10px}.studio-parent{font-size:9px;max-width:115px}.studio-home{font-size:22px}header.beta-header nav{margin-left:0;gap:14px 18px}header.beta-header h1{font-size:34px}.beta-intro{padding:18px}.studio-hero{margin-bottom:22px}section h2{font-size:22px}}
