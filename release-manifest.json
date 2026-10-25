@@ -34,10 +34,10 @@
     "emu/worklet.js": "f956641d25802dc0003341226994a88788677bf91aea28aa0162d3bceab5b02d",
     "emu/x0x.wasm": "e765fd3c65b1ba22f311b425cd5bc964462ee0a783a5222069c2d50a3f78d8a0",
     "faq/index.html": "07bcc9a6ebb71d1f33144e1ffc61e2292d66504aa2faef873a92f2dc4927805b",
-    "index.html": "f3e48e823f72c5fefe922a0ade183d5444b6a7648d242934a4b474df9c191395",
+    "index.html": "ebaba54dcca7d288d58690460826c39f4b60e6d17fabde6bf8ebc59628e5813f",
     "manual/index.html": "83cc71214ab58f6584b96a182a052dd5bea6b62abec52a507633b01b56fd72ed",
     "site.css": "9df123b4f65985ffd69a40bfe96f857222dd4d59d5dc07dfcb6665082df60253",
-    "experimental/0.1.9-query/index.html": "924850bd30c5ec6eff936fbf1d9c1d060d0aa592d1ae453f3d4cdef750c89c11",
+    "experimental/0.1.9-query/index.html": "42dd4f9ffaa5b374a40bfb86626d0d22fbbba80c45e2ed42fed191f95a17cec9",
     "experimental/0.1.9-query/promo/index.html": "a3f5c72a5a5d05af32ff89ace3830175842cb3fdcc2c0f1e2c10f5ef9e721fb9",
     "experimental/0.1.9-query/docs/FAQ.html": "2c1934ffaff016f3c51c92b6d9d79ccdd8cc9399d90c28ddc2bb9f9f553befca",
     "experimental/0.1.9-query/promo/promo.css": "959564939e371c24b5c3696be6538ca0c75d0b36c25d09826c725791f4c5244d",
@@ -73,5 +73,10 @@
     "approved_utc": "2026-10-25T07:55:59.642107+00:00",
     "scope": "FM-1 project homepage, experimental download and comparison pages",
     "firmware_release_unchanged": true
+  },
+  "current_browser_emulator": {
+    "url": "https://acultur8.com/beta/fm1/",
+    "version": "0.1.27-sysexfix",
+    "scope": "Browser beta with newer pattern tools; separate from public firmware download and earlier shaped-slice emulator"
   }
 }
