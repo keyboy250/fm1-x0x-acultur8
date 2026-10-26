@@ -15,3 +15,14 @@
 **What is covered by backups?** Project/current-strip exports do not independently back up sample slots, the panel calibration record or the separate saved-default bank. Retain an exact prior firmware and recheck project bytes/settings after any separately authorized installation. This packet performs no device update.
 
 **What is the release status?** Approved as the explicitly scoped experimental beta described in ACCEPTANCE_REVIEW.json. The GitHub prerelease is the authoritative publication record.
+
+
+## How do I clear a pattern or just one part?
+
+Physical FM-1 controls for Extended Edition 0.1.30-calbeta:
+
+**Whole pattern:** Stop playback and select the intended pattern. Open **GLO → CLEAR PATTERN**. Check **CLEAR THIS PATTERN? / ALL FIVE PARTS**, then press **SEL** to confirm or **HOME** to cancel.
+
+**One part:** Stop playback, select the intended pattern and part, then hold **SAVE** and press **REC**. Check the named part, then press **SEL** to confirm or **HOME** to cancel.
+
+Clearing removes sequence data and keeps sound settings. **HOME + REC** undoes; **HOME + PLAY** redoes. Undo history does not survive switching off. With autosave enabled, stopped edits can be saved automatically.
