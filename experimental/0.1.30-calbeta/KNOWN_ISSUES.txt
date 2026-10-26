@@ -1,0 +1,11 @@
+EXPERIMENTAL BETA: KNOWN LIMITS
+
+Local native/WASM production-ingress MIDI suites pass. Physical USB CC mode filtering/readback and selected notes/transport checks are bounded. Advanced remote 303/drum generation, variation, Freeze/Commit and copy hardware replay remain OPEN. Native-panel action checks do not certify equivalent remote CC execution. No blanket hardware/DAW qualification is claimed.
+
+Reason external-clock clip/grid stability is unresolved. Averaging and fine-tempo controls from the private 0.1.31 candidate are deferred and absent from this release. This firmware is not advertised as a fix for that Reason issue.
+
+Physical TRS, exhaustive routes/tempos/scopes, other units, long-run stress and hardware power-loss acceptance remain unqualified. Browser-only controls require their compatible companion. The existing website emulator is unchanged.
+
+Per-unit calibration is inherited and experimental; one unit passed measured Apply/Reset and reboot tests. Measure each actual unit independently. Do not copy another unit's calibration or raw flash.
+
+BREAK-only filter/sampler changes, named-device routing/internal-sound bypass and other planned features are not newly qualified by this release. Consult the chart for explicitly unmapped entries.

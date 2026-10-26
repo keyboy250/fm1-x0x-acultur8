@@ -1,0 +1,83 @@
+{
+  "status": "APPROVED_SCOPED_EXPERIMENTAL_BETA",
+  "recorded_utc": "2026-10-26T08:43:11.127335+00:00",
+  "version": "0.1.30-calbeta",
+  "identity": "FM-1_9000130",
+  "firmware_sha256": "e1221337c317efcf87cfb1a454350bc226dde0f1e5e0f978d9ce91a01da54529",
+  "source_sha256": "13eabcd7c0af7c9d1e7d637450551fb307d44486c93d7a2f335862bd46c5914c",
+  "firmware_and_source_unchanged": true,
+  "local_checks_carried_from_exact_frozen_qualified_artifacts": {
+    "required_checks": 134,
+    "host_scenarios": 39,
+    "midi_feature_suites": 5,
+    "target_gates": 15,
+    "frozen_rebuild": "byte identical"
+  },
+  "fresh_packaging_checks": {
+    "archive_manifest": "PASS",
+    "critical_CC_action_readback_files_unchanged_from_qualified_clockfix": 11,
+    "chart_source_validation": "PASS",
+    "chart_browser_QA": "PASS",
+    "responsive_widths": [
+      320,
+      390,
+      768,
+      1440
+    ],
+    "no_page_errors": true
+  },
+  "acceptance_matrix": [
+    {
+      "area": "MIDI implementation map and decoder",
+      "local": "PASS;751 entries:714 firmware,13 browser-only,24 unmapped",
+      "physical": "No claim that every address/route was exercised",
+      "release_claim": "Source-derived experimental implementation reference"
+    },
+    {
+      "area": "USB CC FULL/SIMPLE/OFF filtering",
+      "local": "PASS",
+      "physical": "PASS bounded selected boost/selector checks,restoration and unchanged P8/P9/25strips",
+      "release_claim": "Bounded USB filtering accepted"
+    },
+    {
+      "area": "Remote303/drum generation,variation,Freeze/Commit and scoped copy",
+      "local": "PASS production-ingress native/WASM replay and readback suites",
+      "physical": "PENDING direct remote-action replay on hardware",
+      "release_claim": "Implemented and locally qualified;hardware remote-action acceptance open"
+    },
+    {
+      "area": "Native-panel Freeze/Commit and scoped copy",
+      "local": "PASS",
+      "physical": "PASS bounded909BD,303A,cross-voicecopy,Undo/Redo,Save and power-cycle checks",
+      "release_claim": "Panel evidence supports those selected functions;it does not certify equivalent remote CC execution"
+    },
+    {
+      "area": "USB note delivery and Start/Stop cleanup",
+      "local": "PASS",
+      "physical": "PASS bounded P9 traces;matched notes and no held notes at Stop",
+      "release_claim": "Selected USB output accepted;not all tempos/routes/TRS/DAWs"
+    },
+    {
+      "area": "Per-unit calibration inherited from0.1.30",
+      "local": "PASS;Apply/Reset/storage/runtime/utility/target checks",
+      "physical": "PASS on one test unit:Apply/Reset,reboot and corrected134BPM analog check",
+      "release_claim": "Experimental unit-specific facility;not universal calibration or Reason-sync acceptance"
+    },
+    {
+      "area": "Reason external-clock clip/grid stability",
+      "local": "Not established by local tests",
+      "physical": "UNRESOLVED;clip jumps reported;0.1.31 averaging failed its acceptance test",
+      "release_claim": "Known limitation;no stability claim"
+    },
+    {
+      "area": "0.1.31 averaging and fine-tempo controls",
+      "local": "Excluded from this exact firmware/source",
+      "physical": "Deferred",
+      "release_claim": "Future work;current0.1.31 installation remains private"
+    }
+  ],
+  "publication_approved": true,
+  "installed_device_unchanged_by_preparation": true,
+  "required_decision": "Experimental beta scope approved. Complete advanced remote-action hardware gates before claiming full physical qualification.",
+  "publication_decision": "User approved going live as the documented experimental beta;advanced remote-action hardware gates remain OPEN,not PASS."
+}

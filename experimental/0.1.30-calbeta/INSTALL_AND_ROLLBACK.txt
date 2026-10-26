@@ -1,0 +1,14 @@
+INSTALLATION AND ROLLBACK / 0.1.30-calbeta
+Expected running identity: FM-1_9000130
+Firmware SHA256: e1221337c317efcf87cfb1a454350bc226dde0f1e5e0f978d9ce91a01da54529
+
+1. Back up the current project and current sound-strip settings. Retain sample WAVs, the saved-default bank and unit calibration separately. Project/current-strip exports do not independently cover all of these. A stopped project export can save unsaved edits; it is not a read-only musical snapshot.
+2. Keep the exact previous firmware, corresponding source and matching pre-update project. Do not overwrite your only backup. Cross-version downgrade/restore is not physically qualified here.
+3. Stop playback, lower MASTER, close MIDI applications, connect reliable USB data/power and verify SHA256.
+4. The included Python client needs Python 3, mido and python-rtmidi. In the extracted bundle run:
+   python tools/fm1_install.py x0x-0.1.30-calbeta.fwsc
+   The installer asks for confirmation. Keep USB/power connected until completion.
+5. Check the running identity, project bytes/settings and sample/default recall before working on originals. Stop and investigate any mismatch; do not automatically restore over the unit.
+
+For rollback, use the same installer with your retained exact prior firmware and matching backup. No stock or private-device flash is bundled. Never restore another unit's raw flash.
+The matching source archive includes build scripts and documented external compiler/SDK dependencies. Calibration tools/protocol are experimental and require measurement of the actual unit.
