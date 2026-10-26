@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # SAVE while playing waits for the stop (writing the flash stops the audio), then saves
 wait 300
 tapkey w0

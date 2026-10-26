@@ -97,7 +97,10 @@ static void pattern(FILE *f,int pat){
     read_unchanged(pat,0,0,0);if(f)record(f);
 }
 static void snapshot(const char *name){FILE *f=fopen(name,"wb");CHECK(f!=0);pattern(f,1);pattern(f,2);fclose(f);}
-int main(void){
+#ifndef PATTERN_QUERY_MAIN
+#define PATTERN_QUERY_MAIN main
+#endif
+int PATTERN_QUERY_MAIN(void){
     char path[120];
     for(int mode=0;mode<3;mode++){
         mode_setup(mode);proj.set.autosave_off=1;ui.dirty=1;

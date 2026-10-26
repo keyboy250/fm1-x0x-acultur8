@@ -71,6 +71,8 @@ void project_flash_changed(void);
 /* Stopped scoped copy: 0 all, 1/2 909 kick/snare, 3/4 808 kick/snare.
  * Always preserves destination shared accent and swing. No clipboard snapshot. */
 int ui_pattern_copy(int source,int destination,int scope);
+int ui_pattern_copy_to(int src,int dst,int source_scope,int destination_scope);
+int ui_generate_constrained(int pattern,int bass,int mode,int block,uint32_t seed);
 int ui_delete_block(int block); /* stopped, arrangement row only; preserves patterns/sounds */
 int ui_duplicate_block(int block); /* stopped, independent patterns; bank or VR_* */
 void ui_init(void);

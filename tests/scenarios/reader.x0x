@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Screen reader (fm1-reader, firmware/src/announce.c): silent until a reader says HELLO, then the whole screen,
 # then what changes: a knob, a page, a step, play and stop, a list row with its place, a help card, a message.
 # (each "said" checks what was said since the one before)
@@ -21,19 +26,34 @@ tap PLAY
 said STOP
 tap GLO
 wait 400
-said GLOBAL LIST. COPY/PASTE SEQUENCES, ACTION, 1 OF 21
+said GLOBAL LIST. COPY/PASTE SEQUENCES, ACTION, 1 OF 22
 tap SEL
 wait 400
-said COPY/PASTE SEQ LIST. COPY/PASTE SEQUENCES. COPY FROM P1, 1 OF 4
+said COPY/PASTE SEQ LIST. COPY/PASTE SEQUENCES. COPY FROM P1, 1 OF 5
+turn SELECT 2
+wait 400
+said SOURCE PART ALL PARTS, 3 OF 5
+turn ALGO 2
+wait 400
+said SOURCE PART 909 SNARE, 3 OF 5
+turn SELECT 1
+wait 400
+said DEST PART 909 SNARE, 4 OF 5
+turn ALGO 4
+wait 400
+said DEST PART 909 RIMSHOT, 4 OF 5
 tap HOME
 wait 400
-said GLOBAL LIST. COPY/PASTE SEQUENCES, ACTION, 1 OF 21
+said GLOBAL LIST. COPY/PASTE SEQUENCES, ACTION, 1 OF 22
 turn SELECT 1
 wait 300
-said MIDI. CLOCK OUT ON, 2 OF 21
+said MIDI. CC MODE FULL, 2 OF 22
 turn SELECT 1
 wait 300
-said NOTES OUT OFF, 3 OF 21
+said CLOCK OUT ON, 3 OF 22
+turn SELECT 1
+wait 300
+said NOTES OUT OFF, 4 OF 22
 tap GLO
 wait 300
 press SAVE

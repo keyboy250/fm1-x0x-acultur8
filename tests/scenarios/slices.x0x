@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # BREAK: a step held + black key 1-8 gives that 16th its own slice of loop A, which plays there in
 # place of the generator's choice; the same key again gives it back to the generator.
 wait 300
@@ -48,6 +53,11 @@ expect brkslice6 0
 # saved and back
 tap SAVE
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 wait 300
 expect brkslice0 5
 expect brkslice8 2

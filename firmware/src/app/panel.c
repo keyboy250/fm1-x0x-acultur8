@@ -16,6 +16,14 @@ typedef struct {
     int8_t dir[NE];              /* +1 / -1 so that clockwise is + */
 } panel_t;
 panel_t panel __attribute__((section(".noinit")));
+typedef char timing_panel_size[(sizeof(panel_t)==32)?1:-1];
+#include "../timing_store.h"
+int plat_timing_load(uint32_t words[4]) {
+ timing_record_t r=timing_store_read();words[0]=r.rate;words[1]=r.generation;words[2]=r.unit;words[3]=r.status;return 0;
+}
+int plat_timing_save(uint32_t rate,uint32_t generation,uint32_t old_unit,uint32_t new_unit) {
+ return timing_store_write(&panel,rate,generation,old_unit,new_unit);
+}
 
 static const panel_t PANEL_DEFAULT = {
     PANEL_MAGIC,
@@ -100,7 +108,13 @@ static void panel_setup(void)
         fm1_enc_take(e);
     }
     panel.magic = PANEL_MAGIC;
-    plat_store_save(OBJ_PANEL, &panel, sizeof panel);
+    if(timing_panel_write(&panel)) {
+        panel=old;
+        lcd_fill(0,0,240,240,C_BLACK);
+        draw_text_box(0,100,240,&FONT_S,"CALIBRATION NOT SAVED",C_WHITE,1);
+        fm1_delay_ms(1500);
+        return;
+    }
     lcd_fill(0, 0, 240, 240, C_BLACK);
     return;
 timeout:

@@ -3,19 +3,19 @@
   "map_version": "draft-1-actions-prototype-1",
   "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
   "source_hashes": {
-    "firmware/src/app/engine.c": "ec13ec6b1f724f152c0f81d37779284a8c69ddedb36833c9c4cab57ccf298abe",
-    "firmware/src/app/engine.h": "ce6c85391601439e9b1836c5c917b5b3376e135bee4e3710fcd4bcb5aa76c5e0",
-    "firmware/src/app/ui.c": "66fcbc7550e8756105e8e5fb638da17314ec303762b2fd1abf727b4831aad1ea",
-    "firmware/src/app/x0x.h": "256446d43a173dfdd6920bcf727fc611925b8a5a5e11da4098c92e4b7b794c57",
+    "firmware/src/app/engine.c": "3766e827601d1e4f0a4859639383fbb58271837749d8394c57c4efe66a6793d3",
+    "firmware/src/app/engine.h": "e58ada7ad5ed6e179c94964b1587c5fdffd5849d824531a30d93fb5b51c35c72",
+    "firmware/src/app/ui.c": "21b5a1ea4e80d5acf5dec6198a471b2f3a54a23b34a7c052704d3136aa3cb0cc",
+    "firmware/src/app/x0x.h": "14a90aa7abc4e177809e83ad8c23172d7546edc14f19984f6d265db6c667af18",
     "firmware/src/app/block_bridge.inc": "03ccb0ec7f1364bc6e9c3a03c80f6302ce156ef9f71d0dbdc27696923a8060f1",
     "firmware/src/app/variant.c": "b0eb98dfc22bc6597607ad5e36df3416f1d1437ff37344d8f6ad12f50dc5629a",
     "firmware/src/app/variant.h": "cf296a6870b5715ef7cc1934827e6439408858440577a05bf7f566a857df3e5f",
-    "firmware/src/seq/pattern.h": "c8f7aeee9c1fd96571ce65afa65f149ec89ac2e9521276fbf2728df9fb641b93",
+    "firmware/src/seq/pattern.h": "1e17afab1e724321d9434412195c68f2b971a1ee59596ba1eb7481c235698be4",
     "firmware/src/seq/lanes.h": "4645f81d5ce69cb00c315cf7a9f6eebe21caee180caedf33e9e0f99fb394b45e",
-    "firmware/src/seq/sequencer.h": "84e00c5b08f4d962286514d46caea280ff57cd49c03daa35b891789ed84b37af",
+    "firmware/src/seq/sequencer.h": "06bd25e5104cbac21dc79803544d21f076655cfa6652b3a06678bd9a9ba918cd",
     "firmware/src/seq/motion.h": "ac88bf9e4532f50f7d157a7b15c60c72118078a1bd5ac6cee1a6cf74ceaa585e",
     "firmware/src/seq/motion.c": "5cf517f38b6653f142b663af7a7179e0fcc92db3c390dcd9dc2949036b03a7c4",
-    "firmware/src/seq/tb3po.h": "7dd646a572129fc8df5628f6111f68fef6b54476446f75cc5f583b6f110f0073",
+    "firmware/src/seq/tb3po.h": "5e040e4e4f78d586c4f09400b67a99a815e690200f4e8712995824f27a19a5bd",
     "firmware/src/seq/harmony.h": "69b7c2f454f3ed784036522e1147a20343e64d11738d4c7d00315a2edaa689a4",
     "firmware/src/dsp/drum909.c": "3a333fc53aac44118ed6e419b4ff9c04117ec1cda81e64ece5ae80accc15a27d",
     "firmware/src/dsp/drum808.c": "6b86f83b7adea57c615d71f611c81eb16b73a4a1fcf0012dbc52eacb369a950f",
@@ -24,9 +24,9 @@
     "firmware/src/dsp/master.c": "5064bd16121c0a0e3a789b37a067425b3d2f069848a32b8305f8c2be0a044d30",
     "firmware/src/dsp/breaks.c": "76be2e80b6a8d94d9e53069e276a191899c6e14c6338d208d1458b8878d7bf7a",
     "firmware/src/dsp/sound_strip.h": "983b4d7774c86557dc020bc733745b7d936513ee3333f53183c304f20e7c015f",
-    "firmware/src/app/main_fm1.c": "d75e0eda7df76f01be02fc22b2ef6c83dac1bd08893c26355c3e4eac14d0d874",
+    "firmware/src/app/main_fm1.c": "686e645ec2661ea7107455d5929da224fe7e68fe61112c58d9bbb68310ee6e5f",
     "firmware/src/midi_uart.c": "278beda53253a65fde7f561da6d62c63f4331f6b4f30ad6652025caf961038ed",
-    "firmware/src/usb.c": "90ac01026752c6d459634f419697cc453ecb264b03740466b030477aa8c96271",
+    "firmware/src/usb.c": "82e15d0036c10dfdd116b3b2af27b06b48ff206d06bd608b5d6f40c9e54a2255",
     "web/emu/index.html": "9ab0e1ba17986d10fe4c557c59e7818bfcafbebd084172a58143f26352e90a23",
     "web/emu/slice-panel.html": "b5d2cfe3a4e1db5c4855bcb18988ecc4e0a557a7896fe5c5076d650a10bfbbb3",
     "web/emu/pad-panel.html": "4ab2ef69f56d535f359bc550e50613e9c8b8ce52dfb6ecb7d809f90a1ceb298c"
@@ -102,7 +102,7 @@
     "R_KEYLED": "descriptor or structured field",
     "R_KEYSOUND": "descriptor or structured field",
     "R_AUTOSAVE": "descriptor or structured field",
-    "R_ACT": "all ACT_P actions; block actions 12-15 and Undo action 16 and scoped paste action 17 and copy submenu action 18 native only",
+    "R_ACT": "all ACT_P actions; block actions 12-15 and Undo action 16 and scoped paste action 17 and copy submenu action 18 and confirmed generation action 19 and drum generation action 20 and variation arm/off actions 21/22 and frozen commit action23 native only",
     "R_SBAR": "descriptor or structured field",
     "R_SPAT": "descriptor or structured field",
     "R_SLEN": "descriptor or structured field",
@@ -130,7 +130,13 @@
     "R_AKEY": "descriptor or structured field",
     "R_ASCALE": "descriptor or structured field",
     "R_AFOLLOW": "descriptor or structured field",
-    "R_COPYCFG": "native-only source/destination/scope; no MIDI binding"
+    "R_COPYCFG": "Scoped/cross-part copy recipe,preview/arm,guarded execute and page10 readback;legacy copy unchanged",
+    "R_NEWGEN": "native-only transient generation mode and chord-block selector; no MIDI binding",
+    "R_DRUMGEN": "Remote typed drum recipe and guarded generation; no UI focus",
+    "R_VARIATION": "Remote runtime variation recipe/apply/OFF;overlay switch remains native only",
+    "R_CAPTURE": "Remote guarded Freeze/Commit plus complete HELD note/gate readback;UI focus independent",
+    "R_RANDOM": "native-only generated length and selected-note step; no MIDI binding",
+    "R_CCMODE": "Native GLO diagnostic mode; command51 page7 readback; not remotely writable"
   },
   "structured_field_coverage": {
     "tb3po_cfg_t": {
@@ -23663,9 +23669,13 @@
       "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
       "live_requirement": "while playing",
       "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
-      "address": null,
+      "address": {
+        "channel": 15,
+        "cc": 9
+      },
       "scaling": "round(min + cc7 * (max-min) / 127)",
-      "action_policy": "Native UI only; confirmed staged paste; no new remote CC binding"
+      "action_policy": "Private explicit copy recipe;guarded preview/arm and request execute;no UI focus",
+      "parameter_number": 1241
     },
     {
       "id": "ui.pattern_copy.destination",
@@ -23681,9 +23691,13 @@
       "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
       "live_requirement": "while playing",
       "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
-      "address": null,
+      "address": {
+        "channel": 15,
+        "cc": 10
+      },
       "scaling": "round(min + cc7 * (max-min) / 127)",
-      "action_policy": "Native UI only; confirmed staged paste; no new remote CC binding"
+      "action_policy": "Private explicit copy recipe;guarded preview/arm and request execute;no UI focus",
+      "parameter_number": 1242
     },
     {
       "id": "ui.pattern_copy.scope",
@@ -23699,9 +23713,988 @@
       "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
       "live_requirement": "while playing",
       "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 11
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Private explicit copy recipe;guarded preview/arm and request execute;no UI focus",
+      "parameter_number": 1243
+    },
+    {
+      "id": "ui.constrained_generation.mode",
+      "name": "Constrained generation mode",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        4
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 91
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Explicit source-owned stopped generation; guarded request/result, no UI focus",
+      "parameter_number": 1203
+    },
+    {
+      "id": "ui.constrained_generation.chord_block",
+      "name": "Constrained generation chord_block",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        191
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 92
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Explicit source-owned stopped generation; guarded request/result, no UI focus",
+      "parameter_number": 1204
+    },
+    {
+      "id": "ui.constrained_generation.generate_confirmed",
+      "name": "Constrained generation generate_confirmed",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 93
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Explicit source-owned stopped generation; guarded request/result, no UI focus",
+      "parameter_number": 1205
+    },
+    {
+      "id": "ui.drum_generation.density",
+      "name": "Drum generation density",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        100
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 94
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned stopped drum generation; arm3, explicit context, shared length, request and result",
+      "parameter_number": 1206
+    },
+    {
+      "id": "ui.drum_generation.positions",
+      "name": "Drum generation positions",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        3
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 95
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned stopped drum generation; arm3, explicit context, shared length, request and result",
+      "parameter_number": 1207
+    },
+    {
+      "id": "ui.drum_generation.anchors",
+      "name": "Drum generation anchors",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        5
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 96
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned stopped drum generation; arm3, explicit context, shared length, request and result",
+      "parameter_number": 1208
+    },
+    {
+      "id": "ui.drum_generation.seed_index",
+      "name": "Drum generation seed_index",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        255
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 97
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned stopped drum generation; arm3, explicit context, shared length, request and result",
+      "parameter_number": 1209
+    },
+    {
+      "id": "ui.drum_generation.replace_confirm",
+      "name": "Drum generation replace_confirm",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 98
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned stopped drum generation; arm3, explicit context, shared length, request and result",
+      "parameter_number": 1210
+    },
+    {
+      "id": "ui.repeating_variation.every",
+      "name": "Repeating variation every",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        2
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 99
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned runtime variation;explicit context,arm4/5,guarded apply/OFF;no saved pattern mutation",
+      "parameter_number": 1211
+    },
+    {
+      "id": "ui.repeating_variation.changes",
+      "name": "Repeating variation changes",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        8
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 100
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned runtime variation;explicit context,arm4/5,guarded apply/OFF;no saved pattern mutation",
+      "parameter_number": 1212
+    },
+    {
+      "id": "ui.repeating_variation.anchor_lock",
+      "name": "Repeating variation anchor_lock",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        3
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 101
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned runtime variation;explicit context,arm4/5,guarded apply/OFF;no saved pattern mutation",
+      "parameter_number": 1213
+    },
+    {
+      "id": "ui.repeating_variation.seed",
+      "name": "Repeating variation seed",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        255
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 102
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned runtime variation;explicit context,arm4/5,guarded apply/OFF;no saved pattern mutation",
+      "parameter_number": 1214
+    },
+    {
+      "id": "ui.repeating_variation.mode",
+      "name": "Repeating variation mode",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        2
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 103
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned runtime variation;explicit context,arm4/5,guarded apply/OFF;no saved pattern mutation",
+      "parameter_number": 1215
+    },
+    {
+      "id": "ui.repeating_variation.shape",
+      "name": "Repeating variation shape",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 104
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned runtime variation;explicit context,arm4/5,guarded apply/OFF;no saved pattern mutation",
+      "parameter_number": 1216
+    },
+    {
+      "id": "ui.repeating_variation.range",
+      "name": "Repeating variation range",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        3
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 105
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned runtime variation;explicit context,arm4/5,guarded apply/OFF;no saved pattern mutation",
+      "parameter_number": 1217
+    },
+    {
+      "id": "ui.repeating_variation.arm_confirm",
+      "name": "Repeating variation arm_confirm",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 106
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned runtime variation;explicit context,arm4/5,guarded apply/OFF;no saved pattern mutation",
+      "parameter_number": 1218
+    },
+    {
+      "id": "ui.repeating_variation.off_confirm",
+      "name": "Repeating variation off_confirm",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 107
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Source-owned runtime variation;explicit context,arm4/5,guarded apply/OFF;no saved pattern mutation",
+      "parameter_number": 1219
+    },
+    {
+      "id": "ui.live_overlay",
+      "name": "Live drum display overlay (session only; default OFF)",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
       "address": null,
       "scaling": "round(min + cc7 * (max-min) / 127)",
-      "action_policy": "Native UI only; confirmed staged paste; no new remote CC binding"
+      "action_policy": "Native drum VAR OPTIONS knob4 only; no project save, Undo, CC binding or timing-acceptance claim"
+    },
+    {
+      "id": "ui.freeze_commit.destination",
+      "name": "Freeze/Commit destination",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        31
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 108
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Explicit Freeze arm6/pending full-pass receipt;Commit arm7,held capture token,stopped destination transaction",
+      "parameter_number": 1220
+    },
+    {
+      "id": "ui.freeze_commit.freeze_request",
+      "name": "Freeze/Commit freeze_request",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 109
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Explicit Freeze arm6/pending full-pass receipt;Commit arm7,held capture token,stopped destination transaction",
+      "parameter_number": 1221
+    },
+    {
+      "id": "ui.freeze_commit.commit_confirm",
+      "name": "Freeze/Commit commit_confirm",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 110
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Explicit Freeze arm6/pending full-pass receipt;Commit arm7,held capture token,stopped destination transaction",
+      "parameter_number": 1222
+    },
+    {
+      "id": "ui.random_options.length",
+      "name": "Random options length",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        64
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 111
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Explicit source-owned stopped generation; guarded request/result, no UI focus",
+      "parameter_number": 1223
+    },
+    {
+      "id": "ui.random_options.note_step",
+      "name": "Random options note_step",
+      "category": "nonmusical_action",
+      "range": [
+        0,
+        64
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 112
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Explicit source-owned stopped generation; guarded request/result, no UI focus",
+      "parameter_number": 1224
+    },
+    {
+      "id": "remote.generation.seed_byte0",
+      "name": "remote.generation.seed_byte0",
+      "category": "musical",
+      "range": [
+        0,
+        255
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_generation.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 115
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "parameter_number": 1227
+    },
+    {
+      "id": "remote.generation.seed_byte1",
+      "name": "remote.generation.seed_byte1",
+      "category": "musical",
+      "range": [
+        0,
+        255
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_generation.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 116
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "parameter_number": 1228
+    },
+    {
+      "id": "remote.generation.seed_byte2",
+      "name": "remote.generation.seed_byte2",
+      "category": "musical",
+      "range": [
+        0,
+        255
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_generation.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 117
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "parameter_number": 1229
+    },
+    {
+      "id": "remote.generation.seed_byte3",
+      "name": "remote.generation.seed_byte3",
+      "category": "musical",
+      "range": [
+        0,
+        255
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_generation.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 118
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "parameter_number": 1230
+    },
+    {
+      "id": "remote.request_low7",
+      "name": "remote.request_low7",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_generation.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 14,
+        "cc": 119
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "parameter_number": 1231
+    },
+    {
+      "id": "remote.request_high7",
+      "name": "remote.request_high7",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_generation.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 0
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 0,
+        "lsb": 32,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "parameter_number": 1232
+    },
+    {
+      "id": "remote.action_arm",
+      "name": "remote.action_arm",
+      "category": "musical",
+      "range": [
+        0,
+        7
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_generation.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 1
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 1,
+        "lsb": 33,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "parameter_number": 1233
+    },
+    {
+      "id": "remote.cancel",
+      "name": "remote.cancel",
+      "category": "musical",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_generation.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 2
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 2,
+        "lsb": 34,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "parameter_number": 1234
+    },
+    {
+      "id": "ui.cc_mode",
+      "name": "GLO MIDI CC MODE",
+      "category": "nonmusical",
+      "range": [
+        0,
+        2
+      ],
+      "default": null,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": null,
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": [
+        "FULL",
+        "SIMPLE",
+        "OFF"
+      ],
+      "action_policy": "Session-only native GLO; invalidates pending CC contexts/arms; readback and non-CC MIDI remain available"
+    },
+    {
+      "id": "remote.variation.constraint_mode",
+      "name": "Variation303 constraint mode",
+      "category": "musical",
+      "range": [
+        0,
+        3
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_generation.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 3
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 3,
+        "lsb": 35,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": [
+        "GEN",
+        "KEY",
+        "CHORD",
+        "BOTH"
+      ],
+      "parameter_number": 1235
+    },
+    {
+      "id": "remote.variation.chord_block",
+      "name": "Variation303 chord block",
+      "category": "musical",
+      "range": [
+        0,
+        191
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_generation.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 4
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 4,
+        "lsb": 36,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "parameter_number": 1236
+    },
+    {
+      "id": "remote.capture.token_byte0",
+      "name": "Expected captured-pass token byte0",
+      "category": "musical",
+      "range": [
+        0,
+        255
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_capture.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 5
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 5,
+        "lsb": 37,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "parameter_number": 1237
+    },
+    {
+      "id": "remote.capture.token_byte1",
+      "name": "Expected captured-pass token byte1",
+      "category": "musical",
+      "range": [
+        0,
+        255
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_capture.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 6
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 6,
+        "lsb": 38,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "parameter_number": 1238
+    },
+    {
+      "id": "remote.capture.token_byte2",
+      "name": "Expected captured-pass token byte2",
+      "category": "musical",
+      "range": [
+        0,
+        255
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_capture.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 7
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 7,
+        "lsb": 39,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "parameter_number": 1239
+    },
+    {
+      "id": "remote.capture.token_byte3",
+      "name": "Expected captured-pass token byte3",
+      "category": "musical",
+      "range": [
+        0,
+        255
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_capture.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 8
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 8,
+        "lsb": 40,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "parameter_number": 1240
+    },
+    {
+      "id": "ui.pattern_copy.destination_scope",
+      "name": "Scoped cross-part copy destination_scope",
+      "category": "musical",
+      "range": [
+        0,
+        24
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_copy.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 12
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 12,
+        "lsb": 44,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "action_policy": "Private explicit copy recipe;guarded preview/arm and request execute",
+      "parameter_number": 1244
+    },
+    {
+      "id": "ui.pattern_copy.preview_arm",
+      "name": "Scoped cross-part copy preview_arm",
+      "category": "musical",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_copy.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 13
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 13,
+        "lsb": 45,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "action_policy": "Private explicit copy recipe;guarded preview/arm and request execute",
+      "parameter_number": 1245
+    },
+    {
+      "id": "ui.pattern_copy.execute",
+      "name": "Scoped cross-part copy execute",
+      "category": "musical",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_copy.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 14
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 14,
+        "lsb": 46,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "action_policy": "Private explicit copy recipe;guarded preview/arm and request execute",
+      "parameter_number": 1246
     }
   ]
 }

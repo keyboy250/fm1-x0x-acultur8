@@ -52,6 +52,7 @@ static void ppm(const char *path)
 }
 int main(void)
 {
+    assert(text_w(&FONT_T,BOOT_VERSION_TEXT)<=228);
     assert(text_w(&FONT_S,"EXTENDED EDITION")<=240);
     assert(text_w(&FONT_S,"RHYTHM / BASS / BREAKS")<=240);
     palette_set(1); reset(0); boot_intro();
@@ -65,6 +66,8 @@ int main(void)
     reset(0); fm1_in.buttons=1; boot_intro(); assert(!frames && fm1_ms<=2);
     for (uint32_t ms=0;ms<=3000;ms++) boot_intro_frame(ms);
     boot_intro_frame(1600);
+    unsigned footer_pixels=0;for(unsigned y=176;y<188;y++)for(unsigned x=0;x<240;x++)footer_pixels+=screen[y*240+x]!=0;
+    assert(footer_pixels>0);printf("VERSION FOOTER: %s; pixels=%u\n",BOOT_VERSION_TEXT,footer_pixels);
     static uint16_t held[240*240]; memcpy(held,screen,sizeof held);
     boot_intro_frame(2900); assert(!memcmp(held,screen,sizeof held));
     ppm("build/boot-intro-logo.ppm");

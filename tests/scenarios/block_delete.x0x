@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Native deletion, cancellation, Undo/Redo, retained patterns and empty transport.
 wait 300
 tapkey b0
@@ -69,6 +74,11 @@ expect songlen 2
 tap SAVE
 wait 200
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 expect songlen 2
 turn PRESET 2
 expect hit0.1.15 1
@@ -109,6 +119,11 @@ expect songlen 0
 tap SAVE
 wait 200
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 expect songlen 0
 turn PRESET 2
 expect hit0.1.15 1

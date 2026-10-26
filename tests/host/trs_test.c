@@ -1,3 +1,4 @@
+#include "timing_rate_test_state.h"
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* The TRS MIDI IN parser (midi_uart.c): bytes as the UART DMA leaves them in, USB-MIDI packets out,
  * into the queue USB fills. */

@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Uploaded loops: tools/upload_breaks.py's slot image (synthetic test loops, built by
 # tests/run_tests.sh into build/test_upload/) parsed by the firmware's own slots.c.
 wait 200

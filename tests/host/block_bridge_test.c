@@ -13,7 +13,10 @@ static void bridge_test_sync(void);
 #include <assert.h>
 #include "../../firmware/src/app/engine.c"
 static int locked,checks;
-uint32_t plat_control_enter(void){assert(!locked);if(start_before_reserve){start_before_reserve=0;seq.req_start=1;}locked=1;return 91;}
+#ifndef OPTIONAL_CONTROL_ENTER_HOOK
+#define OPTIONAL_CONTROL_ENTER_HOOK() ((void)0)
+#endif
+uint32_t plat_control_enter(void){OPTIONAL_CONTROL_ENTER_HOOK();assert(!locked);if(start_before_reserve){start_before_reserve=0;seq.req_start=1;}locked=1;return 91;}
 void plat_control_leave(uint32_t s){assert(locked&&s==91);locked=0;}
 static void render(void){int32_t b[512];engine_render(b,256);}
 static void bridge_test_sync(void){lcd_sync();if(fail_dma_sync)test_dma_timeouts++;if(start_during_stage){start_during_stage=0;seq_start(&seq);render();assert(!seq.playing&&seq.req_start&&seq.transport_hold);}}

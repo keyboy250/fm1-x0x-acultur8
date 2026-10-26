@@ -3,11 +3,19 @@
 import argparse,json,math
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-KINDS=['UNSUPPORTED','SOUND','STRIP','SEQ','GEN','BRKGEN','CHANNEL','PREF','SONG','ACTION','SELECTOR','STEP','MOTION','PROB','PERF','GENACTION','SEED','ARR','FOLLOW','PAD','EXACT','MASTER','TRANSPORT','LANE','HISTORY','ACTIONCTL','RATE']
+KINDS=['UNSUPPORTED','SOUND','STRIP','SEQ','GEN','BRKGEN','CHANNEL','PREF','SONG','ACTION','SELECTOR','STEP','MOTION','PROB','PERF','GENACTION','SEED','ARR','FOLLOW','PAD','EXACT','MASTER','TRANSPORT','LANE','HISTORY','ACTIONCTL','RATE','REMOTE']
 
 def binding(row):
     key=row['id'];parts=key.split('.');a=b=c=0;kind='UNSUPPORTED'
-    if parts[0]=='sound':kind='SOUND';a=row['target']['engine'];b=row['target']['voice'];c=row['target']['index']
+    remote={'ui.drum_generation.density':13,'ui.drum_generation.positions':14,'ui.drum_generation.anchors':15,'ui.drum_generation.seed_index':16,'ui.drum_generation.replace_confirm':17,'ui.constrained_generation.mode':0,'ui.constrained_generation.chord_block':1,'ui.random_options.length':2,'ui.random_options.note_step':3,'remote.generation.seed_byte0':4,'remote.generation.seed_byte1':5,'remote.generation.seed_byte2':6,'remote.generation.seed_byte3':7,'remote.request_low7':8,'remote.request_high7':9,'remote.action_arm':10,'remote.cancel':11,'ui.constrained_generation.generate_confirmed':12}
+    remote.update({'ui.repeating_variation.'+name:18+i for i,name in enumerate(('every','changes','anchor_lock','seed','mode','shape','range','arm_confirm','off_confirm'))})
+    remote.update({'remote.variation.constraint_mode':27,'remote.variation.chord_block':28})
+    remote.update({'ui.freeze_commit.destination':29,'ui.freeze_commit.freeze_request':30,'ui.freeze_commit.commit_confirm':31})
+    copy_fields=['source','destination','scope','destination_scope','preview_arm','execute']
+    if key.startswith('ui.pattern_copy.') and parts[-1] in copy_fields:kind='REMOTE';a=2;c=copy_fields.index(parts[-1])
+    elif key.startswith('remote.capture.token_byte'):kind='REMOTE';a=1;c=int(parts[-1][-1])
+    elif key in remote:kind='REMOTE';c=remote[key]
+    elif parts[0]=='sound':kind='SOUND';a=row['target']['engine'];b=row['target']['voice'];c=row['target']['index']
     elif parts[0]=='strip':kind='STRIP';a=int(parts[1]);c=['highpass','lowpass','boost','ceiling','release','flags','enabled','highpass_enabled','lowpass_enabled','limiter_enabled'].index(parts[2])
     elif key.startswith('pref.SQ_'):kind='SEQ';c=['SWING','DLEN','DRATE','BLEN','BRATE','BDIR','BTRANS','TEMPO','ACCENT','CLK','NOTES','THEME','KEYLED','KEYSOUND','AUTOSAVE'].index(parts[1][3:])
     elif parts[0]=='generator' and parts[1].isdigit():kind='GEN';c=int(parts[1])

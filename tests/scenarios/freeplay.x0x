@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # SEQ > KEYS > FREE PLAY on a 303: the keys play it on every 303 screen and write nothing;
 # off, the white keys are steps again; REC still writes (the factory pattern's 303A is empty)
 wait 300

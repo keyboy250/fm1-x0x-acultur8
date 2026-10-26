@@ -5,6 +5,9 @@
 #include "../../firmware/src/seq/sequencer.h"
 seq_t seq;static unsigned source_resets;static pattern_t patterns[NPAT];
 void cc_reset_source(uint8_t source){assert(source==0);source_resets++;plat_midi_clear_cc_source(source);}
+/* This isolated USB-retirement fixture mocks the main CC engine. Full capture
+ * receipt servicing is exercised by midi_freeze_test and production WASM. */
+void cc_generation_service(void){}
 static int inject_reset_observation;
 static void reset_reconfigure(void){usb.resets++;midi_usb_state(0,0,1);midi_usb_state(1,0,0);}
 static void observation_hook(void){if(inject_reset_observation){assert(lock_depth==1&&!irq_enabled);inject_reset_observation=0;deferred_irq=reset_reconfigure;}}

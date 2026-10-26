@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Knob acceleration: a few clicks are exact at any speed, a quick spin sweeps. 909 BD Tune (0..127) starts at 34.
 wait 300
 expect sound0.0.0 34

@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # The overload guard (engine.c): past the CPU it lightens the 303s and the 808's tails, shows GUARD,
 # and lets go after 3 s back under 65%. "load N" stands in for the FM-1's measured load.
 wait 300
@@ -47,7 +52,7 @@ expect guard 1
 load 95
 tap PLAY
 tap GLO
-turn SELECT 17
+turn SELECT 18
 tap SEL
 expect view 7
 tap SEL

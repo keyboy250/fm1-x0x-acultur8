@@ -5109,24 +5109,311 @@
     },
     {
       "id": "ui.pattern_copy.source",
-      "parameter_number": null,
-      "binding": "UNSUPPORTED",
-      "status": "explicitly unmapped/read-only/nonmusical",
-      "reason": "no writable direct CC address in reviewed registry"
+      "parameter_number": 1241,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
     },
     {
       "id": "ui.pattern_copy.destination",
+      "parameter_number": 1242,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.pattern_copy.scope",
+      "parameter_number": 1243,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.constrained_generation.mode",
+      "parameter_number": 1203,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.constrained_generation.chord_block",
+      "parameter_number": 1204,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.constrained_generation.generate_confirmed",
+      "parameter_number": 1205,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.drum_generation.density",
+      "parameter_number": 1206,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.drum_generation.positions",
+      "parameter_number": 1207,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.drum_generation.anchors",
+      "parameter_number": 1208,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.drum_generation.seed_index",
+      "parameter_number": 1209,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.drum_generation.replace_confirm",
+      "parameter_number": 1210,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.repeating_variation.every",
+      "parameter_number": 1211,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.repeating_variation.changes",
+      "parameter_number": 1212,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.repeating_variation.anchor_lock",
+      "parameter_number": 1213,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.repeating_variation.seed",
+      "parameter_number": 1214,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.repeating_variation.mode",
+      "parameter_number": 1215,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.repeating_variation.shape",
+      "parameter_number": 1216,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.repeating_variation.range",
+      "parameter_number": 1217,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.repeating_variation.arm_confirm",
+      "parameter_number": 1218,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.repeating_variation.off_confirm",
+      "parameter_number": 1219,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.live_overlay",
       "parameter_number": null,
       "binding": "UNSUPPORTED",
       "status": "explicitly unmapped/read-only/nonmusical",
       "reason": "no writable direct CC address in reviewed registry"
     },
     {
-      "id": "ui.pattern_copy.scope",
+      "id": "ui.freeze_commit.destination",
+      "parameter_number": 1220,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.freeze_commit.freeze_request",
+      "parameter_number": 1221,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.freeze_commit.commit_confirm",
+      "parameter_number": 1222,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.random_options.length",
+      "parameter_number": 1223,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.random_options.note_step",
+      "parameter_number": 1224,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "remote.generation.seed_byte0",
+      "parameter_number": 1227,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "remote.generation.seed_byte1",
+      "parameter_number": 1228,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "remote.generation.seed_byte2",
+      "parameter_number": 1229,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "remote.generation.seed_byte3",
+      "parameter_number": 1230,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "remote.request_low7",
+      "parameter_number": 1231,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "remote.request_high7",
+      "parameter_number": 1232,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "remote.action_arm",
+      "parameter_number": 1233,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "remote.cancel",
+      "parameter_number": 1234,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.cc_mode",
       "parameter_number": null,
       "binding": "UNSUPPORTED",
       "status": "explicitly unmapped/read-only/nonmusical",
       "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "remote.variation.constraint_mode",
+      "parameter_number": 1235,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "remote.variation.chord_block",
+      "parameter_number": 1236,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "remote.capture.token_byte0",
+      "parameter_number": 1237,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "remote.capture.token_byte1",
+      "parameter_number": 1238,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "remote.capture.token_byte2",
+      "parameter_number": 1239,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "remote.capture.token_byte3",
+      "parameter_number": 1240,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.pattern_copy.destination_scope",
+      "parameter_number": 1244,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.pattern_copy.preview_arm",
+      "parameter_number": 1245,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
+    },
+    {
+      "id": "ui.pattern_copy.execute",
+      "parameter_number": 1246,
+      "binding": "REMOTE",
+      "status": "native candidate; focused acceptance required",
+      "reason": ""
     }
   ]
 }

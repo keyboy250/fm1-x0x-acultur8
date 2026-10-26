@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # A tour of every screen, for looking at (screenshots in build/scenarios/tour/).
 wait 300
 # a little content
@@ -94,7 +99,7 @@ shot t16_list_edit.png
 tap HOME
 tap GLO
 shot t17_global.png
-turn SELECT 16
+turn SELECT 17
 shot t18_global_reset.png
 tap SEL
 shot t19_ask.png

@@ -38,6 +38,7 @@ async function run(load) {
   const turn = (role, n) => { for (let i = 0; i < n; i++) { ex.web_enc(role, 1); r(80); } };
   const tapkey = (k) => { ex.web_keys(1 << k); r(60); ex.web_keys(0); r(30); };
   r(200);
+  tap(4); // Startup is HOME; explicitly enter the sound editor before choosing BREAK.
   if (load) {
     const { pcm, rate } = mono16(wav);
     new Uint8Array(mem.buffer, ex.web_slot_namebuf(), 9).set([84, 69, 83, 84, 0, 0, 0, 0, 0]);   // "TEST"
@@ -47,7 +48,7 @@ async function run(load) {
     ex.web_slots_changed();
   }
   turn(1, 4);                                          // ALGORITHM to BREAK
-  // Boot is already in the sound view: BREAK opens on LOOPS. EDIT advances
+  // In the sound view BREAK opens on LOOPS. Another EDIT advances
   // into the per-sound strip pages; GROOVE/RETRIG belong to SEQ.
   turn(3, 2);                                          // KNOB 1: loop A two on (the first user loop)
   for (const k of [0, 7, 14, 21]) tapkey(k);           // white keys 1, 5, 9, 13

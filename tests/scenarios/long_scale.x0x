@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Native controls for a 32-bar block, key/scale and per-303 adherence.
 wait 300
 tap HOME
@@ -30,6 +35,11 @@ tap HOME
 tap SAVE
 wait 200
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 expect blockbars1 32
 expect follow0 3
 expect hkey 2

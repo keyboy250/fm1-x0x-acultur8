@@ -91,6 +91,7 @@ void plat_leds(uint32_t buttons, uint32_t keys)
 }
 
 #include "midi_fm1.inc"
+int plat_midi_tx_idle(void) { return mo_w==mo_r && so_w==so_r; }
 
 int plat_store_load(uint32_t obj, void *dst, uint32_t max) { return flash_ok ? st_load(obj, dst, max) : -1; }
 int plat_store_save(uint32_t obj, const void *src, uint32_t len) { return flash_ok ? st_save(obj, src, len) : -9; }

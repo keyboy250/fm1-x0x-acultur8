@@ -218,6 +218,13 @@ def build_loader():
 
 def build_app():
     flags = [*CFLAGS, *FPU, "-Ifirmware/hal", "-Ifirmware/src", "-Ibuild/gen"]
+    flags.append("-DX0X_DEVICE_TIMING=1")
+    timing_rate = os.environ.get("X0X_TIMING_RATE_HZ")
+    if timing_rate is not None:
+        if not re.fullmatch(r"[0-9]+", timing_rate) or int(timing_rate) != 44100:
+            raise SystemExit("Calibration firmware builds must default to44100Hz;use the per-unit setting for calibration")
+        flags.append(f"-DX0X_TIMING_RATE_HZ={int(timing_rate)}u")
+        print(f"Physical audio timing profile: {int(timing_rate)} Hz (device-specific)")
     if VERSION and os.environ.get("X0X_DEBUG") == "1":
         raise SystemExit("X0X_DEBUG=1 (register peek / poke over USB) is for development builds only")
     for flag in ("X0X_CDC", "X0X_DEBUG"):

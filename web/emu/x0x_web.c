@@ -33,6 +33,9 @@ __attribute__((used,visibility("default"))) uint32_t web_cc_source(int source,in
 __attribute__((used,visibility("default"))) uint32_t web_cc_stat(int index){return index<0||index>=6?0xffffffffu:((uint32_t *)&cc_stats)[index];}
 __attribute__((used,visibility("default"))) uint32_t web_cc_pending(void){return mi_w-mi_r;}
 __attribute__((used,visibility("default"))) uint32_t web_cc_version(void){return 0x00010001u;} /* ABI1 / map1; partial candidate, not complete coverage */
+__attribute__((used,visibility("default"))) uint32_t web_cc_mode(void){return cc_mode();}
+static uint32_t web_generation_words[24];
+__attribute__((used,visibility("default"))) uint32_t *web_generation_snapshot(unsigned source,unsigned page,unsigned index){int n=cc_generation_snapshot(source,page,index,web_generation_words+1);if(n<0)return 0;web_generation_words[0]=(uint32_t)n;return web_generation_words;}
 /* Browser slice CC ABI1. Host-only: no firmware capability or MIDI-source0/1 claim.
  * Exact take returns0 success,-1 invalid21-bit domain,-2 mismatch/context.
  * Route admission belongs to the correlated worklet request, not this C ABI. */
@@ -311,3 +314,7 @@ __attribute__((used, visibility("default"))) int web_seq_playing(void) { return 
 __attribute__((used, visibility("default"))) float web_seq_beat(void) { return (float)sync_beat(); }
 __attribute__((used, visibility("default"))) void web_seq_set_bpm(float bpm) { if(isfinite(bpm)&&bpm>=20&&bpm<=275)seq.bpm=bpm; }
 __attribute__((used, visibility("default"))) void web_seq_play(int on) { if(on)seq_start(&seq);else seq_stop(&seq); }
+
+static uint32_t web_runtime_words[RUNTIME_DIAGNOSTIC_WORDS];
+__attribute__((used,visibility("default"))) uint32_t *web_runtime_snapshot(int lane)
+{return lane<0 || engine_runtime_snapshot((unsigned)lane,web_runtime_words)?0:web_runtime_words;}

@@ -163,6 +163,26 @@ static uint32_t ota_service(void)
     return d;
 }
 
+/* Normal editor-enabled loop only; recovery and active updater sessions retain
+ * their original drain behaviour because no editor pass runs in those paths. */
+static uint32_t ota_editor_service(void)
+{
+    const uint8_t *p;
+    uint32_t n;
+    /* A new editor frame may arrive after ed_service() and before this pass.
+     * Leave complete editor headers for its next pass; short malformed frames
+     * still drain. Keep ota_take() unchanged for active updater sessions, where
+     * no editor pass runs and foreign frames must not block updater replies. */
+    /* An empty observation owns no frame. Do not check again through ota_take:
+     * a USB interrupt could publish an editor request between the two checks. */
+    if (!ota_frame_get(&p, &n))
+        return 0;
+    /* A pending frame is immutable until its consumer releases sx_ready. */
+    if (n >= 4u && p[0] == 0x7D && p[1] == 0x46 && p[2] == 0x4C)
+        return 0;
+    return ota_service();
+}
+
 /* one read request (3 tries x ota_try_ms, 5 s); data -> dst */
 static uint32_t ota_try_ms = 5000u;              /* a try's wait (a restore's first reads: shorter until it starts) */
 static uint32_t ota_deadline;                    /* 0 = none; else ota_now_ms() limit of the session */

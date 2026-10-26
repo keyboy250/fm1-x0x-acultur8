@@ -30,6 +30,7 @@ void plat_midi_service(void){
     usb_midi_observed_generation=generation;previous_usb=connected;
     MIDI_TX_LEAVE(saved);
     if(retire)cc_reset_source(0);
+    cc_generation_service();
     cc_ingress_service(midi_in_q,&mi_w,&mi_r,MQ);
 }
 int plat_midi_out(uint32_t pkt) { return midi_out_event(pkt); }

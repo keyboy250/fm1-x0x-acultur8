@@ -18,3 +18,8 @@ void tb3po_generate(bpart_t *b);
 void tb3po_mutate(bpart_t *b, uint32_t *rng);
 /* a new seed from any entropy (time, key presses) */
 uint32_t tb3po_new_seed(uint32_t entropy);
+
+/* Explicit stopped-generation helper. Pitch-class mask uses C=bit0. Invalid or
+ * empty constraints return0 with the whole part untouched. No allocation/state. */
+uint16_t tb3po_scale_mask(const tb3po_cfg_t *g);
+int tb3po_generate_mask(bpart_t *b,uint16_t mask,int low,int high);

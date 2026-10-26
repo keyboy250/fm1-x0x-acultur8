@@ -105,7 +105,7 @@ run breaks sh tests/host/run_breaks.sh
 run synthetic-upload-fixtures python3 tests/host/make_test_loops.py build/test_loops
 run upload-images python3 tools/upload_breaks.py --dry-run build/test_upload build/test_loops/loop*.wav
 run breaks-web node web/test_breaks.mjs
-printf 'wav emu_ref.wav\nwait 500\ntapkey b0\ntapkey w0\ntapkey w8\ntap PLAY\nwait 2960\nwavstop\n' > "$OUT/emu_ref.x0x"
+printf 'wav emu_ref.wav\nwait 500\ntap EDIT\ntapkey b0\ntapkey w0\ntapkey w8\ntap PLAY\nwait 2960\nwavstop\n' > "$OUT/emu_ref.x0x"
 run host-reference build/host/x0x_host "$OUT/emu_ref.x0x" "$OUT"
 run wasm-host-parity node tests/host/emu_test.mjs build/emu/x0x.wasm "$OUT/emu_ref.wav"
 run wasm-slots node tests/host/emu_slots_test.mjs build/emu/x0x.wasm build/test_loops/loop1.wav

@@ -27,7 +27,8 @@ volatile uint8_t eng_step[NTRACKS];
 volatile uint16_t eng_peak[NPARTS];
 volatile uint8_t eng_hit[NKIT][NDRUM];
 int16_t eng_scope[SCOPE_N];
-volatile uint32_t eng_scope_w;
+volatile uint32_t eng_scope_w X0X_POOL;
+static pattern_freeze_t variation_capture X0X_POOL;
 
 static drum909_t d909 POOL;
 static drum808_t d808 POOL;
@@ -145,8 +146,8 @@ int engine_clock_request(uint32_t protocol,unsigned role,unsigned source,unsigne
     saved=plat_control_enter();w=cq_w;g=seq.clock.generation;
     if(w!=cq_r || seq.clock.pending || (seq.clock.flags&CLOCK_RETIRED) || g==UINT32_MAX){plat_control_leave(saved);return -2;}
     g++;
-    cq[w%CQ]=(C_ARR<<28)|(3u<<20)|((role|(source<<2))<<12)|(g&4095u);
-    cq[(w+1)%CQ]=(C_ARR<<28)|(4u<<20)|(((g>>12)&255u)<<12)|(g>>20);
+    cq[w%CQ]=((uint32_t)C_ARR<<28)|(3u<<20)|((role|(source<<2))<<12)|(g&4095u);
+    cq[(w+1)%CQ]=((uint32_t)C_ARR<<28)|(4u<<20)|(((g>>12)&255u)<<12)|(g>>20);
     __asm__ volatile("" ::: "memory");cq_w=w+2;
     if(generation)*generation=g;
     plat_control_leave(saved);return 0;
@@ -157,8 +158,8 @@ int engine_clock_source_retire(uint32_t protocol,unsigned source,uint32_t *gener
     saved=plat_control_enter();w=cq_w;g=seq.clock.generation;
     if(w!=cq_r || seq.clock.pending || (seq.clock.flags&CLOCK_RETIRED) || g==UINT32_MAX){plat_control_leave(saved);return -2;}
     g++;
-    cq[w%CQ]=(C_ARR<<28)|(5u<<20)|(source<<12)|(g&4095u);
-    cq[(w+1)%CQ]=(C_ARR<<28)|(4u<<20)|(((g>>12)&255u)<<12)|(g>>20);
+    cq[w%CQ]=((uint32_t)C_ARR<<28)|(5u<<20)|(source<<12)|(g&4095u);
+    cq[(w+1)%CQ]=((uint32_t)C_ARR<<28)|(4u<<20)|(((g>>12)&255u)<<12)|(g>>20);
     __asm__ volatile("" ::: "memory");cq_w=w+2;
     if(generation)*generation=g;plat_control_leave(saved);return 0;
 }
@@ -185,6 +186,49 @@ static int cq_put(uint32_t type, uint32_t a, uint32_t b, uint32_t c)
 uint32_t engine_queue_space(void) { return CQ - (cq_w - cq_r); }
 uint32_t engine_queue_written(void) { return cq_w; }
 uint32_t engine_queue_read(void) { return cq_r; }
+/* Per-unit timing calibration; never copied into project or Undo data. */
+void engine_timing_init(void) {
+ uint32_t w[4]={0,0,0,3};plat_timing_load(w);
+ timing_rate_state.stored_hz=w[0];timing_rate_state.generation=w[1];timing_rate_state.unit=w[2];timing_rate_state.record_status=w[3];
+ timing_rate_activate(w[3]==0&&w[0]?w[0]:X0X_TIMING_RATE_HZ);
+}
+static int timing_busy(void) {
+ return seq.playing||seq.req_stop||seq.req_start||seq.req_cont||seq.transport_hold||seq.transport_stage||seq.clock.pending||cq_w!=cq_r||!plat_midi_tx_idle();
+}
+void engine_timing_status(uint32_t w[10]) {
+ uint32_t saved=plat_control_enter();
+ w[0]=timing_rate_get();w[1]=timing_rate_state.stored_hz;w[2]=timing_rate_state.generation;w[3]=timing_rate_state.unit;w[4]=timing_rate_state.record_status;
+ w[5]=43900;w[6]=44300;w[7]=X0X_TIMING_RATE_HZ;w[8]=(uint32_t)timing_busy();w[9]=1;
+ plat_control_leave(saved);
+}
+static uint32_t timing_rescale(uint32_t v,uint32_t old,uint32_t next) {
+ if(!v||v==UINT32_MAX)return v;
+ uint64_t n=((uint64_t)v*next+old/2u)/old;return n>=UINT32_MAX?UINT32_MAX-1u:(uint32_t)n;
+}
+int engine_timing_update(uint32_t rate,uint32_t expected_rate,uint32_t generation,uint32_t old_unit,uint32_t new_unit) {
+ uint32_t saved,old;int rc;
+ if((rate&&(rate<43900||rate>44300))||!new_unit||(old_unit&&old_unit!=new_unit))return 1;
+ saved=plat_control_enter();old=timing_rate_get();
+ if(timing_busy()){plat_control_leave(saved);return 2;}
+ if(old!=expected_rate||timing_rate_state.generation!=generation||timing_rate_state.unit!=old_unit){plat_control_leave(saved);return 3;}
+ if(timing_rate_state.record_status>2||generation==UINT32_MAX){plat_control_leave(saved);return 6;}
+ if(rate==timing_rate_state.stored_hz){plat_control_leave(saved);return 0;}
+ seq.transport_hold=1;plat_control_leave(saved);
+ rc=plat_timing_save(rate,generation,old_unit,new_unit);
+ saved=plat_control_enter();
+ if(!rc){
+  uint32_t hz=rate?rate:X0X_TIMING_RATE_HZ;
+  if(!seq.ext){
+   seq.clk_to_next=timing_rescale(seq.clk_to_next,old,hz);
+   for(unsigned i=0;i<NTRACKS;i++){seq.t[i].to_next=timing_rescale(seq.t[i].to_next,old,hz);seq.t[i].to_off=timing_rescale(seq.t[i].to_off,old,hz);}
+   for(unsigned i=0;i<20;i++)seq.lane[i].to_next=timing_rescale(seq.lane[i].to_next,old,hz);
+  }
+  if(seq.ext&&seq.ext_period)seq.ext_bpm=(float)hz*60.0f*256.0f/(24.0f*(float)seq.ext_period);
+  timing_rate_activate(hz);timing_rate_state.stored_hz=rate;timing_rate_state.generation=generation+1;timing_rate_state.unit=new_unit;timing_rate_state.record_status=0;
+ }else if(rc!=-2&&rc!=-3)timing_rate_state.record_status=3;
+ seq.transport_hold=0;plat_control_leave(saved);
+ return !rc?0:rc==-3?3:rc==-2?6:4;
+}
 int engine_transport_reserve(void)
 {
     uint32_t saved = plat_control_enter();
@@ -541,9 +585,14 @@ void engine_brk_live(int key, int down) { cq_put(C_BRK, (uint32_t)key, (uint32_t
 /* probability: each part's (and drum track's) chance on the step playing now, set by its T_PROB lane
  * before the step fires (motion_step runs first); 100 = always */
 static uint8_t prob[NPARTS][NDRUM];
+/* Stopped transaction only: an erased probability lane must not leave its
+ * previously applied value in the audio cache. Each later step applies motion. */
+void engine_probability_clear(int lane)
+{if((unsigned)lane<24u)prob[lane<22?lane/11:lane-20][lane<22?lane%11:0]=100;}
 static uint32_t prob_rng = 0x2545F491u;
 static int prob_skip(int part, int v)                 /* ISR: 1 = this hit does not play */
 {
+    if(part<PART_BRK && seq_freeze_held(&seq,part<NKIT?part*NDRUM+v:part+20))return 0;
     uint32_t p = prob[part][v];
     if (p > 100u && p < PROB_COND + PROB_NCOND) {      /* A:B: the A-th of every B passes (seq_track_t.bars) */
         int a, b;
@@ -557,6 +606,8 @@ static int prob_skip(int part, int v)                 /* ISR: 1 = this hit does 
     prob_rng ^= prob_rng << 5;
     return prob_rng % 100u >= p;
 }
+#include "runtime_diagnostics.inc"
+
 static void s_drum(void *x, int kit, int v, float vel);
 static int s_drum_seq(void *x, int kit, int v, float vel)
 {
@@ -1041,6 +1092,7 @@ void engine_render(int32_t *out_lr, uint32_t n)
     void (*advance)(seq_t *,uint32_t,const seq_sink_t *);
     if (n > 256u)
         n = 256u;
+    plat_midi_audio_position(0);
     eng_prof_frames += n;
     if ((mot_was_on && !mot_on) || mot_release_req) {   /* motion off, or its lanes replaced: knobs back */
         mot_release_req = 0;
@@ -1073,6 +1125,7 @@ void engine_render(int32_t *out_lr, uint32_t n)
 #endif
         {
             PROF_T(pt);
+            plat_midi_audio_position(done+k);
             advance(&seq, k, &SINK);
             PROF_ADD(7, pt);
         }
@@ -1284,6 +1337,9 @@ POLY_COLD void engine_init(pattern_t *patterns, song_t *song, lane_t *lanes, con
     fxbus_init(&fx, dly_buf, DLY_LEN);
     master_init(&mst);
     seq_init(&seq, patterns);
+    for(unsigned i=0;i<sizeof variation_capture;i++)((uint8_t *)&variation_capture)[i]=0;
+    variation_capture.destination=6;
+    seq.freeze=&variation_capture;
     seq.rate_units=rate_units;for(unsigned i=0;i<25;i++)rate_units[i]=0;
     seq.clock.tick_lo=previous_clock.tick_lo;seq.clock.tick_hi=previous_clock.tick_hi;
     seq.clock.generation=previous_clock.generation==UINT32_MAX?UINT32_MAX:previous_clock.generation+1u;

@@ -1,0 +1,11 @@
+{
+  "version": "0.1.30-calbeta",
+  "default_hz": 44100,
+  "runtime_min_hz": 43900,
+  "runtime_max_hz": 44300,
+  "unit_storage": "OBJ_PANEL ABI1 extension;outside projects",
+  "command": 52,
+  "utility": "tools/fm1_calibrate.py",
+  "hardware_acceptance": "not performed",
+  "parent_fixed_profile": "history/0.1.29-TIMING_RATE_PROFILE.json"
+}

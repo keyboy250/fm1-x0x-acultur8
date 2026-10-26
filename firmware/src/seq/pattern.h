@@ -93,3 +93,17 @@ static inline int sm_any(const uint32_t *m)
 
 /* default empty pattern: 16 steps, straight, 303 lines empty with TB-3PO defaults */
 void pattern_init(pattern_t *p, uint32_t seed_a, uint32_t seed_b);
+
+/* Selected drum lane only. Human step 1 has index 0. Invalid/conflicting
+ * constraints leave the row byte-identical; inactive tail bits are retained. */
+enum { DR_POS_ALL, DR_POS_EVEN, DR_POS_ODD, DR_POS_OFF, DR_POS_COUNT };
+enum { DR_AN_NONE, DR_AN_BEAT, DR_AN_BACK, DR_AN_KEEP, DR_AN_BEATLOCK, DR_AN_BACKLOCK, DR_AN_COUNT };
+int pattern_generate_drum(uint32_t hits[NSW],int len,int density,int positions,int anchor,uint32_t seed);
+
+/* Runtime-only repeat overlay; never part of pattern/project storage. */
+/* Runtime only: the extra four bytes capture the 303 constraint snapshot. */
+typedef struct { uint8_t lane,pattern,every,amount,seed,anchor,mode,options; uint16_t notes; uint8_t low,high; } pattern_variation_t;
+typedef char pattern_variation_size_12[(sizeof(pattern_variation_t)==12)?1:-1];
+int pattern_variation_selected(const pattern_variation_t *v,int step,int length,unsigned cycle);
+int pattern_variation_valid(const pattern_variation_t *v);
+int pattern_variation_hit(const pattern_variation_t *v,int base,int step,int length,unsigned cycle);

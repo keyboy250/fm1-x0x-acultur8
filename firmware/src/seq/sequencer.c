@@ -5,6 +5,12 @@
 #include "rate_families.h"
 #include "../app/plat.h"
 
+#ifndef X0X_DEVICE_TIMING
+volatile timing_rate_state_t timing_rate_state={X0X_TIMING_RATE_HZ,0,0,0,1,24000000.0f/X0X_TIMING_RATE_HZ};
+#else
+volatile timing_rate_state_t timing_rate_state __attribute__((section(".noinit")));
+#endif
+
 #ifdef X0X_WEB
 extern void web_seq_transport(int playing, int from_top);
 extern void web_seq_tick(uint32_t period_q8);
@@ -38,6 +44,7 @@ void seq_init(seq_t *s, pattern_t *patterns)
     for (i = 0; i < sizeof *s; i++)
         p[i] = 0;
     s->pat = patterns;
+    s->variation.lane=255;s->variation.every=1;s->variation.amount=2;s->variation.anchor=3;
     s->clock.age=UINT32_MAX;
     for (i = 0; i < NTRACKS; i++)
         s->pcue[i] = 0xFF;
@@ -69,7 +76,7 @@ static int arrangement_active(const seq_t *s)
 float seq_tempo(const seq_t *s) { return s->ext ? s->ext_bpm : s->bpm; }
 
 /* LAN2 countdowns retain exact rational units in the existing uint32 timers.
- * Internal: numerator FS*150*pulses4, denominator BPM-tenths*24.
+ * Internal: numerator timing_rate_get()*150*pulses4, denominator BPM-tenths*24.
  * External: quarter-Q8 sample units, preserving fractional MIDI-pulse steps.
  * Legacy LAN1 timers and IDs keep their existing Q8 path unchanged. */
 static __attribute__((noinline)) int expanded(const seq_t *s){return s->lane_sound && poly_expanded(s->lane_sound);}
@@ -83,7 +90,7 @@ static uint32_t adopt_rate_unit(seq_t *s,int lane,uint32_t carry){unsigned bpm=(
  /* carry is less than one sample, never a long remaining interval. */
  return old==rate_unit(s,lane)?carry:(uint32_t)((float)carry*(float)rate_unit(s,lane)/(float)old);
 }
-static __attribute__((noinline)) uint32_t rate_interval(const seq_t *s,int rate){if(!expanded(s))return seq_step_q8(s,rate);return s->ext?(s->ext_period?s->ext_period:seq_step_q8(s,RATE_16)/6u)*rf_divisions[rate].pulses4:(uint32_t)FS*150u*rf_divisions[rate].pulses4;}
+static __attribute__((noinline)) uint32_t rate_interval(const seq_t *s,int rate){if(!expanded(s))return seq_step_q8(s,rate);return s->ext?(s->ext_period?s->ext_period:seq_step_q8(s,RATE_16)/6u)*rf_divisions[rate].pulses4:(uint32_t)timing_rate_get()*150u*rf_divisions[rate].pulses4;}
 void seq_lane_mark_pending(seq_t *s,int lane,int rate){s->lane_pending|=1u<<lane;if(rate && expanded(s))*rate_clock(s,lane)=(uint8_t)((*rate_clock(s,lane)&31u)|32u);}
 static void rate_bar(seq_t *s){int lane;if(expanded(s))for(lane=0;lane<25;lane++)if(*rate_clock(s,lane)&32u)*rate_clock(s,lane)|=64u;}
 static __attribute__((noinline)) int rate_boundary(seq_t *s,int lane){int rate=seq_lane_rate(s,lane);
@@ -98,14 +105,46 @@ uint32_t seq_step_q8(const seq_t *s, int rate)
         bpm = 20.0f;
     if (bpm > 300.0f)
         bpm = 300.0f;
-    q = (float)FS * 60.0f / bpm;                    /* samples per quarter */
+    q = (float)timing_rate_get() * 60.0f / bpm;                    /* samples per quarter */
     return (uint32_t)(q * 256.0f * (expanded(s)?(float)rf_divisions[rate<21?rate:0].pulses4/96.0f:(float)TICKS_PER_STEP[rate & 7]/24.0f));
 }
 
 static const dpart_t *dpart(const seq_t *s, int k) { return &s->pat[s->ppat[k]].drum[k]; }
 static int is_drum(int t) { return t < NKIT; }
 static int is_bass(int t) { return t >= TRK_BASS0 && t < TRK_BASS0 + NBASS; }
-static bpart_t *bpart(const seq_t *s, int b) { return &s->pat[s->ppat[TRK_BASS0 + b]].bass[b]; }
+int seq_freeze_matches(const seq_t *s,int lane)
+{
+    int part=lane<22?lane/11:lane-20;
+    return s->freeze && lane<24 && s->variation.lane==lane && s->variation.pattern==s->ppat[part];
+}
+int seq_freeze_held(const seq_t *s,int lane)
+{return seq_freeze_matches(s,lane) && s->freeze->state==FREEZE_HELD;}
+static bpart_t *bpart(const seq_t *s, int b) {
+    return seq_freeze_held(s,22+b)?&s->freeze->bass:&s->pat[s->ppat[TRK_BASS0 + b]].bass[b];
+}
+/* FWD only: count proves every slot was observed, including rejected/rest gates.
+ * Publish only at the next local boundary, after the requested pass is complete. */
+static void freeze_begin(seq_t *s,int lane,int step)
+{
+    if(!seq_freeze_matches(s,lane) || s->freeze->state==FREEZE_HELD)return;
+    pattern_freeze_t *f=s->freeze;
+    if(lane>=22 && bpart(s,lane-22)->dir!=DIR_FWD){f->count=0;return;}
+    int len=s->lane_enabled?seq_lane_length(s,lane):lane<22?dpart(s,lane/11)->len:bpart(s,lane-22)->len;
+    if(!step){
+        if(f->state==FREEZE_REQUEST && f->count==len){f->state=FREEZE_HELD;return;}
+        f->count=0;f->bass.len=(uint8_t)len;
+        f->bass.rate=(uint8_t)(s->lane_sound?seq_lane_rate(s,lane):lane<22?dpart(s,lane/11)->rate:bpart(s,lane-22)->rate);
+        f->bass.dir=DIR_FWD;f->bass.transpose=24;
+    }
+    if(f->count==step)f->count++;else f->count=0;
+    f->bass.step[step].flags=G_REST;f->bass.step[step].note=0;
+}
+static void freeze_record(seq_t *s,int lane,int step,int note,int flags)
+{
+    if(!seq_freeze_matches(s,lane) || s->freeze->state==FREEZE_HELD || !s->freeze->count)return;
+    s->freeze->bass.step[step].note=(uint8_t)note;
+    s->freeze->bass.step[step].flags=(uint8_t)flags;
+}
 
 int seq_part_len(const seq_t *s, int t)
 {
@@ -349,17 +388,50 @@ int seq_bass_resolve(seq_t *s,int b,int source,int transpose,uint8_t *note)
             mode==BASS_FOLLOW_ROOT?HARMONY_ROOT_ONLY:HARMONY_CHORD_TONES,note);
     }
 }
+/* source_note bit 7 marks a temporary projected NOTE, never persisted. */
+static int bass_variation_legal(const seq_t *s,int b,int note)
+{
+    const pattern_variation_t *v=&s->variation;
+    return v->lane!=22+b || v->pattern!=s->ppat[TRK_BASS0+b] ||
+        (pattern_variation_valid(v) && note>=v->low && note<=v->high && (v->notes&(1u<<(note%12))));
+}
+static int bass_source_resolve(seq_t *s,int b,int source,int transpose,uint8_t *note)
+{
+    if(seq_freeze_held(s,22+b)){*note=(uint8_t)(source&127);return 1;}
+    return seq_bass_resolve(s,b,source&127,transpose,note) &&
+        (!(source&128) || bass_variation_legal(s,b,*note));
+}
+/* At most one octave either way; no RNG state, heap, project or articulation writes.
+ * Check the FINAL pitch against both snapshot and the normal live follow resolver. */
+static uint8_t bass_variation_source(seq_t *s,int b,int step,uint8_t source,int transpose,uint8_t *note)
+{
+    const pattern_variation_t *v=&s->variation;uint8_t resolved;
+    unsigned cycle=s->t[TRK_BASS0+b].variation_cycle;int base=*note;
+    if(v->lane!=22+b || v->pattern!=s->ppat[TRK_BASS0+b] ||
+       !pattern_variation_selected(v,step,s->lane_enabled?seq_lane_length(s,22+b):bpart(s,b)->len,cycle))return source;
+    unsigned h=(unsigned)v->seed+1u+((unsigned)step*73u);
+    if(v->options&1u)h^=((cycle>>(v->every+1u))+1u)*0x9e3779b9u;
+    h^=h<<13;h^=h>>17;h^=h<<5;
+    int direction=v->mode==1?1:v->mode==2?-1:(h&1u)?1:-1;
+    for(int distance=1;distance<=12;distance++)for(int side=0;side<(v->mode?1:2);side++){
+        int candidate=base+distance*(side?-direction:direction),input=candidate-transpose;
+        if(input<0 || input>127 || candidate<0 || candidate>127 || !bass_variation_legal(s,b,candidate))continue;
+        if(seq_bass_resolve(s,b,input,transpose,&resolved) && resolved==candidate){*note=resolved;return (uint8_t)(input|128);}
+    }
+    return source; /* no legal alternative: keep the exact base event */
+}
 static void bass_retune_held(seq_t *s,int b,const seq_sink_t *o)
 {
     seq_track_t *tr=&s->t[TRK_BASS0+b];uint8_t note;
     unsigned bit=FOLLOW_RETUNE_A<<b;
+    if(seq_freeze_held(s,22+b))return;
     if(!(s->arrangement.reserved&bit))return;
     s->arrangement.reserved &= (uint8_t)~bit;
     if(s->mute&(1u<<(MUTE_BASS0+b))) {bass_release(s,b,o);return;}
     if(!tr->sounding)return;
     if(arrangement_bass_mode(s->arrangement.flags,b)!=BASS_FOLLOW_SCALE &&
        (!(s->arrangement.flags&ARR_ENABLED) || !arrangement_bass_mode(s->arrangement.flags,b) || !s->arrangement.degree))return;
-    if(!seq_bass_resolve(s,b,tr->held_note&127u,0,&note)) {
+    if(!bass_source_resolve(s,b,(tr->held_note&127u)|(tr->source_note&128u),0,&note)) {
         bass_release(s,b,o);tr->held_note=0;s->arrangement.reserved|=(uint8_t)(FOLLOW_BLOCKED_A<<b);return;
     }
     if(note!=(tr->held_note&127u)) {
@@ -376,8 +448,9 @@ void seq_cc_reconcile(seq_t *s,const seq_sink_t *o){
         if(s->song && s->song_pos<s->song->len)s->arrangement.degree=ARR_DEGREE(a->degree[s->song_pos]);}
     for(int b=0;b<NBASS;b++){
         seq_track_t *tr=&s->t[TRK_BASS0+b];uint8_t note;
+        if(seq_freeze_held(s,22+b))continue;
         if(!tr->sounding)continue; /* never revive a probability/range-rejected NOTE via TIE */
-        if(!seq_bass_resolve(s,b,tr->source_note,(int)bpart(s,b)->transpose-24,&note)){
+        if(!bass_source_resolve(s,b,tr->source_note,(int)bpart(s,b)->transpose-24,&note)){
             bass_release(s,b,o);tr->held_note=0;s->arrangement.reserved|=(uint8_t)(FOLLOW_BLOCKED_A<<b);continue;
         }
         if(note!=(tr->held_note&127u)){
@@ -398,10 +471,15 @@ static void fire_drum_range(seq_t *s, int k, int p, const seq_sink_t *o,int firs
     float vel = (d->accent[w] & bit) ? 1.0f : (float)s->accent_q7 / 127.0f;
     int v;
     for (v = first; v < end; v++) {
-        if (!(d->hit[v][w] & bit) || ((s->mute | s->vmute) & (1u << (k * NDRUM + v))))
+        freeze_begin(s,k*NDRUM+v,p);
+        int hit=seq_freeze_held(s,k*NDRUM+v)?bstep_gate(&s->freeze->bass.step[p])==G_NOTE:(d->hit[v][w]&bit)!=0;
+        if(!seq_freeze_held(s,k*NDRUM+v) && s->variation.lane==k*NDRUM+v && s->variation.pattern==s->ppat[k])
+            hit=pattern_variation_hit(&s->variation,hit,p,s->lane_enabled?seq_lane_length(s,k*NDRUM+v):d->len,seq_lane_cycles(s,k*NDRUM+v));
+        if (!hit || ((s->mute | s->vmute) & (1u << (k * NDRUM + v))))
             continue;
         if (!o->drum(o->ctx, k, v, vel))
             continue;                                /* its chance said no: no MIDI either */
+        freeze_record(s,k*NDRUM+v,p,0,G_NOTE);
         if (s->send_notes && s->ch[k] != SEQ_CH_OFF) {
             uint8_t mv = (uint8_t)(vel * 127.0f);
             midi(o, (uint8_t)(0x90 | s->ch[k]), GM_DRUM[k][v], mv);
@@ -414,6 +492,7 @@ static void fire_drum(seq_t *s,int k,int p,const seq_sink_t *o) { fire_drum_rang
 
 static __attribute__((noinline)) void fire_bass(seq_t *s,int b,int p,uint32_t step_q8,uint32_t carry,const seq_sink_t *o)
 {
+    freeze_begin(s,22+b,p);
     seq_track_t *tr=&s->t[TRK_BASS0+b];bpart_t *bp=bpart(s,b);const bstep_t *st=&bp->step[p];
     int gate=bstep_gate(st),hold,nx;uint8_t note;
     uint8_t prev_slide=tr->held_note&128u;
@@ -426,20 +505,22 @@ static __attribute__((noinline)) void fire_bass(seq_t *s,int b,int p,uint32_t st
         (!tr->sounding && (s->arrangement.flags&ARR_ENABLED) && s->arrangement.degree && arrangement_bass_mode(s->arrangement.flags,b))))return;
     if(gate==G_TIE && tr->sounding)note=tr->held_note&127u; /* TIE's stored note is not played */
     else {
-        if(!seq_bass_resolve(s,b,st->note,(int)bp->transpose-24,&note)) {
+        if(!bass_source_resolve(s,b,st->note,(int)bp->transpose-24,&note)) {
             bass_release(s,b,o);tr->held_note=0;s->arrangement.reserved|=(uint8_t)blocked;return;
         }
+        uint8_t source=gate==G_NOTE && !seq_freeze_held(s,22+b)?bass_variation_source(s,b,p,st->note,(int)bp->transpose-24,&note):st->note;
         s->arrangement.reserved&=(uint8_t)~blocked; /* successful projection; chance rejection is separate */
         {
             int accent=(st->flags&BS_ACCENT)!=0,slide=tr->sounding && prev_slide;
             int triggered=o->bass_trigger?o->bass_trigger(o->ctx,b,note,accent,slide):1;
             if(!o->bass_trigger && o->bass_on)o->bass_on(o->ctx,b,note,accent,slide);
             if(!triggered) {bass_release(s,b,o);tr->held_note=0;tr->trigger_rejected=1;return;}
-            tr->source_note=st->note;
+            tr->source_note=source;
             bass_midi_on(s,b,note,accent,!slide,o);tr->sounding=1;tr->trigger_rejected=0;
             s->arrangement.reserved=(uint8_t)((s->arrangement.reserved&~(blocked|accentbit))|(accent?accentbit:0));
         }
     }
+    freeze_record(s,22+b,p,note,st->flags);
     nx=next_pos(s,TRK_BASS0+b,p,0);
     hold=(st->flags&BS_SLIDE) || bstep_gate(&bp->step[nx])==G_TIE;
     tr->held_note=(uint8_t)(note|((st->flags&BS_SLIDE)?128u:0));
@@ -540,7 +621,7 @@ static void arrangement_latch(seq_t *s, uint16_t block)
         a->pat[t] = next[t];
         if (next[t] != s->ppat[t]) {
             seq_track_t *tr = &s->t[t];
-            s->ppat[t] = next[t]; if(s->lane_sound){latch_rate(s,t<NKIT?t*11:t+20,part_rate(s,t));if(t<NKIT)row_reset(s,t,1);} tr->started = 0; tr->bars = 0; tr->pp_dir = 1;
+            s->ppat[t] = next[t]; if(s->lane_sound){latch_rate(s,t<NKIT?t*11:t+20,part_rate(s,t));if(t<NKIT)row_reset(s,t,1);} tr->started = 0; tr->bars = 0; tr->variation_step=tr->variation_cycle=0; tr->pp_dir = 1;
             tr->to_next = s->ext ? NEVER : 0;
             if(!expanded(s))tr->ext_ticks = (uint8_t)(TICKS_PER_STEP[part_rate(s,t)] - 1);
         }
@@ -650,7 +731,7 @@ static void auto_mutate(seq_t *s, int b)
     bpart_t *bp = bpart(s, b);
     seq_track_t *tr = &s->t[TRK_BASS0 + b];
     tr->bars++;
-    if (bp->gen.mutate_bars && tr->bars % bp->gen.mutate_bars == 0)
+    if (!(s->variation.lane==22+b && s->variation.pattern==s->ppat[TRK_BASS0+b]) && bp->gen.mutate_bars && tr->bars % bp->gen.mutate_bars == 0)
         tb3po_mutate(bp, &s->mut_rng[b]);
 }
 
@@ -685,6 +766,10 @@ static __attribute__((noinline)) uint32_t fire_step(seq_t *s, int t, const seq_s
         tr->bars++;
     if (changed & 1u)                                /* the 909's new pattern: its passes from 1 again, as */
         tr->bars = 0;                                /* restart() does for the others (probability cycles) */
+    if(bass){
+        if(tr->variation_step>=seq_part_len(s,t)){tr->variation_step=0;tr->variation_cycle++;}
+        tr->variation_step++;
+    }
     tr->pos = (uint8_t)p;
     if (o->step)                                     /* first: the step's motion and p-locks, which the hit */
         o->step(o->ctx, t, p);                       /* below must hear (a drum takes its tune as it fires) */
@@ -720,6 +805,7 @@ static void restart(seq_t *s, uint32_t parts)  /* parts whose pattern switched: 
         s->t[t].to_next = s->ext ? NEVER : 0;
         if(!expanded(s))s->t[t].ext_ticks = (uint8_t)(TICKS_PER_STEP[part_rate(s, t)] - 1);
         s->t[t].bars = 0;
+        s->t[t].variation_step=s->t[t].variation_cycle=0;
         s->t[t].pp_dir = 1;
         if(s->lane_sound && t<NKIT)row_reset(s,t,1);
     }
@@ -743,6 +829,7 @@ static __attribute__((noinline)) void do_start(seq_t *s, int from_top, const seq
             tr->started = 0;
             tr->trigger_rejected=0;
             tr->bars = 0;
+            tr->variation_step=tr->variation_cycle=0;
             tr->pp_dir = 1;
         }
         if(s->lane_sound){latch_rate(s,t<NKIT?t*11:t+20,part_rate(s,t));if(t<NKIT)row_reset(s,t,from_top);}
@@ -752,7 +839,7 @@ static __attribute__((noinline)) void do_start(seq_t *s, int from_top, const seq
     }
     s->clk_to_next = 0;
     s->playing = 1;
-    if((s->clock.role_source&3u)==CLOCK_FOLLOW){s->clock.state=CLOCK_RUNNING;s->ext_since=0;s->clk_to_next=(FS/2u+1u)<<8;}
+    if((s->clock.role_source&3u)==CLOCK_FOLLOW){s->clock.state=CLOCK_RUNNING;s->ext_since=0;s->clk_to_next=(timing_rate_get()/2u+1u)<<8;}
     s->pad_status|=PAD_ARMED;
 #ifdef X0X_WEB
     web_seq_transport(1, from_top);
@@ -809,7 +896,7 @@ static __attribute__((noinline)) void poly_musical_tick(seq_t *s)
     if(++a->tick<96)return;
     a->tick=0;poly_mode_boundary(s);rate_bar(s);changed=bar_end(s,0);
     for(t=0;t<NTRACKS;t++)if(changed&(1u<<t)){
-        seq_track_t *tr=&s->t[t];tr->started=0;tr->bars=0;tr->pp_dir=1;
+        seq_track_t *tr=&s->t[t];tr->started=0;tr->bars=0;tr->variation_step=tr->variation_cycle=0;tr->pp_dir=1;
         latch_rate(s,t<NKIT?t*11:t+20,part_rate(s,t));if(!expanded(s))tr->ext_ticks=(uint8_t)(TICKS_PER_STEP[part_rate(s,t)]-1);
         tr->to_next=s->ext?NEVER:0;if(t<NKIT)row_reset(s,t,1);
     }
@@ -824,16 +911,16 @@ static __attribute__((noinline)) void ext_ticks(seq_t *s, int arrangement,const 
     s->ext_pending = 0;
     if(expanded(s)&&n>1){clock_cutoff(s,o);do_stop(s,o,arrangement && arrangement_active(s));seq_transport_retire(s);s->clock.state=CLOCK_LOST;s->ext_period=0;s->ext_since=0;return;}
     for (; n; n--) {
-        if (s->ext_since > 0 && s->ext_since < FS) {  /* tempo: smoothed tick period */
+        if (s->ext_since > 0 && s->ext_since < timing_rate_get()) {  /* tempo: smoothed tick period */
             uint32_t q = s->ext_since << 8;
             s->ext_period = s->ext_period ? s->ext_period - (s->ext_period >> 3) + (q >> 3) : q;
-            s->ext_bpm = (float)FS * 60.0f * 256.0f / (24.0f * (float)s->ext_period);
+            s->ext_bpm = (float)timing_rate_get() * 60.0f * 256.0f / (24.0f * (float)s->ext_period);
         }
         /* Expanded interpolation supports the explicit20..300 BPM domain.
          * A single late/too-fast measured period must not wrap a long interval. */
-        if(expanded(s) && s->ext_period && (s->ext_period<(FS*60u*256u)/(300u*24u)-256u || s->ext_period>(FS*60u*256u)/(20u*24u)+256u)){clock_cutoff(s,o);do_stop(s,o,arrangement && arrangement_active(s));seq_transport_retire(s);s->clock.state=CLOCK_LOST;s->ext_period=0;s->ext_since=0;return;}
+        if(expanded(s) && s->ext_period && (s->ext_period<(timing_rate_get()*60u*256u)/(300u*24u)-256u || s->ext_period>(timing_rate_get()*60u*256u)/(20u*24u)+256u)){clock_cutoff(s,o);do_stop(s,o,arrangement && arrangement_active(s));seq_transport_retire(s);s->clock.state=CLOCK_LOST;s->ext_period=0;s->ext_since=0;return;}
         s->ext_since = 0;
-        if(clock_role(s)==CLOCK_FOLLOW)s->clk_to_next=(FS/2u+1u)<<8;
+        if(clock_role(s)==CLOCK_FOLLOW)s->clk_to_next=(timing_rate_get()/2u+1u)<<8;
         clock_tick(s);
         if (!s->playing)
             continue;
@@ -890,12 +977,12 @@ static __attribute__((noinline)) int clock_prepare(seq_t *s,uint32_t k,const seq
     }
     if (s->ext_pending)
         s->ext = 1;
-    else if(clock_role(s)==CLOCK_FOLLOW && s->clock.state==CLOCK_RUNNING && s->ext_since>FS/2u){
+    else if(clock_role(s)==CLOCK_FOLLOW && s->clock.state==CLOCK_RUNNING && s->ext_since>timing_rate_get()/2u){
         s->clock.state=CLOCK_LOST;s->clock.flags=(uint8_t)((s->clock.flags&~CLOCK_CONFIG_APPLIED)|CLOCK_INVALIDATED);clock_generation(s);clock_cutoff(s,o);seq_stop(s);
     }
     /* External Follow never uses the internal pulse countdown. Cache its
      * exact loss event here without reducing the independent tick/age status. */
-    if(clock_role(s)==CLOCK_FOLLOW)s->clk_to_next=(s->ext_since>FS/2u?1u:FS/2u+1u-s->ext_since)<<8;
+    if(clock_role(s)==CLOCK_FOLLOW)s->clk_to_next=(s->ext_since>timing_rate_get()/2u?1u:timing_rate_get()/2u+1u-s->ext_since)<<8;
     return 1;
 }
 
@@ -966,7 +1053,7 @@ static inline __attribute__((always_inline)) uint32_t until_event_common(seq_t *
         return n;
     role=clock_role(s);
     if (s->ext && (arrangement || poly) && role!=CLOCK_FOLLOW) {
-        e = s->ext_since > FS / 2u ? 1u : FS / 2u + 1u - s->ext_since;
+        e = s->ext_since > timing_rate_get() / 2u ? 1u : timing_rate_get() / 2u + 1u - s->ext_since;
         if (e < m) m = e;
     }
     for (t = 0; t < NTRACKS; t++) {
@@ -987,7 +1074,7 @@ static __attribute__((noinline)) void advance_common(seq_t *s, uint32_t k, const
     int t, guard, clock_rebased = 0,rf=poly && expanded(s);
     uint32_t dq = k << 8;
     if(!clock_prepare(s,k,o))return;
-    if(!s->ext_pending && clock_role(s)==CLOCK_LEGACY && s->ext && s->ext_since > FS / 2u) {    /* clock gone for 0.5 s: back to internal */
+    if(!s->ext_pending && clock_role(s)==CLOCK_LEGACY && s->ext && s->ext_since > timing_rate_get() / 2u) {    /* clock gone for 0.5 s: back to internal */
         s->ext = 0;
         if (arrangement || poly) {
             s->clk_to_next = seq_step_q8(s,RATE_16) / 6u; /* resume next tick, without duplicating the last one */

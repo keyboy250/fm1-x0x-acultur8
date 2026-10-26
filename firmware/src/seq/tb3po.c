@@ -144,3 +144,32 @@ uint32_t tb3po_new_seed(uint32_t entropy)
     rng_u32(&r);
     return r ? r : 1;
 }
+
+uint16_t tb3po_scale_mask(const tb3po_cfg_t *g)
+{
+    uint16_t mask=0;int i;
+    if(!g || g->root>11 || g->scale>=TB3PO_NSCALES)return 0;
+    const scale_t *sc=&SCALES[g->scale];
+    for(i=0;i<sc->len;i++)mask|=(uint16_t)(1u<<((g->root+sc->deg[i])%12));
+    return mask;
+}
+
+int tb3po_generate_mask(bpart_t *b,uint16_t mask,int low,int high)
+{
+    uint8_t allowed[128];int n=0,i,len;uint32_t rng;
+    if(!b || !mask || (mask&~0xfffu) || low<0 || high>127 || low>high ||
+       b->len<1 || b->len>NSTEPS || b->gen.density>100 || b->gen.accent>100 || b->gen.slide>100)return 0;
+    for(i=low;i<=high;i++)if(mask&(1u<<(i%12)))allowed[n++]=(uint8_t)i;
+    if(!n)return 0;
+    rng=b->gen.seed?b->gen.seed:1;len=b->len;
+    for(i=0;i<NSTEPS;i++){
+        b->step[i].note=allowed[0];b->step[i].flags=G_REST;
+        if(i<len && b->gen.density && rng_f(&rng)<(float)b->gen.density/100.0f){
+            b->step[i].note=allowed[(int)(rng_f(&rng)*(float)n)];
+            b->step[i].flags=roll_kind(&rng,&b->gen);
+        }
+    }
+    for(i=0;i<len;i++)if((b->step[i].flags&BS_SLIDE) && bstep_gate(&b->step[(i+1)%len])==G_REST)
+        b->step[i].flags&=(uint8_t)~BS_SLIDE;
+    return 1;
+}

@@ -4,7 +4,7 @@
 
 Generated with `python tools/cc_inventory.py --write`; validate with `--check`. No firmware compilation is performed.
 
-710 inventory rows: 685 addressed field templates/descriptor rows and 25 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 650, 'nonmusical': 4, 'diagnostic': 1, 'read_only': 1, 'action': 26, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 15}.
+751 inventory rows: 727 addressed field templates/descriptor rows and 24 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 667, 'nonmusical': 5, 'diagnostic': 1, 'read_only': 1, 'action': 26, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 38}.
 
 ## Source-derived engine descriptor counts
 
@@ -753,6 +753,47 @@ Acceptance: exhaustive registry coverage and endpoint/enum scaling; collision/re
 | ui.navigation | ui.navigation | [0, 1] | none | {} | nonmusical_action |
 | ui.keyboard_latch | ui.keyboard_latch | [0, 1] | none | {} | nonmusical_action |
 | ui.factory_reset | ui.factory_reset | [0, 1] | none | {} | nonmusical_action |
-| ui.pattern_copy.source | Stopped copy source | [0, 31] | none | {} | nonmusical_action |
-| ui.pattern_copy.destination | Stopped copy destination | [0, 31] | none | {} | nonmusical_action |
-| ui.pattern_copy.scope | Stopped copy scope | [0, 24] | none | {} | nonmusical_action |
+| ui.pattern_copy.source | Stopped copy source | [0, 31] | 15 / 9 | {} | nonmusical_action |
+| ui.pattern_copy.destination | Stopped copy destination | [0, 31] | 15 / 10 | {} | nonmusical_action |
+| ui.pattern_copy.scope | Stopped copy scope | [0, 24] | 15 / 11 | {} | nonmusical_action |
+| ui.constrained_generation.mode | Constrained generation mode | [0, 4] | 14 / 91 | {} | nonmusical_action |
+| ui.constrained_generation.chord_block | Constrained generation chord_block | [0, 191] | 14 / 92 | {} | nonmusical_action |
+| ui.constrained_generation.generate_confirmed | Constrained generation generate_confirmed | [0, 1] | 14 / 93 | {} | nonmusical_action |
+| ui.drum_generation.density | Drum generation density | [0, 100] | 14 / 94 | {} | nonmusical_action |
+| ui.drum_generation.positions | Drum generation positions | [0, 3] | 14 / 95 | {} | nonmusical_action |
+| ui.drum_generation.anchors | Drum generation anchors | [0, 5] | 14 / 96 | {} | nonmusical_action |
+| ui.drum_generation.seed_index | Drum generation seed_index | [0, 255] | 14 / 97 | {} | nonmusical_action |
+| ui.drum_generation.replace_confirm | Drum generation replace_confirm | [0, 1] | 14 / 98 | {} | nonmusical_action |
+| ui.repeating_variation.every | Repeating variation every | [0, 2] | 14 / 99 | {} | nonmusical_action |
+| ui.repeating_variation.changes | Repeating variation changes | [0, 8] | 14 / 100 | {} | nonmusical_action |
+| ui.repeating_variation.anchor_lock | Repeating variation anchor_lock | [0, 3] | 14 / 101 | {} | nonmusical_action |
+| ui.repeating_variation.seed | Repeating variation seed | [0, 255] | 14 / 102 | {} | nonmusical_action |
+| ui.repeating_variation.mode | Repeating variation mode | [0, 2] | 14 / 103 | {} | nonmusical_action |
+| ui.repeating_variation.shape | Repeating variation shape | [0, 1] | 14 / 104 | {} | nonmusical_action |
+| ui.repeating_variation.range | Repeating variation range | [0, 3] | 14 / 105 | {} | nonmusical_action |
+| ui.repeating_variation.arm_confirm | Repeating variation arm_confirm | [0, 1] | 14 / 106 | {} | nonmusical_action |
+| ui.repeating_variation.off_confirm | Repeating variation off_confirm | [0, 1] | 14 / 107 | {} | nonmusical_action |
+| ui.live_overlay | Live drum display overlay (session only; default OFF) | [0, 1] | none | {} | nonmusical_action |
+| ui.freeze_commit.destination | Freeze/Commit destination | [0, 31] | 14 / 108 | {} | nonmusical_action |
+| ui.freeze_commit.freeze_request | Freeze/Commit freeze_request | [0, 1] | 14 / 109 | {} | nonmusical_action |
+| ui.freeze_commit.commit_confirm | Freeze/Commit commit_confirm | [0, 1] | 14 / 110 | {} | nonmusical_action |
+| ui.random_options.length | Random options length | [0, 64] | 14 / 111 | {} | nonmusical_action |
+| ui.random_options.note_step | Random options note_step | [0, 64] | 14 / 112 | {} | nonmusical_action |
+| remote.generation.seed_byte0 | remote.generation.seed_byte0 | [0, 255] | 14 / 115 | {} | musical |
+| remote.generation.seed_byte1 | remote.generation.seed_byte1 | [0, 255] | 14 / 116 | {} | musical |
+| remote.generation.seed_byte2 | remote.generation.seed_byte2 | [0, 255] | 14 / 117 | {} | musical |
+| remote.generation.seed_byte3 | remote.generation.seed_byte3 | [0, 255] | 14 / 118 | {} | musical |
+| remote.request_low7 | remote.request_low7 | [0, 127] | 14 / 119 | {} | musical |
+| remote.request_high7 | remote.request_high7 | [0, 127] | 15 / 0 | {} | musical |
+| remote.action_arm | remote.action_arm | [0, 7] | 15 / 1 | {} | musical |
+| remote.cancel | remote.cancel | [0, 1] | 15 / 2 | {} | musical |
+| ui.cc_mode | GLO MIDI CC MODE | [0, 2] | none | {} | nonmusical |
+| remote.variation.constraint_mode | Variation303 constraint mode | [0, 3] | 15 / 3 | {} | musical |
+| remote.variation.chord_block | Variation303 chord block | [0, 191] | 15 / 4 | {} | musical |
+| remote.capture.token_byte0 | Expected captured-pass token byte0 | [0, 255] | 15 / 5 | {} | musical |
+| remote.capture.token_byte1 | Expected captured-pass token byte1 | [0, 255] | 15 / 6 | {} | musical |
+| remote.capture.token_byte2 | Expected captured-pass token byte2 | [0, 255] | 15 / 7 | {} | musical |
+| remote.capture.token_byte3 | Expected captured-pass token byte3 | [0, 255] | 15 / 8 | {} | musical |
+| ui.pattern_copy.destination_scope | Scoped cross-part copy destination_scope | [0, 24] | 15 / 12 | {} | musical |
+| ui.pattern_copy.preview_arm | Scoped cross-part copy preview_arm | [0, 1] | 15 / 13 | {} | musical |
+| ui.pattern_copy.execute | Scoped cross-part copy execute | [0, 1] | 15 / 14 | {} | musical |

@@ -39,12 +39,14 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
 {
     uint32_t t0 = fm1_ticks(), us, budget = HALF_FRAMES * 1000000u / FS;
     x0x_dbg.in_audio = 1;
+    midi_audio_begin(t0);
 #if FELUCCA_UAC
     uac_render_start();
 #endif
     {
         uint32_t k;
         for (k = 0; k < HALF_FRAMES; k += REND_FRAMES) {
+            midi_deadline.chunk=k;
             engine_render(o + 2u * k, REND_FRAMES);
 #if FELUCCA_UAC
             uac_tap(o + 2u * k, REND_FRAMES);       /* the USB audio input: the same master output */
@@ -79,6 +81,7 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
     x0x_dbg.last_us = us;
     if (us > x0x_dbg.max_us)
         x0x_dbg.max_us = us;
+    midi_audio_end();
     x0x_dbg.in_audio = 0;
 }
 
@@ -142,6 +145,9 @@ void fm1_timer5_irq(void)
             uac_service();
 #endif
     }
+    /* The TX consumer reads only published ring slots. It may run during
+     * render; RX/editor/configuration remain in the non-render poll below. */
+    if(sub%5u==0u && x0x_dbg.in_audio && usb.up && usb.config)ep1_tx();
     if (usb_due && !x0x_dbg.in_audio) {
         usb_due = 0;
         usb_poll();
@@ -242,6 +248,7 @@ static POLY_COLD void safe_main(void)
     }
     fm1_input_init();
     panel_init();
+    engine_timing_init();
     usb_start();
     fm1_timer5_start(isr_timer5, 1);
     fm1_guard_lock_top();
@@ -435,6 +442,7 @@ static POLY_COLD void fm1_main(void)
     fm1_input_init();
     fm1_adc_init();
     panel_init();
+    engine_timing_init();
     led_pos_init();
     plat_perf_init();
     engine_init(proj.pat, &proj.arr.song, proj.arr.lane, &proj.sound);
@@ -521,7 +529,7 @@ static POLY_COLD void fm1_main(void)
                 ota_frame_done();
         }
         ed_service();                               /* sample upload SysEx */
-        backup_service(ota_service());              /* M-UPGRADE handshake; backup and restore */
+        backup_service(ota_editor_service());       /* M-UPGRADE handshake; backup and restore */
         if (usb.ota_req) {
             usb.ota_req = 0;
             seq_stop(&seq);

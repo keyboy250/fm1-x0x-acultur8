@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Undo / redo (HOME + REC / HOME + PLAY): a step is one gesture, what changed between quiet moments.
 wait 300
 expect sound0.0.0 34
@@ -54,7 +59,7 @@ expect hit0.0.8 0
 expect hit0.0.12 1
 # FACTORY RESET (GLO, the tenth row, asks) can be undone too
 tap GLO
-turn SELECT 16
+turn SELECT 17
 tap SEL
 tap SEL
 wait 600

@@ -103,6 +103,7 @@ int engine_brk_outline(int which, uint8_t *peaks, int n);   /* the loop's peaks 
 int engine_motion_part(int target, int voice);              /* the part a parameter's lane follows */
 int engine_motion_value(int lane);                          /* what the lane plays now, -1 none */
 void engine_motion_rec(int lane);                           /* record a pass from the next step */
+void engine_probability_clear(int lane); /* main, stopped transport reservation only */
 void engine_motion_hold(int lane);                          /* the knob wins for a pass */
 float engine_gr_db(void);                                   /* master compressor gain reduction (UI meter) */
 void engine_master_format(int i, char *buf);                /* a master pot in its unit */
@@ -122,3 +123,9 @@ int engine_strip_restore(unsigned strip,const sound_strip_config_t *config);
  * the reservation. No other main producer may run between these calls. */
 int engine_strip_restore_prepare(unsigned strip,const sound_strip_config_t *config);
 void engine_strip_restore_commit(unsigned strip,const sound_strip_config_t *config);
+
+#include "runtime_diagnostics.h"
+
+void engine_timing_init(void);
+void engine_timing_status(uint32_t words[10]);
+int engine_timing_update(uint32_t rate,uint32_t expected_rate,uint32_t generation,uint32_t old_unit,uint32_t new_unit);

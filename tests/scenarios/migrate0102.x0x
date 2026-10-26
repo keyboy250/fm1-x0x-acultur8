@@ -1,6 +1,16 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # A project saved by 0.10.2-beta (tests/fixtures/v0102_store.bin, made in its simulator: drums, motion, a 303 line, a song, and a value in every sound place that has moved since) loads as it was, and saves again in today's format.
 wait 100
 storeload tests/fixtures/v0102_store.bin
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 wait 300
 # the patterns and the song
 expect hit0.0.0 1
@@ -39,6 +49,11 @@ tap PLAY
 tap SAVE
 wait 300
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 wait 300
 expect sound0.0.10 30
 expect sound0.1.4 70

@@ -33,6 +33,7 @@ export class SliceWorkletControl {
       if(!integer(m.request,1,0xffffffff)||m.abi!==1)fail(reason);
       if(o.loading||!e)fail('engine-not-ready');if(!this.supported())fail('engine-slice-abi-unavailable');
       if(m.ccRoute!==undefined&&(!o.ccInput.ready||m.ccRoute!==o.ccInput.route))fail('stale-route');
+      if(m.ccRoute!==undefined&&e.web_cc_mode&&e.web_cc_mode()!==0)fail('cc-mode-disabled');
       const gate=e.web_slice_control_state()>>>0;
       if(!['stop','consume'].includes(m.op)&&(o.editOwner!==null||(gate&8)))fail('owned-gesture');
       if(!['stop','consume'].includes(m.op)&&(gate&4))fail('reserved');

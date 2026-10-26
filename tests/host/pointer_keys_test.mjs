@@ -65,7 +65,11 @@ async function instrument(){
    s.advance(128000/44100);while(pending.length)await p.onMessage(pending.shift());
    currentTime+=128/44100;p.process([],[[new Float32Array(128),new Float32Array(128)]]);
  }};
- await render(175);return {p,s,render};
+ await render(175);
+ // This fixture tests step editing; the new startup screen is HOME.
+ await p.onMessage({type:"buttons",mask:1<<4});await render(25);
+ await p.onMessage({type:"buttons",mask:0});await render(25);
+ return {p,s,render};
 }
 const whiteMask=WHITE.reduce((mask,k)=>mask|(1<<k),0),pattern=p=>p.ex.web_lit_keys()&whiteMask;
 {

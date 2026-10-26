@@ -234,7 +234,7 @@ def build(root=ROOT):
     ui=texts['firmware/src/app/ui.c']
     refs=enum_names(ui,'R_NONE')
     expected='R_NONE R_ENG R_SWING R_DLEN R_DRATE R_BLEN R_BRATE R_BDIR R_BTRANS R_GEN R_BRKSET R_BRKSLOT R_TEMPO R_ACCENT R_CLKOUT R_NOTEOUT R_PALETTE R_KEYLED R_KEYSOUND R_AUTOSAVE R_ACT R_SBAR R_SPAT R_SLEN R_STALLS R_HDR R_TAPE R_MIDICH R_OUTLOUD R_SREP R_BATT R_USBFULL R_FREEPLAY R_RATEENABLE R_RATEFAMILY R_RATEBOUNDARY R_RATEHYST R_RATEEXACT R_STRIP R_STRIPFLAG R_STRIPDEFAULT R_CORES R_BMODE R_BDEGREE R_BMUTE'.split()
-    expected+=['R_AKEY','R_ASCALE','R_AFOLLOW','R_COPYCFG'] # native aliases of existing harmony fields
+    expected+=['R_AKEY','R_ASCALE','R_AFOLLOW','R_COPYCFG','R_NEWGEN','R_DRUMGEN','R_VARIATION','R_CAPTURE','R_RANDOM','R_CCMODE'] # native aliases of existing harmony fields
     if refs!=expected:raise ValueError('UI reference coverage must be updated')
     # Every pref kind accounted for, including nonmusical/read-only rows.
     seq=descriptors(ui,'SEQ_P',symbols); sq=enum_names(ui,'SQ_SWING')[:-1]
@@ -352,7 +352,59 @@ def build(root=ROOT):
     covered={name:'descriptor or structured field' for name in refs}
     for field,maximum in [('source',31),('destination',31),('scope',24)]:
         add('ui.pattern_copy.'+field,'Stopped copy '+field,maximum,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native UI only; confirmed staged paste; no new remote CC binding')
-    covered.update({'R_COPYCFG':'native-only source/destination/scope; no MIDI binding', 'R_NONE':'sentinel','R_HDR':'non-selectable header','R_BATT':'read-only', 'R_ACT':'all ACT_P actions; block actions 12-15 and Undo action 16 and scoped paste action 17 and copy submenu action 18 native only', 'R_BMODE':'alias arrangement.enabled', 'R_BDEGREE':'alias arrangement.degree', 'R_BMUTE':'alias arrangement.mute'})
+    for field,maximum in [('mode',4),('chord_block',191),('generate_confirmed',1)]:
+        add('ui.constrained_generation.'+field,'Constrained generation '+field,maximum,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native UI only; stopped confirmed generation; no remote CC binding')
+    for field,maximum in [('density',100),('positions',3),('anchors',5),('seed_index',255),('replace_confirm',1)]:
+        add('ui.drum_generation.'+field,'Drum generation '+field,maximum,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native UI only; stopped confirmed generation; no remote CC binding')
+    for field,maximum in [('every',2),('changes',8),('anchor_lock',3),('seed',255),('mode',2),('shape',1),('range',3),('arm_confirm',1),('off_confirm',1)]:
+        add('ui.repeating_variation.'+field,'Repeating variation '+field,maximum,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native UI only; stopped transient playback recipe; no project write or remote MIDI binding')
+    add('ui.live_overlay','Live drum display overlay (session only; default OFF)',1,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native drum VAR OPTIONS knob4 only; no project save, Undo, CC binding or timing-acceptance claim')
+    for field,maximum in [('destination',31),('freeze_request',1),('commit_confirm',1)]:
+        add('ui.freeze_commit.'+field,'Freeze/Commit '+field,maximum,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native UI only; runtime full-pass request and stopped confirmed destination commit; no remote MIDI binding')
+    for field,maximum in [('length',64),('note_step',64)]:
+        add('ui.random_options.'+field,'Random options '+field,maximum,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native UI only; stopped confirmed generation or selected NOTE pitch randomization; no remote MIDI binding')
+    covered.update({'R_RANDOM':'native-only generated length and selected-note step; no MIDI binding','R_CAPTURE':'native-only runtime Freeze and confirmed destination commit; no MIDI binding','R_VARIATION':'native-only transient playback recipe; no MIDI binding','R_DRUMGEN':'native-only transient drum recipe; no MIDI binding','R_NEWGEN':'native-only transient generation mode and chord-block selector; no MIDI binding','R_COPYCFG':'native-only source/destination/scope; no MIDI binding', 'R_NONE':'sentinel','R_HDR':'non-selectable header','R_BATT':'read-only', 'R_ACT':'all ACT_P actions; block actions 12-15 and Undo action 16 and scoped paste action 17 and copy submenu action 18 and confirmed generation action 19 and drum generation action 20 and variation arm/off actions 21/22 and frozen commit action23 native only', 'R_BMODE':'alias arrangement.enabled', 'R_BDEGREE':'alias arrangement.degree', 'R_BMUTE':'alias arrangement.mute'})
+    # Compatible first remote-generation slice; existing addresses unchanged.
+    extension=[{'id': 'ui.constrained_generation.mode', 'maximum': 4, 'slot': 1203}, {'id': 'ui.constrained_generation.chord_block', 'maximum': 191, 'slot': 1204}, {'id': 'ui.constrained_generation.generate_confirmed', 'maximum': 1, 'slot': 1205}, {'id': 'ui.random_options.length', 'maximum': 64, 'slot': 1223}, {'id': 'ui.random_options.note_step', 'maximum': 64, 'slot': 1224}, {'id': 'remote.generation.seed_byte0', 'maximum': 255, 'slot': 1227}, {'id': 'remote.generation.seed_byte1', 'maximum': 255, 'slot': 1228}, {'id': 'remote.generation.seed_byte2', 'maximum': 255, 'slot': 1229}, {'id': 'remote.generation.seed_byte3', 'maximum': 255, 'slot': 1230}, {'id': 'remote.request_low7', 'maximum': 127, 'slot': 1231}, {'id': 'remote.request_high7', 'maximum': 127, 'slot': 1232}, {'id': 'remote.action_arm', 'maximum': 7, 'slot': 1233}, {'id': 'remote.cancel', 'maximum': 1, 'slot': 1234}]
+    for item in extension:
+        row=next((r for r in rows if r['id']==item['id']),None)
+        if row is None:
+            add(item['id'],item['id'],item['maximum'],item['slot'],'musical',source='firmware/src/app/cc_generation.inc')
+            row=rows[-1]
+        else:
+            q,offset=divmod(item['slot'],88)
+            row['address']={'channel':q+1,'cc':CCS[offset]}
+            row['action_policy']='Explicit source-owned stopped generation; guarded request/result, no UI focus'
+        row['parameter_number']=item['slot']
+    for offset,field,maximum in [(0,'density',100),(1,'positions',3),(2,'anchors',5),(3,'seed_index',255),(4,'replace_confirm',1)]:
+        row=next(r for r in rows if r['id']=='ui.drum_generation.'+field)
+        q,idx=divmod(1206+offset,88);row['address']={'channel':q+1,'cc':CCS[idx]}
+        row['parameter_number']=1206+offset;row['action_policy']='Source-owned stopped drum generation; arm3, explicit context, shared length, request and result'
+    add('ui.cc_mode','GLO MIDI CC MODE',2,None,'nonmusical',source='firmware/src/app/ui.c',choices=['FULL','SIMPLE','OFF'],action_policy='Session-only native GLO; invalidates pending CC contexts/arms; readback and non-CC MIDI remain available')
+    covered['R_CCMODE']='Native GLO diagnostic mode; command51 page7 readback; not remotely writable'
+    covered['R_DRUMGEN']='Remote typed drum recipe and guarded generation; no UI focus'
+    for offset,field in enumerate(('every','changes','anchor_lock','seed','mode','shape','range','arm_confirm','off_confirm')):
+        row=next(r for r in rows if r['id']=='ui.repeating_variation.'+field);q,idx=divmod(1211+offset,88)
+        row['address']={'channel':q+1,'cc':CCS[idx]};row['parameter_number']=1211+offset
+        row['action_policy']='Source-owned runtime variation;explicit context,arm4/5,guarded apply/OFF;no saved pattern mutation'
+    add('remote.variation.constraint_mode','Variation303 constraint mode',3,1235,source='firmware/src/app/cc_generation.inc',choices=['GEN','KEY','CHORD','BOTH'])
+    add('remote.variation.chord_block','Variation303 chord block',191,1236,source='firmware/src/app/cc_generation.inc')
+    covered['R_VARIATION']='Remote runtime variation recipe/apply/OFF;overlay switch remains native only'
+    for offset,field in enumerate(('destination','freeze_request','commit_confirm')):
+        row=next(r for r in rows if r['id']=='ui.freeze_commit.'+field);q,idx=divmod(1220+offset,88)
+        row['address']={'channel':q+1,'cc':CCS[idx]};row['parameter_number']=1220+offset;row['action_policy']='Explicit Freeze arm6/pending full-pass receipt;Commit arm7,held capture token,stopped destination transaction'
+    for byte in range(4):add('remote.capture.token_byte'+str(byte),'Expected captured-pass token byte'+str(byte),255,1237+byte,source='firmware/src/app/cc_capture.inc')
+    covered['R_CAPTURE']='Remote guarded Freeze/Commit plus complete HELD note/gate readback;UI focus independent'
+    for offset,field in enumerate(('source','destination','scope','destination_scope','preview_arm','execute')):
+        key='ui.pattern_copy.'+field;maximum=31 if offset<2 else 24 if offset<4 else 1
+        if offset<3:
+            row=next(r for r in rows if r['id']==key);q,idx=divmod(1241+offset,88);row['address']={'channel':q+1,'cc':CCS[idx]};row['parameter_number']=1241+offset;row['action_policy']='Private explicit copy recipe;guarded preview/arm and request execute;no UI focus'
+        else:add(key,'Scoped cross-part copy '+field,maximum,1241+offset,source='firmware/src/app/cc_copy.inc',action_policy='Private explicit copy recipe;guarded preview/arm and request execute')
+    covered['R_COPYCFG']='Scoped/cross-part copy recipe,preview/arm,guarded execute and page10 readback;legacy copy unchanged'
+    # Every assigned entry exposes the same immutable numeric target as its wire address.
+    for row in rows:
+        if row['address'] and 'parameter_number' not in row:
+            row['parameter_number']=(row['address']['channel']-1)*88+CCS.index(row['address']['cc'])
     result={'schema':1,'map_version':'draft-1-actions-prototype-1','runtime_cc':RUNTIME_NOTE,
             'source_hashes':{p:hashlib.sha256(t.encode()).hexdigest() for p,t in raw.items()},
             'descriptor_counts':counts,'ui_ref_coverage':covered,'structured_field_coverage':structured,

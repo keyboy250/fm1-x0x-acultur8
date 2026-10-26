@@ -1,6 +1,11 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Procedural intro: reuse gfx's existing strip canvas. No movie, heap, or
  * persistent state. Called only after USB/input IRQs start, outside safe mode. */
+#ifdef X0X_VERSION
+#define BOOT_VERSION_TEXT "v" X0X_VERSION
+#else
+#define BOOT_VERSION_TEXT "vDEV"
+#endif
 static void boot_intro_frame(uint32_t ms)
 {
     static const uint8_t rows[2][5] = {{17,10,4,10,17},{14,17,17,17,14}};
@@ -29,9 +34,10 @@ static void boot_intro_frame(uint32_t ms)
     }
     if (ms<800u) cv_rect((int32_t)(ms*239u/800u),0,1,144,cyan);
     if (ms>=1120u) {
-        cv_text((240-text_w(&FONT_S,"EXTENDED EDITION"))/2,96,&FONT_S,"EXTENDED EDITION",amber);
-        cv_text((240-text_w(&FONT_S,"RHYTHM / BASS / BREAKS"))/2,116,&FONT_S,"RHYTHM / BASS / BREAKS",C_GRAY);
+        cv_text((240-text_w(&FONT_S,"EXTENDED EDITION"))/2,93,&FONT_S,"EXTENDED EDITION",amber);
+        cv_text((240-text_w(&FONT_S,"RHYTHM / BASS / BREAKS"))/2,111,&FONT_S,"RHYTHM / BASS / BREAKS",C_GRAY);
     }
+    cv_text((240-text_w(&FONT_T,BOOT_VERSION_TEXT))/2,128,&FONT_T,BOOT_VERSION_TEXT,C_GRAY);
     cv_rect(50,141,(int32_t)((ms<1300u?ms:1300u)*140u/1300u),2,amber);
     /* Match the preview: hold until 2.9s, then fade over the final 100ms. */
     if (ms>2900u) {

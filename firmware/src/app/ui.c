@@ -11,6 +11,7 @@
  * Keys: F3..G5; the 16 white keys are steps (HOME: patterns), the 11 black keys a drum
  * machine's tracks or the break's slice pads (HOME: part mutes). */
 #include "x0x.h"
+#include "cc.h"
 #include "../dsp/fastmath.h"
 #include "../dsp/master.h"
 #include "../dsp/bass303.h"                    /* BASS303_* (the 303's pages) */
@@ -31,7 +32,7 @@ static const char *const PART_S[NPARTS] = {"909", "808", "303A", "303B", "BRK"};
 /* overlays drawn over the main area */
 enum { O_NONE, O_LIST, O_ASK };
 enum { ACT_NONE, ACT_SAVE, ACT_CLEAR_PART, ACT_CLEAR_PAT, ACT_COPY, ACT_RESET, ACT_ABOUT, ACT_SONG_INS,
-       ACT_SONG_DEL, ACT_SONG_CLR, ACT_PERF, ACT_PERF_TEST, ACT_BLOCK_DUP, ACT_BLOCK_NOTES, ACT_BLOCK_QUEUE, ACT_BLOCK_DEL, ACT_UNDO, ACT_SCOPED_PASTE, ACT_COPY_SEQUENCES };
+       ACT_SONG_DEL, ACT_SONG_CLR, ACT_PERF, ACT_PERF_TEST, ACT_BLOCK_DUP, ACT_BLOCK_NOTES, ACT_BLOCK_QUEUE, ACT_BLOCK_DEL, ACT_UNDO, ACT_SCOPED_PASTE, ACT_COPY_SEQUENCES, ACT_GENERATE_CONSTRAINED, ACT_GENERATE_DRUM, ACT_VARIATION_ARM, ACT_VARIATION_OFF, ACT_FREEZE_COMMIT };
 
 typedef struct {
     uint8_t view, part, prev_view;
@@ -46,12 +47,13 @@ typedef struct {
     uint8_t wpos[NBASS];
     int8_t held_step;
     uint8_t step_edited;
+    uint8_t live_overlay;              /* session-only switch; fills existing alignment padding */
     uint32_t step_t0;                  /* when the held 303 step went down: a tap toggles, a hold does not */
     uint8_t step_preview;              /* the held step is sounding (only while stopped) */
     uint8_t step_created;              /* the press turned the held step on (its release keeps it) */
     int8_t brk_held;                   /* BREAK: the white key (16th) held, -1 none */
     int8_t hold_step;                  /* a drum machine: the step (white key) held, -1 none */
-    uint8_t hold_created, hold_used;   /* drums / BREAK: the press turned the step on; a knob or a slice used it */
+    uint8_t hold_created, hold_used, cc_mode; /* CC diagnostics uses existing alignment padding */   /* drums / BREAK: the press turned the step on; a knob or a slice used it */
     uint32_t hold_t0;                  /* when it went down (a tap takes an old step off) */
     uint16_t brk_pinkeys;              /* BREAK: black keys used to give a held step its slice (their release is not live) */
     uint8_t gen_stale[NBASS];          /* TB-3PO's knobs changed since the line was written */
@@ -66,7 +68,7 @@ typedef struct {
     uint8_t overlay;
     uint8_t list_sel, list_top, list_n;
     uint8_t ask_act;
-    uint16_t ask_arg;
+    uint32_t ask_arg;
     char ask_q[2][28];
     uint32_t frame;
     uint32_t dirty;
@@ -79,11 +81,20 @@ typedef struct {
     uint8_t outline[232];              /* the break loop's outline */
     uint8_t outline_ok, outline_slot;
     uint8_t song_sel;                  /* the SONG screen's bar */
+    uint8_t drum_gen[4];                 /* density, positions, anchor, seed index; transient */
+    uint8_t gen_mode[NBASS];           /* constrained generation page; transient, not project data */
 } ui_t;
 static ui_t ui;
-static uint8_t copy_config[3] = {0,1,0}; /* source, destination, scope; UI only */
-static uint32_t copy_fingerprint,copy_epoch;
+static uint8_t copy_config[4] = {0,1,0,0}; /* source/destination patterns and parts; UI only */
+static uint32_t edit_fingerprint,edit_epoch;
 static POLY_COLD void copy_native_action(int confirm,int arg);
+static POLY_COLD void generate_native_action(int confirm,int arg);
+static POLY_COLD void drum_generate_native_action(int confirm,int arg);
+static POLY_COLD void variation_native_action(int confirm,int off,int arg);
+static int variation_control(int field);
+static int variation_set_control(int field,int value);
+static void capture_native_action(int commit,int confirm,int arg);
+static int capture_page(void);
 static uint8_t any_button;             /* a button has been pressed since power-on (the footer's first line) */
 #define FOOT_GAP 7                     /* between the footer's parts */
 static uint16_t footer_text(const char **a, const char **b, const char **c);
@@ -212,7 +223,7 @@ static int arrangement_panel_refuse(void)
 /* =============================================================== param refs === */
 enum { R_NONE, R_ENG, R_SWING, R_DLEN, R_DRATE, R_BLEN, R_BRATE, R_BDIR, R_BTRANS, R_GEN, R_BRKSET,
        R_BRKSLOT, R_TEMPO, R_ACCENT, R_CLKOUT, R_NOTEOUT, R_PALETTE, R_KEYLED, R_KEYSOUND, R_AUTOSAVE, R_ACT, R_SBAR, R_SPAT,
-       R_SLEN, R_STALLS, R_HDR, R_TAPE, R_MIDICH, R_OUTLOUD, R_SREP, R_BATT, R_USBFULL, R_FREEPLAY, R_RATEENABLE, R_RATEFAMILY, R_RATEBOUNDARY, R_RATEHYST, R_RATEEXACT, R_STRIP, R_STRIPFLAG, R_STRIPDEFAULT, R_CORES, R_BMODE, R_BDEGREE, R_BMUTE, R_AKEY, R_ASCALE, R_AFOLLOW, R_COPYCFG };   /* R_TAPE: FX's one-knob TAPE (DIGI .. worn tape) */          /* R_HDR: a list's section header (a = its group), never selected */
+       R_SLEN, R_STALLS, R_HDR, R_TAPE, R_MIDICH, R_OUTLOUD, R_SREP, R_BATT, R_USBFULL, R_FREEPLAY, R_RATEENABLE, R_RATEFAMILY, R_RATEBOUNDARY, R_RATEHYST, R_RATEEXACT, R_STRIP, R_STRIPFLAG, R_STRIPDEFAULT, R_CORES, R_BMODE, R_BDEGREE, R_BMUTE, R_AKEY, R_ASCALE, R_AFOLLOW, R_COPYCFG, R_NEWGEN, R_DRUMGEN, R_VARIATION, R_CAPTURE, R_RANDOM, R_CCMODE };   /* R_TAPE: FX's one-knob TAPE (DIGI .. worn tape) */          /* R_HDR: a list's section header (a = its group), never selected */
 /* Four logical bytes; scalar helper ABI avoids aggregate copy temporaries.
  * Explicit unsigned casts preserve the original uint8_t initializer behavior. */
 typedef uint32_t pref_t;
@@ -231,9 +242,28 @@ static const x0x_param_t RATE_CONFIG_P[]={{"EXPAND",1,0,0},{"FAMILY",3,0,RATE_FA
 static const x0x_param_t EXP_RATE_P={"RATE",20,0,EXP_RATE_N};
 static const x0x_param_t POLY_RATE_P={"RATE",7,0,RATE_N};
 static const char *const DIR_N[] = {"FWD", "REV", "PING", "RND"};
+static const char *const CCMODE_N[]={"FULL","SIMPLE","OFF"};
+static const x0x_param_t CCMODE_P={"CC MODE",2,0,CCMODE_N};
 static const char *const ONOFF_N[] = {"OFF", "ON"};
 static const char *const ROOT_N[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 static const char *const THEME_N[] = {"GREEN", "AMBER", "CYAN", "RED", "MONO"};
+enum { GEN_SCALE, GEN_KEY, GEN_CHORD, GEN_BOTH, GEN_FREE, GEN_MODES };
+static const char *const GEN_MODE_N[]={"GEN","KEY","CHORD","BOTH","FREE"};
+static const char *const GEN_MODE_LONG[]={"GENERATOR SCALE","PROJECT KEY/SCALE","BLOCK CHORD","SCALE + BLOCK CHORD","FREE CHROMATIC"};
+static const char *const DR_POS_N[]={"ALL","EVEN","ODD","OFFBT"};
+static const char *const DR_AN_N[]={"NONE","BEAT","BACK","KEEP","B.LCK","S.LCK"};
+static const x0x_param_t DRUMGEN_P[]={{"DENS",100,50,0},{"STEPS",DR_POS_COUNT-1,0,DR_POS_N},
+    {"ANCHOR",DR_AN_COUNT-1,0,DR_AN_N},{"SEED",255,0,0}};
+static const char *const VAR_EVERY_N[]={"2","4","8"},*const VAR_LOCK_N[]={"NONE","BEAT","BACK","BOTH"};
+static const char *const VAR_MODE_N[]={"TOGGL","ADD","DROP"},*const VAR_SHAPE_N[]={"SAME","EVOLV"},*const VAR_RANGE_N[]={"ALL","LAST4","LAST8","LAST16"};
+static const x0x_param_t VAR_P[]={{"EVERY",2,1,VAR_EVERY_N},{"CHANGE",8,2,0},{"LOCK",3,3,VAR_LOCK_N},{"SEED",255,0,0},
+    {"MODE",2,0,VAR_MODE_N},{"SHAPE",1,0,VAR_SHAPE_N},{"RANGE",3,0,VAR_RANGE_N}};
+static const char *const BVAR_MODE_N[]={"NEAR","UP","DOWN"};
+static uint8_t random_opts[2] X0X_POOL; /* length0=KEEP; step0=ALL; stopped confirmation only */
+static const x0x_param_t RANDOM_P[]={{"STEPS",NSTEPS,0,0},{"STEP",NSTEPS,0,0}};
+static const x0x_param_t CAPTURE_P={"STORE TO",NPAT-1,6,0};
+static const x0x_param_t BVAR_MODE_P={"PITCH",2,0,BVAR_MODE_N};
+static const x0x_param_t NEWGEN_P[]={{"NOTES",GEN_MODES-1,0,GEN_MODE_N},{"BLOCK",NSONG-1,0,0}};
 enum { G_DENS, G_ACC, G_SLIDE, G_OCTS, G_ROOT, G_SCALE, G_BASE, G_MUT, NGEN };
 static const x0x_param_t GEN_P[NGEN] = {
     {"DENS", 100, 70, 0}, {"ACCENT", 100, 40, 0}, {"SLIDE", 100, 25, 0}, {"OCTS", 2, 1, 0},
@@ -272,7 +302,11 @@ static int pc_scope_part(int scope)
 {return scope<PCOPY_303A?(scope-1)/NDRUM:scope-21;}
 static int pc_scope_voice(int scope)
 {return scope<PCOPY_303A?(scope-1)%NDRUM:scope-PCOPY_303A;}
-static const x0x_param_t COPY_P[] = {{"COPY FROM",31,0,0},{"PASTE INTO",31,1,0},{"COPY SCOPE",PCOPY_COUNT-1,0,COPY_SCOPE_N}};
+static const x0x_param_t COPY_P[] = {{"COPY FROM",31,0,0},{"PASTE INTO",31,1,0},{"SOURCE PART",PCOPY_COUNT-1,0,COPY_SCOPE_N}};
+static const x0x_param_t COPY_DST_P[] = {{"DEST PART",0,0,COPY_SCOPE_N},{"DEST PART",21,0,COPY_SCOPE_N+1},{"DEST PART",1,0,COPY_SCOPE_N+PCOPY_303A}};
+static int pc_group(int scope){return !scope?0:scope<PCOPY_303A?1:2;}
+static int pc_first(int scope){return !scope?0:scope<PCOPY_303A?1:PCOPY_303A;}
+static const char *const COPY_SHORT_N[]={"ALL","909 BD","909 SD","909 LT","909 MT","909 HT","909 RS","909 CP","909 CH","909 OH","909 CR","909 RD","808 BD","808 SD","808 LT","808 MT","808 HT","808 RS","808 CP","808 CB","808 CY","808 OH","808 CH","303 A","303 B"};
 static const x0x_param_t STALLS_P = {"STALLS", 1, 0, ONOFF_N};
 static const x0x_param_t MIDICH_P[NPARTS] = {   /* 0 = OFF (no notes in or out), 1-16 */
     {"909 MIDI CH", 16, 10, 0}, {"808 MIDI CH", 16, 11, 0}, {"303A MIDI CH", 16, 2, 0}, {"303B MIDI CH", 16, 3, 0},
@@ -283,6 +317,7 @@ static const char *const USBA_N[] = {"FOLLOWS KNOB", "FULL"};
 static const x0x_param_t USBA_P = {"USB AUDIO", 1, 0, USBA_N};
 static const char *const CORES_N[] = {"ON", "OFF"};
 static const x0x_param_t CORES_P = {"2ND CORE", 1, 0, CORES_N};   /* proj.set.one_core: at the next power-on */
+static const x0x_param_t LIVE_OVERLAY_P = {"OVERLAY", 1, 0, ONOFF_N};
 static const x0x_param_t FREEPLAY_P = {"FREE PLAY", 1, 0, ONOFF_N};
 static const x0x_param_t SREP_P = {"REPEAT", 7, 0, 0};    /* the bar plays 1-8 times */
 static const char *const BATT_N[] = {"EMPTY", "1/3", "2/3", "FULL", "USB POWER", "..."};
@@ -357,6 +392,12 @@ static POLY_COLD const x0x_param_t *pref_desc(pref_t r)
         return &params[P_C(r)?1:0];
     }
     case R_ENG: return engine_param(P_A(r), P_B(r), P_C(r));
+    case R_CCMODE: return &CCMODE_P;
+    case R_RANDOM: return &RANDOM_P[P_C(r)&1];
+    case R_CAPTURE: return &CAPTURE_P;
+    case R_VARIATION: if(P_C(r)==7)return &LIVE_OVERLAY_P; return P_A(r) && P_C(r)==4?&BVAR_MODE_P:&VAR_P[P_C(r)%7];
+    case R_DRUMGEN: return &DRUMGEN_P[P_C(r)%4];
+    case R_NEWGEN: return &NEWGEN_P[P_C(r)==1];
     case R_GEN: return &GEN_P[P_C(r) % NGEN];
     case R_BRKSET: return breaks_param(P_C(r));
     case R_BRKSLOT: {
@@ -365,7 +406,7 @@ static POLY_COLD const x0x_param_t *pref_desc(pref_t r)
         d.names = engine_brk_slot_names();
         return &d;
     }
-    case R_COPYCFG: return P_A(r)<3?&COPY_P[P_A(r)]:0;
+    case R_COPYCFG: return P_A(r)<3?&COPY_P[P_A(r)]:P_A(r)==3?&COPY_DST_P[pc_group(copy_config[2])]:0;
     case R_ACT: return &ACT_P[P_A(r)];
     case R_SBAR: {
         static x0x_param_t d = {"BAR", 0, 0, 0};
@@ -420,6 +461,12 @@ static POLY_COLD int pref_get(pref_t r)
     case R_BRATE: return pat_of(NKIT + P_A(r))->bass[P_A(r)].rate;
     case R_BDIR: return pat_of(NKIT + P_A(r))->bass[P_A(r)].dir;
     case R_BTRANS: return pat_of(NKIT + P_A(r))->bass[P_A(r)].transpose;
+    case R_CCMODE: return ui.cc_mode;
+    case R_RANDOM: return random_opts[P_C(r)&1];
+    case R_CAPTURE: return seq.freeze?seq.freeze->destination:0;
+    case R_VARIATION: return P_C(r)==7?ui.live_overlay:variation_control(P_C(r)%7);
+    case R_DRUMGEN: return ui.drum_gen[P_C(r)%4];
+    case R_NEWGEN: return P_C(r)?ui.song_sel:ui.gen_mode[P_A(r)];
     case R_GEN: return *canonical_gen_byte(p,P_A(r),P_C(r)<NGEN?P_C(r):G_MUT)-(P_C(r)==G_OCTS);
     case R_BRKSET: return p->brk.set[P_C(r)];
     case R_BRKSLOT: return P_A(r) ? p->brk.slot_b : p->brk.slot_a;
@@ -443,7 +490,7 @@ static POLY_COLD int pref_get(pref_t r)
         return k >= 0 ? sg->bar[k].pat[P_A(r)] : seq.ppat[P_A(r)];
     }
     case R_MIDICH: return seq.ch[P_A(r) % NPARTS] == SEQ_CH_OFF ? 0 : seq.ch[P_A(r) % NPARTS] + 1;
-    case R_COPYCFG: return P_A(r)<3?copy_config[P_A(r)]:0;
+    case R_COPYCFG: return P_A(r)<3?copy_config[P_A(r)]:P_A(r)==3?copy_config[3]-pc_first(copy_config[2]):0;
     case R_OUTLOUD: return proj.set.out_loud;
     case R_USBFULL: return proj.set.usb_full;
     case R_CORES: return proj.set.one_core;
@@ -464,7 +511,21 @@ static POLY_COLD void pref_set(pref_t r, int v)
     if (!d || P_KIND(r) == R_ACT)
         return;
     v = v < 0 ? 0 : v > d->max ? d->max : v;
-    if(P_KIND(r)==R_COPYCFG){if(P_A(r)<3)copy_config[P_A(r)]=(uint8_t)v;return;}
+    if(P_KIND(r)==R_CCMODE){cc_set_mode((unsigned)v);return;}
+    if(P_KIND(r)==R_RANDOM){random_opts[P_C(r)&1]=(uint8_t)v;return;}
+    if(P_KIND(r)==R_CAPTURE){if(seq.freeze)seq.freeze->destination=(uint8_t)v;return;}
+    if(P_KIND(r)==R_VARIATION && P_C(r)==7){ui.live_overlay=(uint8_t)v;return;}
+    if(P_KIND(r)==R_VARIATION){if(!variation_set_control(P_C(r)%7,v))say("STOP / WAIT TO CONFIGURE",0);return;}
+    if(P_KIND(r)==R_DRUMGEN){ui.drum_gen[P_C(r)%4]=(uint8_t)v;return;}
+    if(P_KIND(r)==R_NEWGEN){
+        if(P_C(r))ui.song_sel=(uint8_t)v;else ui.gen_mode[P_A(r)]=(uint8_t)v;
+        return;
+    }
+    if(P_KIND(r)==R_COPYCFG){
+        if(P_A(r)<3){copy_config[P_A(r)]=(uint8_t)v;if(P_A(r)==2)copy_config[3]=(uint8_t)v;}
+        else if(P_A(r)==3)copy_config[3]=(uint8_t)(v+pc_first(copy_config[2]));
+        return;
+    }
     if(P_KIND(r)==R_STRIPDEFAULT){
         if(v){int rc=ui_strip_default_action(P_A(r),P_C(r)!=0);
             say(rc==VR_OK?(P_C(r)?"DEFAULT APPLIED":"DEFAULT SAVED"):rc==VR_MISSING?"NO SAVED DEFAULT":rc==VR_BUSY?"STOP AND RELEASE KEYS":rc==VR_IO?"DEFAULT SAVE FAILED":"DEFAULT REFUSED",0);}
@@ -786,6 +847,11 @@ static POLY_COLD void pref_value_of(pref_t r, int v, char *num, char *unit)
         return;
     case R_BRKSET: put_i(num, v); put_s(unit, "%"); return;
     case R_TEMPO: put_i(num, v + 20); put_s(unit, "bpm"); return;
+    case R_RANDOM: if(!v)put_s(num,P_C(r)?"ALL":"KEEP");else put_i(num,v);return;
+    case R_CAPTURE: put_i(put_s(num,"P"),v+1);return;
+    case R_VARIATION: put_i(num,v+(P_C(r)==3));return;
+    case R_DRUMGEN: put_i(num,v+(P_C(r)==3));return;
+    case R_NEWGEN: put_i(num,v+1);return;
     case R_SBAR: put_i(num, v + 1); return;
     case R_COPYCFG: num[0]='P';put_i(num+1,v+1);return;
     case R_SPAT: num[0] = 'P'; put_i(num + 1, v + 1); return;
@@ -971,10 +1037,20 @@ static POLY_COLD void build_pages(void)
         break;
     case V_GEN:
         pg_grp = GR_PAT;
+        if(is_drum()){
+            add_page("RHYTHM",PR(R_DRUMGEN,0,0,0),PR(R_DRUMGEN,0,0,1),PR(R_DRUMGEN,0,0,2),PR(R_DRUMGEN,0,0,3));
+            add_page("VARIATION",PR(R_VARIATION,0,0,0),PR(R_VARIATION,0,0,1),PR(R_VARIATION,0,0,2),PR(R_VARIATION,0,0,3));
+            add_page("VAR OPTIONS",PR(R_VARIATION,0,0,4),PR(R_VARIATION,0,0,5),PR(R_VARIATION,0,0,6),PR(R_VARIATION,0,0,7));
+            add_page("FREEZE / STORE",PR(R_CAPTURE,0,0,0),NONE,NONE,NONE);
+            add_page("RANDOM SIZE",PR(R_RANDOM,0,0,0),NONE,NONE,NONE);break;}
         add_page("GENERATE", PR(R_GEN, b, 0, G_DENS), PR(R_GEN, b, 0, G_ACC), PR(R_GEN, b, 0, G_SLIDE),
                  PR(R_GEN, b, 0, G_OCTS));
         add_page("SCALE", PR(R_GEN, b, 0, G_ROOT), PR(R_GEN, b, 0, G_SCALE), PR(R_GEN, b, 0, G_BASE),
                  PR(R_GEN, b, 0, G_MUT));
+        add_page("CONSTRAINED",PR(R_NEWGEN,b,0,0),PR(R_NEWGEN,b,0,1),PR(R_RANDOM,0,0,0),PR(R_RANDOM,0,0,1));
+        add_page("VARIATION",PR(R_VARIATION,1,0,0),PR(R_VARIATION,1,0,1),PR(R_VARIATION,1,0,2),PR(R_VARIATION,1,0,3));
+        add_page("VAR OPTIONS",PR(R_VARIATION,1,0,4),PR(R_VARIATION,1,0,5),PR(R_VARIATION,1,0,6),PR(R_NEWGEN,b,0,0));
+        add_page("FREEZE / STORE",PR(R_CAPTURE,0,0,0),NONE,NONE,NONE);
         break;
     case V_FX:                                         /* (each part's sends: MIX's PARTS) */
         add_page("REVERB", PR(R_ENG, T_FX, 0, FX_RV_DECAY), PR(R_ENG, T_FX, 0, FX_RV_TONE), NONE, NONE);
@@ -1130,6 +1206,7 @@ static POLY_COLD void open_global(void)
     ui.list_n = 0;
     list_add(PR(R_ACT,ACT_COPY_SEQUENCES,0,0));
     list_rows[ui.list_n++] = PR(R_HDR, GR_MIDI, 0, 0);
+    list_add(PR(R_CCMODE,0,0,0));
     list_add(PR(R_CLKOUT, 0, 0, 0));
     list_add(PR(R_NOTEOUT, 0, 0, 0));
     for (int p = 0; p < NPARTS; p++)
@@ -1165,7 +1242,7 @@ static POLY_COLD void open_copy_sequences(void)
 {
     ui.list_n=0;
     list_rows[ui.list_n++]=PR(R_HDR,GR_COPY,0,0);
-    for(int k=0;k<3;k++)list_add(PR(R_COPYCFG,k,0,0));
+    for(int k=0;k<4;k++)list_add(PR(R_COPYCFG,k,0,0));
     list_add(PR(R_ACT,ACT_SCOPED_PASTE,0,0));
     put_s(list_title,"COPY/PASTE SEQ");
     ui.list_sel=1;ui.list_top=0;ui.overlay=O_LIST;
@@ -1175,7 +1252,7 @@ static POLY_COLD void open_copy_sequences(void)
 static void ask(int act, int arg, const char *q1, const char *q2)
 {
     ui.ask_act = (uint8_t)act;
-    ui.ask_arg = (uint16_t)arg;
+    ui.ask_arg = (uint32_t)arg;
     put_s(ui.ask_q[0], q1);
     put_s(ui.ask_q[1], q2 ? q2 : "");
     ui.overlay = O_ASK;
@@ -1279,8 +1356,13 @@ static POLY_COLD int help_lines(int b, const char *l[HELP_LINES])
         break;
     }
     case B_ARP:
+        if(capture_page()){L("FREEZE THE CURRENT FULL PASS");L("OCT+: REQUEST; WAIT FOR END");L("KNOB1: DESTINATION P1-32");L("STOP; OCT-: STORE WITH UNDO");break;}
+        if(gen && is_303() && cur_page()>=3){L("TEMPORARY PITCH VARIATION");L("OCT+: ARM; OCT-: OFF");L("STOP TO CHANGE THE RECIPE");L("AGAIN: OPTIONS / FREEZE");break;}
+        if(is_drum() && gen && cur_page() && cur_page()!=4){L("TEMPORARY REPEAT VARIATION");L("OCT+: ARM TRACK/PATTERN");L("OCT-: OFF; STOP TO CHANGE");L("BASE PATTERN IS NEVER WRITTEN");break;}
+        if(is_drum()){L("DRUM RHYTHM: SELECT A TRACK");L("DENSITY, STEPS, ANCHOR, SEED");L("STOP; OCT+: NEW, OCT-: REPEAT");L("CONFIRM REPLACEMENT; HOME: NO");break;}
         L("TB-3PO: THE 303 LINE"); L("GENERATOR (303A, 303B)");
-        if (gen) { L("OCT+: A NEW LINE"); L("OCT-: MUTATE IT"); }
+        if (gen && cur_page()==2) { L("STEPS: WHOLE LINE LENGTH");L("STEP ALL OR ONE NOTE ONLY"); L("OCT+: NEW; OCT-: SAME SEED");L("STOP; CONFIRM WITH UNDO"); }
+        else if (gen) { L("OCT+: A NEW LINE"); L("OCT-: MUTATE IT"); }
         L("AGAIN: THE NEXT PAGE");
         break;
     case B_SEQ:
@@ -1293,7 +1375,11 @@ static POLY_COLD int help_lines(int b, const char *l[HELP_LINES])
         break;
     case B_OCTDN:
     case B_OCTUP:
-        if (gen) L(b == B_OCTUP ? "A NEW 303 LINE" : "MUTATE THE LINE");
+        if(capture_page()){L(b==B_OCTUP?"FREEZE CURRENT FULL PASS":"STORE TO CHOSEN PATTERN");L(b==B_OCTUP?"WAIT FOR END OF THIS PASS":"STOP FIRST; CONFIRM OR CANCEL");L("SOURCE PATTERN STAYS UNCHANGED");}
+        else if(gen && ((is_drum() && cur_page() && cur_page()!=4) || (is_303() && cur_page()>=3)))L(b==B_OCTUP?"ARM REPEAT VARIATION":"TURN VARIATION OFF");
+        else if(gen && is_drum())L(b==B_OCTUP?"DRUM RHYTHM: NEW SEED":"DRUM RHYTHM: REPEAT SEED");
+        else if(gen && cur_page()==2)L(b==B_OCTUP?"CONSTRAINED: NEW SEED":"CONSTRAINED: REPEAT SEED");
+        else if (gen) L(b == B_OCTUP ? "A NEW 303 LINE" : "MUTATE THE LINE");
         else if (kbd) { L("THE KEYBOARD'S OCTAVE"); L("LFO + OCT: A TIE  ENV + OCT: A REST"); }
         else if (ui.view == V_HOME || ui.view == V_SONG) L(b == B_OCTUP ? "PATTERNS 17-32" : "PATTERNS 1-16");
         else {
@@ -1372,7 +1458,9 @@ uint8_t *ui_project_stage(uint32_t bytes)
 void ui_project_stage_finish(int loaded)
 {
     ui_draw_invalidate();
-    if (loaded) { cc_actions_reset(); reset_checkpoint_hold=0; }
+    if (loaded) { cc_actions_reset(); reset_checkpoint_hold=0;
+        if(seq.freeze){seq.freeze->state=FREEZE_RECORD;seq.freeze->count=0;}
+    }
     if (loaded && undo_ready) { undo_reset(&undo); external_edit = 0; }
     if (seq.transport_stage) { seq.transport_stage = 0; engine_transport_release(); }
 }
@@ -1813,6 +1901,10 @@ static POLY_COLD void run_action(int act, int arg)
 {
     char t[28], *q;
     if(act==ACT_SCOPED_PASTE){copy_native_action(1,arg);return;}
+    if(act==ACT_FREEZE_COMMIT){capture_native_action(1,1,arg);return;}
+    if(act==ACT_VARIATION_ARM || act==ACT_VARIATION_OFF){variation_native_action(1,act==ACT_VARIATION_OFF,arg);return;}
+    if(act==ACT_GENERATE_DRUM){drum_generate_native_action(1,arg);return;}
+    if(act==ACT_GENERATE_CONSTRAINED){generate_native_action(1,arg);return;}
     if(act>=ACT_BLOCK_DUP && act<=ACT_BLOCK_DEL){bridge_native_action(act);return;}
     if ((act == ACT_SONG_INS || act == ACT_SONG_DEL || act == ACT_SONG_CLR) && arrangement_panel_refuse()) return;
     int reset_held = 0,copy_held=0;
@@ -1907,6 +1999,10 @@ static POLY_COLD void run_action(int act, int arg)
 #include "cc_actions.inc"
 #include "block_bridge.inc"
 #include "pattern_copy.inc"
+#include "constrained_generation.inc"
+#include "drum_generation.inc"
+#include "repeating_variation.inc"
+#include "freeze_commit.inc"
 
 /* ===================================================================== input === */
 /* knob acceleration by speed: a slow turn is one step a detent (fine detail), a quick one up to 8,
@@ -2626,8 +2722,8 @@ static POLY_COLD void button_tap(int b)
             set_view(V_PART);
         break;
     case B_ARP:
-        if (!is_303()) {
-            warn("TB-3PO: PICK 303A OR 303B", 0);
+        if (!is_303() && !is_drum()) {
+            warn("PICK A DRUM OR 303 PART", 0);
             break;
         }
         if (ui.view == V_GEN && ui.overlay == O_NONE)  /* the generator; again: its next page */
@@ -2672,6 +2768,14 @@ static POLY_COLD void button_tap(int b)
             ui.help = 0;
         } else if (steps_view() && is_303() && !ui.rec && ui.held_step >= 0) {   /* a held step: its octave */
             held_note_by(up ? 12 : -12);
+        } else if(capture_page()){
+            capture_native_action(!up,0,0);
+        } else if (ui.view == V_GEN && is_drum()) {
+            if(cur_page() && cur_page()!=4)variation_native_action(0,!up,0);else drum_generate_native_action(0,up);
+        } else if (ui.view == V_GEN && is_303() && cur_page()>=3) {
+            variation_native_action(0,!up,0);
+        } else if (ui.view == V_GEN && cur_page()==2) {
+            generate_native_action(0,up);
         } else if (ui.view == V_GEN) {
             bpart_t *bp = &cur_pat()->bass[bidx()];
             if (up) {
@@ -2784,7 +2888,7 @@ static POLY_COLD void input(void)
         } else {
             int p = ui.part + (e > 0 ? 1 : -1);
             ui.part = (uint8_t)(p < 0 ? 0 : p >= NPARTS ? NPARTS - 1 : p);
-            if (ui.view == V_GEN && !is_303())         /* TB-3PO is a 303's */
+            if (ui.view == V_GEN && !is_303() && !is_drum())         /* TB-3PO is a 303's */
                 set_view(V_PART);
             ui.outline_ok = 0;
             build_pages();
@@ -3245,7 +3349,7 @@ static POLY_COLD void draw_header(void)
         cv_text(6, vc(&FONT_B, 1, 17), &FONT_B, PART_N[ui.part], C_BLACK);
         x = w + 6;
         if (ui.view == V_GEN)
-            x = cv_text(x, vc(&FONT_S, 1, 17), &FONT_S, "TB-3PO", C_HI) + 6;
+            x = cv_text(x, vc(&FONT_S, 1, 17), &FONT_S, is_drum()?"RHYTHM":"TB-3PO", C_HI) + 6;
         else if (ui.view == V_SEQ)
             x = cv_text(x, vc(&FONT_S, 1, 17), &FONT_S, !kbd_on() ? "SEQ" : ui.rec ? "SEQ KEYS" : "FREE PLAY",
                         kbd_on() ? C_AMB : C_HI) + 6;
@@ -3306,12 +3410,15 @@ static int step_of(int col) { return ui.spage * 16 + col; }
 #define GX 27
 static int32_t col_x(int c) { return GX + c * 13 + (c >> 2); }   /* a pixel between beats */
 
+#include "live_drum_overlay.inc"
+
 #define DROW 11                                    /* drum rows: 12 of them over both bands, a gap under */
 static POLY_COLD void draw_drum(int band)
 {
     int k = ui.part, v, c, len = ui_drum_length(cur_pat(),k,ui.sel[k]);
     const dpart_t *d = &cur_pat()->drum[k];
     int ph = seq.playing ? (seq.lane_enabled?seq_lane_position(&seq,k*11+ui.sel[k]):eng_step[TRK_DRUM+k]) : -1;
+    live_drum_overlay_t live = live_drum_overlay();
     uint16_t col = part_col(), on_dim = dim(col, 8);
     uint32_t lmarks = lock_marks(k == PART_909 ? T_909 : T_808, ui.sel[k], ui.spage * 16) |
                       lock_marks(T_PROB, k << 4 | ui.sel[k], ui.spage * 16);
@@ -3339,7 +3446,12 @@ static POLY_COLD void draw_drum(int band)
                 continue;
             }
             box(x, y, 12, DROW - 2, hit ? (muted ? C_DIM : sel ? col : on_dim) : (s == ph ? C_DIM : C_LINE));
-            if (hit && s == ph)
+            /* Stored fill remains the editable base; the small amber strip is
+             * this pass's accepted prefix. White is the current accepted gate. */
+            int observed = live.active && sel && live_drum_hit(&live,s);
+            if (observed)
+                box(x + 2, y + DROW - 4, 8, 1, C_AMB);
+            if ((live.active && sel ? observed && s == live.step : hit && s == ph))
                 box(x + 2, y + 2, 8, DROW - 6, C_WHITE);
             if (hit && sel && ((lmarks >> c) & 1u))      /* the step's own values (p-locks): a notch */
                 cv_rect(x + 8, y + 1, 3, 3, C_BLACK);
@@ -3433,9 +3545,14 @@ static POLY_COLD void draw_303(int band, int gen)
         cv_text(4, vc(&FONT_B, 122, 16) - o, &FONT_B, t, C_WHITE);
     } else {                                           /* else the line's scale and seed */
         char t2[16];
-        q = put_s(q, ROOT_N[bp->gen.root % 12]);
-        q = put_s(q, " ");
-        put_s(q, TB3PO_SCALE_NAMES[bp->gen.scale % TB3PO_NSCALES]);
+        if(ui.view==V_GEN && cur_page()==2){
+            q=put_s(q,GEN_MODE_N[ui.gen_mode[b]]);
+            if(ui.gen_mode[b]==GEN_CHORD || ui.gen_mode[b]==GEN_BOTH)put_i(put_s(q," B"),ui.song_sel+1);
+        }else{
+            q = put_s(q, ROOT_N[bp->gen.root % 12]);
+            q = put_s(q, " ");
+            put_s(q, TB3PO_SCALE_NAMES[bp->gen.scale % TB3PO_NSCALES]);
+        }
         put_hex(put_s(t2, "SEED "), bp->gen.seed & 0xFFFFu, 4);
         segs(4, vc(&FONT_S, 122, 16) - o, &FONT_S, C_GRAY, 18, t, t2, 0, 0);
     }
@@ -4087,6 +4204,10 @@ static POLY_COLD uint16_t footer_text(const char **a, const char **b, const char
         *a = "AGAIN: NEXT PAGE";
         *b = "SEL: ALL AS A LIST";
     } else if (ui.view == V_GEN) {
+        if(capture_page()){*a="OCT+: FREEZE";*b="OCT-: STORE";*c="STOP TO STORE";return part_col();}
+        if((is_drum() && cur_page() && cur_page()!=4) || (is_303() && cur_page()>=3)){*a="OCT+: ARM";*b="OCT-: OFF";*c="STOP TO CHANGE";return part_col();}
+        if(is_drum()){*a="OCT+: NEW";*b="OCT-: REPEAT";*c="BLACK: TRACK";return part_col();}
+        if(cur_page()==2){*a="OCT+: NEW";*b="OCT-: REPEAT";return part_col();}
         *a = ui.gen_stale[bidx()] ? "OCT+: NEW LINE *" : "OCT+: NEW LINE";
         *b = "OCT-: MUTATE";
         return ui.gen_stale[bidx()] ? C_WHITE : C_AMB;
@@ -4183,6 +4304,8 @@ static POLY_COLD uint32_t knobs_sig(void)
     MIXIN(ui.sel[0] | ui.sel[1] << 8);
     MIXIN(seq.ppat[ui.part]);
     MIXIN(ui.song_sel);
+    if(ui.view==V_GEN && seq.freeze)MIXIN(seq.freeze->state | (seq.freeze->destination<<8));
+    if(ui.view==V_GEN && ((is_drum() && pgi && pgi!=4) || (is_303() && pgi>=3)))MIXIN(seq.variation.lane | (seq.variation.pattern<<8));
     {
         const char *fa, *fb, *fc;
         MIXIN(footer_text(&fa, &fb, &fc));
@@ -4227,6 +4350,12 @@ static POLY_COLD void knob_tag(char *t)
         put_s(put_s(put_s(t, ti), ": "), engine_voice_name(dm ? T_808 : T_909, ui.sel[dm]));
     else if (ui.view == V_MIX && cur_page() == 0)
         put_s(put_s(t, "PARTS: "), PART_N[ui.mixsel]);
+    else if(ui.view==V_GEN && ((is_drum() && cur_page() && cur_page()!=4) || (is_303() && cur_page()>=3))){
+        if(seq.variation.lane<22){int lane=seq.variation.lane;put_s(put_i(put_s(put_s(put_s(put_s(t,PART_N[lane/11])," "),engine_voice_name(lane/11?T_808:T_909,lane%11))," P"),seq.variation.pattern+1)," LIVE");}
+        else if(seq.variation.lane<24)put_s(put_i(put_s(put_s(t,PART_N[seq.variation.lane-20])," P"),seq.variation.pattern+1)," LIVE");
+        else put_s(t,"VARIATION OFF");
+        if(seq.variation.lane<24 && seq.freeze && seq.freeze->state){char *q=t;while(*q)q++;q-=4;put_s(q,seq.freeze->state==FREEZE_HELD?"FROZEN":"WAIT");}
+    }
     else if (g == GR_PAT)
         put_s(put_s(put_i(put_s(t, "P"), seq.ppat[ui.part] + 1), " "), ti);
     else if (g == GR_KIT || g == GR_SOUND)
@@ -4397,13 +4526,18 @@ static void leds(void)
         } else if (is_drum()) {
             const dpart_t *d0 = &cur_pat()->drum[ui.part];
             const uint32_t *bits = (ui.btn & (1u << B_ENV)) ? d0->accent : d0->hit[ui.sel[ui.part]];
-            int ph = eng_step[TRK_DRUM + ui.part];
+            live_drum_overlay_t live = live_drum_overlay();
+            int ph = ui.live_overlay && seq.lane_enabled ? seq_lane_position(&seq,ui.part*NDRUM+ui.sel[ui.part]) : eng_step[TRK_DRUM + ui.part];
             for (i = 0; i < 16; i++) {
                 int s = step_of((int)i), on = s < ui_drum_length(cur_pat(),ui.part,ui.sel[ui.part]) && sm_get(bits, s);
-                if (seq.playing && s == ph)
-                    on = !on;
-                if (on)
-                    k |= 1u << WHITE_KEY[i];
+                if (live.active && !(ui.btn & (1u << B_ENV))) {
+                    if (on) d |= 1u << WHITE_KEY[i]; /* base stays visible, dim */
+                    if (s == live.step && live_drum_hit(&live,s))
+                        k |= 1u << WHITE_KEY[i];    /* accepted trigger, bright */
+                } else {
+                    if (seq.playing && s == ph) on = !on;
+                    if (on) k |= 1u << WHITE_KEY[i];
+                }
             }
             for (i = 0; i < NDRUM && i < 11u; i++) {    /* the track bright (blinking: muted), the others */
                 int mu = track_muted(ui.part, (int)i);  /* with hits dim, muted dark */
@@ -4511,7 +4645,7 @@ static void sp_screen(void)
     if (part_view()) {
         sp_cat(PART_N[ui.part]);
         if (ui.view == V_GEN)
-            sp_cat(" TB-3PO");
+            sp_cat(is_drum()?" RHYTHM":" TB-3PO");
         else if (ui.view == V_SEQ)
             sp_cat(!kbd_on() ? " SEQ" : ui.rec ? " SEQ KEYS" : " FREE PLAY");
         else if (kbd_on())
@@ -4789,7 +4923,7 @@ static void speak_dump(void)
             ui.part = (uint8_t)p;
             ui.overlay = O_NONE;
             ui.help = 0;
-            if ((ui.view == V_GEN && !is_303()) || (!part_view() && p))
+            if ((ui.view == V_GEN && !is_303() && !is_drum()) || (!part_view() && p))
                 continue;
             build_pages();
             for (q = 0; q < pg.n; q++) {
@@ -4859,6 +4993,8 @@ static void speak_dump(void)
 
 void ui_init(void)
 {
+    cc_generation_reset();
+    cc_set_mode(0);                   /* session-only diagnostic mode; FULL on init/load/reboot */
     int i;
     for (i = 0; i < NKEYS; i++) {
         if (KEY_WHITE[i] >= 0)
@@ -4867,9 +5003,13 @@ void ui_init(void)
             BLACK_KEY[KEY_BLACK[i]] = (uint8_t)i;
     }
     corners_init();
-    ui.view = V_PART;
+    ui.view = V_HOME;
+    ui.live_overlay = 0;              /* never saved; default OFF on init/load/reboot */
     ui.prev_view = V_PART;
     ui.part = PART_909;
+    random_opts[0]=random_opts[1]=0;
+    for(i=0;i<NBASS;i++)ui.gen_mode[i]=GEN_SCALE;
+    ui.drum_gen[0]=50;ui.drum_gen[1]=ui.drum_gen[2]=ui.drum_gen[3]=0;
     ui.held_step = -1;
     ui.brk_held = -1;
     ui.hold_step = -1;

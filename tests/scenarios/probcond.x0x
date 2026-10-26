@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Probability cycles (A:B): SELECT on a held step, down past 5%: 1:2 2:2 1:3 ... 8:8. A step at A:B plays on
 # the A-th of every B passes of its part's pattern. A kick on 1, 5, 9, 13; step 1 at 1:4 (passes 1 and 5 of
 # 8), step 9 at 2:2 (passes 2, 4, 6, 8): with NOTES OUT, 2 + 8 + 4 + 8 = 22 kicks in 8 bars.
@@ -28,7 +33,7 @@ expect laneval7.0.0.12 255
 expect hit0.0.0 1
 expect hit0.0.8 1
 tap GLO
-turn SELECT 2
+turn SELECT 3
 turn ALGO 1
 tap HOME
 tap EDIT

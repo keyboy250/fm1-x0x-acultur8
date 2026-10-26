@@ -145,9 +145,9 @@ static void menu(void)
 {
     mode_setup(2);ui.view=V_GLO;open_global();int found=0;
     CHECK(P_KIND(list_rows[0])==R_ACT&&P_A(list_rows[0])==ACT_COPY_SEQUENCES);
-    CHECK(P_KIND(list_rows[2])==R_CLKOUT);
-    int count=0;for(int k=0;k<ui.list_n;k++){if(!list_skip(k))count++;CHECK(P_KIND(list_rows[k])!=R_COPYCFG);}CHECK(count==21);
-    before=proj;list_enter();CHECK(copy_sequences_open());CHECK(ui.list_sel==1&&ui.list_n==5);
+    CHECK(P_KIND(list_rows[2])==R_CCMODE&&P_KIND(list_rows[3])==R_CLKOUT);
+    int count=0;for(int k=0;k<ui.list_n;k++){if(!list_skip(k))count++;CHECK(P_KIND(list_rows[k])!=R_COPYCFG);}CHECK(count==22);
+    before=proj;list_enter();CHECK(copy_sequences_open());CHECK(ui.list_sel==1&&ui.list_n==6);
     button_tap(B_HOME);CHECK(!copy_sequences_open()&&ui.view==V_GLO&&ui.overlay==O_LIST&&ui.list_sel==0);CHECK(!memcmp(&before,&proj,sizeof proj));
     list_enter();CHECK(copy_sequences_open());
     for(int k=0;k<ui.list_n;k++)if(P_KIND(list_rows[k])==R_ACT&&P_A(list_rows[k])==ACT_SCOPED_PASTE){ui.list_sel=(uint8_t)k;found=1;break;}
@@ -229,7 +229,7 @@ static void all_scope_menu_and_failures(void)
         for(int part=0;part<5;part++)proj.arr.song.bar[0].pat[part]=0;
         proj.arr.song.bar[0].pat[scope?expected_part[scope]:0]=31;
         settle();before=proj;
-        copy_config[0]=1;copy_config[1]=31;copy_config[2]=(uint8_t)scope;
+        copy_config[0]=1;copy_config[1]=31;copy_config[2]=(uint8_t)scope;copy_config[3]=(uint8_t)scope;
         copy_native_action(0,0);CHECK(ui.overlay==O_ASK);
         CHECK(strstr(ui.ask_q[0],"P2 -> P32 KEEP ACC/SW"));
         CHECK(strstr(ui.ask_q[1],COPY_SCOPE_N[scope]));CHECK(strstr(ui.ask_q[1],"1 BLOCKS"));

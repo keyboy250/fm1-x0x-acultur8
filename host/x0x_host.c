@@ -191,7 +191,7 @@ int plat_midi_in(uint32_t *pkt)
     }
     return 0;
 }
-void plat_midi_service(void){cc_ingress_service(min_q,&mi_w,&mi_r,MQ);}
+void plat_midi_service(void){cc_generation_service();cc_ingress_service(min_q,&mi_w,&mi_r,MQ);}
 void plat_midi_clear_cc_source(uint8_t source){cc_ingress_clear_source(min_q,&mi_w,MQ,source);}
 #ifdef X0X_WEB
 WEB_EXPORT int host_web_midi_ingest(uint32_t packet,int source){
@@ -443,6 +443,21 @@ static int ann_wire_send(const uint8_t *p, uint32_t n)
     }
     return 0;
 }
+int plat_midi_tx_idle(void) {
+#ifdef X0X_WEB
+ return host_web_midi_pending()==0;
+#else
+ return 1; /* native log sink is synchronous */
+#endif
+}
+#include "../firmware/src/timing_store.h"
+int plat_timing_load(uint32_t words[4]) {
+ timing_record_t r=timing_store_read();words[0]=r.rate;words[1]=r.generation;words[2]=r.unit;words[3]=r.status;return 0;
+}
+int plat_timing_save(uint32_t rate,uint32_t generation,uint32_t old_unit,uint32_t new_unit) {
+ static const uint8_t p[32]={0x35,0x4e,0x41,0x50,2,3,4,5,6,7,8,9,10,11,12,13,0,1,0,1,6,2,3,4,5,1,1,1,1,1,1,1};
+ return timing_store_write(p,rate,generation,old_unit,new_unit);
+}
 #include "../firmware/src/app/project.c"
 #include "../firmware/src/app/ui.c"
 #include "../firmware/src/app/cc.c"
@@ -598,6 +613,7 @@ static double now_ns(void)
 
 static void boot(void)
 {
+    engine_timing_init();
     engine_init(proj.pat, &proj.arr.song, proj.arr.lane, &proj.sound);
     if (project_load() != 0)
         project_defaults();

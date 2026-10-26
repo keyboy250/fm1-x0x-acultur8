@@ -10,11 +10,12 @@
 #define ED_HDR0 0x7D
 #define ED_HDR1 0x46
 #define ED_HDR2 0x4C
-enum { ED_INFO = 1, ED_SMP_BEGIN = 11, ED_SMP_WRITE, ED_SMP_END, ED_SMP_ERASE, ED_SMP_INFO, ED_SMP_READ, ED_PING = 25, ED_STRIP_QUERY = 48, ED_PATTERN_QUERY = 49 };
+enum { ED_INFO = 1, ED_SMP_BEGIN = 11, ED_SMP_WRITE, ED_SMP_END, ED_SMP_ERASE, ED_SMP_INFO, ED_SMP_READ, ED_PING = 25, ED_STRIP_QUERY = 48, ED_PATTERN_QUERY = 49, ED_RUNTIME_QUERY = 50, ED_GENERATION_QUERY = 51 };
 #define ED_READ_MAX 224u                     /* X0X: SMP_READ's bytes a frame (the break page draws the slots) */
 
-static uint8_t ed_out[288];
-static uint32_t ed_n;
+static uint8_t ed_out[276] __attribute__((aligned(4)));
+typedef char ed_reply_capacity[(sizeof(ed_out)>=16+RUNTIME_DIAGNOSTIC_WORDS*5)?1:-1];
+static uint16_t ed_n; /* bounded by276-byte reply buffer */
 
 static void ed_begin(uint32_t cmd)
 {
@@ -54,7 +55,7 @@ static POLY_COLD uint32_t ed_unpack7(const uint8_t *a, uint32_t na, uint8_t *out
     }
     return n;
 }
-static uint8_t ed_smp_buf[512] __attribute__((aligned(4)));
+static uint8_t ed_smp_buf[sizeof(smp_user_hdr_t)] __attribute__((aligned(4)));
 static uint32_t ed_smp_slot(uint32_t k) { return SMP_USER_BASE + k * SMP_USER_SIZE; }
 static void ed_smp_inval(uint32_t k)
 {
@@ -188,6 +189,10 @@ static POLY_COLD int ed_debug(uint32_t cmd, const uint8_t *a, uint32_t na)
 #endif
 
 #include "pattern_query.inc"
+#include "runtime_query.inc"
+#include "generation_query.inc"
+#define ED_TIMING_TX_IDLE() plat_midi_tx_idle()
+#include "timing_query.inc"
 
 static POLY_COLD void ed_handle(const uint8_t *f, uint32_t n)
 {
@@ -229,6 +234,15 @@ static POLY_COLD void ed_handle(const uint8_t *f, uint32_t n)
         }
         break;
     }
+    case 52: /* ABI1 timing calibration: query / guarded Apply / Reset. */
+        ed_timing_query(a,na);
+        break;
+    case ED_GENERATION_QUERY:
+        ed_generation_query(a,na);
+        break;
+    case ED_RUNTIME_QUERY:
+        ed_runtime_query(a,na);
+        break;
     case ED_PATTERN_QUERY:
         ed_pattern_query(a,na);
         break;

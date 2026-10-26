@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Backup and restore over USB (tools/x0x_backup.py, web/backup; the device's side, a cut cable, a power cut and the
 # question: tests/backup_test.c). A backup of a project; the project changed and saved; the backup put back as the
 # device does once SEL answers RESTORE FROM USB?: everything as it was, at once and after a reboot. Refused while
@@ -25,6 +30,11 @@ tapkey w4
 tapkey w2
 tap SAVE
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 expect tempo 125
 expect hit0.0.4 0
 expect hit0.0.2 1
@@ -60,12 +70,22 @@ expect dirty 0
 wait 100
 shot restored.png
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 expect tempo 120
 expect hit0.0.4 1
 expect hit0.0.2 0
 # ---- a backup of what X0X 0.10 saved (tests/fixtures/v1_store.bin: format 1), restored over this project: loaded
 # as at power-on (migrate.x0x), its steps on 1-32, the SD's pots moved for DECAY, the lanes widened, the song
 storeload tests/fixtures/v1_store.bin
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 wait 100
 backup v1.x0b
 restore proj.x0b
@@ -86,6 +106,11 @@ expect laneval0.1.4.40 255
 expect songlen 2
 expect songbar2.0 16
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 expect hit0.0.31 1
 expect sound0.1.4 105
 expect songlen 2

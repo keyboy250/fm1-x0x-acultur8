@@ -133,9 +133,10 @@ static volatile uint32_t mi_w, mi_r, mo_w, mo_r;
 static volatile uint8_t mo_cancel_attacks,mo_cancel_transport;
 static volatile uint32_t usb_midi_generation,usb_midi_observed_generation;
 static volatile uint8_t mi_retired_clock[3];
+static void midi_out_deadlines_retire(void);
 static void midi_out_cancel(int transport) {
     mo_cancel_attacks=(uint8_t)(mo_w-mo_r);
-    if(transport)mo_cancel_transport=mo_cancel_attacks;
+    if(transport){mo_cancel_transport=mo_cancel_attacks;midi_out_deadlines_retire();}
     RING_PUBLISH();
 }
 /* Preserve prior global interrupt enable state. Existing irq_save/restore is
@@ -173,18 +174,49 @@ static void midi_usb_state(uint8_t config,uint8_t suspended,int reset) {
 #endif
 
 #include "midi_ring.h"
+#if X0X_CC
+/* Explicitly initialized transient metadata in otherwise unused NOINIT RAM.
+ * It is never a persistent setting and consumes no audio/pool headroom. */
+#include "midi_deadline.h"
+static midi_deadline_t midi_deadline __attribute__((section(".noinit")));
+static void midi_out_deadlines_retire(void) {
+    uint32_t i,end=mo_w;for(i=mo_r;i!=end;i++)midi_deadline.due[i%MQ]=0;
+}
+static __attribute__((noinline)) void midi_audio_begin(uint32_t now) { midi_deadline_begin(&midi_deadline,now); }
+static void midi_audio_end(void) { midi_deadline.active=0; }
+void plat_midi_audio_position(uint32_t frame) { midi_deadline.frame=frame; }
+static int midi_out_timed(const uint32_t *packets,uint32_t count) {
+    uint32_t w=mo_w,i;
+    if(!midi_usb_ready() || !count || count>6u || w-mo_r>MQ-count)return 0;
+    uint32_t due=midi_deadline_value(&midi_deadline);
+    for(i=0;i<count;i++)midi_deadline.due[(w+i)%MQ]=due;
+    return midi_ring_try_batch(midi_out_q,&mo_w,&mo_r,MQ,packets,count,midi_usb_ready());
+}
+#endif
 static int midi_out_event(uint32_t pkt) /* bounded enqueue feedback, audio/main single producer */
 {
+#if X0X_CC
+    return midi_out_timed(&pkt,1);
+#else
     return midi_ring_try_put(midi_out_q,&mo_w,&mo_r,MQ,pkt,midi_usb_ready());
+#endif
 }
 static int midi_out_pair(uint32_t first,uint32_t second)
 {
+#if X0X_CC
+    uint32_t packets[2]={first,second};return midi_out_timed(packets,2);
+#else
     return midi_ring_try_pair(midi_out_q,&mo_w,&mo_r,MQ,first,second,midi_usb_ready());
+#endif
 }
 
 static int midi_out_batch(const uint32_t *packets,uint32_t count)
 {
+#if X0X_CC
+    return midi_out_timed(packets,count);
+#else
     return midi_ring_try_batch(midi_out_q,&mo_w,&mo_r,MQ,packets,count,midi_usb_ready());
+#endif
 }
 
 /* ------------------------------------------------------- descriptors --- */
@@ -800,6 +832,14 @@ static void ep1_tx(void)
         RING_PUBLISH();                                 /* the audio ISR (producer) can preempt us: */
 #if X0X_CC
         pkt = midi_out_q[stage_r % MQ]; /* r remains published until commitment */
+        /* Cancelled entries may retire before their old deadline, so fresh
+         * Stop/owned Off cannot be held behind future attacks or clock. */
+        {
+            uint32_t ahead=stage_r-mo_r,status=(pkt>>8)&255u;
+            int cancelled=(ahead<mo_cancel_attacks && (status&240u)==144u && (pkt>>24)&127u) ||
+                          (ahead<mo_cancel_transport && status>=248u && status<=252u && status!=249u);
+            if(!cancelled && !midi_deadline_ready(midi_deadline.due[stage_r%MQ],fm1_ticks()))break;
+        }
 #else
         pkt = midi_out_q[mo_r % MQ];                    /* slot read strictly between the index checks */
 #endif
@@ -1146,6 +1186,9 @@ static void usb_poll(void)                              /* TIMER5 ISR, 2 kHz */
 
 static void usb_start(void)                             /* boot, or main-loop retry while usb.up == 0 */
 {
+#if X0X_CC
+    midi_deadline.active=0; midi_deadline.base=0; midi_deadline.frame=0;
+#endif
     usb.timeouts = 0;
     fm1_usb_reset();                                    /* reset whatever the ROM left */
     fm1_delay_ms(25);

@@ -35,6 +35,7 @@
 #include "pattern.h"
 #include "harmony.h"
 #include "lanes.h"
+#include "../timing_rate.h"
 
 #define FS 44100u
 #define TRK_DRUM 0                    /* + kit: 0 = 909, 1 = 808 */
@@ -125,14 +126,17 @@ typedef struct {                      /* one part's runtime */
     uint8_t started;                  /* the first step has fired since start */
     uint8_t sounding;                 /* 303: a note is held */
     uint8_t held_note;
-    uint8_t source_note; /* accepted untransposed NOTE for live CC reprojection; runtime only */
+    uint8_t source_note; /* accepted source NOTE; bit7 temporary pitch overlay; runtime only */
     uint8_t trigger_rejected; /* uses existing alignment gap; chance failure is not strict failure */
+    uint8_t variation_step;           /* former alignment byte: played steps in local pass */
     uint32_t to_next;                 /* samples to the next step (Q8 fraction) */
     uint32_t to_off;                  /* 303: samples to the gate falling, Q8; 0 = none */
     uint32_t rng;                     /* DIR_RANDOM and auto-mutate */
     uint16_t bars;                    /* wraps since the pattern started (auto-mutate) */
     uint8_t ext_ticks;                /* external clock: ticks into this step */
+    uint8_t variation_cycle;          /* former tail padding: local passes, wraps at 256 */
 } seq_track_t;
+typedef char seq_track_size_24[(sizeof(seq_track_t)==24)?1:-1];
 
 typedef struct { uint32_t to_next; uint16_t bars; uint8_t pos,ext_ticks; } seq_lane_clock_t;
 typedef char lane_clock_size_8[(sizeof(seq_lane_clock_t)==8)?1:-1];
@@ -149,7 +153,17 @@ typedef struct {
     uint8_t role_source,state,pending,flags;
 } clock_runtime_t;
 typedef char clock_runtime_size_20[(sizeof(clock_runtime_t)==20)?1:-1];
+/* One selected lane's accepted forward pass. Runtime only; never serialized. */
+enum { FREEZE_RECORD, FREEZE_REQUEST, FREEZE_HELD };
 typedef struct {
+    bpart_t bass; /* drums use step[].flags as accepted-hit bits */
+    volatile uint8_t state,count;
+    uint8_t destination,reserved;
+} pattern_freeze_t;
+typedef char freeze_size_148[(sizeof(pattern_freeze_t)==148)?1:-1];
+typedef struct {
+    pattern_freeze_t *freeze;
+    pattern_variation_t variation; /* stopped-configured, transient playback overlay */
     volatile clock_runtime_t clock; /* audio state; main snapshots/retirement under guard */
     uint8_t *lane_sound; /* audio-owned published metadata view; null retains old algorithm */
     seq_lane_clock_t lane[20]; /* voices1..10; voice0 and pitched lanes reuse t[] */
@@ -221,6 +235,8 @@ static inline __attribute__((always_inline)) void seq_arrangement_queue(seq_t *s
     else { s->song_start = block; s->arrangement.queued = 255; }
 }
 
+int seq_freeze_matches(const seq_t *s,int lane);
+int seq_freeze_held(const seq_t *s,int lane);
 int seq_bass_resolve(seq_t *s,int b,int source,int transpose,uint8_t *note);
 void seq_init(seq_t *s, pattern_t *patterns);
 uint32_t seq_until_event(seq_t *s, uint32_t n);

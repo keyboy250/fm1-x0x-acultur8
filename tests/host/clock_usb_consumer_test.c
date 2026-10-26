@@ -1,3 +1,4 @@
+#include "timing_rate_test_state.h"
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Actual production USB consumer; only MMIO/IRQ transport is stubbed. */
 #include <assert.h>
@@ -43,12 +44,14 @@ static void ep_send(uint32_t ep,void *p,uint32_t n){
 #define MIDI_TX_ENTER() enter()
 #define MIDI_TX_LEAVE(saved) leave(saved)
 #define MIDI_TX_BEFORE_COMMIT() before_commit()
+static uint32_t test_ticks;
+static uint32_t fm1_ticks(void){return test_ticks;}
 #include "usb.c"
 static uint32_t pk(unsigned s,unsigned n,unsigned v){return(s>=248?15u:s>>4)|(s<<8)|(n<<16)|(v<<24);}
 static unsigned status(uint32_t p){return(p>>8)&255u;}
 static void leave(uint32_t saved){assert(lock_depth>=1);lock_depth--;irq_enabled=(int)saved;if(irq_enabled&&pending_irq){pending_irq=0;midi_out_cancel(1);assert(midi_out_event(pk(252,0,0)));}if(irq_enabled&&deferred_irq){void(*fn)(void)=deferred_irq;deferred_irq=0;fn();}}
 static void before_commit(void){assert(!lock_depth);if(before_stop){before_stop=0;midi_out_cancel(1);}}
-static void reset(void){memset(&usb,0,sizeof usb);usb.config=usb.up=1;usb_midi_generation=usb_midi_observed_generation=0;mo_w=mo_r=0;mo_cancel_attacks=mo_cancel_transport=0;mi_w=mi_r=mi_ready=0;for(int i=0;i<3;i++)mi_retired_clock[i]=0;so_w=so_r=0;sx_busy=0;nw=0;memset(regs,0,sizeof regs);irq_enabled=1;before_stop=after_stop=pending_irq=lock_depth=0;deferred_irq=0;}
+static void reset(void){memset(&midi_deadline,0,sizeof midi_deadline);test_ticks=0;memset(&usb,0,sizeof usb);usb.config=usb.up=1;usb_midi_generation=usb_midi_observed_generation=0;mo_w=mo_r=0;mo_cancel_attacks=mo_cancel_transport=0;mi_w=mi_r=mi_ready=0;for(int i=0;i<3;i++)mi_retired_clock[i]=0;so_w=so_r=0;sx_busy=0;nw=0;memset(regs,0,sizeof regs);irq_enabled=1;before_stop=after_stop=pending_irq=lock_depth=0;deferred_irq=0;}
 static void next(void){regs[S_TXCSR1]=0;ep1_tx();assert(!lock_depth);}
 #ifndef CLOCK_USB_NO_MAIN
 int main(void){

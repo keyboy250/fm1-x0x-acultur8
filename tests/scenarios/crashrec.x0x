@@ -1,8 +1,13 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # PERF keeps the last crash's numbers (its red screen's) until power-off, to photograph (fm1-x0x#17)
 wait 300
 fakecrash
 tap GLO
-turn SELECT 17
+turn SELECT 18
 tap SEL
 wait 1200
 shot crash_on_perf.png

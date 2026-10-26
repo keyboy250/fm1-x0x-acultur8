@@ -2,7 +2,7 @@ Local upstream integration is documented in [the integration record](docs/UPSTRE
 
 # Acultur8 X0X for the M-VAVE FM-1
 
-An experimental variant of [Charles Vestal's X0X](https://github.com/charlesvestal/fm1-x0x), with a local development dashboard and browser firmware emulator for musical experiments.
+Built on [X0X for the M-VAVE FM-1 by Charles Vestal and upstream contributors](https://github.com/charlesvestal/fm1-x0x), itself a fork of [Felucca by Leo Kuroshita (Hügelton Instruments)](https://github.com/hugelton/Felucca). Acultur8 contributes the Extended Edition changes, local dashboard and browser tools described here. Original authorship and [complete upstream credits](LICENSING.md) are retained; this variant does not imply upstream endorsement.
 
 The browser runs the shared C engine compiled to WebAssembly. It supports WAV slice banks with exact markers and sequencer-tempo playback that keeps each slice's pitch. Browser performance does not establish physical FM1 processing headroom.
 
@@ -29,6 +29,6 @@ Native REX decoding is an optional external local tool. The public variant does 
 
 ## Upstream and licenses
 
-The initial variant is based on upstream commit `47f8e4c4ad602591b81c21bc5480db7a94f6d6af`. The imported baseline was compared against the supplied source archive before applying the emulator/slice changes. Upstream history remains available on `main` and through the upstream repository.
+The initial import was upstream commit `47f8e4c4ad602591b81c21bc5480db7a94f6d6af`. The later runtime integration was reviewed against `2e31c517ded3732c58b845eb0c800fe018004b8d`, with the BREAK-filter storage conflict explicitly deferred. The original repository was downloaded again on24 October2026 at `54194c54bb01e9d9b3fe9d641b3ddfa512ac04a3`; its one newer commit changes credits only. These documentation updates retain the Melodee and Jangada acknowledgements and correct keremimo's name. This0.1.26 credits packaging revision includes those source-documentation updates. Runtime files and firmware are byte-identical to the qualified0.1.26-copymidi candidate;this corresponding-source archive has its own manifest and checksum.
 
 X0X is GPL-3.0-only. Preserve [LICENSE](LICENSE), [LICENSING.md](LICENSING.md), bundled notices and original author credits when redistributing. Open303 and bundled fonts retain their respective licenses. Recorded loops belong to their owners and are not covered by this project's license. Acultur8 X0X is not affiliated with M-VAVE, Roland, Reason Studios, IK Multimedia or Hügelton Instruments.

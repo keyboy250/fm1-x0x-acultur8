@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Drum tracks mute on their own: HOME + a black key on the 909 / 808 screen. The part mute (HOME,
 # black 1-5) and the song leave them alone.
 wait 300

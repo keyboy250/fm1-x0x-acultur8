@@ -28,7 +28,7 @@ function prompt(p,scope){
  turn(p,1,1); // COPY FROM P2
  turn(p,0,1);turn(p,1,1); // PASTE INTO P3
  turn(p,0,1);turn(p,1,scope); // scope
- turn(p,0,1);screen(p,`wasm-menu-${scope}`);
+ turn(p,0,2);screen(p,`wasm-menu-${scope}`);
  tap(p,1);screen(p,`wasm-confirm-${scope}`); // SEL -> confirmation
 }
 for(let scope=0;scope<25;scope++){

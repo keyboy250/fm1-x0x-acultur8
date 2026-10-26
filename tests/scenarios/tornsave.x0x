@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # a power cut in the middle of a save (fm1-x0x#17, #20): the next start loads the save before, from the
 # objects' previous copies, not the defaults. Random hits pack badly, so the stream spans several objects
 # and the cut leaves its first object new and the rest old.
@@ -7,6 +12,11 @@ tap SAVE
 wait 300
 snapproj
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 wait 300
 expect projsame 1
 fillrandom 2
@@ -14,6 +24,11 @@ tearsave 1
 tap SAVE
 wait 300
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 wait 300
 expect projsame 1
 expect mempct >30
@@ -22,5 +37,10 @@ tap SAVE
 wait 300
 snapproj
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 wait 300
 expect projsame 1

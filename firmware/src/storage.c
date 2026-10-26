@@ -113,7 +113,7 @@ static int st_load(uint32_t obj, void *dst, uint32_t max)
     st_hdr_t h;
     if (st_current(obj, &h) < 0) {
         /* Distinguish an absent defaults bank from damaged/future content. */
-        if (obj == OBJ_STRIP_DEFAULTS) {
+        if (obj == OBJ_STRIP_DEFAULTS || obj == OBJ_PANEL) {
             uint32_t magic[2];
             if (st_read(st_sector(obj,0),magic,4) || st_read(st_sector(obj,1),magic+1,4) ||
                 magic[0] != UINT32_MAX || magic[1] != UINT32_MAX) return -2;

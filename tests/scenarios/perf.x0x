@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # PERF: the performance screen, and PERF TEST (three patterns of its own on the factory sound), which
 # must put back everything it changed: the patterns, the sound, the tempo, the mutes, the song mode.
 wait 300
@@ -13,7 +18,7 @@ tapkey b2
 expect mute 4194304
 # GLO > PERFORMANCE (the eleventh row)
 tap GLO
-turn SELECT 17
+turn SELECT 18
 tap SEL
 expect view 7
 tap PLAY
