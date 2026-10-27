@@ -1,0 +1,9 @@
+INSTALL AND ROLLBACK / 0.1.32-straightbeta
+1. Stop playback, turn MASTER fully down and close software holding the FM1 MIDI ports.
+2. Export a fresh project and retain a second verified copy. Keep your exact prior firmware and its matching pre-feature project, sample WAVs, unit calibration record and separate saved strip-default bank. A project export does not export those separate stores.
+3. Check SHA256SUMS.txt. The firmware identity is FM-1_9000132. Use the included tools/fm1_install.py after installing its documented mido/python-rtmidi dependencies; do not unplug during the update.
+   python tools/fm1_install.py x0x-0.1.32-straightbeta.fwsc --port "X0X FM-1"
+4. After restart, verify identity and your project/settings with playback stopped. Test at a controlled low listening level only when ready.
+5. To use STRAIGHT, stop playback and find GLO > SYNC RATE MODE at the bottom of the System list. Activation initializes the compatible independent-lane/expanded-rate storage if needed.
+6. To roll back, retain the prior firmware plus its matching pre-feature project. Do not assume an older build can load a LAN3 save. This release deliberately does not distribute another user's project, samples or unit calibration.
+Do not flash or restore on a timeout without investigating the exact state. See the searchable FAQ for pattern clearing and one-sound overrides.

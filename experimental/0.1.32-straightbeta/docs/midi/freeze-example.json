@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "mode": "plan_only",
+  "feature": "freeze_commit",
+  "required_capability": 16,
+  "pattern_zero_based": 1,
+  "lane": 22,
+  "request_id": 2,
+  "operation": "freeze",
+  "destination_zero_based": null,
+  "expected_capture_id": null,
+  "events": [
+    [
+      187,
+      74,
+      3
+    ],
+    [
+      187,
+      75,
+      48
+    ],
+    [
+      187,
+      77,
+      0
+    ],
+    [
+      188,
+      13,
+      114
+    ],
+    [
+      188,
+      15,
+      64
+    ],
+    [
+      189,
+      119,
+      2
+    ],
+    [
+      190,
+      0,
+      0
+    ],
+    [
+      190,
+      1,
+      100
+    ],
+    [
+      189,
+      109,
+      0
+    ],
+    [
+      189,
+      109,
+      64
+    ]
+  ],
+  "preconditions": [
+    "CC MODE FULL",
+    "matching armed live variation and playback pattern",
+    "no competing capture owner",
+    "Commit:stopped/drained,complete HELD pass,explicit matching capture token"
+  ],
+  "verify": "Command51 page4 matching request;Freeze PENDING until full pass becomes APPLIED. Capture scan pages5/6 must be complete/coherent;Commit must change only approved destination lane,with Undo/Redo and command49 actual musical readback. No save/start/installation is sent."
+}

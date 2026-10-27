@@ -1,0 +1,19 @@
+{
+  "original_project": "https://github.com/charlesvestal/fm1-x0x",
+  "original_author": "Charles Vestal and upstream contributors",
+  "original_manual": "https://charlesvestal.github.io/fm1-x0x/manual/",
+  "foundation_project": "https://github.com/hugelton/Felucca",
+  "foundation_author": "Leo Kuroshita / Hugelton Instruments",
+  "reviewed_upstream_commit": "54194c54bb01e9d9b3fe9d641b3ddfa512ac04a3",
+  "previous_runtime_integration_review_base": "2e31c517ded3732c58b845eb0c800fe018004b8d",
+  "review_date_utc": "2026-10-24",
+  "credit_update": "Melodee by keremimo;Jangada by zednaked;correct keremimo attribution",
+  "scope": "Credit and source-review metadata;not a claim that the frozen firmware incorporates the documentation overlay",
+  "source_archive_sha256": "4daf134407530d756d919717177455aec0b95fefa105e8b753484ad347a7ab02",
+  "notice_sha256": {
+    "CREDITS.txt": "7435a952802a15befe40b0223da7f83a76b6488d87636e1d1effa93749544d84",
+    "UPSTREAM-LICENSING.md": "6b1041d59e75f0b87090f315d5f1d409b50daa81ad94b20c9eacc13badc42f89",
+    "UPSTREAM-README.md": "1e70f1d2486a429ac687765179176d2c7d387041c9f5a53073856f783ba9cd4e",
+    "LICENSE.txt": "230184f60bae2feaf244f10a8bac053c8ff33a183bcc365b4d8b876d2b7f4809"
+  }
+}

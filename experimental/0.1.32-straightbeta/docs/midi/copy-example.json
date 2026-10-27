@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "mode": "plan_only",
+  "feature": "scoped_cross_part_copy",
+  "required_capability": 32,
+  "source_pattern_zero_based": 1,
+  "destination_pattern_zero_based": 2,
+  "source_scope": 2,
+  "destination_scope": 4,
+  "request_id": 1,
+  "events": [
+    [
+      190,
+      9,
+      3
+    ],
+    [
+      190,
+      10,
+      7
+    ],
+    [
+      190,
+      11,
+      8
+    ],
+    [
+      190,
+      12,
+      19
+    ],
+    [
+      189,
+      119,
+      1
+    ],
+    [
+      190,
+      0,
+      0
+    ],
+    [
+      190,
+      13,
+      64
+    ],
+    [
+      190,
+      14,
+      0
+    ],
+    [
+      190,
+      14,
+      64
+    ]
+  ],
+  "preview_event_count": 7,
+  "preconditions": [
+    "CC MODE FULL",
+    "stopped/drained,writable and unowned project",
+    "explicit approved destination",
+    "fresh monotonic request ID"
+  ],
+  "verify": "First send preview prefix,read command51 page10 with preview_valid=1 and page4 ACCEPTED matching request. Then execute suffix and require matching APPLIED/NO_CHANGE;independently query command49 both slots and motion,Undo/Redo/save recall. No automatic save/start/installation."
+}

@@ -1,0 +1,8 @@
+EXPERIMENTAL BETA SCOPE
+Global straight time and a selected909 snare triplet override passed controls, listening and saved restart on one test unit. This does not certify all physical voices/rates/tempos or worst-case real-time CPU deadlines.
+Advanced remote generation, variation, Freeze/Commit and copy hardware replay remains open. Native panel acceptance does not certify remote CC execution. Existing bounded parent evidence is retained with its original scope.
+Reason external-clock clip/grid stability is unresolved. No Reason-sync fix is claimed. Private 0.1.31 averaging and fine-tempo controls are excluded.
+Mode changes require stopped playback. Existing stored rates are retained until edited. Explicit direct/exact MIDI division IDs 0..20 retain their meanings; the sweep follows the active policy. In LAN3, legacy family CC value 0 selects local STRAIGHT, 2 selects STR+TRIPLET, and 1 or 3 selects ALL. New global/local policy selectors have no direct CC address.
+LAN3 projects require this compatible firmware. Older firmware rejects them; keep a pre-feature backup matched to your rollback firmware. Project exports omit sample slots, panel calibration and the separate saved-default bank.
+Shared delay STRAIGHT choices are its supported 1/16, 1/8, 1/4, 1/2 subset. Its existing buffer limit/folding remains; no multi-bar delay buffer was added. This source has no separate LFO rate engine.
+Alternate 303B engines and per-drum sound-choice lists are future requests, not features of this release. The existing public browser emulator retains its separately published build.
