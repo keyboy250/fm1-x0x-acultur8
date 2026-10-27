@@ -19,7 +19,7 @@ extern void web_seq_tick(uint32_t period_q8);
 #define WEB_CLOCK 0
 #endif
 
-#define NEVER 0xFFFFFFFFu
+#define NEVER UINT32_MAX
 #ifdef CLOCK_RUN_REQUEST_TEST_HOOK
 extern void clock_run_request_boundary(seq_t *s);
 #define RUN_REQUEST_BOUNDARY(s) clock_run_request_boundary(s)
@@ -62,7 +62,7 @@ void seq_init(seq_t *s, pattern_t *patterns)
         s->t[i].pp_dir = 1;
         s->t[i].rng = 0x1234567u * (i + 1);
     }
-    s->clk_to_next = NEVER;
+    s->clk_to_next = UINT32_MAX;
     s->arrangement.queued = 255;
     s->midi_ready=1;
     s->pad_channel_out=255;for(i=0;i<3;i++)s->pad_notes_out[i]=255;
@@ -84,13 +84,20 @@ static uint8_t *rate_clock(seq_t *s,int lane){return lane<22 && lane%11?&s->lane
 /* The denominator belongs to each interval. Tempo/source changes never
  * reinterpret or rescale the remaining countdown. Only a local step may adopt
  * current timing, so legal slow-to-fast changes cannot overflow uint32. */
-static inline uint32_t rate_unit(const seq_t *s,int lane){return s->rate_units[lane]?(uint32_t)s->rate_units[lane]*24u:1024u;}
+/* A lane's uint16 unit cell has 12 BPM bits and four spare high bits.
+ * LAN3 uses three bits for countdown carry and one for the idle sentinel, retaining every original
+ * uint32 timer and the exact pool/general-RAM allocation. Internal numerator
+ * and denominator share a factor of six: fs*25*pulses4 / (BPM-tenths*4).
+ * The longest supported 32-bar interval needs <3 carry bits at 43900..44300Hz. */
+static inline uint32_t rate_unit(const seq_t *s,int lane){unsigned bpm=s->rate_units[lane]&4095u;return bpm?bpm*4u:1024u;}
+static uint64_t rate_remaining(const seq_t *s,int lane,uint32_t low){return s->rate_units[lane]&32768u?UINT64_MAX:((uint64_t)((s->rate_units[lane]>>12)&7u)<<32)|low;}
+static uint32_t rate_idle(seq_t *s,int lane){if(expanded(s))s->rate_units[lane]=(uint16_t)((s->rate_units[lane]&4095u)|32768u);return NEVER;}
+static uint32_t rate_store(seq_t *s,int lane,uint64_t value){s->rate_units[lane]=(uint16_t)((s->rate_units[lane]&4095u)|((value>>32)<<12));return (uint32_t)value;}
 static uint32_t adopt_rate_unit(seq_t *s,int lane,uint32_t carry){unsigned bpm=(unsigned)(s->bpm*10.0f+0.5f);uint32_t old=rate_unit(s,lane),next=s->ext?0u:bpm<200?200u:bpm>3000?3000u:bpm;
  s->rate_units[lane]=(uint16_t)next;
- /* carry is less than one sample, never a long remaining interval. */
  return old==rate_unit(s,lane)?carry:(uint32_t)((float)carry*(float)rate_unit(s,lane)/(float)old);
 }
-static __attribute__((noinline)) uint32_t rate_interval(const seq_t *s,int rate){if(!expanded(s))return seq_step_q8(s,rate);return s->ext?(s->ext_period?s->ext_period:seq_step_q8(s,RATE_16)/6u)*rf_divisions[rate].pulses4:(uint32_t)timing_rate_get()*150u*rf_divisions[rate].pulses4;}
+static __attribute__((noinline)) uint64_t rate_interval(const seq_t *s,int rate){if(!expanded(s))return seq_step_q8(s,rate);return s->ext?(uint64_t)(s->ext_period?s->ext_period:seq_step_q8(s,RATE_16)/6u)*rf_divisions[rate].pulses4:(uint64_t)timing_rate_get()*25u*rf_divisions[rate].pulses4;}
 void seq_lane_mark_pending(seq_t *s,int lane,int rate){s->lane_pending|=1u<<lane;if(rate && expanded(s))*rate_clock(s,lane)=(uint8_t)((*rate_clock(s,lane)&31u)|32u);}
 static void rate_bar(seq_t *s){int lane;if(expanded(s))for(lane=0;lane<25;lane++)if(*rate_clock(s,lane)&32u)*rate_clock(s,lane)|=64u;}
 static __attribute__((noinline)) int rate_boundary(seq_t *s,int lane){int rate=seq_lane_rate(s,lane);
@@ -98,16 +105,14 @@ static __attribute__((noinline)) int rate_boundary(seq_t *s,int lane){int rate=s
  s->lane_pending&=~(1u<<lane);if(expanded(s))*rate_clock(s,lane)&=31u;return rate;
 }
 
-uint32_t seq_step_q8(const seq_t *s, int rate)
+static uint64_t step_wide_q8(const seq_t *s,int rate)
 {
-    float bpm = seq_tempo(s), q;
-    if (bpm < 20.0f)
-        bpm = 20.0f;
-    if (bpm > 300.0f)
-        bpm = 300.0f;
-    q = (float)timing_rate_get() * 60.0f / bpm;                    /* samples per quarter */
-    return (uint32_t)(q * 256.0f * (expanded(s)?(float)rf_divisions[rate<21?rate:0].pulses4/96.0f:(float)TICKS_PER_STEP[rate & 7]/24.0f));
+ float bpm=seq_tempo(s);if(bpm<20.0f)bpm=20.0f;if(bpm>300.0f)bpm=300.0f;
+ float q=(float)timing_rate_get()*60.0f/bpm;
+ if(expanded(s) && rate>=21){unsigned b=(unsigned)(bpm*10.0f+0.5f);return (uint64_t)timing_rate_get()*600u*256u*rf_divisions[rate<RF_COUNT?rate:0].pulses4/(b*96u);}
+ return (uint32_t)(q*256.0f*(expanded(s)?(float)rf_divisions[rate<21?rate:0].pulses4/96.0f:(float)TICKS_PER_STEP[rate&7]/24.0f));
 }
+uint32_t seq_step_q8(const seq_t *s,int rate){uint64_t q=step_wide_q8(s,rate);return q>=UINT32_MAX?UINT32_MAX-1:(uint32_t)q;}
 
 static const dpart_t *dpart(const seq_t *s, int k) { return &s->pat[s->ppat[k]].drum[k]; }
 static int is_drum(int t) { return t < NKIT; }
@@ -158,7 +163,7 @@ static __attribute__((noinline)) int part_rate(const seq_t *s, int t)
 }
 
 /* swing offset of a step, Q8: odd 16ths / 32nds come late; triplets are never swung */
-static __attribute__((noinline)) uint32_t swing_q8(const seq_t *s, int rate, uint32_t step_q8)
+static __attribute__((noinline)) uint64_t swing_q8(const seq_t *s, int rate, uint64_t step_q8)
 {
     uint32_t sw = s->pat[s->ppat[TRK_DRUM]].swing;   /* the 909 is the bar: its pattern's groove */
     if ((expanded(s) && rf_divisions[rate].kind!=1) || rate == RATE_16T || rate == RATE_8T || rate == RATE_4T || rate == RATE_32T || !sw)
@@ -490,7 +495,7 @@ static void fire_drum_range(seq_t *s, int k, int p, const seq_sink_t *o,int firs
 
 static void fire_drum(seq_t *s,int k,int p,const seq_sink_t *o) { fire_drum_range(s,k,p,o,0,NDRUM); }
 
-static __attribute__((noinline)) void fire_bass(seq_t *s,int b,int p,uint32_t step_q8,uint32_t carry,const seq_sink_t *o)
+static __attribute__((noinline)) void fire_bass(seq_t *s,int b,int p,uint64_t step_q8,uint32_t carry,const seq_sink_t *o)
 {
     freeze_begin(s,22+b,p);
     seq_track_t *tr=&s->t[TRK_BASS0+b];bpart_t *bp=bpart(s,b);const bstep_t *st=&bp->step[p];
@@ -573,7 +578,7 @@ int seq_lane_latched_rate(const seq_t *s,int lane)
 }
 static void latch_rate(seq_t *s,int lane,int rate)
 {
- if(expanded(s)){uint8_t *c=rate_clock(s,lane);*c=(uint8_t)((*c&96u)|(unsigned)rate);return;}
+ if(expanded(s)){s->rate_units[lane]&=4095u;uint8_t *c=rate_clock(s,lane);*c=(uint8_t)((*c&96u)|(unsigned)rate);return;}
  unsigned bit=(unsigned)lane*3,n=bit/8,sh=bit%8,x=s->lane_rate[n],mask=7u<<sh;
  if(n+1<sizeof s->lane_rate)x|=(unsigned)s->lane_rate[n+1]<<8;
  x=(x&~mask)|((unsigned)rate<<sh);s->lane_rate[n]=(uint8_t)x;
@@ -585,7 +590,7 @@ static __attribute__((noinline)) void row_reset(seq_t *s,int kit,int from_top)
   int lane=kit*11+v,rate=seq_lane_rate(s,lane);seq_lane_clock_t *c=row_clock(s,lane);
   if(from_top){c->pos=255;c->bars=0;}
   latch_rate(s,lane,rate);if(!expanded(s))c->ext_ticks=(uint8_t)(TICKS_PER_STEP[rate]-1);
-  c->to_next=s->ext?NEVER:0;
+  c->to_next=s->ext?rate_idle(s,lane):0;
  }
 }
 static __attribute__((noinline)) void row_fire(seq_t *s,int lane,const seq_sink_t *o)
@@ -594,12 +599,12 @@ static __attribute__((noinline)) void row_fire(seq_t *s,int lane,const seq_sink_
  int p=c->pos==255?0:(c->pos+1>=len?0:c->pos+1),np=p+1>=len?0:p+1;
  uint32_t unit=expanded(s)?rate_unit(s,lane):256u,carry=c->to_next<unit?c->to_next:0;
  if(expanded(s))carry=adopt_rate_unit(s,lane,carry);
- uint32_t L=rate_interval(s,rate),sw=swing_q8(s,rate,L);
+ uint64_t L=rate_interval(s,rate),sw=swing_q8(s,rate,L);
  if(c->pos!=255 && !p)c->bars++;
  c->pos=(uint8_t)p;latch_rate(s,lane,rate);
  fire_drum_range(s,lane/11,p,o,lane%11,lane%11+1);
- c->to_next=s->ext && !expanded(s)?NEVER:carry+((np&1)?L+sw:L-sw);
- if((!s->ext || expanded(s)) && !(np&1) && !(p&1))c->to_next=carry+L;
+ c->to_next=s->ext && !expanded(s)?NEVER:expanded(s)?rate_store(s,lane,carry+((np&1)?L+sw:L-sw)):carry+((np&1)?L+sw:L-sw);
+ if((!s->ext || expanded(s)) && !(np&1) && !(p&1))c->to_next=expanded(s)?rate_store(s,lane,carry+L):carry+L;
 }
 
 static void arrangement_latch(seq_t *s, uint16_t block)
@@ -622,7 +627,7 @@ static void arrangement_latch(seq_t *s, uint16_t block)
         if (next[t] != s->ppat[t]) {
             seq_track_t *tr = &s->t[t];
             s->ppat[t] = next[t]; if(s->lane_sound){latch_rate(s,t<NKIT?t*11:t+20,part_rate(s,t));if(t<NKIT)row_reset(s,t,1);} tr->started = 0; tr->bars = 0; tr->variation_step=tr->variation_cycle=0; tr->pp_dir = 1;
-            tr->to_next = s->ext ? NEVER : 0;
+            tr->to_next = s->ext ? rate_idle(s,t<NKIT?t*11:t+20) : 0;
             if(!expanded(s))tr->ext_ticks = (uint8_t)(TICKS_PER_STEP[part_rate(s,t)] - 1);
         }
         s->pcue[t] = 255;
@@ -742,7 +747,7 @@ static __attribute__((noinline)) uint32_t fire_step(seq_t *s, int t, const seq_s
     int lane=t<NKIT?t*11:t+20,rate=s->lane_sound?rate_boundary(s,lane):part_rate(s,t),p,wrapped;
     if(s->lane_sound)latch_rate(s,lane,rate);
     uint32_t changed = 0;
-    uint32_t L = seq_step_q8(s, rate);
+    uint64_t L = step_wide_q8(s, rate);
     uint32_t unit=expanded(s)?rate_unit(s,lane):256u;
     uint32_t carry = tr->to_next < unit ? tr->to_next : 0;
     if(expanded(s))carry=adopt_rate_unit(s,lane,carry);   /* the step was due this far into the sample: keep it */
@@ -777,7 +782,7 @@ static __attribute__((noinline)) uint32_t fire_step(seq_t *s, int t, const seq_s
         { if(s->lane_enabled)fire_drum_range(s,t,p,o,0,1);else fire_drum(s,t,p,o); }
     else if (t == TRK_BRK) {
         if (o->brk)
-            o->brk(o->ctx, p, tr->bars, (float)L / 256.0f,
+            o->brk(o->ctx, p, tr->bars, (float)(uint32_t)(L >> 8) + (float)(uint8_t)L / 256.0f,
                    (s->lane_sound ? poly_break_gate(s->pat,s->lane_sound,s->ppat[TRK_BRK],p) : (int)(s->pat[s->ppat[TRK_BRK]].brk.steps >> p & 1u)) && !(s->mute & (1u << MUTE_BRK)));
     } else
         fire_bass(s, t - TRK_BASS0, p, L, expanded(s)?carry*256u/rate_unit(s,lane):carry, o);
@@ -787,10 +792,10 @@ static __attribute__((noinline)) uint32_t fire_step(seq_t *s, int t, const seq_s
         /* the step that follows p: swung if it is an odd one */
         int np = next_pos(s, t, p, 0);
         if(expanded(s))L=rate_interval(s,rate);
-        uint32_t sw = swing_q8(s, rate, L);
-        tr->to_next = carry + ((np & 1) ? L + sw : L - sw);
+        uint64_t sw = swing_q8(s, rate, L);
+        tr->to_next = expanded(s)?rate_store(s,lane,carry+((np&1)?L+sw:L-sw)):carry+((np&1)?L+sw:L-sw);
         if (!(np & 1) && (p & 1) == 0)               /* even -> even (odd lengths, wraps): no swing */
-            tr->to_next = carry + L;
+            tr->to_next = expanded(s)?rate_store(s,lane,carry+L):carry+L;
     }
     return changed;
 }
@@ -802,7 +807,7 @@ static void restart(seq_t *s, uint32_t parts)  /* parts whose pattern switched: 
         if (!(parts >> t & 1u))
             continue;
         s->t[t].started = 0;
-        s->t[t].to_next = s->ext ? NEVER : 0;
+        s->t[t].to_next = s->ext ? rate_idle(s,t<NKIT?t*11:t+20) : 0;
         if(!expanded(s))s->t[t].ext_ticks = (uint8_t)(TICKS_PER_STEP[part_rate(s, t)] - 1);
         s->t[t].bars = 0;
         s->t[t].variation_step=s->t[t].variation_cycle=0;
@@ -834,7 +839,7 @@ static __attribute__((noinline)) void do_start(seq_t *s, int from_top, const seq
         }
         if(s->lane_sound){latch_rate(s,t<NKIT?t*11:t+20,part_rate(s,t));if(t<NKIT)row_reset(s,t,from_top);}
         tr->to_off = 0;
-        tr->to_next = s->ext ? NEVER : 0;
+        tr->to_next = s->ext ? rate_idle(s,t<NKIT?t*11:t+20) : 0;
         if(!expanded(s))tr->ext_ticks = (uint8_t)(TICKS_PER_STEP[part_rate(s, t)] - 1);   /* the first clock is the downbeat */
     }
     s->clk_to_next = 0;
@@ -884,7 +889,7 @@ static void do_stop(seq_t *s, const seq_sink_t *o, int arrangement)
     if (o->brk_stop)
         o->brk_stop(o->ctx);
     for (t = 0; t < NTRACKS; t++)
-        s->t[t].to_next = NEVER;
+        s->t[t].to_next = rate_idle(s,t<NKIT?t*11:t+20);
     s->out_stop_pending=(uint8_t)(!retired && clock_output(s) && s->midi_ready);
 }
 
@@ -898,7 +903,7 @@ static __attribute__((noinline)) void poly_musical_tick(seq_t *s)
     for(t=0;t<NTRACKS;t++)if(changed&(1u<<t)){
         seq_track_t *tr=&s->t[t];tr->started=0;tr->bars=0;tr->variation_step=tr->variation_cycle=0;tr->pp_dir=1;
         latch_rate(s,t<NKIT?t*11:t+20,part_rate(s,t));if(!expanded(s))tr->ext_ticks=(uint8_t)(TICKS_PER_STEP[part_rate(s,t)]-1);
-        tr->to_next=s->ext?NEVER:0;if(t<NKIT)row_reset(s,t,1);
+        tr->to_next=s->ext?rate_idle(s,t<NKIT?t*11:t+20):0;if(t<NKIT)row_reset(s,t,1);
     }
 }
 
@@ -927,8 +932,8 @@ static __attribute__((noinline)) void ext_ticks(seq_t *s, int arrangement,const 
         /* Musical block changes precede track arming on the same incoming clock. */
         if (arrangement) arrangement_tick(s);else if(s->lane_sound)poly_musical_tick(s);
         if(expanded(s)){
-            for(t=0;t<NTRACKS;t++)if(s->t[t].to_next==NEVER)s->t[t].to_next=0;
-            if(s->lane_enabled)for(t=0;t<20;t++)if(s->lane[t].to_next==NEVER)s->lane[t].to_next=0;
+            for(t=0;t<NTRACKS;t++)if(rate_remaining(s,t<NKIT?t*11:t+20,s->t[t].to_next)==UINT64_MAX)s->t[t].to_next=rate_store(s,t<NKIT?t*11:t+20,0);
+            if(s->lane_enabled)for(t=0;t<20;t++)if(rate_remaining(s,(t/10)*11+t%10+1,s->lane[t].to_next)==UINT64_MAX)s->lane[t].to_next=rate_store(s,(t/10)*11+t%10+1,0);
             continue;
         }
         if(s->lane_enabled) { int lane;
@@ -1047,6 +1052,7 @@ static __attribute__((noinline)) void clock_transport(seq_t *s,const seq_sink_t 
 static inline __attribute__((always_inline)) uint32_t until_event_common(seq_t *s, uint32_t n, int arrangement,int poly)
 {
     uint32_t m = n, e, role;
+    uint64_t remaining;
     int rf=poly && expanded(s);
     int t;
     if (!s->playing)
@@ -1058,12 +1064,15 @@ static inline __attribute__((always_inline)) uint32_t until_event_common(seq_t *
     }
     for (t = 0; t < NTRACKS; t++) {
         uint32_t unit=rf?rate_unit(s,t<NKIT?t*11:t+20):256u;
-        if (s->t[t].to_next != NEVER && (e = s->t[t].to_next / unit) < m)
-            m = e;
-        if (s->t[t].to_off && (e = s->t[t].to_off >> 8) < m)
-            m = e;
+        remaining=rf?rate_remaining(s,t<NKIT?t*11:t+20,s->t[t].to_next):s->t[t].to_next;
+        if (remaining!=(rf?UINT64_MAX:NEVER) && remaining/unit<m)m=(uint32_t)(remaining/unit);
+        if(s->t[t].to_off && (e=s->t[t].to_off>>8)<m)m=e;
     }
-    if(poly && s->lane_enabled)for(t=0;t<20;t++)if(s->lane[t].to_next!=NEVER && (e=s->lane[t].to_next/(rf?rate_unit(s,(t/10)*11+t%10+1):256u))<m)m=e;
+    if(poly && s->lane_enabled)for(t=0;t<20;t++){
+        int lane=(t/10)*11+t%10+1;uint32_t unit=rf?rate_unit(s,lane):256u;
+        remaining=rf?rate_remaining(s,lane,s->lane[t].to_next):s->lane[t].to_next;
+        if(remaining!=(rf?UINT64_MAX:NEVER) && remaining/unit<m)m=(uint32_t)(remaining/unit);
+    }
     if ((!s->ext || role==CLOCK_FOLLOW) && (role || s->send_clock || WEB_CLOCK || arrangement || poly) && (e = s->clk_to_next >> 8) < m)
         m = e;
     return m ? m : 1;
@@ -1081,8 +1090,8 @@ static __attribute__((noinline)) void advance_common(seq_t *s, uint32_t k, const
             clock_rebased = 1;
         }
         for (t = 0; t < NTRACKS; t++)
-            if (s->playing && s->t[t].to_next == NEVER)
-                s->t[t].to_next = poly && !rf ? seq_step_q8(s,latched_rate(s,t<NKIT?t*11:t+20))/TICKS_PER_STEP[latched_rate(s,t<NKIT?t*11:t+20)] * (TICKS_PER_STEP[latched_rate(s,t<NKIT?t*11:t+20)]-s->t[t].ext_ticks) : 0;
+            if (s->playing && (rf?rate_remaining(s,t<NKIT?t*11:t+20,s->t[t].to_next)==UINT64_MAX:s->t[t].to_next==NEVER))
+                s->t[t].to_next = poly && !rf ? seq_step_q8(s,latched_rate(s,t<NKIT?t*11:t+20))/TICKS_PER_STEP[latched_rate(s,t<NKIT?t*11:t+20)] * (TICKS_PER_STEP[latched_rate(s,t<NKIT?t*11:t+20)]-s->t[t].ext_ticks) : (rf?rate_store(s,t<NKIT?t*11:t+20,0):0);
         if(poly && !rf && s->lane_enabled)for(t=0;t<20;t++)if(s->playing && s->lane[t].to_next==NEVER){int lane=(t/10)*11+t%10+1,rate=latched_rate(s,lane);s->lane[t].to_next=seq_step_q8(s,rate)/TICKS_PER_STEP[rate]*(TICKS_PER_STEP[rate]-s->lane[t].ext_ticks);}
     }
     clock_transport(s,o,arrangement);
@@ -1102,12 +1111,12 @@ static __attribute__((noinline)) void advance_common(seq_t *s, uint32_t k, const
     for (t = 0; t < NTRACKS; t++) {                 /* move time */
         seq_track_t *tr = &s->t[t];
         uint32_t unit=rf?rate_unit(s,t<NKIT?t*11:t+20):256u;
-        if (tr->to_next != NEVER)
-            tr->to_next = tr->to_next > k*unit ? tr->to_next - k*unit : 0;
+        uint64_t left=rf?rate_remaining(s,t<NKIT?t*11:t+20,tr->to_next):tr->to_next;
+        if(left!=(rf?UINT64_MAX:NEVER)){left=left>(uint64_t)k*unit?left-(uint64_t)k*unit:0;tr->to_next=rf?rate_store(s,t<NKIT?t*11:t+20,left):(uint32_t)left;}
         if (tr->to_off)
             tr->to_off = tr->to_off > dq ? tr->to_off - dq : 1;   /* 1: due, still "set" */
     }
-    if(poly && s->lane_enabled)for(t=0;t<20;t++){seq_lane_clock_t *c=&s->lane[t];uint32_t unit=rf?rate_unit(s,(t/10)*11+t%10+1):256u;if(c->to_next!=NEVER)c->to_next=c->to_next>k*unit?c->to_next-k*unit:0;}
+    if(poly && s->lane_enabled)for(t=0;t<20;t++){int lane=(t/10)*11+t%10+1;seq_lane_clock_t *c=&s->lane[t];uint32_t unit=rf?rate_unit(s,lane):256u;uint64_t left=rf?rate_remaining(s,lane,c->to_next):c->to_next;if(left!=(rf?UINT64_MAX:NEVER)){left=left>(uint64_t)k*unit?left-(uint64_t)k*unit:0;c->to_next=rf?rate_store(s,lane,left):(uint32_t)left;}}
     if (!clock_rebased && !s->ext && (clock_schedule(s) || WEB_CLOCK || arrangement || poly))
         s->clk_to_next = s->clk_to_next > dq ? s->clk_to_next - dq : 0;
     if(!s->ext && poly && !arrangement && s->clk_to_next<256u)poly_musical_tick(s);
@@ -1122,13 +1131,13 @@ static __attribute__((noinline)) void advance_common(seq_t *s, uint32_t k, const
                 bass_release(s, t - TRK_BASS0, o);
                 fired = 1;
             }
-            if (tr->to_next < (rf?rate_unit(s,t<NKIT?t*11:t+20):256u)) {
+            if ((rf?rate_remaining(s,t<NKIT?t*11:t+20,tr->to_next):tr->to_next) < (rf?rate_unit(s,t<NKIT?t*11:t+20):256u)) {
                 uint32_t ch = fire_step(s, t, o, arrangement);
                 if (ch)
                     restart(s, ch);                   /* a part's new pattern starts on step 1 */
                 fired = 1;
             }
-            if(poly && s->lane_enabled && t<NKIT){int v;for(v=1;v<NDRUM;v++)if(s->lane[t*10+v-1].to_next<(rf?rate_unit(s,t*11+v):256u)){row_fire(s,t*11+v,o);fired=1;}}
+            if(poly && s->lane_enabled && t<NKIT){int v;for(v=1;v<NDRUM;v++)if((rf?rate_remaining(s,t*11+v,s->lane[t*10+v-1].to_next):s->lane[t*10+v-1].to_next)<(rf?rate_unit(s,t*11+v):256u)){row_fire(s,t*11+v,o);fired=1;}}
         }
         if (!fired)
             break;

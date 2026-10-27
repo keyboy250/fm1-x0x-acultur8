@@ -3664,6 +3664,20 @@
       "reason": ""
     },
     {
+      "id": "sync.global_mode",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
+      "id": "sync.strip_override",
+      "parameter_number": null,
+      "binding": "UNSUPPORTED",
+      "status": "explicitly unmapped/read-only/nonmusical",
+      "reason": "no writable direct CC address in reviewed registry"
+    },
+    {
       "id": "pref.SQ_SWING",
       "parameter_number": 900,
       "binding": "SEQ",

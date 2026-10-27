@@ -53,10 +53,11 @@ int main(void){
  /* Actual native pages expose filter/limiter settings and defaults for all25 sounds. */
  for(unsigned i=0;i<25;i++){ui.part=(uint8_t)poly_part(i);if(i<22)ui.sel[i/11]=(uint8_t)(i%11);ui.view=V_PART;build_pages();assert(pg.n>=3);assert(P_KIND(pg.r[pg.n-1][1])==R_STRIPDEFAULT);}
  /* Legacy BREAK selection stays first; strip pages append without stealing its knobs. */
- ui.part=PART_BRK;ui.view=V_PART;build_pages();assert(pg.n==4);
+ ui.part=PART_BRK;ui.view=V_PART;build_pages();assert(pg.n==5);
  assert(!strcmp(pg.title[0],"LOOPS")&&P_KIND(pg.r[0][0])==R_BRKSLOT&&P_A(pg.r[0][0])==0);
  assert(P_KIND(pg.r[1][0])==R_STRIP&&P_A(pg.r[1][0])==24&&P_C(pg.r[1][0])==0);
  assert(P_KIND(pg.r[2][0])==R_STRIP&&P_A(pg.r[2][0])==24&&P_C(pg.r[2][0])==2);
- assert(P_KIND(pg.r[3][1])==R_STRIPDEFAULT&&P_A(pg.r[3][1])==24);
+ assert(!strcmp(pg.title[3],"STRIP SYNC")&&P_KIND(pg.r[3][0])==R_SYNCLOCAL&&P_A(pg.r[3][0])==24);
+ assert(P_KIND(pg.r[4][1])==R_STRIPDEFAULT&&P_A(pg.r[4][1])==24);
  puts("Strip defaults actual engine:25 independent defaults, reboot/project reopen, isolated recall, undo/redo, no-op save, I/O/format/protection/transport/gesture/CQ refusals PASS");return 0;
 }

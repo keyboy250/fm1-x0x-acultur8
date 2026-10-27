@@ -27,6 +27,7 @@ int engine_arrangement_refresh(const arrangement_settings_t *intent);
 int engine_arrangement_queue(uint8_t block);
 int engine_lane_set(int pattern,int lane,int index,int value);
 int engine_lane_mode(int enabled);
+int engine_sync_mode(int lane,int value);
 int engine_rate_set(int pattern,int lane,int field,int value);
 int engine_lane_break_step(int pattern,int step,int gate,int slice);
 int engine_cc_refresh(int reconcile);

@@ -1,0 +1,52 @@
+{
+  "status": "APPROVED_SCOPED_EXPERIMENTAL_BETA",
+  "version": "0.1.32-straightbeta",
+  "identity": "FM-1_9000132",
+  "firmware_sha256": "0aedc953384583a22085a77f1e619399d7354a97563e4f4e2b6bab944cd9c716",
+  "source_sha256": "8016263a0dd91c52328b5946705b04c5cb1365cc744aa518a6a94bebc99a7f68",
+  "exact_installed_firmware_and_qualified_source": true,
+  "local": {
+    "required_checks": 134,
+    "host_scenarios": 39,
+    "frozen_source_rebuild": "BYTE_IDENTICAL_PASS",
+    "target_budget": "PASS",
+    "updater_simulation": "PASS",
+    "actual_wasm": "PASS"
+  },
+  "acceptance_matrix": [
+    {
+      "area": "Global STRAIGHT selector and one-drum override",
+      "local": "PASS native/actual WASM,13 stops,all25 lane input paths",
+      "physical": "PASS bounded909BD/SD controls;BD1/16 retained whileSD1/16T;listening and saved restart on one unit",
+      "scope": "Accepted bounded feature test;not a measurement of every physical rate or voice"
+    },
+    {
+      "area": "Saved state, installation and power cycle",
+      "local": "PASS migrations,Undo/Redo,LAN3 compatibility and exact frozen rebuild",
+      "physical": "PASS pre/post install project and25strips/P8/P9/calibration;repeated saved project exports matched across power cycle;global/local modes visually confirmed",
+      "scope": "This unit;no private project exports distributed"
+    },
+    {
+      "area": "MIDI CC implementation and remote actions",
+      "local": "PASS inherited native/worklet replay suites;753 reference rows",
+      "physical": "Prior parent has bounded USB mode/readback and notes/transport evidence;advanced remote-action replay remains OPEN",
+      "scope": "Do not infer all CC routes or actions are physically qualified"
+    },
+    {
+      "area": "Timing and performance",
+      "local": "PASS long-rate rational timing,calibrated profiles,updater simulation and unchanged target budgets",
+      "physical": "Worst-case CPU deadlines,all tempos/voices and external-clock/Reason acceptance remain OPEN",
+      "scope": "No Reason-sync fix claimed"
+    }
+  ],
+  "excluded": [
+    "0.1.31 averaging and fine-tempo controls",
+    "alternate303B synth engines",
+    "selectable additional drum voices",
+    "new browser emulator engine"
+  ],
+  "hardware_accessed_during_publication_preparation": false,
+  "publication_approved": true,
+  "prepared_utc": "2026-10-27T04:49:01.832586+00:00",
+  "authorization": "User explicitly requested publication of0.1.32 with updated FAQ,promo generative artwork and automation-inspired origin story."
+}

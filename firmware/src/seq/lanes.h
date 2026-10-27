@@ -28,6 +28,14 @@ int poly_break_gate(const pattern_t *p,const uint8_t *sound,int pattern,int step
 int poly_break_slice(const pattern_t *p,const uint8_t *sound,int pattern,int step);
 void poly_break_set(pattern_t *p,uint8_t *sound,int pattern,int step,int gate,int slice);
 int poly_part(int lane);
+/* LAN3 owns spare LAN2 config/header bits, without increasing project size.
+ * Global 0=ALL,1=STRAIGHT; local 0=FOLLOW,1=STRAIGHT,2=STR+TRIPLET,3=ALL. */
+int poly_sync_enabled(const uint8_t *sound);
+int poly_sync_upgrade(pattern_t *patterns,uint8_t *sound);
+int poly_sync_mode(const pattern_t *patterns,const uint8_t *sound);
+int poly_sync_override(const pattern_t *patterns,const uint8_t *sound,int lane);
+void poly_sync_set(pattern_t *patterns,uint8_t *sound,int lane,int value);
+unsigned poly_sync_family(const pattern_t *patterns,const uint8_t *sound,int lane);
 int poly_expanded(const uint8_t *sound);
 int poly_expand(pattern_t *patterns,uint8_t *sound);
 /* LAN2 must be enabled while transport is reserved/stopped. Main writes are guarded.

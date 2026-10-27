@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "x0x.h"
+#include "../seq/rate_families.h"
 
 static uint32_t variant_revision;
 void variant_changed(void) { variant_revision++; }
@@ -301,7 +302,7 @@ POLY_COLD int variant_snapshot(int section, int target, int voice, variant_snaps
     } else if(section==VS_LANE_MODE) {
         if(target || voice)return VR_INVALID;
         s->count=7;s->value[0]=(proj.variant.arrangement.flags&POLY_FLAG)!=0;
-        s->value[1]=s->value[0]?poly_mode((const uint8_t *)&proj.sound):0;s->value[2]=seq.lane_enabled;s->value[3]=s->value[1]!=s->value[2];s->value[4]=25;s->value[5]=poly_expanded((const uint8_t *)&proj.sound)?21:8;s->value[6]=64;
+        s->value[1]=s->value[0]?poly_mode((const uint8_t *)&proj.sound):0;s->value[2]=seq.lane_enabled;s->value[3]=s->value[1]!=s->value[2];s->value[4]=25;s->value[5]=poly_sync_enabled((const uint8_t *)&proj.sound)?RF_COUNT:poly_expanded((const uint8_t *)&proj.sound)?21:8;s->value[6]=64;
     } else if(section==VS_LANE_BREAK){
         if(target<0 || target>=NPAT || voice<0 || voice>1 || !(proj.variant.arrangement.flags&POLY_FLAG))return VR_INVALID;
         s->count=5;for(i=0;i<32;i++){int step=voice*32+i;s->value[0]|=(unsigned)poly_break_gate(proj.pat,(const uint8_t *)&proj.sound,target,step)<<i;s->value[1+i/8]|=(unsigned)poly_break_slice(proj.pat,(const uint8_t *)&proj.sound,target,step)<<((i%8)*4);}
@@ -311,7 +312,8 @@ POLY_COLD int variant_snapshot(int section, int target, int voice, variant_snaps
         if(s->value[0]){s->value[1]=poly_length(proj.pat,(const uint8_t *)&proj.sound,target,voice);s->value[2]=poly_rate(proj.pat,(const uint8_t *)&proj.sound,target,voice);}
         else {s->value[1]=part<NKIT?proj.pat[target].drum[part].len:part==TRK_BRK?16:proj.pat[target].bass[part-NKIT].len;s->value[2]=part<NKIT?proj.pat[target].drum[part].rate:part==TRK_BRK?RATE_16:proj.pat[target].bass[part-NKIT].rate;}
         s->value[3]=seq.ppat[part];s->value[4]=seq.lane_sound && seq.playing?seq_lane_position(&seq,voice):255;s->value[5]=seq.lane_sound?seq_lane_cycles(&seq,voice):seq.t[part].bars;s->value[6]=seq.lane_sound?(uint32_t)seq_lane_latched_rate(&seq,voice):s->value[2];s->value[7]=seq.lane_enabled;s->value[8]=seq.lane_sound && seq.playing && seq.ppat[part]==target && (seq.lane_pending&(1u<<voice));
-        if(s->value[0] && poly_expanded((const uint8_t *)&proj.sound)){s->count=13;for(i=0;i<3;i++)s->value[9+i]=(uint32_t)poly_rate_config(proj.pat,(const uint8_t *)&proj.sound,voice,i);s->value[12]=1;}
+        if(s->value[0] && poly_expanded((const uint8_t *)&proj.sound)){s->count=13;for(i=0;i<3;i++)s->value[9+i]=(uint32_t)poly_rate_config(proj.pat,(const uint8_t *)&proj.sound,voice,i);s->value[12]=1;
+            if(poly_sync_enabled((const uint8_t *)&proj.sound)){s->count=16;s->value[12]=2;s->value[13]=poly_sync_mode(proj.pat,(const uint8_t *)&proj.sound);s->value[14]=poly_sync_override(proj.pat,(const uint8_t *)&proj.sound,voice);s->value[15]=poly_sync_family(proj.pat,(const uint8_t *)&proj.sound,voice);}}
     } else if (section == VS_SOUND) {
         if (target < 0 || target >= NTARGETS || voice < 0 || voice >= engine_nvoices(target)) return VR_INVALID;
         n = engine_nparams(target, voice);

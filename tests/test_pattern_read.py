@@ -74,6 +74,13 @@ def capture(name, patterns=(2, 3)):
 
 
 class QueryTests(unittest.TestCase):
+    def test_lan3_multi_bar_rates_and_out_of_range_rejection(self):
+        for rate in range(21,29):
+            raw=bytes([16,rate])+bytes(16)
+            self.assertEqual(Q.parse_payload(0,1,0,raw)['rate'],rate)
+        for rate in (29,31,255):
+            with self.assertRaises(Q.ReadbackError):Q.parse_payload(0,1,0,bytes([16,rate])+bytes(16))
+
     def test_real_pages_three_formats_and_64_steps(self):
         for mode in range(3):
             s = capture(f"mode-{mode}.bin")

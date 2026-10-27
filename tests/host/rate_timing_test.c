@@ -33,7 +33,7 @@ int main(void){
   for(int lane=0;lane<25;lane++)assert(counts[lane]==counts[0]);
  }
  fixture(11,200);seq_start(&seq);seq_advance_poly(&seq,0,&sink);checking=0;
- uint32_t remaining=seq.t[0].to_next;seq.bpm=300.0f;seq_advance_poly(&seq,0,&sink);assert(seq.t[0].to_next==remaining && units[0]==200);run(10000);assert(seq.t[0].to_next==remaining-10000u*4800u);assert(counts[0]==1);
+ uint32_t remaining=seq.t[0].to_next;seq.bpm=300.0f;seq_advance_poly(&seq,0,&sink);assert(seq.t[0].to_next==remaining && units[0]==200);run(10000);assert(seq.t[0].to_next==remaining-10000u*800u);assert(counts[0]==1);
  fixture(0,1250);seq_start(&seq);seq_advance_poly(&seq,0,&sink);run(1000);checking=0;
  uint8_t position=seq_lane_position(&seq,0);poly_set(patterns,sound,0,0,64,11);seq_lane_mark_pending(&seq,0,1);
  assert(seq_lane_latched_rate(&seq,0)==0);run(4291);assert(seq_lane_position(&seq,0)==position);run(1);assert(seq_lane_latched_rate(&seq,0)==11);

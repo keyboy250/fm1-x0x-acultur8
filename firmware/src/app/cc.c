@@ -234,7 +234,7 @@ static POLY_COLD int cc_apply(int kind,int a,int b,int c,uint32_t value,cc_sourc
         if(!c && (seq.playing||seq.req_stop||seq.req_start||seq.req_cont))return CC_REJECTED;
         if(c==5){
             if(!poly_expanded((const uint8_t *)&proj.sound))return CC_REJECTED;
-            unsigned family=(unsigned)poly_rate_config(proj.pat,(const uint8_t *)&proj.sound,x->strip,0),h=(unsigned)poly_rate_config(proj.pat,(const uint8_t *)&proj.sound,x->strip,2);
+            unsigned family=poly_sync_family(proj.pat,(const uint8_t *)&proj.sound,x->strip),h=(unsigned)poly_rate_config(proj.pat,(const uint8_t *)&proj.sound,x->strip,2);
             uint16_t tag=(uint16_t)(0x8000u|x->pattern|(x->strip<<5)|(family<<10));
             unsigned prior=source->rate_tag==tag?source->rate_bin:RF_INVALID,bin;
             if(prior!=RF_INVALID && rf_ordered(family,prior)!=(unsigned)poly_rate(proj.pat,(const uint8_t *)&proj.sound,x->pattern,x->strip))prior=RF_INVALID;

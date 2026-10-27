@@ -234,8 +234,14 @@ def build(root=ROOT):
     ui=texts['firmware/src/app/ui.c']
     refs=enum_names(ui,'R_NONE')
     expected='R_NONE R_ENG R_SWING R_DLEN R_DRATE R_BLEN R_BRATE R_BDIR R_BTRANS R_GEN R_BRKSET R_BRKSLOT R_TEMPO R_ACCENT R_CLKOUT R_NOTEOUT R_PALETTE R_KEYLED R_KEYSOUND R_AUTOSAVE R_ACT R_SBAR R_SPAT R_SLEN R_STALLS R_HDR R_TAPE R_MIDICH R_OUTLOUD R_SREP R_BATT R_USBFULL R_FREEPLAY R_RATEENABLE R_RATEFAMILY R_RATEBOUNDARY R_RATEHYST R_RATEEXACT R_STRIP R_STRIPFLAG R_STRIPDEFAULT R_CORES R_BMODE R_BDEGREE R_BMUTE'.split()
-    expected+=['R_AKEY','R_ASCALE','R_AFOLLOW','R_COPYCFG','R_NEWGEN','R_DRUMGEN','R_VARIATION','R_CAPTURE','R_RANDOM','R_CCMODE'] # native aliases of existing harmony fields
+    expected+=['R_AKEY','R_ASCALE','R_AFOLLOW','R_COPYCFG','R_NEWGEN','R_DRUMGEN','R_VARIATION','R_CAPTURE','R_RANDOM','R_SYNCMODE','R_SYNCLOCAL','R_CCMODE'] # native aliases and stopped LAN3 policy selectors
     if refs!=expected:raise ValueError('UI reference coverage must be updated')
+    add('sync.global_mode','SYNC RATE MODE',1,None,category='nonmusical',default=0,
+        choices=['ALL','STRAIGHT'],live_requirement='stopped',runtime_parameter='engine_sync_mode(-1,value)',
+        status='native panel; no direct MIDI CC address assigned')
+    add('sync.strip_override','RATE MODE',3,None,category='nonmusical',default=0,
+        choices=['GLOBAL','STRAIGHT','STR+TRIPLET','ALL'],context={'strip':[0,24]},live_requirement='stopped',
+        runtime_parameter='engine_sync_mode(strip,value)',status='native panel; no direct MIDI CC address assigned')
     # Every pref kind accounted for, including nonmusical/read-only rows.
     seq=descriptors(ui,'SEQ_P',symbols); sq=enum_names(ui,'SQ_SWING')[:-1]
     for i,(symbol,d) in enumerate(zip(sq,seq)):
@@ -382,6 +388,8 @@ def build(root=ROOT):
         row['parameter_number']=1206+offset;row['action_policy']='Source-owned stopped drum generation; arm3, explicit context, shared length, request and result'
     add('ui.cc_mode','GLO MIDI CC MODE',2,None,'nonmusical',source='firmware/src/app/ui.c',choices=['FULL','SIMPLE','OFF'],action_policy='Session-only native GLO; invalidates pending CC contexts/arms; readback and non-CC MIDI remain available')
     covered['R_CCMODE']='Native GLO diagnostic mode; command51 page7 readback; not remotely writable'
+    covered['R_SYNCMODE']='Native stopped global synced-rate selection policy; sync.global_mode; no direct CC'
+    covered['R_SYNCLOCAL']='Native stopped per-sound synced-rate override; sync.strip_override; no direct CC'
     covered['R_DRUMGEN']='Remote typed drum recipe and guarded generation; no UI focus'
     for offset,field in enumerate(('every','changes','anchor_lock','seed','mode','shape','range','arm_confirm','off_confirm')):
         row=next(r for r in rows if r['id']=='ui.repeating_variation.'+field);q,idx=divmod(1211+offset,88)

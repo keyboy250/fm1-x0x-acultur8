@@ -3,15 +3,15 @@
   "map_version": "draft-1-actions-prototype-1",
   "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
   "source_hashes": {
-    "firmware/src/app/engine.c": "3766e827601d1e4f0a4859639383fbb58271837749d8394c57c4efe66a6793d3",
-    "firmware/src/app/engine.h": "e58ada7ad5ed6e179c94964b1587c5fdffd5849d824531a30d93fb5b51c35c72",
-    "firmware/src/app/ui.c": "21b5a1ea4e80d5acf5dec6198a471b2f3a54a23b34a7c052704d3136aa3cb0cc",
+    "firmware/src/app/engine.c": "5d5cdbda13333d5dd58197985175ae259db33f0745c69aeed9ddb4d17bc5f79d",
+    "firmware/src/app/engine.h": "87524ed4022efe962be93d56a37fcd9c9182148b6196b8a412ec33487c103a0f",
+    "firmware/src/app/ui.c": "fb36d1877d4b590af75377c4eef9dba2671d1ad4e0c550861b9eb18655c0bd43",
     "firmware/src/app/x0x.h": "14a90aa7abc4e177809e83ad8c23172d7546edc14f19984f6d265db6c667af18",
     "firmware/src/app/block_bridge.inc": "03ccb0ec7f1364bc6e9c3a03c80f6302ce156ef9f71d0dbdc27696923a8060f1",
-    "firmware/src/app/variant.c": "b0eb98dfc22bc6597607ad5e36df3416f1d1437ff37344d8f6ad12f50dc5629a",
+    "firmware/src/app/variant.c": "18ac5992787496c97ac5485ae31cb829a7b701bc79d7f72d3833b32dc70810de",
     "firmware/src/app/variant.h": "cf296a6870b5715ef7cc1934827e6439408858440577a05bf7f566a857df3e5f",
     "firmware/src/seq/pattern.h": "1e17afab1e724321d9434412195c68f2b971a1ee59596ba1eb7481c235698be4",
-    "firmware/src/seq/lanes.h": "4645f81d5ce69cb00c315cf7a9f6eebe21caee180caedf33e9e0f99fb394b45e",
+    "firmware/src/seq/lanes.h": "7722c12857b94830ca431cfcd81ede7c410c24b078c15b83aa77cba91ba8e081",
     "firmware/src/seq/sequencer.h": "06bd25e5104cbac21dc79803544d21f076655cfa6652b3a06678bd9a9ba918cd",
     "firmware/src/seq/motion.h": "ac88bf9e4532f50f7d157a7b15c60c72118078a1bd5ac6cee1a6cf74ceaa585e",
     "firmware/src/seq/motion.c": "5cf517f38b6653f142b663af7a7179e0fcc92db3c390dcd9dc2949036b03a7c4",
@@ -136,6 +136,8 @@
     "R_VARIATION": "Remote runtime variation recipe/apply/OFF;overlay switch remains native only",
     "R_CAPTURE": "Remote guarded Freeze/Commit plus complete HELD note/gate readback;UI focus independent",
     "R_RANDOM": "native-only generated length and selected-note step; no MIDI binding",
+    "R_SYNCMODE": "Native stopped global synced-rate selection policy; sync.global_mode; no direct CC",
+    "R_SYNCLOCAL": "Native stopped per-sound synced-rate override; sync.strip_override; no direct CC",
     "R_CCMODE": "Native GLO diagnostic mode; command51 page7 readback; not remotely writable"
   },
   "structured_field_coverage": {
@@ -15843,6 +15845,59 @@
         "mask": 8
       },
       "parameter_number": 873
+    },
+    {
+      "id": "sync.global_mode",
+      "name": "SYNC RATE MODE",
+      "category": "nonmusical",
+      "range": [
+        0,
+        1
+      ],
+      "default": 0,
+      "source": "firmware/src/app/ui.c",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "stopped",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": null,
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": [
+        "ALL",
+        "STRAIGHT"
+      ],
+      "runtime_parameter": "engine_sync_mode(-1,value)",
+      "status": "native panel; no direct MIDI CC address assigned"
+    },
+    {
+      "id": "sync.strip_override",
+      "name": "RATE MODE",
+      "category": "nonmusical",
+      "range": [
+        0,
+        3
+      ],
+      "default": 0,
+      "source": "firmware/src/app/ui.c",
+      "context": {
+        "strip": [
+          0,
+          24
+        ]
+      },
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "stopped",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": null,
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": [
+        "GLOBAL",
+        "STRAIGHT",
+        "STR+TRIPLET",
+        "ALL"
+      ],
+      "runtime_parameter": "engine_sync_mode(strip,value)",
+      "status": "native panel; no direct MIDI CC address assigned"
     },
     {
       "id": "pref.SQ_SWING",

@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "lanes.h"
 #include "rate_slice_codec.h"
+#include "rate_families.h"
 /* Frozen descriptor tails plus whole unused voices. T_FX[1][0] is the TAPE
  * preference, even though engine_nvoices does not expose it. */
 static const struct { uint16_t first,offset,count; } cells[] = {
@@ -55,7 +56,7 @@ int poly_cell_owned(unsigned offset)
 }
 static uint8_t get(const uint8_t *s,unsigned cell){return s[poly_sound_offset(cell)];}
 static void put(uint8_t *s,unsigned cell,uint8_t v){s[poly_sound_offset(cell)]=v;}
-POLY_COLD int poly_expanded(const uint8_t *s){return get(s,3)=='2';}
+POLY_COLD int poly_expanded(const uint8_t *s){return get(s,3)=='2' || get(s,3)=='3';}
 static unsigned base(int pattern){return 8u+33u*(unsigned)pattern;}
 /* 26 packed timing bytes: 13 existing non-bass header bytes +13 slab bytes. */
 __attribute__((noinline)) static uint8_t *time_cell(pattern_t *p,uint8_t *s,int pattern,unsigned n)
@@ -133,11 +134,11 @@ void poly_mode_set(uint8_t *s,int enabled){put(s,4,(uint8_t)(1u|(enabled?128u:0)
 POLY_COLD int poly_valid(const pattern_t *p,const uint8_t *s)
 {
     int pat,lane,step;
-    const uint8_t hdr[8]={'L','A','N',poly_expanded(s)?'2':'1',1,33,32,25};
-    for(step=0;step<8;step++)if((get(s,(unsigned)step)&(step==4?127u:255u))!=hdr[step])return 0;
+    const uint8_t hdr[8]={'L','A','N',poly_sync_enabled(s)?'3':poly_expanded(s)?'2':'1',1,33,32,25};
+    for(step=0;step<8;step++)if((get(s,(unsigned)step)&(step==4?127u:poly_sync_enabled(s)&&step>=5?(step==7?31u:63u):255u))!=hdr[step])return 0;
     for(pat=0;pat<NPAT;pat++){
         if(!poly_expanded(s)&&(*time_cell((pattern_t *)p,(uint8_t *)s,pat,25)&128u))return 0;
-        for(lane=0;lane<25;lane++)if(poly_rate(p,s,pat,lane)>(poly_expanded(s)?20:7))return 0;
+        for(lane=0;lane<25;lane++)if(poly_rate(p,s,pat,lane)>(poly_sync_enabled(s)?RF_COUNT-1:poly_expanded(s)?20:7))return 0;
         for(lane=22;lane<24;lane++)if(poly_length(p,s,pat,lane)<1||poly_length(p,s,pat,lane)>64)return 0;
         for(step=0;step<64;step++)if(poly_break_slice(p,s,pat,step)<0 || poly_break_slice(p,s,pat,step)>8)return 0;
     }
@@ -150,6 +151,7 @@ POLY_COLD int poly_valid(const pattern_t *p,const uint8_t *s)
  * each LAN2 timing record. It never overlaps rate/length, slices or sound cells. */
 static uint8_t *config_cell(pattern_t *p,uint8_t *s,unsigned bit,unsigned *shift)
 {
+ if(bit>=144){unsigned b=bit-144;*shift=b<4?6+b%2:5+b-4;return &s[poly_sound_offset(b<4?5+b/2:7)];}
  if(bit<48){*shift=bit%8;return &s[poly_sound_offset(1064+bit/8)];}
  bit-=48;*shift=5+bit%3;return time_cell(p,s,(int)(bit/3),31);
 }
@@ -185,3 +187,15 @@ POLY_COLD int poly_expand(pattern_t *p,uint8_t *s)
  put(s,3,'2');for(i=1064;i<1070;i++)put(s,i,0);
  return poly_valid(p,s);
 }
+
+/* 125 policy bits are LAN2-owned. LAN3 adds 1 global +25 follow bits:
+ * bits125..143 use the remaining record bits;144..150 use header high bits.
+ * Header low bits, rates, slices, lengths and sound controls are untouched. */
+int poly_sync_enabled(const uint8_t *s){return get(s,3)=='3';}
+static unsigned sync_bit(const pattern_t *p,const uint8_t *s,unsigned bit){unsigned shift;uint8_t *a=config_cell((pattern_t *)p,(uint8_t *)s,bit,&shift);return (*a>>shift)&1u;}
+static void sync_put(pattern_t *p,uint8_t *s,unsigned bit,unsigned v){unsigned shift;uint8_t *a=config_cell(p,s,bit,&shift);*a=(uint8_t)((*a&~(1u<<shift))|(v<<shift));}
+int poly_sync_upgrade(pattern_t *p,uint8_t *s){unsigned i;if(poly_sync_enabled(s))return poly_valid(p,s);if(!poly_expand(p,s))return 0;for(i=125;i<=150;i++)sync_put(p,s,i,i!=125);put(s,3,'3');return poly_valid(p,s);}
+int poly_sync_mode(const pattern_t *p,const uint8_t *s){return poly_sync_enabled(s)?(int)sync_bit(p,s,125):0;}
+int poly_sync_override(const pattern_t *p,const uint8_t *s,int lane){unsigned f;if(lane<0||lane>=25||!poly_sync_enabled(s)||sync_bit(p,s,126u+(unsigned)lane))return 0;f=(unsigned)poly_rate_config(p,s,lane,0);return f==0?1:f==2?2:3;}
+void poly_sync_set(pattern_t *p,uint8_t *s,int lane,int value){if(lane<0){sync_put(p,s,125,(unsigned)value);return;}sync_put(p,s,126u+(unsigned)lane,value==0);if(value)poly_rate_config_set(p,s,lane,0,value==1?0:value==2?2:3);}
+unsigned poly_sync_family(const pattern_t *p,const uint8_t *s,int lane){int local=poly_sync_override(p,s,lane);if(!poly_sync_enabled(s))return (unsigned)poly_rate_config(p,s,lane,0);return local==1 || (!local&&poly_sync_mode(p,s))?RF_GRID:local==2?RF_STRAIGHT_TRIPLET:RF_FULL;}

@@ -9,13 +9,17 @@ const rf_division_t rf_divisions[RF_COUNT]={
  {384,1,"1/1"},{192,1,"1/2"},{6,1,"1/64"},
  {576,2,"1/1D"},{288,2,"1/2D"},{144,2,"1/4D"},{72,2,"1/8D"},
  {36,2,"1/16D"},{18,2,"1/32D"},{9,2,"1/64D"},
- {256,4,"1/1T"},{128,4,"1/2T"},{4,4,"1/64T"}
+ {256,4,"1/1T"},{128,4,"1/2T"},{4,4,"1/64T"},
+ {768,1,"2/1"},{1152,1,"3/1"},{1536,1,"4/1"},{2304,1,"6/1"},
+ {3072,1,"8/1"},{4608,1,"12/1"},{6144,1,"16/1"},{12288,1,"32/1"}
 };
-static const uint8_t order[RF_COUNT]={11,8,12,18,9,13,19,4,14,6,5,15,3,0,16,1,2,17,7,10,20};
+static const uint8_t order[RF_COUNT]={28,27,26,25,24,23,22,21,11,8,12,18,9,13,19,4,14,6,5,15,3,0,16,1,2,17,7,10,20};
 POLY_COLD int rf_allowed(unsigned family,unsigned rate)
 {
- static const uint8_t mask[RF_FAMILIES]={1,3,5,7};
- return family<RF_FAMILIES && rate<RF_COUNT && (mask[family]&rf_divisions[rate].kind)!=0;
+ static const uint8_t mask[4]={1,3,5,7};
+ if(family==RF_GRID)return rate<RF_COUNT && rf_divisions[rate].kind==1 && rate!=2 && rate!=10;
+ if(family==RF_FULL)return rate<RF_COUNT;
+ return family<4 && rate<21 && (mask[family]&rf_divisions[rate].kind)!=0;
 }
 POLY_COLD unsigned rf_count(unsigned family){unsigned i,n=0;for(i=0;i<RF_COUNT;i++)n+=rf_allowed(family,i);return n;}
 POLY_COLD unsigned rf_ordered(unsigned family,unsigned index)
@@ -27,6 +31,17 @@ POLY_COLD unsigned rf_nearest(unsigned family,unsigned rate)
  /* slow-first traversal makes exact ties deterministic: choose slower. */
  for(i=0;i<rf_count(family);i++){unsigned r=rf_ordered(family,i),a=rf_divisions[r].pulses4,b=rf_divisions[rate].pulses4,d=a>b?a-b:b-a;if(d<dist){best=r;dist=d;}}
  return best;
+}
+/* UI knob order is fast-to-slow, while the existing CC sweep remains slow-first. */
+POLY_COLD unsigned rf_turn(unsigned family,unsigned rate,int direction)
+{
+ unsigned i,n=rf_count(family),best=RF_INVALID;
+ if(rate>=RF_COUNT || !n || !direction)return rate;
+ for(i=0;i<n;i++){unsigned r=rf_ordered(family,i);
+  if(direction>0 && rf_divisions[r].pulses4>rf_divisions[rate].pulses4)best=r;
+  if(direction<0 && rf_divisions[r].pulses4<rf_divisions[rate].pulses4)return r;
+ }
+ return best==RF_INVALID?rate:best;
 }
 POLY_COLD unsigned rf_bin(unsigned family,unsigned value)
 {unsigned n=rf_count(family);return n && value<128?value*n/128:RF_INVALID;}

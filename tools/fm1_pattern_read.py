@@ -65,7 +65,7 @@ def parse_payload(pattern, section, index, raw):
             raise ReadbackError("Invalid motion owner")
         return dict(part=PARTS[part], target=target, voice=voice, parameter=parameter, values=list(raw[4:]))
     length, rate = raw[:2]
-    if not 1 <= length <= 64 or rate > 20:
+    if not 1 <= length <= 64 or rate > 28:
         raise ReadbackError("Invalid lane timing")
     result = dict(lane=index, length=length, rate=rate)
     if index < 22:

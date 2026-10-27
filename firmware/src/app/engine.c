@@ -303,10 +303,19 @@ POLY_COLD int engine_lane_set(int pattern,int lane,int index,int value)
 }
 /* Structural conversion is stopped/reserved. Live policy/rate publication uses
  * the same exact ICFG guard and audio-owner CQ marker as legacy lane timing. */
+/* Policy edits are stopped transactions. They never rewrite stored rates. */
+POLY_COLD int engine_sync_mode(int lane,int value)
+{
+ if(lane < -1 || lane>=25 || value<0 || value>(lane<0?1:3) || engine_queue_space()<2 || !engine_transport_reserve())return 0;
+ if(!(proj.variant.arrangement.flags&POLY_FLAG) && !engine_lane_mode(1)){engine_transport_release();return 0;}
+ if(!poly_sync_upgrade(proj.pat,(uint8_t *)&proj.sound)){engine_transport_release();return 0;}
+ poly_sync_set(proj.pat,(uint8_t *)&proj.sound,lane,value);
+ cq_put(C_LANE,255,255,0);engine_transport_release();return 1;
+}
 POLY_COLD int engine_rate_set(int pattern,int lane,int field,int value)
 {
  uint32_t saved;int i,rate,len;
- if(pattern<0||pattern>=NPAT||lane<0||lane>=25||field<0||field>4||value<0||value>(field==0?1:field==1?20:field==2?3:field==3?1:2)||!engine_queue_space())return 0;
+ if(pattern<0||pattern>=NPAT||lane<0||lane>=25||field<0||field>4||value<0||value>(field==0?1:field==1?(poly_sync_enabled((const uint8_t *)&proj.sound)?RF_COUNT-1:20):field==2?3:field==3?1:2)||!engine_queue_space())return 0;
  if(!(proj.variant.arrangement.flags&POLY_FLAG))return 0;
  if(!field){
   if(!value||!engine_transport_reserve())return 0;
@@ -319,7 +328,8 @@ POLY_COLD int engine_rate_set(int pattern,int lane,int field,int value)
  if(field==1){len=poly_length(proj.pat,(const uint8_t *)&proj.sound,pattern,lane);poly_set(proj.pat,(uint8_t *)&proj.sound,pattern,lane,len,value);}
  else {
   poly_rate_config_set(proj.pat,(uint8_t *)&proj.sound,lane,field-2,value);
-  if(field==2)for(i=0;i<NPAT;i++){
+  if(field==2 && poly_sync_enabled((const uint8_t *)&proj.sound))poly_sync_set(proj.pat,(uint8_t *)&proj.sound,lane,value==0?1:value==2?2:3);
+  if(field==2 && !poly_sync_enabled((const uint8_t *)&proj.sound))for(i=0;i<NPAT;i++){
    rate=poly_rate(proj.pat,(const uint8_t *)&proj.sound,i,lane);
    if(!rf_allowed((unsigned)value,(unsigned)rate))poly_set(proj.pat,(uint8_t *)&proj.sound,i,lane,poly_length(proj.pat,(const uint8_t *)&proj.sound,i,lane),(int)rf_nearest((unsigned)value,(unsigned)rate));
   }

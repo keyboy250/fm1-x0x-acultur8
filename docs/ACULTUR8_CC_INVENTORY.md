@@ -4,7 +4,7 @@
 
 Generated with `python tools/cc_inventory.py --write`; validate with `--check`. No firmware compilation is performed.
 
-751 inventory rows: 727 addressed field templates/descriptor rows and 24 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 667, 'nonmusical': 5, 'diagnostic': 1, 'read_only': 1, 'action': 26, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 38}.
+753 inventory rows: 727 addressed field templates/descriptor rows and 26 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 667, 'nonmusical': 7, 'diagnostic': 1, 'read_only': 1, 'action': 26, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 38}.
 
 ## Source-derived engine descriptor counts
 
@@ -569,6 +569,8 @@ Acceptance: exhaustive registry coverage and endpoint/enum scaling; collision/re
 | strip.24.highpass_enabled | highpass_enabled | [0, 1] | 10 / 111 | {} | musical |
 | strip.24.lowpass_enabled | lowpass_enabled | [0, 1] | 10 / 112 | {} | musical |
 | strip.24.limiter_enabled | limiter_enabled | [0, 1] | 10 / 113 | {} | musical |
+| sync.global_mode | SYNC RATE MODE | [0, 1] | none | {} | nonmusical |
+| sync.strip_override | RATE MODE | [0, 3] | none | {"strip": [0, 24]} | nonmusical |
 | pref.SQ_SWING | SWING | [0, 100] | 11 / 20 | {"pattern": [0, 31]} | musical |
 | pref.SQ_DLEN | LENGTH | [0, 63] | 11 / 21 | {"kit": [0, 1], "pattern": [0, 31]} | musical |
 | pref.SQ_DRATE | RATE | [0, 3] | 11 / 22 | {"kit": [0, 1], "pattern": [0, 31]} | musical |

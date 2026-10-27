@@ -3,12 +3,13 @@
 #include <stdint.h>
 /* ABI1 shared rate-family model: LAN2 projects, native CC and audio-owner latching. */
 #define RF_VERSION 1
-#define RF_COUNT 21
+#define RF_COUNT 29
 #define RF_INVALID 255u
-enum { RF_STRAIGHT, RF_STRAIGHT_DOTTED, RF_STRAIGHT_TRIPLET, RF_ALL, RF_FAMILIES };
+enum { RF_STRAIGHT, RF_STRAIGHT_DOTTED, RF_STRAIGHT_TRIPLET, RF_ALL, RF_GRID, RF_FULL, RF_FAMILIES };
 enum { RF_STEP, RF_BAR };
 typedef struct { uint16_t pulses4; uint8_t kind; const char *label; } rf_division_t;
 extern const rf_division_t rf_divisions[RF_COUNT];
+unsigned rf_turn(unsigned family,unsigned rate,int direction);
 int rf_allowed(unsigned family,unsigned rate);
 unsigned rf_count(unsigned family);
 unsigned rf_ordered(unsigned family,unsigned index);

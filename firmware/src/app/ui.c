@@ -12,6 +12,7 @@
  * machine's tracks or the break's slice pads (HOME: part mutes). */
 #include "x0x.h"
 #include "cc.h"
+#include "../seq/rate_families.h"
 #include "../dsp/fastmath.h"
 #include "../dsp/master.h"
 #include "../dsp/bass303.h"                    /* BASS303_* (the 303's pages) */
@@ -223,7 +224,7 @@ static int arrangement_panel_refuse(void)
 /* =============================================================== param refs === */
 enum { R_NONE, R_ENG, R_SWING, R_DLEN, R_DRATE, R_BLEN, R_BRATE, R_BDIR, R_BTRANS, R_GEN, R_BRKSET,
        R_BRKSLOT, R_TEMPO, R_ACCENT, R_CLKOUT, R_NOTEOUT, R_PALETTE, R_KEYLED, R_KEYSOUND, R_AUTOSAVE, R_ACT, R_SBAR, R_SPAT,
-       R_SLEN, R_STALLS, R_HDR, R_TAPE, R_MIDICH, R_OUTLOUD, R_SREP, R_BATT, R_USBFULL, R_FREEPLAY, R_RATEENABLE, R_RATEFAMILY, R_RATEBOUNDARY, R_RATEHYST, R_RATEEXACT, R_STRIP, R_STRIPFLAG, R_STRIPDEFAULT, R_CORES, R_BMODE, R_BDEGREE, R_BMUTE, R_AKEY, R_ASCALE, R_AFOLLOW, R_COPYCFG, R_NEWGEN, R_DRUMGEN, R_VARIATION, R_CAPTURE, R_RANDOM, R_CCMODE };   /* R_TAPE: FX's one-knob TAPE (DIGI .. worn tape) */          /* R_HDR: a list's section header (a = its group), never selected */
+       R_SLEN, R_STALLS, R_HDR, R_TAPE, R_MIDICH, R_OUTLOUD, R_SREP, R_BATT, R_USBFULL, R_FREEPLAY, R_RATEENABLE, R_RATEFAMILY, R_RATEBOUNDARY, R_RATEHYST, R_RATEEXACT, R_STRIP, R_STRIPFLAG, R_STRIPDEFAULT, R_CORES, R_BMODE, R_BDEGREE, R_BMUTE, R_AKEY, R_ASCALE, R_AFOLLOW, R_COPYCFG, R_NEWGEN, R_DRUMGEN, R_VARIATION, R_CAPTURE, R_RANDOM, R_SYNCMODE, R_SYNCLOCAL, R_CCMODE };   /* R_TAPE: FX's one-knob TAPE (DIGI .. worn tape) */          /* R_HDR: a list's section header (a = its group), never selected */
 /* Four logical bytes; scalar helper ABI avoids aggregate copy temporaries.
  * Explicit unsigned casts preserve the original uint8_t initializer behavior. */
 typedef uint32_t pref_t;
@@ -236,10 +237,12 @@ typedef char pref_reference_size_4[(sizeof(pref_t)==4)?1:-1];
 #define NONE PR(R_NONE, 0, 0, 0)
 
 static const char *const RATE_N[] = {"1/16", "1/16T", "1/32", "1/8T", "1/4", "1/8", "1/4T", "1/32T"};
-static const char *const EXP_RATE_N[]={"1/16","1/16T","1/32","1/8T","1/4","1/8","1/4T","1/32T","1/1","1/2","1/64","1/1D","1/2D","1/4D","1/8D","1/16D","1/32D","1/64D","1/1T","1/2T","1/64T"};
+static const char *const EXP_RATE_N[]={"1/16","1/16T","1/32","1/8T","1/4","1/8","1/4T","1/32T","1/1","1/2","1/64","1/1D","1/2D","1/4D","1/8D","1/16D","1/32D","1/64D","1/1T","1/2T","1/64T","2/1","3/1","4/1","6/1","8/1","12/1","16/1","32/1"};
 static const char *const RATE_FAMILY_N[]={"STRAIGHT","STR+DOTTED","STR+TRIPLET","ALL"},*const RATE_BOUNDARY_N[]={"STEP","BAR+STEP"};
 static const x0x_param_t RATE_CONFIG_P[]={{"EXPAND",1,0,0},{"FAMILY",3,0,RATE_FAMILY_N},{"BOUNDARY",1,0,RATE_BOUNDARY_N},{"HYST CC",2,0,0}};
-static const x0x_param_t EXP_RATE_P={"RATE",20,0,EXP_RATE_N};
+static const char *const SYNC_MODE_N[]={"ALL","STRAIGHT"},*const SYNC_LOCAL_N[]={"GLOBAL","STRAIGHT","STR+TRIPLET","ALL"};
+static const x0x_param_t SYNC_MODE_P={"SYNC RATE MODE",1,0,SYNC_MODE_N},SYNC_LOCAL_P={"RATE MODE",3,0,SYNC_LOCAL_N};
+static const x0x_param_t EXP_RATE_P={"RATE",RF_COUNT-1,0,EXP_RATE_N};
 static const x0x_param_t POLY_RATE_P={"RATE",7,0,RATE_N};
 static const char *const DIR_N[] = {"FWD", "REV", "PING", "RND"};
 static const char *const CCMODE_N[]={"FULL","SIMPLE","OFF"};
@@ -368,6 +371,8 @@ static POLY_COLD void canonical_tape_set(unsigned value)
 static POLY_COLD const x0x_param_t *pref_desc(pref_t r)
 {
     int kind=P_KIND(r);
+    if(kind==R_SYNCMODE)return &SYNC_MODE_P;
+    if(kind==R_SYNCLOCAL)return &SYNC_LOCAL_P;
     if(kind==R_RATEEXACT)return &EXP_RATE_P;
     if(kind>=R_RATEENABLE && kind<=R_RATEHYST)return &RATE_CONFIG_P[kind-R_RATEENABLE];
     if(kind>=R_SWING && kind<=R_BTRANS){
@@ -446,6 +451,8 @@ static POLY_COLD int strip_hz_pot(unsigned hz)
 static POLY_COLD int pref_get(pref_t r)
 {
     pattern_t *p = cur_pat();
+    if(P_KIND(r)==R_SYNCMODE)return poly_sync_mode(proj.pat,(const uint8_t *)&proj.sound);
+    if(P_KIND(r)==R_SYNCLOCAL)return poly_sync_override(proj.pat,(const uint8_t *)&proj.sound,P_A(r));
     if(P_KIND(r)==R_RATEEXACT)return (proj.variant.arrangement.flags&POLY_FLAG)?poly_rate(proj.pat,(const uint8_t *)&proj.sound,seq.ppat[poly_part(P_A(r))],P_A(r)):0;
     if(P_KIND(r)>=R_RATEENABLE && P_KIND(r)<=R_RATEHYST)return P_KIND(r)==R_RATEENABLE?poly_expanded((const uint8_t *)&proj.sound):poly_rate_config(proj.pat,(const uint8_t *)&proj.sound,P_A(r),P_KIND(r)-R_RATEFAMILY);
     switch (P_KIND(r)) {
@@ -538,6 +545,7 @@ static POLY_COLD void pref_set(pref_t r, int v)
         variant_command_t command={VARIANT_ABI,VC_SET_STRIP,0,P_A(r),0,(uint8_t)index,0,value};variant_reply_t reply;
         if(variant_command(&command,&reply)<0)say("STRIP EDIT REFUSED",0);return;
     }
+    if(P_KIND(r)==R_SYNCMODE || P_KIND(r)==R_SYNCLOCAL){if(engine_sync_mode(P_KIND(r)==R_SYNCMODE?-1:P_A(r),v))mark_dirty();else say("STOP TO SET SYNC MODE",0);return;}
     if(P_KIND(r)==R_RATEEXACT){if(engine_rate_set(seq.ppat[poly_part(P_A(r))],P_A(r),1,v))mark_dirty();else say("ENABLE EXPANDED RATES",0);return;}
     if(P_KIND(r)>=R_RATEENABLE && P_KIND(r)<=R_RATEHYST){
         int lane=P_A(r),field=P_KIND(r)==R_RATEENABLE?0:P_KIND(r)-R_RATEFAMILY+2;
@@ -999,7 +1007,7 @@ static POLY_COLD void build_pages(void)
         {
             int lane=is_drum()?p*11+ui.sel[p]:is_303()?22+b:24;
             if(ui.part==PART_BRK && poly_expanded((const uint8_t *)&proj.sound))add_page("DIVISION",PR(R_RATEEXACT,lane,0,0),NONE,NONE,NONE);
-            add_page("RATE FAMILY",PR(R_RATEENABLE,lane,0,0),PR(R_RATEFAMILY,lane,0,0),PR(R_RATEBOUNDARY,lane,0,0),PR(R_RATEHYST,lane,0,0));
+            add_page(poly_sync_enabled((const uint8_t *)&proj.sound)?"RATE POLICY":"RATE FAMILY",PR(R_RATEENABLE,lane,0,0),PR(poly_sync_enabled((const uint8_t *)&proj.sound)?R_SYNCLOCAL:R_RATEFAMILY,lane,0,0),PR(R_RATEBOUNDARY,lane,0,0),PR(R_RATEHYST,lane,0,0));
         }
         break;
     case V_PART:                                       /* the part's sound */
@@ -1032,6 +1040,7 @@ static POLY_COLD void build_pages(void)
             pg_grp=GR_NONE;
             add_page("STRIP FILTERS",PR(R_STRIP,lane,0,0),PR(R_STRIP,lane,0,1),PR(R_STRIPFLAG,lane,0,1),PR(R_STRIPFLAG,lane,0,2));
             add_page("STRIP LIMITER",PR(R_STRIP,lane,0,2),PR(R_STRIP,lane,0,3),PR(R_STRIP,lane,0,4),PR(R_STRIPFLAG,lane,0,3));
+            add_page("STRIP SYNC",PR(R_SYNCLOCAL,lane,0,0),NONE,NONE,NONE);
             add_page("STRIP DEFAULTS",PR(R_STRIPFLAG,lane,0,0),PR(R_STRIPDEFAULT,lane,0,0),PR(R_STRIPDEFAULT,lane,0,1),NONE);
         }
         break;
@@ -1228,6 +1237,7 @@ static POLY_COLD void open_global(void)
     list_add(PR(R_CORES, 0, 0, 0));
     list_add(PR(R_ACT, ACT_ABOUT, 0, 0));
     list_add(PR(R_BATT, 0, 0, 0));
+    list_add(PR(R_SYNCMODE,0,0,0));
     put_s(list_title, "GLOBAL");
     ui.list_sel = ui.list_top = 0;
     while (list_skip(ui.list_sel))
@@ -2242,6 +2252,25 @@ static POLY_COLD uint32_t lock_marks(int t, int v, int base)
     return m;
 }
 
+/* Keep raw saved IDs/display labels. Only a physical turn uses the filtered order. */
+static int sync_turn(pref_t r,int direction)
+{
+ int kind=P_KIND(r),lane=-1;
+ if(!poly_sync_enabled((const uint8_t *)&proj.sound))return -1;
+ if(kind==R_RATEEXACT)lane=P_A(r);
+ else if(kind==R_DRATE)lane=P_A(r)*11+ui.sel[P_A(r)];
+ else if(kind==R_BRATE)lane=22+P_A(r);
+ if(lane>=0)return (int)rf_turn(poly_sync_family(proj.pat,(const uint8_t *)&proj.sound,lane),(unsigned)pref_get(r),direction);
+ /* The existing shared delay line has four supported straight divisions. Do not
+  * promise multi-bar delays that its fixed audio buffer cannot represent. */
+ if(kind==R_ENG && P_A(r)==T_FX && P_B(r)==0 && P_C(r)==FX_DL_TIME && poly_sync_mode(proj.pat,(const uint8_t *)&proj.sound)){
+  static const int ids[4]={2,5,8,11};int current=pref_get(r),i;
+  if(direction>0){for(i=0;i<4;i++)if(ids[i]>current)return ids[i];}
+  else for(i=3;i>=0;i--)if(ids[i]<current)return ids[i];
+  return current;
+ }
+ return -1;
+}
 static POLY_COLD void turn_ref(pref_t r, int e, int knob)
 {
     const x0x_param_t *d = pref_desc(r);
@@ -2251,7 +2280,7 @@ static POLY_COLD void turn_ref(pref_t r, int e, int knob)
         e = e > 0 ? 1 : -1;                          /* a switch: one detent, one position */
     else
         e = accel(knob, e, d->max);
-    pref_set(r, pref_get(r) + e);
+    {int filtered=sync_turn(r,e);pref_set(r,filtered<0?pref_get(r)+e:filtered);}
     motion_touch(r);
 }
 

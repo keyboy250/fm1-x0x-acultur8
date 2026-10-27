@@ -146,7 +146,7 @@ static void menu(void)
     mode_setup(2);ui.view=V_GLO;open_global();int found=0;
     CHECK(P_KIND(list_rows[0])==R_ACT&&P_A(list_rows[0])==ACT_COPY_SEQUENCES);
     CHECK(P_KIND(list_rows[2])==R_CCMODE&&P_KIND(list_rows[3])==R_CLKOUT);
-    int count=0;for(int k=0;k<ui.list_n;k++){if(!list_skip(k))count++;CHECK(P_KIND(list_rows[k])!=R_COPYCFG);}CHECK(count==22);
+    int count=0,sync_rows=0;for(int k=0;k<ui.list_n;k++){if(!list_skip(k))count++;CHECK(P_KIND(list_rows[k])!=R_COPYCFG);if(P_KIND(list_rows[k])==R_SYNCMODE)sync_rows++;}CHECK(count==23&&sync_rows==1);
     before=proj;list_enter();CHECK(copy_sequences_open());CHECK(ui.list_sel==1&&ui.list_n==6);
     button_tap(B_HOME);CHECK(!copy_sequences_open()&&ui.view==V_GLO&&ui.overlay==O_LIST&&ui.list_sel==0);CHECK(!memcmp(&before,&proj,sizeof proj));
     list_enter();CHECK(copy_sequences_open());

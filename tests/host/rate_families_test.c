@@ -30,7 +30,7 @@ int main(void)
   }
   for(v=0;v<128;v++){b=rf_bin(f,v);assert(rf_sweep(f,v,2,RF_INVALID)==b);assert(rf_sweep(f,v,2,b)==b);}
  }
- assert(rf_count(4)==0 && rf_bin(4,1)==RF_INVALID && rf_bin(0,128)==RF_INVALID);
+ assert(rf_count(RF_FAMILIES)==0 && rf_bin(RF_FAMILIES,1)==RF_INVALID && rf_bin(0,128)==RF_INVALID);
  for(r=0;r<21;r++){
   static const unsigned ticks[]={1,2,257,1234567,10000000};
   for(i=0;i<5;i++){uint8_t rem=0;uint64_t sum=0;
@@ -42,7 +42,7 @@ int main(void)
    }
   }
  }
- {uint8_t rem=0;assert(!rf_external_q8(21,100,&rem));assert(!rf_external_q8(11,UINT32_MAX,&rem));assert(rem==0);}
+ {uint8_t rem=0;assert(!rf_external_q8(RF_COUNT,100,&rem));assert(!rf_external_q8(11,UINT32_MAX,&rem));assert(rem==0);}
  {rf_latch_t s={0,0,0,RF_STEP,0};assert(rf_select(&s,8)==1);assert(s.effective==0);assert(!rf_boundary(&s,0,1));assert(rf_boundary(&s,1,0));assert(s.effective==8 && !s.pending);s.policy=RF_BAR;assert(rf_select(&s,11)==1);assert(!rf_boundary(&s,1,0));assert(!rf_boundary(&s,0,1));assert(rf_boundary(&s,1,0));assert(s.effective==11);assert(rf_select(&s,11)==0);}
  {uint8_t slices[64],decoded[64],packed[26],before[26];unsigned word,k;
   for(word=0;word<6561;word++){unsigned q=word;for(k=0;k<4;k++){slices[k]=(uint8_t)(q%9);q/=9;}for(k=4;k<64;k++)slices[k]=slices[k%4];
