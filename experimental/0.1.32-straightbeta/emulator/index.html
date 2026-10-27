@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FM1 0.1.32 emulator preview · Straight time &amp; triplet overrides</title>
+<meta name="description" content="Play X0X, the groovebox firmware for the M-VAVE FM-1, in your browser: the qualified 0.1.32-straightbeta engine with a separate preview save area and browser slice-sound integration.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="emu.css?v=shaped-slices-1">
+<link rel="stylesheet" href="variant-ui.css">
+<link rel="stylesheet" href="arrangement-ui.css">
+<style>.emulator-version-menu{margin:18px 0;padding:16px;border:1px solid var(--rule,#777);border-radius:8px;max-width:100%;box-sizing:border-box}.emulator-version-menu h2{font-size:1.1rem;margin:0 0 10px}.version-menu-controls{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}.version-menu-controls select{flex:1 1 260px;min-width:0;max-width:100%;padding:10px;font:inherit;background:var(--card,#fff);color:var(--ink,#222);border:1px solid var(--rule,#777);border-radius:5px}.version-menu-controls button{font:inherit;padding:9px 16px;cursor:pointer}.version-menu-controls button:disabled{opacity:.6;cursor:default}.emulator-version-menu p{font-size:.88rem;margin:8px 0;overflow-wrap:anywhere}#version-menu-status:empty{display:none}</style></head>
+<body>
+<main>
+<header>
+  <h1><a href="https://keyboy250.github.io/fm1-x0x-acultur8/" target="_top" style="color:inherit;text-decoration:none" title="X0X home">X0X</a></h1>
+  <p>0.1.32-straightbeta preview · separate browser saves · no device connection</p>
+  <nav><a href="https://keyboy250.github.io/fm1-x0x-acultur8/about/">About</a><a href="https://keyboy250.github.io/fm1-x0x-acultur8/manual/" target="_blank">Manual</a><a href="https://github.com/keyboy250/fm1-x0x-acultur8">Source</a></nav>
+</header><section class="emulator-version-menu" aria-labelledby="version-menu-title"><h2 id="version-menu-title">Choose your emulator version</h2><form id="emulator-version-form"><label for="emulator-version">Emulator version</label><div class="version-menu-controls"><select id="emulator-version" aria-describedby="version-description version-switch-help"><option value="../../../emu/" data-version-id="original">Original emulator (legacy)</option><option value="../../../experimental/0.1.32-straightbeta/emulator/" data-version-id="0.1.32-straightbeta" selected>0.1.32-straightbeta (preview)</option></select><button type="submit" id="emulator-version-open">Open version</button></div></form><p id="version-description">Straight time and per-sound triplet overrides. Experimental preview with separate saved data.</p><p id="version-switch-help">Save changes you want to keep before switching. Switching versions stops playback and opens the selected emulator. Each version keeps its own saved projects, break slots and slice imports.</p><p id="version-menu-status" role="status" aria-live="polite"></p><noscript><p><a href="../../../emu/">Open original emulator</a> · <a href="../../../experimental/0.1.32-straightbeta/emulator/">Open 0.1.32 preview</a></p></noscript></section>
+
+<section class="preview-note" aria-labelledby="preview-title"><h2 id="preview-title">Try straight time and a triplet exception</h2><p><strong>Experimental 0.1.32 preview.</strong> The existing emulator remains <a href="../../../emu/">available here</a>. This preview has separate saved projects, break slots and slice imports. It does not read or change the existing emulator’s saves.</p><p>Stop playback, open <strong>GLO → SYNC RATE MODE → STRAIGHT</strong>. Select 909 BD and use SEQ: RATE should move from 1/16 directly to 1/8. For SD, choose <strong>EDIT → STRIP SYNC → RATE MODE → STR+TRIPLET</strong>, then use SEQ to choose 1/16T. Turn SELECT to move through menu rows; ALGORITHM changes the highlighted GLO value. On the STRIP SYNC page, KNOB1 changes RATE MODE.</p><p><a href="https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.32-straightbeta/docs/FAQ.html#tutorials">Step-by-step tutorials</a> · <a href="https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.32-straightbeta/">Firmware &amp; known limits</a></p><p id="preview-state" role="status">Switch on for read-only engine feedback: global mode and the first pattern’s 909 kick/snare rates.</p><p>Save after changes you want to keep. Preview saves use LAN3 when straight/override features are activated. No physical MIDI, timing or listening acceptance is implied by browser checks.</p></section>
+<p class="turn">Turn your phone sideways for bigger controls.</p>
+<div class="devicebox"><div class="device" id="device">
+  <svg id="panel" viewBox="0 0 1000 640" role="application" aria-label="The FM-1: knobs, buttons, screen and keys"></svg>
+  <canvas id="screen" width="240" height="240" aria-label="The FM-1 screen"></canvas>
+  <div class="start" id="start"><button id="go">Switch on</button></div>
+</div></div>
+
+<div class="bar">
+  <span id="status">Off. Sound starts when you switch it on.</span>
+  <span class="cpu" id="cpu"></span>
+  <button id="reset" type="button" title="Forget the saved patterns and sound, and start again from the factory settings">Factory reset</button>
+</div>
+
+<section class="variant-lab" aria-labelledby="variant-title">
+  <h2 id="variant-title">909 kick · sound strip</h2>
+  <p>Shape each selected sound before the mix. Use the instrument pads or PLAY to audition.</p>
+  <label class="variant-selector" for="variant-strip">Sound strip <select id="variant-strip" aria-describedby="variant-availability"></select></label>
+  <p id="variant-availability">Switch on the FM1 panel to check sound-strip support.</p>
+  <fieldset id="variant-controls" disabled>
+    <legend id="variant-legend">Kick processing</legend>
+    <div class="variant-stages">
+      <label><input id="variant-enabled" type="checkbox" data-flag="1"> Enable strip (off = bypass)</label>
+      <label><input type="checkbox" data-flag="2"> High-pass filter</label>
+      <label><input type="checkbox" data-flag="4"> Low-pass filter</label>
+      <label><input type="checkbox" data-flag="8"> Limiter</label>
+    </div>
+    <div class="variant-parameters">
+      <div><label for="variant-hp-range">High-pass cutoff</label><input id="variant-hp-range" type="range" min="0" max="1000" step="1" data-index="0" aria-label="High-pass cutoff"><label class="variant-number"><input id="variant-hp-number" type="number" min="20" max="20000" step="1" data-index="0" aria-label="High-pass cutoff in Hz"> Hz</label></div>
+      <div><label for="variant-lp-range">Low-pass cutoff</label><input id="variant-lp-range" type="range" min="0" max="1000" step="1" data-index="1" aria-label="Low-pass cutoff"><label class="variant-number"><input id="variant-lp-number" type="number" min="20" max="20000" step="1" data-index="1" aria-label="Low-pass cutoff in Hz"> Hz</label></div>
+      <div><label for="variant-boost-range">Floor booster (Boost)</label><input id="variant-boost-range" type="range" min="0" max="24" step="1" data-index="2" aria-label="Boost"><label class="variant-number"><input id="variant-boost-number" type="number" min="0" max="24" step="1" data-index="2" aria-label="Boost in dB"> dB</label></div>
+      <div><label for="variant-ceiling-range">Limiter ceiling</label><input id="variant-ceiling-range" type="range" min="-48" max="0" step="1" data-index="3" aria-label="Limiter ceiling"><label class="variant-number"><input id="variant-ceiling-number" type="number" min="-48" max="0" step="1" data-index="3" aria-label="Limiter ceiling in dBFS"> dBFS</label></div>
+    </div>
+    <p>Limiter release: 80 ms while editing this strip. Floor booster is the existing 0–24 dB boost; the limiter uses a sample-peak ceiling. Boost applies when the strip is enabled.</p>
+    <div class="variant-actions"><button id="variant-undo" type="button">Undo</button><button id="variant-redo" type="button">Redo</button><button id="variant-save" type="button">Save project</button></div>
+  </fieldset>
+  <p>808 paired tracks: RS/Clave tails and CP/Maracas tails are each summed before one strip. The selected sound’s Rev/Dly settings are used when active. BREAK currently has a mono source.</p>
+  <p id="variant-meter">Gain reduction unavailable.</p>
+  <p id="variant-project"></p>
+  <p id="variant-status" role="status" aria-live="polite">Waiting for the engine.</p>
+</section>
+
+<section class="arrangement-lab" aria-labelledby="arrangement-title">
+  <h2 id="arrangement-title">Arrangement · progression metadata</h2>
+  <p>Arrange five pattern parts into blocks. Chord information is metadata in this build; bass-follow and pad connections are pending.</p>
+  <p id="arrangement-availability">Switch on the FM1 panel to check arrangement support.</p>
+  <fieldset id="arrangement-global" disabled>
+    <legend>Arrangement settings</legend>
+    <div class="arrangement-globals">
+      <label><input id="arrangement-enabled" type="checkbox"> Enable arrangement</label>
+      <label>Length <input id="arrangement-length" type="number" min="0" max="192" step="1" value="0"> blocks</label>
+      <label>Key <select id="arrangement-key"></select></label>
+      <label>Mode <select id="arrangement-mode"></select></label>
+      <label>Pentatonic parent <select id="arrangement-parent"></select></label>
+    </div>
+    <p>Length changes require stopped playback. To keep existing chord degrees when switching to pentatonic, choose a seven-note parent first, then change the mode. The parent can be chosen in a seven-note mode; it takes effect for pentatonic chords. Chromatic mode has no degree chord.</p>
+  </fieldset>
+  <div class="arrangement-page"><button id="arrangement-previous" type="button" disabled>Previous 16</button><span id="arrangement-page-label">Blocks 1–16</span><button id="arrangement-next" type="button" disabled>Next 16</button></div>
+  <div id="arrangement-rows" class="arrangement-rows" aria-label="Arrangement block selection"></div>
+  <p id="arrangement-position">Editing — · Playing — · Queued —</p>
+  <fieldset id="arrangement-block" disabled>
+    <legend id="arrangement-editing">Block editor</legend>
+    <div id="arrangement-parts" class="arrangement-parts"></div>
+    <div class="arrangement-globals">
+      <label>Duration <select id="arrangement-duration"></select> bars</label>
+      <label>Degree metadata <select id="arrangement-degree"></select></label>
+    </div>
+  </fieldset>
+  <p id="arrangement-chord">Playing chord metadata unavailable.</p>
+  <div class="arrangement-actions"><button id="arrangement-undo" type="button" disabled>Undo</button><button id="arrangement-redo" type="button" disabled>Redo</button><button id="arrangement-save" type="button" disabled>Save project</button></div>
+  <p id="arrangement-project"></p>
+  <p id="arrangement-status" role="status" aria-live="polite">Waiting for the engine.</p>
+</section>
+
+<section class="slice-lab" aria-labelledby="slice-title">
+<h2 id="slice-title">WAV slices + sound settings</h2>
+<p>Import exact cuts and trigger positions for emulator audition. Up to 64 slices, mono/stereo WAV, 30 seconds of audio. Sound settings are applied in this browser. This preview lane is separate from the FM1’s three flash slots and legacy eight-slice BREAK controls.</p>
+<div class="slice-files"><label>WAV audio <input type="file" id="slice-audio" accept=".wav,audio/wav"></label><label>Markers or Slice Review JSON <input type="file" id="slice-markers" accept=".json,.csv,application/json,text/csv"></label></div>
+<div class="bar"><button id="slice-import-button" type="button">Import WAV + slice settings</button><button id="slice-demo" type="button">Load unequal timing demo</button><button id="slice-reopen" type="button">Reopen saved import</button></div>
+<p id="slice-status" role="status">Choose WAV + CSV/JSON. Audio stays on this computer; no hardware upload occurs.</p><p id="slice-info"></p>
+<canvas id="slice-wave" width="900" height="140" aria-label="Imported waveform with original slice boundaries"></canvas>
+<div class="bar"><button id="slice-preview-play" type="button" disabled>Play original timing</button><button id="slice-preview-stop" type="button" disabled>Stop slices</button><label><input id="slice-repeat" type="checkbox" checked> Loop original audition</label><label><input id="slice-layer" type="checkbox"> Layer with FM1 audio</label><label>Preview level <input id="slice-volume" type="range" min="0" max="1" step=".01" value=".5"></label><button id="slice-save" type="button" disabled>Save import in browser</button><button id="slice-export" type="button" disabled>Export markers</button></div>
+<div class="bar slice-sync"><label>Original loop BPM <input id="slice-source-bpm" type="number" min="20" max="300" step="0.001" placeholder="From REX markers"></label><button id="slice-sync-play" type="button" disabled>Play with FM1 · keep pitch</button><label>FM1 tempo (BPM) <input id="slice-seq-bpm" type="number" min="20" max="275" step="1" value="125"></label><button id="slice-tempo-set" type="button">Set FM1 tempo</button></div><p id="slice-sync-status" role="status">Sync starts both transports, or joins the next 4-beat bar if FM1 is playing. Instrument PLAY then controls both. Slice pitch stays unchanged.</p>
+<p><a href="https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.6-beta1/browser-slice-editor/" target="_blank" rel="noopener">Open Slice Profiles</a> to detect and shape hits, then export a review project. Import that JSON here with the same WAV to play its sounds alongside the emulator instruments. This preview uses the 0.1.32-straightbeta engine. These slice sound settings remain a browser feature; the physical FM1 does not read Slice Review JSON.</p>
+<fieldset id="slice-sound" disabled><legend id="slice-selected">Select a slice</legend><div class="slice-sound-fields">
+<label><input id="slice-active-setting" type="checkbox" checked> Active in group playback</label>
+<label>Length (ms)<input id="slice-length-setting" type="number" min="0.001" max="30000" step="0.001"></label>
+<label><input id="slice-envelope-setting" type="checkbox"> Hold + Decay enabled</label>
+<label>Hold (ms)<input id="slice-hold-setting" type="number" min="0" max="30000" step="1"></label>
+<label>Decay (ms)<input id="slice-decay-setting" type="number" min="0" max="30000" step="1"></label>
+<label>Level (dB)<input id="slice-level-setting" type="number" min="-60" max="0" step="0.5"></label></div>
+<div class="bar"><button id="slice-apply-sound" type="button">Apply slice sound</button><button id="slice-audition" type="button" disabled>Audition selected</button><button id="slice-export-project" type="button" disabled>Export review project</button></div>
+<p>Apply commits this slice's edits and stops slice playback; select another slice to recall its settings. Inactive slices remain auditionable. Length stops at the next slice start or WAV end. Hold/Decay and Level use the same renderer as Slice Profiles. Save import keeps audio and settings in this browser; review JSON needs its matching WAV. Marker export is cuts-only.</p></fieldset>
+<p id="slice-playhead">Stopped</p><div id="slice-list"></div>
+<details id="slice-export-output" hidden><summary>Exported marker JSON</summary><label>Marker JSON <textarea id="slice-export-json" readonly rows="12" spellcheck="false"></textarea></label><p>This contains exact source sample bounds and original trigger times. Copy it into a .json file if your browser blocks the download.</p></details>
+<details><summary>Marker formats and REX conversion</summary><p>CSV uses seconds: <code>Slice,Start,End,Time</code>. End and Time are optional: End defaults to the next start, Time to Start. JSON supports <code>sampleRate</code>, <code>loopDuration</code>, optional <code>bpm</code>, and <code>slices: [{startSample, endSample, time, label}]</code>. Source positions are WAV samples; time is the original onset in seconds. WAV sample rate must match the marker sampleRate.</p><p>Use the dashboard REX converter for original loops, or import its matching <code>_slices.wav</code> and <code>_markers.json</code>. Old <code>Slice,Duration,Total</code> CSV files do not contain original onset timing and are rejected; reconvert the REX. <a href="https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.32-straightbeta/docs/FAQ.html" target="_blank">Read the illustrated FAQ</a>. No cuts are guessed or reduced to eight.</p><p>Play with FM1 follows the internal sequencer clock and tempo, repeating the loop with its original beat length. It moves slice onsets while retaining their original pitch and duration; slower tempos can reveal gaps, faster tempos overlap tails. It does not stretch sustained audio. Physical FM1 storage is not implemented. Overlaps use up to eight voices and are validated. Source audio is not normalized; preview level is separate. Packed shaped slices have a 1,440,000-frame limit; long overlapping cuts may need shortening. No audio is truncated to fit. Original timing is rounded only to the nearest 44.1 kHz output sample.</p></details>
+</section>
+
+<section class="breaks" aria-labelledby="breaks-h">
+  <h2 id="breaks-h">Your breaks</h2>
+  <p>Load your own loops into the three slots, as you would upload them to the FM-1: one file per
+    loop (WAV, AIFF or MP3), up to 16 in a slot, about 7 seconds per slot. X0X works out whether a
+    loop is 1, 2 or 4 bars. To play one, choose BREAK with ALGORITHM, press EDIT until the LOOPS page,
+    and turn KNOB 1. Your loops stay in this browser.</p>
+  <div class="slots" id="slots"></div>
+</section>
+
+<section class="help">
+  <div>
+    <h2>Mouse and touch</h2>
+    <ul>
+      <li>Drag a knob up or down, or use the scroll wheel over it.</li>
+      <li>Click or touch buttons and keys. Several fingers at once work on a touch screen.</li>
+      <li>Combinations with a mouse: <kbd>Shift</kbd>-click (or right-click) a button to hold it down, click again to let go.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Keyboard</h2>
+    <ul>
+      <li>White keys 1–8: <kbd>Q</kbd>–<kbd>I</kbd>, 9–16: <kbd>A</kbd>–<kbd>K</kbd>. Black keys 1–11: <kbd>1</kbd>–<kbd>0</kbd>, <kbd>-</kbd>.</li>
+      <li><kbd>Space</kbd> PLAY, <kbd>Enter</kbd> REC, <kbd>Shift</kbd> SEL (held), <kbd>Esc</kbd> HOME, <kbd>Z</kbd> / <kbd>X</kbd> OCT− / OCT+.</li>
+      <li><kbd>↑</kbd> <kbd>↓</kbd> turn SELECT.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Saving</h2>
+    <p>SAVE keeps your patterns in this browser, as the FM-1 keeps them in its memory. Factory reset forgets them.
+      It is the firmware, not a recording: what you hear is X0X running, at the FM-1's 44.1 kHz.
+      The idea of running FM-1 firmware in the browser comes from <a href="https://www.groove-os.com/">Groove OS</a>'s emulator.</p>
+  </div>
+</section>
+<p class="preview-credits">Based on <a href="https://github.com/charlesvestal/fm1-x0x">X0X by Charles Vestal and contributors</a> and <a href="https://github.com/hugelton/Felucca">Felucca by Leo Kuroshita</a>. <a href="https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.32-straightbeta/CREDITS.txt">Credits</a> · <a href="https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.32-straightbeta/LICENSING.md">Licenses</a> · <a href="https://github.com/keyboy250/fm1-x0x-acultur8/releases/download/v0.1.32-straightbeta/x0x-0.1.32-straightbeta-source.zip">Matching firmware source</a>.</p></main>
+
+<script src="emu.js?v=shaped-slices-1"></script>
+<script type="module" src="slice-shaped-ui.js"></script>
+<script type="module" src="variant-ui.js"></script>
+<script type="module" src="arrangement-ui.js"></script>
+<script type="module" src="public-demo.js"></script>
+<script src="preview-state.js"></script><script src="../../../emulator-version-menu.js" data-current-emulator="0.1.32-straightbeta" defer></script></body>
+</html>

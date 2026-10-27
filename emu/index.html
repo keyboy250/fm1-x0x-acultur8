@@ -9,14 +9,14 @@
 <link rel="stylesheet" href="emu.css?v=shaped-slices-1">
 <link rel="stylesheet" href="variant-ui.css">
 <link rel="stylesheet" href="arrangement-ui.css">
-</head>
+<style>.emulator-version-menu{margin:18px 0;padding:16px;border:1px solid var(--rule,#777);border-radius:8px;max-width:100%;box-sizing:border-box}.emulator-version-menu h2{font-size:1.1rem;margin:0 0 10px}.version-menu-controls{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}.version-menu-controls select{flex:1 1 260px;min-width:0;max-width:100%;padding:10px;font:inherit;background:var(--card,#fff);color:var(--ink,#222);border:1px solid var(--rule,#777);border-radius:5px}.version-menu-controls button{font:inherit;padding:9px 16px;cursor:pointer}.version-menu-controls button:disabled{opacity:.6;cursor:default}.emulator-version-menu p{font-size:.88rem;margin:8px 0;overflow-wrap:anywhere}#version-menu-status:empty{display:none}</style></head>
 <body>
 <main>
 <header>
   <h1><a href="../" target="_top" style="color:inherit;text-decoration:none" title="X0X home">X0X</a></h1>
   <p>Earlier browser engine + shaped slice playback · no device connection</p>
   <nav><a href="../about/">About</a><a href="../manual/" target="_blank">Manual</a><a href="https://github.com/keyboy250/fm1-x0x-acultur8">Source</a></nav>
-</header>
+</header><section class="emulator-version-menu" aria-labelledby="version-menu-title"><h2 id="version-menu-title">Choose your emulator version</h2><form id="emulator-version-form"><label for="emulator-version">Emulator version</label><div class="version-menu-controls"><select id="emulator-version" aria-describedby="version-description version-switch-help"><option value="../emu/" data-version-id="original" selected>Original emulator (legacy)</option><option value="../experimental/0.1.32-straightbeta/emulator/" data-version-id="0.1.32-straightbeta">0.1.32-straightbeta (preview)</option></select><button type="submit" id="emulator-version-open">Open version</button></div></form><p id="version-description">Legacy browser build, retained as published. Its exact firmware version was not recorded.</p><p id="version-switch-help">Save changes you want to keep before switching. Switching versions stops playback and opens the selected emulator. Each version keeps its own saved projects, break slots and slice imports.</p><p id="version-menu-status" role="status" aria-live="polite"></p><noscript><p><a href="../emu/">Open original emulator</a> · <a href="../experimental/0.1.32-straightbeta/emulator/">Open 0.1.32 preview</a></p></noscript></section>
 
 <p class="turn">Turn your phone sideways for bigger controls.</p>
 <div class="device" id="device">
@@ -155,5 +155,5 @@
 <script type="module" src="variant-ui.js"></script>
 <script type="module" src="arrangement-ui.js"></script>
 <script type="module" src="public-demo.js"></script>
-</body>
+<script src="../emulator-version-menu.js" data-current-emulator="original" defer></script></body>
 </html>
