@@ -4,10 +4,11 @@
 #include <string.h>
 #include <math.h>
 #include "../../firmware/src/dsp/drum808.c"
-void baseline_drum808_init(drum808_t *d);
-void baseline_drum808_trigger(drum808_t *d, int t, float v);
-void baseline_drum808_render_st(drum808_t *d, float *l, float *r, float *v, float *y, int n);
-void baseline_drum808_set(drum808_t *d, int t, int p, int v);
+void *baseline_drum808_create(void);
+void baseline_drum808_init(void *d);
+void baseline_drum808_trigger(void *d, int t, float v);
+void baseline_drum808_render_st(void *d, float *l, float *r, float *v, float *y, int n);
+void baseline_drum808_set(void *d, int t, int p, int v);
 static int fails;
 #define CHECK(c) do { if (!(c)) { fprintf(stderr,"FAIL line %d: %s\n",__LINE__,#c); fails++; } } while (0)
 static drum808_t a,b;
@@ -15,21 +16,22 @@ static void zero(float x[4][256]) { memset(x,0,4*256*sizeof(float)); }
 static void bypass_identity(void)
 {
     float x[4][256], y[4][256]; int t,i,k;
-    drum808_init(&a); baseline_drum808_init(&b);
+    void *legacy=baseline_drum808_create();CHECK(legacy!=0);
+    drum808_init(&a); baseline_drum808_init(legacy);
     /* Every track, alternate switches, noncentral pan, sends, drive, velocities,
      * simultaneous ringing pairs and retriggers/chokes, variable event slices. */
     for (k=0;k<300;k++) {
         t=k%D8_NUM;
         for(i=0;i<drum808_nparams(t);i++) {
             int value=(k*17+i*23)%128;
-            drum808_set(&a,t,i,value); baseline_drum808_set(&b,t,i,value);
+            drum808_set(&a,t,i,value); baseline_drum808_set(legacy,t,i,value);
         }
         drum808_trigger(&a,t,(float)(k%9+1)/9.0f);
-        baseline_drum808_trigger(&b,t,(float)(k%9+1)/9.0f);
+        baseline_drum808_trigger(legacy,t,(float)(k%9+1)/9.0f);
         zero(x); zero(y);
         { int n=(k*37)%256+1;
           drum808_render_st(&a,x[0],x[1],x[2],x[3],n);
-          baseline_drum808_render_st(&b,y[0],y[1],y[2],y[3],n);
+          baseline_drum808_render_st(legacy,y[0],y[1],y[2],y[3],n);
           CHECK(!memcmp(x,y,sizeof x)); }
     }
 }
@@ -110,7 +112,7 @@ static void pairs(void)
      * even when opposing completed lanes sum to exactly zero. */
     drum808_init(&a); { float in[32], sum[32]; int l;
       for(i=0;i<32;i++) { in[i]=(i&1)?1.0f:-1.0f; sum[i]=0; }
-      for(l=L_RS;l<=L_CL;l++) { int s=a.lane[l].snd; a.shp[s].drive=0; a.potv[s][D8P_LEVEL]=1/k_trim[s]; a.lane[l].hit=(l==L_RS)?1:-1; }
+      for(l=L_RS;l<=L_CL;l++) { int s=a.lane[l].snd; a.potv[s][D8P_DRIVE]=0; a.potv[s][D8P_LEVEL]=1/k_trim[s]; a.lane[l].hit=(l==L_RS)?1:-1; }
       strip_lane_add(&a,&a.lane[L_RS],in,32,sum); strip_lane_add(&a,&a.lane[L_CL],in,32,sum);
       for(i=0;i<32;i++) CHECK(fabsf(sum[i])<1e-6f);
       sound_strip_set(&a.strip[D8_RS],&c); a.strip[D8_RS].mix=1;

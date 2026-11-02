@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # External MIDI clock: start, 24 ppqn at 140 BPM (787.5 samples = 17.857 ms per tick), stop.
 wait 300
 tapkey b0

@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Patterns: cue on the bar, chain, copy, save, reboot, everything comes back.
 wait 300
 tapkey b0
@@ -56,6 +61,11 @@ expect gate0.0 1
 tap SAVE
 expect store_writes 6
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 wait 300
 expect pattern 1
 expect hit0.0.0 1

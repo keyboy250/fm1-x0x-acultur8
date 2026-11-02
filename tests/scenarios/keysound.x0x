@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # GLO > KEY SOUND: by default a black drum key selects silently while the pattern plays; stopped,
 # or with REC on, it plays. ALWAYS plays it every time.
 wait 300

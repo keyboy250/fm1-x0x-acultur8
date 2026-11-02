@@ -19,3 +19,4 @@ python3 tests/exp_packing_test.py
 
 # Affine layout, input bounds and adversarial compiled accessor cases.
 python3 tests/exp_affine_test.py
+python3 tests/exp_segments_test.py

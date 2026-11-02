@@ -14,15 +14,17 @@ assert.deepEqual(midiBytes(packet(0xb3,7,99)),[0xb3,7,99]);
 assert.equal(midiBytes(packet(240,0,0,4)),null);
 for(const bad of [NaN,Infinity,-1,0x100000000,'123',1.5])assert.equal(midiBytes(bad),null);
 class Core {
- constructor(){this.ring=[];this.latched=0;this.epoch=0;this.ready=0;this.playing=0;}
+ constructor(){this.ring=[];this.latched=0;this.epoch=0;this.ready=0;this.playing=0;this.cutoff=0;this.transportEpoch=0;}
  web_seq_playing(){return this.playing;}
  web_midi_epoch(){return this.epoch;}
+ web_midi_transport_epoch(){return this.transportEpoch;}
+ web_midi_output_version(){return 0x00020001;}
  web_midi_pending(){return this.ring.length;}
  web_midi_ready(v){if(this.ready&&!v)this.web_midi_cancel();this.ready=v;return 0;}
- web_midi_cancel(){this.epoch++;this.ring=this.ring.map(p=>noteOn(p)?(p|0x80000000)>>>0:p);return this.epoch;}
+ web_midi_cancel(){this.epoch++;this.transportEpoch=this.epoch;this.cutoff=this.ring.length;return this.epoch;}
  web_midi_batch(n){if(this.latched)return -1;return this.latched=Math.min(n,this.ring.length);}
- web_midi_packet(i){return this.ring[i]??0;}
- web_midi_ack(n){if(n<0||n>this.latched)return -1;this.ring.splice(0,n);this.latched-=n;return 0;}
+ web_midi_packet(i){const p=this.ring[i]??0,rt=[248,250,251,252].includes((p>>>8)&255);return i<this.cutoff&&(noteOn(p)||rt)?(p|0x80000000)>>>0:p;}
+ web_midi_ack(n){if(n<0||n>this.latched)return -1;this.ring.splice(0,n);this.latched-=n;this.cutoff=Math.max(0,this.cutoff-n);return 0;}
  put(...p){if(!this.ready||this.ring.length+p.length>64)return false;this.ring.push(...p);return true;}
 }
 class Port {
@@ -30,6 +32,13 @@ class Port {
  async open(){this.opens++;this.connection='open';return this;}
  async close(){this.connection='closed';}
  send(bytes){if(this.state!=='connected'||this.failAt===this.sent.length)throw Error('synthetic send failure');this.sent.push([...bytes]);}
+}
+{
+ const messages=[];let c=new Core();const bridge=new MidiWorkletBridge(()=>c,m=>messages.push(m));
+ bridge.tick();assert.equal(messages.filter(m=>m.type==='midi-output-capability'&&m.supported).length,1);
+ bridge.tick();assert.equal(messages.filter(m=>m.type==='midi-output-capability'&&m.supported).length,1);
+ c=new Core();bridge.tick();assert.equal(messages.filter(m=>m.type==='midi-output-capability'&&m.supported).length,2,'same epoch with new exports identity reannounces capability');
+ assert.equal(bridge.ready,false);assert.equal(c.ready,0);assert.equal(bridge.route,0);
 }
 function frame({playing=false,owned=false,cap=511}={}){
  return {type:'frame',sync:{playing,bpm:120},variant:{info:{abi:1,values:[cap]},pad:{abi:1,section:8,values:[2,60,48,84,1,0,0,owned?2:255,...(owned?[60,64,67]:[255,255,255]),60,64,67,owned?1:0,1]},bass:[{values:[0,0,0,0,0,255,255]},{values:[0,0,0,0,0,255,255]}]}};
@@ -45,9 +54,9 @@ function rig(){
    throw Error('message bridge failed to settle');
  };
  const act=async fn=>{let done=false,error;fn().then(()=>done=true,e=>{done=true;error=e;});for(let i=0;!done&&i<100;i++)await flush();assert.ok(done);await flush();if(error)throw error;};
- router.updateFrame(frame());
+ bridge.state();router.receive(out.at(-2));router.receive(out.at(-1));router.updateFrame(frame());
  return {a,b,access,get core(){return core;},router,get bridge(){return bridge;},wire,out,flush,act,held,
-   replaceEngine:()=>{const old={core,bridge};wire.length=0;core=new Core();bridge=makeBridge(core);router.engineReset();return old;},
+   replaceEngine:()=>{const old={core,bridge};wire.length=0;core=new Core();bridge=makeBridge(core);router.engineReset();bridge.state();router.receive(out.at(-2));router.receive(out.at(-1));return old;},
    hold:predicate=>{hold=predicate;},release:()=>{hold=null;wire.push(...held.splice(0));},get requests(){return requests;}};
 }
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
@@ -114,7 +123,7 @@ for(const boundary of ['open','ready','cancel']){
  disconnectReconnect(r,r.a);await r.flush();gate.resolve();r.release();await settle(r,operation);
  assert.match(operation.error?.message,/interrupted/,boundary);retryAvailable(r,r.a);
  assert.deepEqual(r.a.sent,[[146,60,90]],boundary+' cannot leak an On or erase accepted-note debt');assert.equal(r.router.debt,1);
- if(boundary!=='open'){assert.equal(r.core.ring[0],off);assert.ok(r.core.ring[1]>>>31,'unsent attack is cancelled, not replayed');}
+ if(boundary!=='open'){assert.equal(r.core.ring[0],off);assert.ok(r.core.web_midi_packet(1)>>>31,'unsent attack is cancelled, not replayed');}
  r.a.open=Port.prototype.open;await r.act(()=>r.router.retry());await r.flush();
  assert.deepEqual(r.a.sent,[[146,60,90],[130,60,0]]);assert.equal(r.router.debt,0);assert.equal(r.core.ring.length,0);
  assert.equal(r.router.active,true);assert.equal(r.router.output,r.a);
@@ -168,9 +177,9 @@ for(const boundary of ['first-open','first-ready','retry-open','retry-ready','re
  // Request numbers and route generations survive reset. Neither late control
  // replies nor old packet/state/ack messages may alter the replacement route.
  for(const m of oldReplies)r.router.receive(m);
- r.router.receive({type:'midi-state',route:oldRoute,epoch:999,pending:64,inflight:true});
- r.router.receive({type:'midi-batch',route:oldRoute,batch:999,epoch:0,count:1,packets:[on]});
- r.router.receive({type:'midi-acknowledged',route:oldRoute,batch:999});
+ r.router.receive({type:'midi-state',protocol:0x00020001,route:oldRoute,epoch:999,transportEpoch:999,pending:64,inflight:true});
+ r.router.receive({type:'midi-batch',protocol:0x00020001,route:oldRoute,batch:999,epoch:0,count:1,packets:[on]});
+ r.router.receive({type:'midi-acknowledged',protocol:0x00020001,route:oldRoute,batch:999});
  gate.resolve();await r.flush();
  assert.equal(r.router.rpcs.size,1);assert.equal(r.router.active,false);assert.equal(r.router.locked,true);
  assert.equal(r.a.sent.length,accepted,'late open/reply/batch cannot send a note or clear cleanup debt');
@@ -190,7 +199,7 @@ for(const stage of ['before-acceptance','awaiting-ack']){
  const debt=r.router.debt;r.replaceEngine();r.router.updateFrame(frame());
  assert.equal(r.router.flight,null);assert.equal(r.router.drainWaiting,false);assert.equal(r.router.lastBatch,null);
  assert.equal(r.router.debt,debt);r.router.receive(batch);
- r.router.receive({type:'midi-acknowledged',route:oldRoute,batch:batch.batch});r.release();await r.flush();
+ r.router.receive({type:'midi-acknowledged',protocol:0x00020001,route:oldRoute,batch:batch.batch});r.release();await r.flush();
  assert.equal(r.router.flight,null);assert.equal(r.router.debt,debt);
  await r.act(()=>r.router.retry());assert.equal(r.router.debt,0);assert.equal(r.router.active,true);
  assert.equal(r.a.sent.filter(bytes=>(bytes[0]&240)===144&&bytes[2]>0).length,stage==='awaiting-ack'?2:1,'only API-accepted attacks acquire cleanup debt');
@@ -211,7 +220,7 @@ for(const stage of ['before-acceptance','awaiting-ack']){
  const r=rig();assert.equal(r.requests,0);assert.equal(r.core.ready,0);
  await r.act(()=>r.router.connect());assert.equal(r.requests,1);assert.equal(r.a.opens,0);
  await r.act(()=>r.router.select('A'));assert.equal(r.core.ready,1);
- const forged={type:'midi-batch',route:r.router.route,batch:123,epoch:0,count:1,packets:[on]};
+ const forged={type:'midi-batch',protocol:0x00020001,route:r.router.route,batch:123,epoch:0,count:1,packets:[on]};
  for(const patch of [{route:999},{packets:[-1]},{packets:[NaN]},{packets:[0x100000000]},{batch:1.5},{epoch:-1},{count:2}])r.router.receive({...forged,...patch});
  assert.equal(r.a.sent.length,0);
  r.core.put(on,clock,packet(0xc3,12),packet(0xd3,13),zero);
@@ -220,7 +229,7 @@ for(const stage of ['before-acceptance','awaiting-ack']){
  assert.equal(r.router.debt,0);assert.equal(r.core.ring.length,0);
  assert.ok(r.router.rtt>=0);assert.equal(r.router.accepted,5);
  // Duplicate/unknown acknowledgements never consume fresh appends.
- r.core.put(on);r.bridge.message({type:'midi-ack',route:r.router.route,batch:999,epoch:0,prefix:1});
+ r.core.put(on);r.bridge.message({type:'midi-ack',protocol:0x00020001,route:r.router.route,batch:999,epoch:0,prefix:1});
  assert.equal(r.core.ring.length,1);
  // Full queue and 16-packet flights, only one flight before explicit prefix ack.
  r.core.ring=[];assert.ok(r.core.put(...Array(64).fill(clock)));assert.equal(r.core.put(clock),false);
@@ -234,7 +243,7 @@ for(const stage of ['before-acceptance','awaiting-ack']){
  r.a.failAt=1;r.core.put(on,off,packet(0x92,64,90));r.router.pump();await r.flush();
  assert.deepEqual(r.a.sent,[[146,60,90]]);assert.equal(r.router.active,false);
  assert.equal(r.core.ring.length,2);assert.equal(r.core.latched,2);
- assert.equal(r.core.ring[0],off);assert.ok(r.core.ring[1]>>>31);
+ assert.equal(r.core.ring[0],off);assert.ok(r.core.web_midi_packet(1)>>>31);
  assert.equal(r.router.debt,1);
  // Disconnection keeps the original port; selecting B cannot release ownership.
  r.a.state='disconnected';r.access.dispatchEvent(new Event('statechange'));await r.flush();
@@ -275,16 +284,16 @@ for(const stage of ['before-acceptance','awaiting-ack']){
  b.route=1;b.ready=true;b.drain();const first=messages.find(m=>m.type==='midi-batch');
  b.drain();assert.equal(messages.filter(m=>m.type==='midi-batch').length,1);
  for(const patch of [{route:2},{batch:first.batch+1},{epoch:first.epoch+1},{prefix:5},{prefix:-1},{prefix:1.5}]){
-   b.message({type:'midi-ack',route:1,batch:first.batch,epoch:first.epoch,prefix:1,...patch});
+   b.message({type:'midi-ack',protocol:0x00020001,route:1,batch:first.batch,epoch:first.epoch,prefix:1,...patch});
    assert.equal(c.ring.length,4,'invalid/stale acknowledgements cannot consume packets');
  }
- b.message({type:'midi-ack',route:1,batch:first.batch,epoch:first.epoch,prefix:1});
+ b.message({type:'midi-ack',protocol:0x00020001,route:1,batch:first.batch,epoch:first.epoch,prefix:1});
  const messagesBefore=messages.filter(m=>m.type==='midi-batch').length;b.tick();
  assert.equal(messages.filter(m=>m.type==='midi-batch').length,messagesBefore,'partial suffix waits for explicit drain');
  c.web_midi_cancel();c.put(packet(0x92,67,90));b.drain();
  const suffix=messages.filter(m=>m.type==='midi-batch').at(-1);
- assert.deepEqual(suffix.packets,[off,zero,clock]);assert.equal(c.latched,3);
- b.message({type:'midi-ack',route:1,batch:suffix.batch,epoch:suffix.epoch,prefix:3});b.drain();
+ assert.deepEqual(suffix.packets,[off,zero,(clock|0x80000000)>>>0]);assert.equal(c.latched,3);
+ b.message({type:'midi-ack',protocol:0x00020001,route:1,batch:suffix.batch,epoch:suffix.epoch,prefix:3});b.drain();
  assert.deepEqual(messages.filter(m=>m.type==='midi-batch').at(-1).packets,[packet(0x92,67,90)]);
  // Stop epoch cancels a posted old attack, preserving a velocity-zero Off.
  const r=rig();await r.act(()=>r.router.connect());await r.act(()=>r.router.select('A'));

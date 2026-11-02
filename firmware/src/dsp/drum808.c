@@ -23,6 +23,7 @@
  * tests/host/run_drum808.sh renders every sound against 8W8 itself. */
 #include "drum808.h"
 #include "fastmath.h"
+static void hybrid_kick_defaults(hybrid_kick_t *h);
 
 #define SR 44100.0f
 #define TWO_PI_SR 1.424758520e-4f              /* 2 pi / 44100 */
@@ -162,7 +163,8 @@ static float d8_exp2_cr(float x)
     for (k = 10; k >= 0; k--)
         s = ff_add(ff_mul(s, r), k_ifact[k]);
     b.f = s.hi + s.lo;
-    b.i += (int32_t)n << 23;
+    /* Preserve the two's-complement exponent adjustment without shifting a negative signed value. */
+    b.i += (int32_t)((uint32_t)(int32_t)n << 23);
     return b.f;
 }
 
@@ -877,6 +879,45 @@ D8_TICK float bank_tick(d8_bank_t *b)
     return sum * (1.0f / 21.0f);
 }
 
+/* Exact integer phase step: inputs change only at chunk entry, drift refresh,
+ * and per-oscillator wrap/pending-wrap jitter update. Never cache edge correction. */
+static inline uint32_t bank_step(const d8_bank_t *b, int i)
+{
+    float fm1 = b->drift[i] + b->jm1[i] + b->drift[i] * b->jm1[i];
+    float p = (float)b->inc[i] * fm1;
+    return b->inc[i] + (uint32_t)(int32_t)(p + (p >= 0.0f ? 0.5f : -0.5f));
+}
+
+static inline float bank_tick_cached(d8_bank_t *b, uint32_t step[6])
+{
+    float sum = 0.0f;
+    int i;
+    if (--b->drift_cnt <= 0) {
+        b->drift_cnt = 256;
+        for (i = 0; i < 6; i++) {
+            b->drift[i] += 2.5e-4f * rng_frand2(&b->rng);
+            b->drift[i] *= 0.98f;
+        }
+        for (i = 0; i < 6; i++) step[i] = bank_step(b, i);
+    }
+    for (i = 0; i < 6; i++) {
+        float v;
+        uint32_t dt = step[i];
+        uint32_t old = b->ph[i];
+        b->ph[i] = old + dt;
+        if (b->ph[i] < old || (b->pend_wrap & (1u << i))) {
+            b->pend_wrap &= (uint8_t)~(1u << i);
+            b->jm1[i] = 0.0052f * rng_frand2(&b->rng);
+            step[i] = bank_step(b, i); /* new jitter applies to the NEXT sample */
+        }
+        v = b->ph[i] < BANK_DUTY ? 1.0f : -1.0f;
+        v += blep_fix(b->ph[i], dt);
+        v -= blep_fix(b->ph[i] - BANK_DUTY, dt);
+        sum += v * 2.5f;
+    }
+    return sum * (1.0f / 21.0f);
+}
+
 /* ---- metal envelope ---- */
 static inline float menv_tick(d8_menv_t *e)
 {
@@ -1033,7 +1074,46 @@ static void hat_choke(d8_hat_t *v)
     v->lin_n = 0;
 }
 
-D8_TICK float hat_tick(d8_hat_t *v, float bus)
+/* Self-contained hot leaf: use the existing copied executable-RAM window.
+ * All circuit statements and state transitions remain unchanged. */
+/* Exact helper copies force this RAM routine to remain call-free. */
+static inline __attribute__((always_inline)) float hat_ram_menv_tick(d8_menv_t *e)
+{
+    if (e->target > 0.0f) {
+        e->v = e->target + (e->v - e->target) * e->up;
+        if (e->v >= e->target * 0.995f)
+            e->target = 0.0f;
+    } else
+        e->v *= e->down;
+    return e->v;
+}
+
+static inline __attribute__((always_inline)) float hat_ram_knee_gate(float e)            /* the swing VCA's diode, knee 1.2 */
+{
+    float over = e - DIODE_VON;
+    if (over <= 0.0f)
+        return 0.0f;
+    if (over < 1.2f)
+        return over * over * (1.0f / 2.4f);
+    return over - 0.6f;
+}
+
+static inline __attribute__((always_inline)) float hat_ram_bq_run(d8_bq_t *f, float x)
+{
+    float y = f->n0 * x + f->z1;
+    f->z1 = (f->n1 * x + (y + y + f->z2)) - f->e1 * y;
+    f->z2 = (f->n2 * x - y) - f->e2 * y;
+    return y;
+}
+
+static inline __attribute__((always_inline)) float hat_ram_hp1_run(d8_hp1_t *f, float x)
+{
+    f->y = f->a * (f->y + x - f->z);
+    f->z = x;
+    return f->y;
+}
+
+D8_TICK __attribute__((section(".c1_text"))) float hat_tick(d8_hat_t *v, float bus)
 {
     float t1 = bus - v->d1, hp, e, sv;
     int k, np;
@@ -1061,14 +1141,14 @@ D8_TICK float hat_tick(d8_hat_t *v, float bus)
             }
         }
     } else
-        e = menv_tick(&v->env);
-    sv = bq_run(&v->skb, bq_run(&v->ska, hp * knee_gate(e)));
+        e = hat_ram_menv_tick(&v->env);
+    sv = hat_ram_bq_run(&v->skb, hat_ram_bq_run(&v->ska, hp * hat_ram_knee_gate(e)));
     np = v->mode == 1 ? 5 : 1;
     for (k = 0; k < np; k++) {
         v->lp[k] += (sv - v->lp[k]) * v->lp_c;
         sv = v->lp[k];
     }
-    sv = hp1_run(&v->dc, sv * v->out_scale);
+    sv = hat_ram_hp1_run(&v->dc, sv * v->out_scale);
     if (sv > 3.2e-5f || sv < -3.2e-5f)
         v->quiet = 0;
     else if (++v->quiet > 400 &&
@@ -1133,39 +1213,37 @@ static void shp_resolve(drum808_t *d, int s)
     d8_shp_t *p = &d->shp[s];
     static const float k_mk_exp[7] = {0.0f, 0.6f, 0.42f, 0.65f, 0.45f, 0.5f, 0.0f};
     int type = d->pot[s][D8P_DIST];
-    p->drive = d->potv[s][D8P_DRIVE];
-    p->k = 1.0f + p->drive;
-    p->mk = type >= 1 && type <= 5 ? 1.0f / d8_pow(p->k, k_mk_exp[type]) : 1.0f;
-    p->dn = p->drive >= 1.0e-3f ? 0.5f / fm_tanhf(0.5f * p->drive) : 1.0f;
-    p->bm = clampf((p->k - 0.85f) / 1.15f, 0.0f, 1.0f);
-    p->steps = 1.5f + 9.0f / p->k;
-    p->hold = p->k < 1.0f ? 1.0f : 1.0f + (p->k - 1.0f) * 1.7f;
+    float drive = d->potv[s][D8P_DRIVE];
+    float k = 1.0f + drive;
+    p->mk = type >= 1 && type <= 5 ? 1.0f / d8_pow(k, k_mk_exp[type]) : 1.0f;
+    p->dn = drive >= 1.0e-3f ? 0.5f / fm_tanhf(0.5f * drive) : 1.0f;
+    p->steps = 1.5f + 9.0f / k;
 }
 
-D8_TICK float shape(float x, const d8_shp_t *p, int type, float *st)
+D8_TICK float shape(float x, const d8_shp_t *p, int type, float *st, float drive)
 {
-    float v, u;
+    float v,u,k=1.0f+drive,bm=clampf((k-.85f)/1.15f,0,1),hold=k<1?1.0f:1.0f+(k-1.0f)*1.7f;
     int i;
     switch (type) {
     case 1:                                       /* clip */
-        v = x * p->k;
+        v = x * k;
         if (v > 1.0f) v = 1.0f;
         if (v < -1.0f) v = -1.0f;
         return v * p->mk;
     case 2:                                       /* SAT */
-        u = x * p->k + 0.08f * p->k * x * x;
+        u = x * k + 0.08f * k * x * x;
         return (0.35f * x + 0.8775f * (u / (1.0f + fm_fabsf(u)))) * p->mk;
     case 3:                                       /* BFZ */
-        u = x * (p->k * 2.5f) + 0.22f;
+        u = x * (k * 2.5f) + 0.22f;
         v = (u / (1.0f + fm_fabsf(u)) - 0.22f / 1.22f) * 1.05f;
-        return ((1.0f - p->bm) * x + p->bm * v) * p->mk;
+        return ((1.0f - bm) * x + bm * v) * p->mk;
     case 4:                                       /* PDIST */
-        u = x * p->k + 0.12f;
+        u = x * k + 0.12f;
         if (u > 1.0f) u = 1.0f;
         if (u < -1.0f) u = -1.0f;
         return ((u - u * u * u / 3.0f) - (0.12f - (0.12f * 0.12f * 0.12f) / 3.0f)) * (1.5f / 1.479f) * p->mk;
     case 5:                                       /* fold */
-        v = x * p->k;
+        v = x * k;
         for (i = 0; i < 3; i++) {
             if (v > 1.0f) v = 2.0f - v;
             if (v < -1.0f) v = -2.0f - v;
@@ -1174,13 +1252,13 @@ D8_TICK float shape(float x, const d8_shp_t *p, int type, float *st)
     case 6:                                       /* crush: quantise and decimate */
         v = fm_floorf(x * p->steps + 0.5f) / p->steps;
         st[1] += 1.0f;
-        if (st[1] >= p->hold) {
-            st[1] -= p->hold;
+        if (st[1] >= hold) {
+            st[1] -= hold;
             st[0] = v;
         }
         return st[0];
     default:                                      /* diode */
-        return fm_tanhf(p->drive * x) * p->dn;
+        return fm_tanhf(drive * x) * p->dn;
     }
 }
 
@@ -1369,7 +1447,6 @@ void drum808_set(drum808_t *d, int track, int i, int value)
     case K_SWITCH: d->sw[track] = (uint8_t)value; break;
     case K_PAN:
         d->tpan[track] = (uint8_t)value;
-        x0x_pan_gains(value, &d->pan_l[track], &d->pan_r[track]);
         break;
     default: d->kpot[m->slot] = (uint8_t)value; kit_apply(d); break;
     }
@@ -1410,13 +1487,14 @@ void drum808_init(drum808_t *d)
             set_pot(d, s, k, k_spec[s][k].def);
     for (s = 0; s < D8_NUM; s++) {
         d->tpan[s] = 64;                          /* centre */
-        d->pan_l[s] = d->pan_r[s] = d->pan_lc[s] = d->pan_rc[s] = 1.0f;
+        d->pan_lc[s] = d->pan_rc[s] = 1.0f;
     }
     for (s = 0; s < D8_NUM; s++) sound_strip_init(&d->strip[s]);
     drum808_strip_meter_clear(d);
     d->kpot[0] = 100;
     d->kpot[1] = 127;
     kit_apply(d);
+    hybrid_kick_defaults(&d->hybrid);
 
     rng_seed(&d->sd.rng, 0x808D51Eu);
     sd_reset(&d->sd);
@@ -1462,7 +1540,13 @@ static void choke_lane(d8_lane_t *l)
 
 static float lane_hz(int s, float tune) { return d8_midicps(k_base_note[s] + tune); }
 
-void drum808_trigger(drum808_t *d, int track, float vel)
+#include "hybrid_kick.inc"
+
+static void drum808_trigger_impl(drum808_t *d,int track,float vel,int resolve);
+void drum808_trigger(drum808_t *d,int track,float vel){drum808_trigger_impl(d,track,vel,1);}
+void drum808_trigger_resolved(drum808_t *d,int track,float vel){drum808_trigger_impl(d,track,vel,0);}
+int drum808_resolve_velocity(drum808_t *d,float vel,int tier){return (int)(hybrid_kick_resolve_velocity(&d->hybrid,vel,tier)*127.0f+.5f);}
+static void drum808_trigger_impl(drum808_t *d, int track, float vel,int resolve)
 {
     int s, lane;
     float vgain, volts, soft, tune, decay;
@@ -1472,6 +1556,7 @@ void drum808_trigger(drum808_t *d, int track, float vel)
         return;                                   /* drums are one-shots: no note-off */
     if (vel > 1.0f)
         vel = 1.0f;
+    if(resolve && track==D8_BD && d->hybrid.cfg[HK_ENABLE])vel=hybrid_kick_velocity(&d->hybrid,vel);
     s = track_sound(d, track);
     pv = d->potv[s];
     pot = d->pot[s];
@@ -1512,6 +1597,7 @@ void drum808_trigger(drum808_t *d, int track, float vel)
         bd_trigger(&d->bd, lane_hz(s, tune), (float)pot[D8P_DECAY] / 127.0f, (float)pot[D8P_X1] / 127.0f,
                    (float)pot[D8P_X2] / 127.0f, volts);
         d->lane[lane].hit = soft;
+        if(d->hybrid.cfg[HK_ENABLE])hybrid_kick_trigger(&d->hybrid,vel);
         break;
     case D8S_SD: {
         /* Tone: the 808 panel's (8W8 fixes it at the centre, 0.5 = pot 64) */
@@ -1565,7 +1651,7 @@ void drum808_trigger(drum808_t *d, int track, float vel)
 static int voice_active(const drum808_t *d, int l)
 {
     switch (l) {
-    case L_BD: return d->bd.active;
+    case L_BD: return d->bd.active || d->hybrid.active;
     case L_SD: return d->sd.active;
     case L_T0: case L_T1: case L_T2: return d->tom[l - L_T0].active;
     case L_RS: return d->rs.active;
@@ -1594,7 +1680,7 @@ static int voice_active(const drum808_t *d, int l)
 static void voice_stop(drum808_t *d, int l)
 {
     switch (l) {
-    case L_BD: d->bd.active = 0; break;
+    case L_BD: d->bd.active = 0; d->hybrid.active=0;break;
     case L_SD: d->sd.active = 0; break;
     case L_T0: case L_T1: case L_T2: d->tom[l - L_T0].active = 0; break;
     case L_RS: d->rs.active = 0; break;
@@ -1648,7 +1734,7 @@ static int voice_run(drum808_t *d, int l, float *buf, int m, const float *bus, c
 {
     int i;
     switch (l) {
-    case L_BD: for (i = 0; i < m && d->bd.active; i++) buf[i] = bd_tick(&d->bd); break;
+    case L_BD: for (i = 0; i < m && (d->bd.active||d->hybrid.active); i++){float x=d->bd.active?bd_tick(&d->bd):0;buf[i]=d->hybrid.active?hybrid_kick_tick(&d->hybrid,x,d->bd.active):x;}break;
     case L_SD: for (i = 0; i < m && d->sd.active; i++) buf[i] = sd_tick(&d->sd); break;
     case L_T0: case L_T1: case L_T2: {
         d8_tom_t *t = &d->tom[l - L_T0];
@@ -1660,8 +1746,20 @@ static int voice_run(drum808_t *d, int l, float *buf, int m, const float *bus, c
     case L_MA: for (i = 0; i < m && d->ma.active; i++) buf[i] = ma_tick(&d->ma); break;
     case L_CP: for (i = 0; i < m && d->cp.active; i++) buf[i] = cp_tick(&d->cp); break;
     case L_CB: for (i = 0; i < m && d->cb.active; i++) buf[i] = cb_tick(&d->cb, pair[i]); break;
-    case L_CH: for (i = 0; i < m && d->ch.active; i++) buf[i] = hat_tick(&d->ch, bus[i]); break;
-    case L_OH: for (i = 0; i < m && d->oh.active; i++) buf[i] = hat_tick(&d->oh, bus[i]); break;
+    case L_CH: {
+        /* Volatile local function pointer selects the existing indirect-call
+         * ABI, which spans RAM/XIP without a shortened jump relocation. */
+        float (*volatile tick)(d8_hat_t *,float) = hat_tick;
+        for (i = 0; i < m && d->ch.active; i++) buf[i] = tick(&d->ch, bus[i]);
+        break;
+    }
+    case L_OH: {
+        /* Volatile local function pointer selects the existing indirect-call
+         * ABI, which spans RAM/XIP without a shortened jump relocation. */
+        float (*volatile tick)(d8_hat_t *,float) = hat_tick;
+        for (i = 0; i < m && d->oh.active; i++) buf[i] = tick(&d->oh, bus[i]);
+        break;
+    }
     default: for (i = 0; i < m && d->cy.active; i++) buf[i] = cy_tick(&d->cy, bus[i]); break;
     }
     return i;
@@ -1671,18 +1769,20 @@ static int voice_run(drum808_t *d, int l, float *buf, int m, const float *bus, c
 /* the track each lane belongs to (its pan): the clave is the RS track's, the maracas the CP's */
 static const uint8_t k_lane_track[L_NUM] = {D8_BD, D8_SD, D8_LT, D8_MT, D8_HT, D8_RS, D8_RS, D8_CP, D8_CP,
                                             D8_CB, D8_CH, D8_OH, D8_CY};
-static float *d8_dry_r;         /* the render in progress: its right side (0: mono) */
+static float *d8_pan_dl X0X_POOL, *d8_pan_dr X0X_POOL;
+static float *d8_dry_r X0X_POOL;         /* the render in progress: its right side (0: mono) */
 
 static void lane_mix(drum808_t *d, d8_lane_t *l, const float *buf, int m, float *dry, float *rev, float *dly)
 {
     const int tr = k_lane_track[l - d->lane];
     float *dry_r = d8_dry_r;
-    const float pl = d->pan_lc[tr], pr = d->pan_rc[tr], dpl = d->pan_dl[tr], dpr = d->pan_dr[tr];
+    const float pl = d->pan_lc[tr], pr = d->pan_rc[tr], dpl = d8_pan_dl[tr], dpr = d8_pan_dr[tr];
     int s = l->snd, i, type = d->pot[s][D8P_DIST];
     const d8_shp_t *p = &d->shp[s];
     float trim = k_trim[s], g = d->potv[s][D8P_LEVEL] * l->hit * d->vol;
     float ra = d->potv[s][D8P_REV], da = d->potv[s][D8P_DLY];
-    int bypass = p->drive < 1.0e-3f;
+    float drive = d->potv[s][D8P_DRIVE];
+    int bypass = drive < 1.0e-3f;
     if (l->cstep == 0.0f && bypass) {             /* the common case */
         float k = trim * g * l->cg;
         if (dry_r) {
@@ -1712,7 +1812,7 @@ static void lane_mix(drum808_t *d, d8_lane_t *l, const float *buf, int m, float 
             break;
         x = buf[i] * trim;
         if (!bypass)
-            x = shape(x, p, type, l->crush);
+            x = shape(x, p, type, l->crush, drive);
         sv = x * g * l->cg;
         if (dry_r) {
             dry[i] += sv * (pl + dpl * (float)i);
@@ -1732,7 +1832,8 @@ static void strip_lane_add(drum808_t *d, d8_lane_t *l, const float *buf, int m, 
     int s = l->snd, i, type = d->pot[s][D8P_DIST];
     const d8_shp_t *p = &d->shp[s];
     float trim = k_trim[s], g = d->potv[s][D8P_LEVEL] * l->hit * d->vol;
-    int bypass = p->drive < 1.0e-3f;
+    float drive = d->potv[s][D8P_DRIVE];
+    int bypass = drive < 1.0e-3f;
     if (l->cstep == 0.0f && bypass) {
         float k = trim * g * l->cg;
         for (i = 0; i < m; i++) sum[i] += buf[i] * k;
@@ -1746,7 +1847,7 @@ static void strip_lane_add(drum808_t *d, d8_lane_t *l, const float *buf, int m, 
         }
         if (l->cg <= 0.0f) break;
         x = buf[i] * trim;
-        if (!bypass) x = shape(x, p, type, l->crush);
+        if (!bypass) x = shape(x, p, type, l->crush, drive);
         sum[i] += x * g * l->cg;
     }
 }
@@ -1785,8 +1886,8 @@ static __attribute__((noinline)) void strip_track_mix(drum808_t *d, int first, i
     for (i = 0; i < m; i++) {
         float sv = sum[i];
         if (dry_r) {
-            dry[i] += sv * (d->pan_lc[tr] + d->pan_dl[tr] * (float)i);
-            dry_r[i] += sv * (d->pan_rc[tr] + d->pan_dr[tr] * (float)i);
+            dry[i] += sv * (d->pan_lc[tr] + d8_pan_dl[tr] * (float)i);
+            dry_r[i] += sv * (d->pan_rc[tr] + d8_pan_dr[tr] * (float)i);
         } else dry[i] += sv;
         rev[i] += sv * ra; dly[i] += sv * da;
     }
@@ -1819,14 +1920,17 @@ static void d8_render(drum808_t *d, float *dry, float *rev, float *dly, int n)
         int cb_on = lane_on(d, L_CB);
         if (d8_dry_r)                                 /* the tracks' pans glide over this chunk */
             for (l = 0; l < D8_NUM; l++) {
-                d->pan_dl[l] = x0x_glide_block(&d->pan_lc[l], d->pan_l[l], m);
-                d->pan_dr[l] = x0x_glide_block(&d->pan_rc[l], d->pan_r[l], m);
+                float pl,pr;x0x_pan_gains(d->tpan[l],&pl,&pr);
+                d8_pan_dl[l] = x0x_glide_block(&d->pan_lc[l],pl,m);
+                d8_pan_dr[l] = x0x_glide_block(&d->pan_rc[l],pr,m);
             }
         /* the shared bank runs only while a metal voice sounds */
         if (cb_on || lane_on(d, L_CH) || lane_on(d, L_OH) || lane_on(d, L_CY)) {
             d8_bank_t *b = &d->bank;
+            uint32_t step[6]; /* chunk-local: no new persistent state or invalidation ABI */
+            for (i = 0; i < 6; i++) step[i] = bank_step(b, i);
             for (i = 0; i < m; i++) {
-                bus[i] = bank_tick(b);
+                bus[i] = bank_tick_cached(b, step);
                 if (cb_on)
                     pair[i] = ((b->ph[4] < BANK_DUTY ? 2.5f : -2.5f) + (b->ph[5] < BANK_DUTY ? 2.5f : -2.5f)) * 0.5f;
             }
@@ -1872,6 +1976,7 @@ static void d8_render(drum808_t *d, float *dry, float *rev, float *dly, int n)
 
 void drum808_render(drum808_t *d, float *dry, float *rev, float *dly, int n)
 {
+    float dl[D8_NUM]={0},dr[D8_NUM]={0};d8_pan_dl=dl;d8_pan_dr=dr;
     d8_dry_r = 0;
     d8_render(d, dry, rev, dly, n);
 }
@@ -1880,13 +1985,13 @@ void drum808_pan_settle(drum808_t *d)
 {
     int t;
     for (t = 0; t < D8_NUM; t++) {
-        d->pan_lc[t] = d->pan_l[t];
-        d->pan_rc[t] = d->pan_r[t];
+        x0x_pan_gains(d->tpan[t],&d->pan_lc[t],&d->pan_rc[t]);
     }
 }
 
 void drum808_render_st(drum808_t *d, float *dry_l, float *dry_r, float *rev, float *dly, int n)
 {
+    float dl[D8_NUM]={0},dr[D8_NUM]={0};d8_pan_dl=dl;d8_pan_dr=dr;
     d8_dry_r = dry_r;
     d8_render(d, dry_l, rev, dly, n);
     d8_dry_r = 0;

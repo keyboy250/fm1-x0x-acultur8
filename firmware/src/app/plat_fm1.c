@@ -3,8 +3,8 @@
  * Part of the unity build (x0x.c), after the HAL, usb.c, storage.c and panel.c. */
 
 uint32_t plat_ms(void) { return fm1_ms; }
-uint32_t plat_control_enter(void) { return irq_save(); }
-void plat_control_leave(uint32_t saved) { irq_restore(saved); }
+uint32_t plat_control_enter(void) { return fm1_irq_gate_save(); }
+void plat_control_leave(uint32_t saved) { fm1_irq_gate_restore(saved); }
 
 uint32_t plat_buttons(void)
 {
@@ -90,27 +90,12 @@ void plat_leds(uint32_t buttons, uint32_t keys)
     fm1_led_dim_div = glow_on || keys_dim ? GLOW_DIV : 0u;
 }
 
-/* MIDI: Felucca's rings carry 4-byte USB-MIDI event packets, byte 0 = cable / CIN */
-int plat_midi_connected(void) { return usb.config && !usb.suspended; }
-int plat_midi_in(uint32_t *pkt)
-{
-    while(mi_r!=mi_ready){*pkt=midi_in_q[mi_r++%MQ];if(*pkt)return 1;}
-    return 0;
-}
-void plat_midi_clear_cc_source(uint8_t source){cc_ingress_clear_source(midi_in_q,&mi_w,MQ,source);}
-void plat_midi_service(void){
-    static uint8_t previous_usb;
-    uint8_t connected=(uint8_t)(usb.config&&!usb.suspended);
-    if(previous_usb&&!connected)cc_reset_source(0);
-    previous_usb=connected;cc_ingress_service(midi_in_q,&mi_w,&mi_r,MQ);
-}
-int plat_midi_out(uint32_t pkt) { return midi_out_event(pkt); }
-int plat_midi_pair(uint32_t first,uint32_t second) { return midi_out_pair(first,second); }
-int plat_midi_batch(const uint32_t *packets,uint32_t count) { return midi_out_batch(packets,count); }
-void plat_midi_cancel(void) {}
+#include "midi_fm1.inc"
+int plat_midi_tx_idle(void) { return mo_w==mo_r && so_w==so_r; }
 
 int plat_store_load(uint32_t obj, void *dst, uint32_t max) { return flash_ok ? st_load(obj, dst, max) : -1; }
 int plat_store_save(uint32_t obj, const void *src, uint32_t len) { return flash_ok ? st_save(obj, src, len) : -9; }
+int plat_store_load_prev(uint32_t obj, void *dst, uint32_t max) { return flash_ok ? st_load_prev(obj, dst, max) : -1; }
 
 int plat_slot_zones(int k) { return (k >= 0 && k < SMP_USER_SLOTS) ? usr_nz[k] : 0; }
 
@@ -156,6 +141,17 @@ int plat_cpu2_run(void (*fn)(uint32_t), uint32_t arg) { return fm1_cpu1_run(fn, 
 int plat_cpu2_wait(void) { return fm1_cpu1_wait(); }
 int plat_cpu2_gave_up(void) { return fm1_c1_gave_up; }
 uint32_t plat_cpu2_bad(void) { return fm1_c1_mb.bad; }
+uint8_t plat_vdc14_level, plat_sysvdd_level;    /* main_fm1.c, at start */
+int plat_vdc14_mv(void) { return 1250 + 50 * plat_vdc14_level; }
+int plat_sysvdd_mv(void) { return 930 + 30 * plat_sysvdd_level; }
+int plat_last_crash(uint32_t v[5])                   /* fm1_crash (.noinit): a warm reset keeps it, power-off clears it */
+{
+    if (fm1_crash.magic != FM1_CRASH_MAGIC)
+        return 0;
+    v[0] = fm1_crash.vec, v[1] = fm1_crash.pc, v[2] = fm1_crash.emu, v[3] = fm1_crash.dbg, v[4] = fm1_crash.rets;
+    return 1;
+}
+int plat_cpu2_barred(void) { return fm1_c1_bar.magic == FM1_C1_BAR_MAGIC && fm1_c1_bar.barred == 1u; }
 uint32_t plat_xruns(void) { return audio_xruns; }
 
 static int perf_cyc_ok, perf_stalls_on;

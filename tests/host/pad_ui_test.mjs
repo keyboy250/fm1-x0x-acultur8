@@ -23,6 +23,7 @@ const pad=[2,60,48,84,1,1,0,2,60,64,67,60,64,67,0,1];
 const frame=(cap=511,read=0,revision=1,values=pad,playing=false)=>({type:'frame',sync:{playing,bpm:120},variant:{info:{abi:1,revision,values:[cap,1,0,read,read]},pad:{abi:1,section:8,revision,values},chord:{values:[1,0,4,7,60,64,67]},bass:[]}});
 assert.equal(permissions,0);assert.equal($('pad-controls').disabled,true);
 dispatch(frame(255));assert.equal($('pad-controls').disabled,true);assert.match($('pad-availability').textContent,/unavailable/);
+dispatch({type:'midi-state',protocol:0x00020001,route:0,epoch:0,transportEpoch:0,pending:0,ready:false});
 dispatch(frame());assert.equal($('pad-controls').disabled,false);
 assert.equal($('pad-channel').value,'2');assert.equal($('pad-root').value,'60');assert.equal($('pad-low').value,'48');assert.equal($('pad-high').value,'84');assert.equal($('pad-notes-out').checked,true);
 assert.match($('pad-engine-state').textContent,/60, 64, 67 on channel 3/);assert.match($('pad-engine-state').textContent,/enqueue acceptance, not physical delivery/);
@@ -58,7 +59,7 @@ assert.equal(permissions,1);assert.match($('pad-route-status').textContent,/test
  const ready=sent.filter(m=>m.type==='midi-route'&&m.ready).at(-1);assert.ok(ready);
  assert.equal($('pad-retry').disabled,true,'activation is awaiting acknowledgement');
  port.state='disconnected';access.dispatchEvent(new Event('statechange'));
- dispatch({type:'midi-route-reply',request:ready.request,route:ready.route,result:0,ready:true});await ticks();
+ dispatch({type:'midi-route-reply',protocol:0x00020001,request:ready.request,route:ready.route,result:0,ready:true});await ticks();
  assert.equal($('pad-retry').disabled,false,'late success does not strand the real Retry button');
  port.state='connected';access.dispatchEvent(new Event('statechange'));await ticks();
  assert.equal(port.opens,1,'reconnect does not reopen');assert.equal($('pad-retry').disabled,false);
@@ -68,7 +69,7 @@ assert.equal(permissions,1);assert.match($('pad-route-status').textContent,/test
  const retry=sent.filter(m=>m.type==='midi-route'&&m.ready).at(-1);assert.ok(retry.request>ready.request);
  assert.equal(retry.route,ready.route,'retry retains the original route for cleanup');
  // Resolve this final request as rejected so the test leaves no pending RPC.
- dispatch({type:'midi-route-reply',request:retry.request,route:retry.route,result:-3,ready:false});await ticks();
+ dispatch({type:'midi-route-reply',protocol:0x00020001,request:retry.request,route:retry.route,result:-3,ready:false});await ticks();
  assert.equal($('pad-retry').disabled,false);assert.equal(permissions,2);
  for(const boundary of ['ready','cancel','open']){
    let release;const gate=new Promise(resolve=>release=resolve);
@@ -76,23 +77,24 @@ assert.equal(permissions,1);assert.match($('pad-route-status').textContent,/test
    $('pad-retry').dispatchEvent(new Event('click'));await ticks();
    let obsolete=sent.filter(m=>m.type==='midi-route'&&m.ready).at(-1);
    if(boundary==='cancel'){
-     dispatch({type:'midi-route-reply',request:obsolete.request,route:obsolete.route,result:0,ready:true});await ticks();
+     dispatch({type:'midi-route-reply',protocol:0x00020001,request:obsolete.request,route:obsolete.route,result:0,ready:true});await ticks();
      obsolete=sent.filter(m=>m.type==='midi-cancel').at(-1);assert.ok(obsolete);
    }
    assert.equal($('pad-retry').disabled,true);const opens=port.opens;
-   window.dispatchEvent(new Event('fm1-ready'));await ticks();
+   window.dispatchEvent(new Event('fm1-ready'));
+   dispatch({type:'midi-output-capability',protocol:0x00020001,supported:true});await ticks();
    assert.equal($('pad-retry').disabled,true,'replacement needs a fresh supported stopped frame');
-   dispatch({type:'midi-route-reply',request:obsolete.request,route:obsolete.route,result:0,ready:true});await ticks();
+   dispatch({type:'midi-route-reply',protocol:0x00020001,request:obsolete.request,route:obsolete.route,result:0,ready:true});await ticks();
    assert.equal($('pad-disconnect').disabled,true,'old reply cannot enable the replacement route');
    dispatch(frame());await ticks();assert.equal($('pad-retry').disabled,false,boundary+' cannot strand Retry after reset');
    assert.equal(port.opens,opens,'engine replacement never reopens automatically');
    port.open=async()=>{port.opens++;return port;};$('pad-retry').dispatchEvent(new Event('click'));await ticks();
    const fresh=sent.filter(m=>m.type==='midi-route'&&m.ready).at(-1);
    assert.ok(fresh.request>obsolete.request);assert.notEqual(fresh.route,obsolete.route);
-   dispatch({type:'midi-route-reply',request:obsolete.request,route:obsolete.route,result:0,ready:true});release();await ticks();
+   dispatch({type:'midi-route-reply',protocol:0x00020001,request:obsolete.request,route:obsolete.route,result:0,ready:true});release();await ticks();
    assert.equal($('pad-retry').disabled,true,'late open/reply cannot clear a new retry lock');
    assert.equal($('pad-disconnect').disabled,true);
-   dispatch({type:'midi-route-reply',request:fresh.request,route:fresh.route,result:-3,ready:false});await ticks();
+   dispatch({type:'midi-route-reply',protocol:0x00020001,request:fresh.request,route:fresh.route,result:-3,ready:false});await ticks();
    assert.equal($('pad-retry').disabled,false);assert.equal(permissions,2);
  }
 }

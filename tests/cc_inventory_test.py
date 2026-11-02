@@ -17,11 +17,31 @@ class InventoryTest(unittest.TestCase):
     def setUpClass(cls):cls.data=cc.build(ROOT)
 
     def clone(self,root):
-        for path in cc.FILES+[str(cc.JSON_PATH),str(cc.MD_PATH)]:
+        for path in cc.FILES+[str(cc.JSON_PATH),str(cc.MD_PATH),'tests/hybrid-oracle/cc-addresses.json']:
             target=root/path;target.parent.mkdir(parents=True,exist_ok=True)
             target.write_text((ROOT/path).read_text(encoding='utf-8'),encoding='utf-8')
 
     def test_generated_artifacts_current(self):cc.check_artifacts(ROOT,self.data)
+
+    def test_phase_controls_are_explicitly_unmapped_and_stopped(self):
+        byid={x['id']:x for x in self.data['entries']}
+        for field,maximum in [('engine',1),('wave',7),('shape',127),('envelope',15)]:
+            row=byid['phase303b.'+field]
+            self.assertIsNone(row['address'])
+            self.assertNotIn('parameter_number',row)
+            self.assertEqual(row['range'],[0,maximum])
+            self.assertIn('stopped',row['live_requirement'])
+
+    def test_saved_kick_additive_bindings_and_legacy_wire_map_unchanged(self):
+        byid={x['id']:x for x in self.data['entries']}
+        expected=json.loads((ROOT/'tests/hybrid-oracle/cc-addresses.json').read_text(encoding='utf-8'))
+        for name,fields in expected.items():
+            for key,value in fields.items():self.assertEqual(byid[name].get(key),value,(name,key))
+        rows=[row for name,row in byid.items() if name.startswith('hybrid808.session.')]
+        self.assertEqual(len(rows),39)
+        for row in rows:
+            self.assertIsNotNone(row['address']);self.assertEqual(row['parameter_number'],1250+int(row['id'].rsplit('.',1)[1]))
+            self.assertIn('next-hit',row['live_requirement']);self.assertIn('format7',row['live_requirement'])
 
     def test_exact_descriptor_counts_and_nonmusical_accounting(self):
         # Independent source-review expectations, not copied from generator output.
@@ -31,7 +51,7 @@ class InventoryTest(unittest.TestCase):
             '303':[12,12],'BREAK':[2],'FX':[16],'MIX':[4]*5,'MASTER':[14]})
         byid={x['id']:x for x in self.data['entries']}
         self.assertEqual(byid['arrangement.mode']['range'],[0,9])
-        self.assertEqual(byid['arrangement.duration']['range'],[1,8])
+        self.assertEqual(byid['arrangement.duration']['range'],[1,32])
         self.assertEqual(byid['pad.channel']['allowed_values'],list(range(16))+[255])
         self.assertIn('allowed_values[round',byid['pad.channel']['scaling'])
         self.assertEqual(byid['generator.3']['semantic_offset'],1)
@@ -104,6 +124,14 @@ class InventoryTest(unittest.TestCase):
             if row.get('optional_cc14'):self.assertIn('allowed_values',row['optional_cc14']['scaling'])
             self.assertIn(cc.scaled_value(row,8192,14),allowed)
         self.assertNotEqual(cc.scaled_value(rows['pad.channel'],8192,14),128)
+
+    def test_long_blocks_and_scale_keep_legacy_coarse_values(self):
+        rows={x['id']:x for x in self.data['entries']}
+        for raw in range(128):
+            self.assertEqual(cc.scaled_value(rows['follow.mode'],raw),(raw*2+63)//127)
+            self.assertEqual(cc.scaled_value(rows['arrangement.duration'],raw),1+(raw*7+63)//127)
+        self.assertEqual(cc.exact_value(rows['follow.mode'],3),3)
+        self.assertEqual(cc.exact_value(rows['arrangement.duration'],32),32)
 
     def test_motion_target_domains_and_all_condition_exact_transactions(self):
         rows={x['id']:x for x in self.data['entries']};motion=rows['motion.value']

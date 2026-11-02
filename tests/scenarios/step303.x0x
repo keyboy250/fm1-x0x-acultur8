@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # 303 steps: pressing an empty step turns it on at once (hold it and the knobs edit it); a tap on a
 # step that is on takes it off; holding a step that is on only shows it.
 wait 300

@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* X0X on the host: the whole app — UI, project, engine, sequencer, every DSP part — run
+/* X0X on the host: the whole app â€” UI, project, engine, sequencer, every DSP part â€” run
  * against a simulated FM-1 driven by a script. Audio goes to a WAV, the screen to PNGs,
  * the key / button lights to a text dump, MIDI out to a log. The device-only parts
  * (HAL, USB, OTA, flash driver) are replaced by plat.h implemented here.
@@ -28,6 +28,18 @@
  *   snapline B                   remember 303 B's line on the pattern shown (expect linechgB: 1 = it changed since)
  *   projimg FILE                 a project as the FM-1 holds it in RAM (fm1_debug peek of proj): saved
  *                                to the simulated flash and booted, as if it had been made here
+ *   backup FILE                  a backup over USB (firmware/src/backup.c's image: the six project objects) written
+ *                                to FILE (in OUTDIR), as tools/x0x_backup.py writes it (stopped: the unsaved saved
+ *                                first)
+ *   restore FILE                 a backup (FILE in OUTDIR, or a path with a /) put back as the device does once SEL
+ *                                answers RESTORE FROM USB?: checked whole first; refused while playing (STOP FIRST)
+ *                                or when damaged: nothing changes (expect restore_rc: 0, 10 playing, else damaged)
+ *   backup_damage FILE [head]    a byte of a backup file changed (its middle; head: made Polly's, CRCs right)
+ *   listen                       a screen reader listens (announce.c's HELLO, again every 2 s); each SAY is printed
+ *                                ("said: ..."; "said!:" cuts off what was being said)
+ *   where                        the reader asks for the whole screen
+ *   said TEXT                    some SAY since the last "said" (or "listen") has TEXT in it: else a failure
+ *   said_none                    nothing said since the last check (no reader: nothing is sent)
  */
 #define X0X_HOST 1
 #include <stdio.h>
@@ -68,6 +80,7 @@ static void lcd_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint1
 /* ---------------------------------------------------------- platform --- */
 #include "../firmware/src/app/plat.h"
 #include "../firmware/src/app/cc.h"
+#include "../firmware/src/app/engine.h"
 #define RING_PUBLISH() __asm__ volatile("" ::: "memory")
 
 #include "../firmware/src/app/master_control.h"
@@ -76,7 +89,10 @@ static uint32_t now_ms, held_btn, held_keys;
 static int32_t enc_acc[NE];
 static uint32_t lit_btn, lit_keys, dim_keys;
 
-uint32_t plat_ms(void) { return now_ms; }
+#ifndef HOST_MS_PROBE
+#define HOST_MS_PROBE() ((void)0)
+#endif
+uint32_t plat_ms(void) { HOST_MS_PROBE(); return now_ms; }
 #ifndef PLAT_CONTROL_TEST
 uint32_t plat_control_enter(void) { return 0; }
 void plat_control_leave(uint32_t saved) { (void)saved; }
@@ -106,6 +122,8 @@ void plat_keys_dim(uint32_t k) { dim_keys = k; }      /* dim keys: "o" in the le
 #define MQ 256
 static uint32_t min_q[MQ];
 static volatile uint32_t mi_w,mi_r;
+static uint16_t mi_clock_retired[3];
+void plat_midi_retire_clock(uint8_t sources){uint32_t i,n=mi_w-mi_r;for(i=0;i<3;i++)if(sources&(1u<<i))mi_clock_retired[i]=(uint16_t)n;}
 #include "../firmware/src/midi_cc_ingress.h"
 static FILE *midi_log;
 #ifdef X0X_WEB
@@ -113,22 +131,27 @@ static FILE *midi_log;
 static int midi_connected; /* explicit browser route starts detached */
 static uint32_t web_midi_ring[64],web_midi_w,web_midi_r,web_midi_latched,web_midi_cancel_epoch;
 static uint32_t web_input_pending,web_input_scanned,web_input_applied;
+static uint32_t web_midi_cancel_pending;
+static uint32_t web_midi_transport_cancel_pending,web_midi_transport_cancel_epoch;
 void plat_midi_cancel(void) {
-    uint32_t i;
-    for(i=web_midi_r;i!=web_midi_w;i++) {
-        uint32_t p=web_midi_ring[i%64];
-        if(((p>>8)&240)==144 && ((p>>24)&127))web_midi_ring[i%64]=p|0x80000000u;
-    }
+    /* Producer never modifies published slots or consumer/latched cursors. */
+    web_midi_cancel_pending=web_midi_w-web_midi_r;
     web_midi_cancel_epoch++;
+}
+void plat_midi_transport_cancel(void) {
+    plat_midi_cancel();web_midi_transport_cancel_pending=web_midi_w-web_midi_r;
+    web_midi_transport_cancel_epoch=web_midi_cancel_epoch;
 }
 #define WEB_EXPORT __attribute__((used,visibility("default")))
 WEB_EXPORT int host_web_midi_ready(int ready) {
     if(ready<0 || ready>1)return -1;
-    if(midi_connected && !ready)plat_midi_cancel();
+    if(midi_connected && !ready){seq_transport_retire(&seq);plat_midi_transport_cancel();}
     midi_connected=ready;return 0;
 }
 WEB_EXPORT uint32_t host_web_midi_epoch(void) {return web_midi_cancel_epoch;}
-WEB_EXPORT uint32_t host_web_midi_cancel(void) {plat_midi_cancel();return web_midi_cancel_epoch;}
+WEB_EXPORT uint32_t host_web_midi_transport_epoch(void) {return web_midi_transport_cancel_epoch;}
+WEB_EXPORT uint32_t host_web_midi_output_version(void) {return 0x00020001u;}
+WEB_EXPORT uint32_t host_web_midi_cancel(void) {seq_transport_retire(&seq);plat_midi_transport_cancel();return web_midi_cancel_epoch;}
 WEB_EXPORT uint32_t host_web_midi_pending(void) {return web_midi_w-web_midi_r;}
 WEB_EXPORT int host_web_midi_batch(int max) {
     uint32_t n=host_web_midi_pending();
@@ -136,23 +159,39 @@ WEB_EXPORT int host_web_midi_batch(int max) {
     web_midi_latched=n<(uint32_t)max?n:(uint32_t)max;return (int)web_midi_latched;
 }
 WEB_EXPORT uint32_t host_web_midi_packet(int index) {
-    return index<0 || (uint32_t)index>=web_midi_latched?0:web_midi_ring[(web_midi_r+(uint32_t)index)%64];
+    uint32_t at,p,status;
+    if(index<0 || (uint32_t)index>=web_midi_latched)return 0;
+    at=web_midi_r+(uint32_t)index;p=web_midi_ring[at%64];status=(p>>8)&255u;
+    if(((uint32_t)index<web_midi_transport_cancel_pending &&
+        (status==248u||status==250u||status==251u||status==252u)) ||
+       ((uint32_t)index<web_midi_cancel_pending && (status&240u)==144u && ((p>>24)&127u)))p|=0x80000000u;
+    return p;
 }
 WEB_EXPORT int host_web_midi_ack(int prefix) {
     if(prefix<0 || (uint32_t)prefix>web_midi_latched)return -1;
-    web_midi_r+=(uint32_t)prefix;web_midi_latched-=(uint32_t)prefix;return 0;
+    web_midi_r+=(uint32_t)prefix;web_midi_latched-=(uint32_t)prefix;
+    web_midi_cancel_pending=web_midi_cancel_pending>(uint32_t)prefix?web_midi_cancel_pending-(uint32_t)prefix:0;
+    web_midi_transport_cancel_pending=web_midi_transport_cancel_pending>(uint32_t)prefix?web_midi_transport_cancel_pending-(uint32_t)prefix:0;
+    return 0;
 }
 #else
 static int midi_connected=1; /* synthetic host connection */
 void plat_midi_cancel(void) {}
+void plat_midi_transport_cancel(void) {}
 #endif
 int plat_midi_connected(void) { return midi_connected; }
 int plat_midi_in(uint32_t *pkt)
 {
-    while(mi_r!=mi_ready){*pkt=min_q[mi_r++%MQ];if(*pkt)return 1;}
+    while(mi_r!=mi_ready){
+        uint32_t p=min_q[mi_r++%MQ],source=(p>>4)&15u,status=(p>>8)&255u,i;
+        int retired=source<3 && mi_clock_retired[source];
+        for(i=0;i<3;i++)if(mi_clock_retired[i])mi_clock_retired[i]--;
+        if(retired && (status==248u||status==250u||status==251u||status==252u))continue;
+        *pkt=p;if(p)return 1;
+    }
     return 0;
 }
-void plat_midi_service(void){cc_ingress_service(min_q,&mi_w,&mi_r,MQ);}
+void plat_midi_service(void){cc_generation_service();cc_ingress_service(min_q,&mi_w,&mi_r,MQ);}
 void plat_midi_clear_cc_source(uint8_t source){cc_ingress_clear_source(min_q,&mi_w,MQ,source);}
 #ifdef X0X_WEB
 WEB_EXPORT int host_web_midi_ingest(uint32_t packet,int source){
@@ -201,10 +240,12 @@ int plat_midi_batch(const uint32_t *packets,uint32_t count)
 #endif
 }
 
-/* flash: one buffer per object, kept across a simulated reboot */
-static uint8_t store[OBJ_NOBJ][PLAT_STORE_MAX];
-static int store_len[OBJ_NOBJ] = {-1, -1, -1, -1, -1, -1, -1};
+/* flash: one buffer per object and the one before (storage.c's A/B copies), kept across a simulated
+ * reboot; "tearsave N": the next save stops after N more object writes (a power cut mid-save) */
+static uint8_t store[OBJ_NOBJ][PLAT_STORE_MAX], store_prev[OBJ_NOBJ][PLAT_STORE_MAX];
+static int store_len[OBJ_NOBJ] = {-1, -1, -1, -1, -1, -1, -1, -1}, store_prev_len[OBJ_NOBJ] = {-1, -1, -1, -1, -1, -1, -1, -1};
 static uint32_t store_writes;
+static int store_tear = -1;                          /* object writes left before the cut; -1 none */
 #ifndef HOST_STORE_PROBE
 #define HOST_STORE_PROBE(writing) 0
 #endif
@@ -231,10 +272,26 @@ int plat_store_save(uint32_t obj, const void *src, uint32_t len)
     if (HOST_STORE_PROBE(1)) return -1;
     if (obj >= OBJ_NOBJ || len > PLAT_STORE_MAX)
         return -1;
+    if (store_tear == 0)
+        return -1;                                   /* the power is off: nothing more is written */
+    if (store_tear > 0)
+        store_tear--;
+    memcpy(store_prev[obj], store[obj], PLAT_STORE_MAX);
+    store_prev_len[obj] = store_len[obj];
     memcpy(store[obj], src, len);
     store_len[obj] = (int)len;
     store_writes++;
     return 0;
+}
+int plat_store_load_prev(uint32_t obj, void *dst, uint32_t max)
+{
+    int n = obj < OBJ_NOBJ ? store_prev_len[obj] : -1;
+    if (n < 0)
+        return -1;
+    if ((uint32_t)n > max)
+        n = (int)max;
+    memcpy(dst, store_prev[obj], (size_t)n);
+    return n;
 }
 
 /* sample slots, two ways in:
@@ -294,19 +351,37 @@ const uint8_t *plat_slot(int k, int z, uint32_t *ns, uint32_t *rate, char name[9
 static uint32_t cpu_pct, cpu_peak;
 static int load_force = -1;                      /* script "load N": the guard sees N%, -1 measured */
 /* the second core, simulated: a job runs at once, in order (the split path, the same sums) */
+#include "../firmware/src/worker_trace.h"
+static uint32_t host_worker_job,host_worker_arg,host_worker_dispatch,host_worker_start,host_worker_end;
 static int cpu2_on;
 int plat_cpu2_set(int on) { cpu2_on = on; return 0; }
 int plat_cpu2_on(void) { return cpu2_on; }
 int plat_cpu2_run(void (*fn)(uint32_t), uint32_t arg)
 {
-    if (!cpu2_on)
-        return 0;
-    fn(arg);
+    if (!cpu2_on){worker_trace_add(0,arg,0,0,0,0,0,WTR_UNAVAILABLE|WTR_HOST);return 0;}
+    host_worker_job++;host_worker_arg=arg;
+    host_worker_dispatch=plat_ticks24();host_worker_start=plat_ticks24();
+    fn(arg);host_worker_end=plat_ticks24();
     return 1;
 }
-int plat_cpu2_wait(void) { return 0; }
+int plat_cpu2_wait(void) {
+    uint32_t enter=plat_ticks24(),seen=plat_ticks24();
+    worker_trace_add(host_worker_job,host_worker_arg,host_worker_dispatch,host_worker_start,host_worker_end,enter,seen,WTR_OK|WTR_HOST);
+    return 0;
+}
 int plat_cpu2_gave_up(void) { return 0; }
 uint32_t plat_cpu2_bad(void) { return 0; }
+int plat_cpu2_barred(void) { return 0; }
+int plat_vdc14_mv(void) { return 1600; }
+int plat_sysvdd_mv(void) { return 1380; }
+static int host_crash;                            /* "fakecrash": PERF shows a crash record */
+int plat_last_crash(uint32_t v[5])
+{
+    static const uint32_t r[5] = {1, 0x03000470u, 0, 0x00001000u, 0x02007D80u};   /* fm1-x0x#21's first */
+    for (int i = 0; i < 5; i++)
+        v[i] = r[i];
+    return host_crash;
+}
 uint32_t plat_cpu_pct(void) { return cpu_pct; }
 uint32_t plat_xruns(void) { return 0; }
 /* performance: no CPU counter here: the "cycles" are nanoseconds (plat_cycles_hz) */
@@ -334,6 +409,62 @@ void plat_stalls_enable(int on) { (void)on; }
 
 /* -------------------------------------------------------------- app --- */
 #include "../firmware/src/app/x0x.h"
+#define ANN_NAME "X0X " X0X_VERSION
+#include "ann_words.h"                                  /* the words file's link (tools/gen_words.py) */
+#include "../firmware/src/announce.c"
+/* what the reader is told: the last SAY (expect said), every one to stdout with "said:" (listen) */
+static char said_last[ANN_MAX + 1], said_log[16384];   /* said_log: every SAY since the last "said" check */
+static uint32_t said_count, said_len;
+static int said_print = 1, sim_listen;
+static FILE *said_log_f;                                /* X0X_SAID_LOG=FILE: every SAY, for fm1-reader's audit */
+#ifdef X0X_WEB
+#ifdef X0X_WEB_SYSEX
+static void web_said(const uint8_t *p, uint32_t n);
+#else
+static void web_said(const uint8_t *p, uint32_t n) {(void)p;(void)n;}
+#endif
+#endif
+static int ann_wire_send(const uint8_t *p, uint32_t n)
+{
+#ifdef X0X_WEB
+    web_said(p, n);
+#endif
+    if (n >= 7u && p[4] == ANN_SAY) {
+        uint32_t i, k = 0;
+        for (i = 6; i + 1u < n && k < ANN_MAX; i++)
+            said_last[k++] = (char)p[i];
+        said_last[k] = 0;
+        said_count++;
+        if (said_len + k + 2u < sizeof said_log) {
+            memcpy(said_log + said_len, said_last, k);
+            said_len += k;
+            said_log[said_len++] = '\n';
+            said_log[said_len] = 0;
+        }
+#ifndef X0X_WEB
+        if (said_print)
+            printf("said%s: %s\n", (p[5] & ANN_NOW) ? "!" : "", said_last);
+        if (said_log_f)
+            fprintf(said_log_f, "%s\t%s\n", (p[5] & ANN_KEEP) ? "WARN" : "MSG", said_last);
+#endif
+    }
+    return 0;
+}
+int plat_midi_tx_idle(void) {
+#ifdef X0X_WEB
+ return host_web_midi_pending()==0;
+#else
+ return 1; /* native log sink is synchronous */
+#endif
+}
+#include "../firmware/src/timing_store.h"
+int plat_timing_load(uint32_t words[4]) {
+ timing_record_t r=timing_store_read();words[0]=r.rate;words[1]=r.generation;words[2]=r.unit;words[3]=r.status;return 0;
+}
+int plat_timing_save(uint32_t rate,uint32_t generation,uint32_t old_unit,uint32_t new_unit) {
+ static const uint8_t p[32]={0x35,0x4e,0x41,0x50,2,3,4,5,6,7,8,9,10,11,12,13,0,1,0,1,6,2,3,4,5,1,1,1,1,1,1,1};
+ return timing_store_write(p,rate,generation,old_unit,new_unit);
+}
 #include "../firmware/src/app/project.c"
 #include "../firmware/src/app/ui.c"
 #include "../firmware/src/app/cc.c"
@@ -489,6 +620,7 @@ static double now_ns(void)
 
 static void boot(void)
 {
+    engine_timing_init();
     engine_init(proj.pat, &proj.arr.song, proj.arr.lane, &proj.sound);
     if (project_load() != 0)
         project_defaults();
@@ -565,6 +697,10 @@ static void run_ms(uint32_t ms)
             engine_brk_loops();
         }
         plat_midi_service();
+        if (sim_listen && now_ms % 2000u == 0) {        /* the reader's HELLO, as web/reader sends it */
+            static const uint8_t HELLO[] = {ANN_H0, ANN_H1, ANN_H2, ANN_HELLO, ANN_VER};
+            ann_frame(HELLO, sizeof HELLO, now_ms);
+        }
         if (now_ms >= ui_due) {
             ui_due = now_ms + 16;
             ui_frame();
@@ -719,11 +855,99 @@ static int load_slot(int k, int z, const char *path)
 }
 
 static bpart_t line_snap[NBASS];                  /* "snapline" */
+static pattern_t pat_snap[NPAT];                  /* "snapproj": the patterns, for "expect projsame" */
+/* ------------------------------------------- backup / restore over USB --- */
+/* backup.c's image, made and taken from the simulated store (the device's side and its safety: tests/backup_test.c) */
+static int restore_rc = -1;
+static uint32_t sim_crc32(uint32_t c, const uint8_t *p, size_t n)
+{
+    c = ~c;
+    while (n--) {
+        int k;
+        c ^= *p++;
+        for (k = 0; k < 8; k++)
+            c = c & 1u ? 0xEDB88320u ^ (c >> 1) : c >> 1;
+    }
+    return ~c;
+}
+static void sim_wr32(uint8_t *p, uint32_t v) { p[0] = (uint8_t)v, p[1] = (uint8_t)(v >> 8), p[2] = (uint8_t)(v >> 16), p[3] = (uint8_t)(v >> 24); }
+static uint32_t sim_rd32(const uint8_t *p) { return p[0] | p[1] << 8 | (uint32_t)p[2] << 16 | (uint32_t)p[3] << 24; }
+static const uint8_t SIM_OBJ[6] = {OBJ_SET, OBJ_SOUND, OBJ_PAT0, OBJ_PAT1, OBJ_SONG, OBJ_MOTION};
+static uint8_t sim_img[16 + 6 * (8 + PLAT_STORE_MAX) + 4];
+static int sim_backup(const char *path)
+{
+    size_t n = 16;
+    FILE *f;
+    int i;
+    if (!seq.playing)
+        ui_flush();
+    memcpy(sim_img, "X0XB", 4);
+    sim_img[4] = 1, sim_img[5] = 0, sim_img[6] = 6, sim_img[7] = 0;
+    sim_wr32(sim_img + 8, (uint32_t)ui_dirty());
+    sim_wr32(sim_img + 12, sim_crc32(0, sim_img, 12));
+    for (i = 0; i < 6; i++) {
+        uint32_t o = SIM_OBJ[i], len = store_len[o] > 0 ? (uint32_t)store_len[o] : 0;
+        uint8_t *r = sim_img + n;
+        r[0] = (uint8_t)o, r[1] = 0, r[2] = (uint8_t)len, r[3] = (uint8_t)(len >> 8);
+        memcpy(r + 8, store[o], len);
+        sim_wr32(r + 4, sim_crc32(0, r + 8, len));
+        n += 8 + len;
+    }
+    sim_wr32(sim_img + n, sim_crc32(0, sim_img, n));
+    n += 4;
+    if (!(f = fopen(path, "wb")))
+        return -1;
+    fwrite(sim_img, 1, n, f);
+    fclose(f);
+    return 0;
+}
+static int sim_restore(const char *path)
+{
+    size_t n, pos = 16;
+    FILE *f = fopen(path, "rb");
+    int i;
+    if (!f)
+        return 1;
+    n = fread(sim_img, 1, sizeof sim_img, f);
+    fclose(f);
+    if (seq.playing || seq.req_stop || seq.req_start || seq.req_cont || seq.transport_stage)
+        return 10;                                /* STOP FIRST */
+    if (n < 16 + 6 * 8 + 4 || memcmp(sim_img, "X0XB", 4) || sim_img[4] != 1 || sim_img[5] || sim_img[6] != 6 ||
+        sim_img[7] || sim_rd32(sim_img + 12) != sim_crc32(0, sim_img, 12))
+        return 3;
+    for (i = 0; i < 6; i++) {                     /* all checked before anything changes */
+        const uint8_t *r = sim_img + pos;
+        uint32_t len = r[2] | r[3] << 8;
+        if (pos + 8 + len + 4 > n || r[0] != SIM_OBJ[i] || r[1] || len > PLAT_STORE_MAX)
+            return 4;
+        if (sim_rd32(r + 4) != sim_crc32(0, r + 8, len))
+            return 5;
+        pos += 8 + len;
+    }
+    if (pos + 4 != n || sim_rd32(sim_img + pos) != sim_crc32(0, sim_img, pos))
+        return 6;
+    pos = 16;
+    for (i = 0; i < 6; i++) {
+        const uint8_t *r = sim_img + pos;
+        uint32_t o = SIM_OBJ[i], len = r[2] | r[3] << 8;
+        memcpy(store_prev[o], store[o], PLAT_STORE_MAX);   /* (the copy before: the project as it was) */
+        store_prev_len[o] = store_len[o];
+        memcpy(store[o], r + 8, len);
+        store_len[o] = len ? (int)len : -1;       /* (an empty object: none, as storage.c's st_load) */
+        pos += 8 + len;
+    }
+    return app_restored() ? 4 : 0;
+}
+
 static int expect(const char *what, const char *val)
 {
     int got;
     if (!strcmp(what, "playing"))
         got = seq.playing;
+    else if (!strcmp(what, "restore_rc"))          /* the last restore: 0 done, 10 playing (STOP FIRST), else refused */
+        got = restore_rc;
+    else if (!strcmp(what, "dirty"))
+        got = ui_dirty();
     else if (!strcmp(what, "pattern"))
         got = seq.ppat[PART_909] + 1;
     else if (!strcmp(what, "cue"))
@@ -747,6 +971,13 @@ static int expect(const char *what, const char *val)
         got = seq.song_on;
     else if (!strcmp(what, "songlen"))
         got = proj.arr.song.len;
+    else if (!strncmp(what,"blockbars",9)) {
+        int k=atoi(what+9)-1;
+        got=k>=0&&k<NSONG?(int)ARR_BARS(&proj.arr.song.bar[k],proj.variant.arrangement.degree[k]):-1;
+    } else if (!strcmp(what,"follow0"))
+        got=(int)arrangement_bass_mode(proj.variant.arrangement.flags,0);
+    else if (!strcmp(what,"hkey"))got=proj.variant.arrangement.key;
+    else if (!strcmp(what,"hscale"))got=proj.variant.arrangement.mode;
     else if (!strcmp(what, "songpos"))
         got = seq.song_pos + 1;
     else if (!strncmp(what, "songbar", 7)) {       /* songbarK.P: bar K (1-based) part P's pattern, 1-based; P 5 = mutes */
@@ -791,6 +1022,12 @@ static int expect(const char *what, const char *val)
         got = ui.rec;
     else if (!strcmp(what, "sel"))                  /* the selected track of the part on screen */
         got = ui.sel[ui.part];
+    else if (!strncmp(what, "knobdef", 7)) {        /* knobdefK: knob K (1-4) on this page at its power-on value */
+        pref_t r = pg.r[cur_page()][(atoi(what + 7) - 1) & 3];
+        const x0x_param_t *d = pref_desc(r);
+        got = d && pref_get(r) == d->def;
+    } else if (!strcmp(what, "projsame"))           /* 1: the patterns are as at the last snapproj */
+        got = memcmp(proj.pat, pat_snap, sizeof pat_snap) == 0;
     else if (!strcmp(what, "view"))
         got = ui.view;
     else if (!strcmp(what, "tempo"))
@@ -884,7 +1121,16 @@ int main(int argc, char **argv)
     }
     snprintf(out, sizeof out, "%s/midi_out.txt", dir);
     midi_log = fopen(out, "w");
+    if (getenv("X0X_SAID_LOG")) {                        /* a reader listens from the start, quietly: the log only */
+        said_log_f = fopen(getenv("X0X_SAID_LOG"), "a");
+        sim_listen = 1;
+        said_print = 0;
+    }
     boot();
+    if (sim_listen) {
+        static const uint8_t HELLO[] = {ANN_H0, ANN_H1, ANN_H2, ANN_HELLO, ANN_VER};
+        ann_frame(HELLO, sizeof HELLO, now_ms);
+    }
     while (fgets(line, sizeof line, sc)) {
         char cmd[32] = {0}, a[256] = {0}, b[64] = {0}, c[64] = {0}, line_d[64] = {0};
         lineno++;
@@ -1047,9 +1293,23 @@ int main(int argc, char **argv)
             }
             for (o = 0; o < OBJ_NOBJ; o++) {
                 int32_t n = store_len[o];
-                if (ld ? fread(&n, 4, 1, f) != 1 || fread(store[o], 1, PLAT_STORE_MAX, f) != PLAT_STORE_MAX
-                       : fwrite(&n, 4, 1, f) != 1 || fwrite(store[o], 1, PLAT_STORE_MAX, f) != PLAT_STORE_MAX) {
+                int failed;
+                if (ld) {
+                    size_t header = fread(&n, 1, 4, f);
+                    /* Older whole-flash dumps have exactly seven objects.
+                     * Only a clean boundary EOF makes the new bank absent;
+                     * partial headers or payloads are still malformed. */
+                    if (o == OBJ_STRIP_DEFAULTS && !header && feof(f) && !ferror(f)) {
+                        store_len[o] = -1;
+                        break;
+                    }
+                    failed = header != 4 || fread(store[o], 1, PLAT_STORE_MAX, f) != PLAT_STORE_MAX;
+                } else {
+                    failed = fwrite(&n, 4, 1, f) != 1 || fwrite(store[o], 1, PLAT_STORE_MAX, f) != PLAT_STORE_MAX;
+                }
+                if (failed) {
                     fprintf(stderr, "%s: %s is short\n", cmd, a);
+                    fclose(f);
                     return 1;
                 }
                 store_len[o] = n;
@@ -1085,9 +1345,99 @@ int main(int argc, char **argv)
                 proj.arr.lane[i].used = 0;
         } else if (!strcmp(cmd, "cpu2")) {              /* cpu2 0|1: the simulated second core */
             plat_cpu2_set(atoi(a));
+        } else if (!strcmp(cmd, "fillrandom")) {        /* fillrandom SEED: every pattern's drum hits at random
+                                                         * (they pack badly: the stream spans several objects) */
+            uint32_t r = (uint32_t)atoi(a) * 2654435761u + 1u, p, k, v, w;
+            for (p = 0; p < NPAT; p++)
+                for (k = 0; k < NKIT; k++)
+                    for (v = 0; v < NDRUM; v++)
+                        for (w = 0; w < NSW; w++) {
+                            r ^= r << 13, r ^= r >> 17, r ^= r << 5;
+                            proj.pat[p].drum[k].hit[v][w] = r;
+                        }
+            mark_dirty();
+        } else if (!strcmp(cmd, "snapproj")) {
+            memcpy(pat_snap, proj.pat, sizeof pat_snap);
+        } else if (!strcmp(cmd, "fakecrash")) {
+            host_crash = 1;
+        } else if (!strcmp(cmd, "tearsave")) {          /* tearsave N: the next save stops after N object writes */
+            store_tear = atoi(a);
         } else if (!strcmp(cmd, "reboot")) {
+            store_tear = -1;                            /* the power back */
             memset(&proj, 0, sizeof proj);
             boot();
+        } else if (!strcmp(cmd, "backup") || !strcmp(cmd, "restore")) {
+            if (strchr(a, '/'))
+                snprintf(out, sizeof out, "%s", a);
+            else
+                snprintf(out, sizeof out, "%s/%s", dir, a);
+            if (cmd[0] == 'b') {
+                if (sim_backup(out)) {
+                    printf("line %d: cannot write %s\n", lineno, out);
+                    return 2;
+                }
+            } else {                                       /* (the device's message after it: main_fm1.c) */
+                restore_rc = sim_restore(out);
+                ui_say(!restore_rc ? "RESTORED FROM USB" : restore_rc == 10 ? "STOP FIRST, THEN RESTORE"
+                       : "RESTORE FAILED", 0);
+            }
+        } else if (!strcmp(cmd, "backup_damage")) {     /* a byte of a backup file changed; head: made Polly's */
+            FILE *bf;
+            snprintf(out, sizeof out, "%s/%s", dir, a);
+            if ((bf = fopen(out, "r+b"))) {
+                long n;
+                fseek(bf, 0, SEEK_END);
+                n = ftell(bf);
+                if (!strcmp(b, "head") && n <= (long)sizeof sim_img) {
+                    fseek(bf, 0, SEEK_SET);
+                    if (fread(sim_img, 1, (size_t)n, bf) == (size_t)n) {
+                        memcpy(sim_img, "PLYB", 4);
+                        sim_wr32(sim_img + 12, sim_crc32(0, sim_img, 12));
+                        sim_wr32(sim_img + n - 4, sim_crc32(0, sim_img, (size_t)n - 4));
+                        fseek(bf, 0, SEEK_SET);
+                        fwrite(sim_img, 1, (size_t)n, bf);
+                    }
+                } else {
+                    int c;
+                    fseek(bf, n / 2, SEEK_SET);
+                    c = fgetc(bf);
+                    fseek(bf, n / 2, SEEK_SET);
+                    fputc(c ^ 1, bf);
+                }
+                fclose(bf);
+            }
+        } else if (!strcmp(cmd, "listen")) {
+            static const uint8_t HELLO[] = {ANN_H0, ANN_H1, ANN_H2, ANN_HELLO, ANN_VER};
+            sim_listen = 1;
+            said_len = 0;
+            said_log[0] = 0;
+            ann_frame(HELLO, sizeof HELLO, now_ms);
+            run_ms(40);
+        } else if (!strcmp(cmd, "speakdump")) {        /* every screen's text for a screen reader, to stdout */
+            speak_dump();
+        } else if (!strcmp(cmd, "where")) {
+            static const uint8_t WHERE[] = {ANN_H0, ANN_H1, ANN_H2, ANN_WHERE};
+            ann_frame(WHERE, sizeof WHERE, now_ms);
+            run_ms(40);
+        } else if (!strcmp(cmd, "said_none")) {
+            if (said_count) {
+                printf("line %d: said_none: %u said\n", lineno, said_count);
+                fails++;
+            }
+        } else if (!strcmp(cmd, "said")) {
+            char *t = line + 4, *e;
+            while (*t == ' ')
+                t++;
+            e = t + strlen(t);
+            while (e > t && (e[-1] == '\n' || e[-1] == '\r' || e[-1] == ' '))
+                *--e = 0;
+            if (!strstr(said_log, t)) {
+                printf("line %d: said \"%s\": not said (since the last check: %s)\n", lineno, t,
+                       said_len ? said_log : "nothing\n");
+                fails++;
+            }
+            said_len = 0;
+            said_log[0] = 0;
         } else if (!strcmp(cmd, "echo"))
             printf("%s", line + 5);
         else {

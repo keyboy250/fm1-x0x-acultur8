@@ -23,6 +23,7 @@
 #include "pattern.h"
 
 #define NLANE 160
+#define MOT_KICK_VELOCITY 8u /* saved tier overrides,never an interpolated DSP knob */
 #define MOT_NONE 0xFFu
 #define MOT_PARTS 5
 #define MOT_GAP 4                     /* steps: a longer pause ends a recording gesture */

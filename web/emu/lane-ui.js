@@ -3,7 +3,8 @@
 const $=id=>document.getElementById(id);
 const sounds=['909 BD','909 SD','909 LT','909 MT','909 HT','909 RS','909 CP','909 CH','909 OH','909 CR','909 RD',
   '808 BD','808 SD','808 LT','808 MT','808 HT','808 RS / Clave','808 CP / Maracas','808 CB','808 CY','808 OH','808 CH','303 A','303 B','BREAK'];
-const rates=['1/16','1/16 triplet','1/32','1/8 triplet','1/4','1/8','1/4 triplet','1/32 triplet'];
+const rates=['1/16','1/16 triplet','1/32','1/8 triplet','1/4','1/8','1/4 triplet','1/32 triplet','1/1','1/2','1/64','1/1 dotted','1/2 dotted','1/4 dotted','1/8 dotted','1/16 dotted','1/32 dotted','1/64 dotted','1/1 triplet','1/2 triplet','1/64 triplet'];
+const rateKinds=[1,4,1,4,1,1,4,4,1,1,1,2,2,2,2,2,2,2,4,4,4],familyMasks=[1,3,5,7];
 function options(select,labels){select.replaceChildren(...labels.map((label,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=label;return o;}));}
 options($('lane-pattern'),Array.from({length:32},(_,i)=>`Pattern ${i}`));options($('lane-sound'),sounds);options($('lane-rate'),rates);
 let pattern=0,lane=0,page=0,viewRevision=0,request=0;
@@ -95,7 +96,9 @@ function commitLength(){
   edit(18,0,value);
 }
 $('lane-length').addEventListener('change',commitLength);$('lane-length').addEventListener('blur',commitLength);
-$('lane-rate').addEventListener('change',()=>{const value=Number($('lane-rate').value);if(!Number.isInteger(value)||value<0||value>7)return render();edit(18,1,value);});
+$('lane-rate').addEventListener('change',()=>{const value=Number($('lane-rate').value);if(!Number.isInteger(value)||value<0||value>=(mode?.[5]??8))return render();edit(18,mode?.[5]===21?3:1,value);});
+$('lane-rate-enable').addEventListener('click',()=>{if(!playing&&mode?.[0]&&mode[5]===8)edit(18,8,1);});
+for(const [id,index] of [['lane-rate-family',4],['lane-rate-boundary',5],['lane-rate-hysteresis',6]])$(id).addEventListener('change',()=>edit(18,index,Number($(id).value)));
 $('lane-mode').addEventListener('click',()=>edit(19,0,mode?.[1]?0:1));
 for(const [id,op] of [['lane-undo',5],['lane-redo',6],['lane-save',7]])$(id).addEventListener('click',()=>action(op));
 for(const event of ['blur','pagehide','pointercancel'])window.addEventListener(event,()=>{
@@ -108,6 +111,8 @@ function controls(){
   const lock=!editable(),drafting=draft!==null;
   $('lane-selection').disabled=!available||busy()||drafting;
   $('lane-mode').disabled=lock||drafting||!mode||!!mode[3]||(!mode[0]&&playing);
+  $('lane-rate-enable').disabled=lock||drafting||playing||!mode?.[0]||mode[5]===21;
+  $('lane-rate-policy').disabled=lock||drafting||mode?.[5]!==21;
   $('lane-timing').disabled=lock||!mode?.[0];$('lane-rate').disabled=drafting;
   $('lane-break-controls').disabled=lock||drafting||!mode?.[0]||!breaks;
   $('lane-previous').disabled=!available||busy()||drafting||page===0;$('lane-next').disabled=!available||busy()||drafting||page===1;
@@ -121,9 +126,12 @@ function render(){
     $('lane-mode-state').textContent=`Saved choice: ${mode[1]?'independent':'grouped'} · Effective: ${mode[2]?'independent':'grouped'}${mode[3]?' · Pending next musical bar':''}${!mode[0]?' · Not initialized; stop to initialize':''}`;
   }
   if(settings){
-    if(draft===null)$('lane-length').value=String(settings[1]);$('lane-rate').value=String(settings[2]);
+    if(draft===null)$('lane-length').value=String(settings[1]);
+    if($('lane-rate').children.length!==(mode?.[5]??8)){if(mode?.[5]===21)$('lane-rate').replaceChildren(...[11,8,12,18,9,13,19,4,14,6,5,15,3,0,16,1,2,17,7,10,20].map(i=>{const o=document.createElement('option');o.value=String(i);o.textContent=rates[i];return o;}));else options($('lane-rate'),rates.slice(0,8));}
+    if(settings.length===13){$('lane-rate-family').value=String(settings[9]);$('lane-rate-boundary').value=String(settings[10]);$('lane-rate-hysteresis').value=String(settings[11]);for(const o of $('lane-rate').options)o.disabled=!(familyMasks[settings[9]]&rateKinds[Number(o.value)])&&Number(o.value)!==settings[2];}
+    $('lane-rate').value=String(settings[2]);
     $('lane-position').textContent=`Editing pattern ${pattern} · ${sounds[lane]} · Playing pattern ${settings[3]} · ${playing&&settings[4]!==255?`step ${settings[4]+1}`:'stopped / no local step'} · cycles ${settings[5]}`;
-    $('lane-timing-state').textContent=!mode?.[0]?'Initialize the lanes to edit their timing.':settings[3]!==pattern?'Prepared settings for this pattern; it is not the playing pattern.':settings[8]?'Timing read back · waiting for this sound’s next local step.':`Timing ready · effective step rate ${rates[settings[6]]??'unknown'}${!settings[7]&&lane<22?' (kit BD conductor; this sound’s individual timing stays saved)':''}.`;
+    $('lane-timing-state').textContent=!mode?.[0]?'Initialize the lanes to edit their timing.':settings[3]!==pattern?'Prepared settings for this pattern; it is not the playing pattern.':settings[8]?settings.length!==13?'Timing read back · waiting for this sound’s next local step.':`Selected ${rates[settings[2]]}; effective ${rates[settings[6]]}. Waiting for ${settings[10]?'the next sound step after the next bar':'this sound’s next local step'}.`:`Timing ready · effective step rate ${rates[settings[6]]??'unknown'}${!settings[7]&&lane<22?' (kit BD conductor; this sound’s individual timing stays saved)':''}.`;
   }else {$('lane-position').textContent=`Editing pattern ${pattern} · ${sounds[lane]} · waiting for selected readback.`;$('lane-timing-state').textContent='Waiting for selected timing.';}
   for(const [i,row] of rows.entries()){
     const step=page*32+i,on=breaks?!!((breaks[0]>>>i)&1):false,slice=breaks?(breaks[1+(i>>>3)]>>>((i&7)*4))&15:0;
@@ -135,8 +143,8 @@ function render(){
 function validSnapshot(s,section,count){
   if(!(s?.abi===1&&s.section===section&&Number.isInteger(s.revision)&&s.revision>=0&&s.revision<=0xffffffff&&Array.isArray(s.values)&&s.values.length===count&&s.values.every(v=>Number.isInteger(v)&&v>=0&&v<=0xffffffff)))return false;
   const v=s.values;
-  if(section===11)return v.slice(0,4).every(x=>x<=1)&&v[4]===25&&v[5]===8&&v[6]===64;
-  if(section===10)return v[0]<=1&&v[1]>=1&&v[1]<=64&&v[2]<8&&v[3]<32&&(v[4]<64||v[4]===255)&&v[6]<8&&v[7]<=1&&v[8]<=1;
+  if(section===11)return v.slice(0,4).every(x=>x<=1)&&v[4]===25&&(v[5]===8||v[5]===21)&&v[6]===64;
+  if(section===10)return v[0]<=1&&v[1]>=1&&v[1]<=64&&v[2]<(count===13?21:8)&&v[3]<32&&(v[4]<64||v[4]===255)&&v[6]<(count===13?21:8)&&v[7]<=1&&v[8]<=1&&(count!==13||(v[9]<4&&v[10]<2&&v[11]<3&&v[12]===1));
   if(section===12)return v.slice(1).every(word=>Array.from({length:8},(_,i)=>(word>>>(i*4))&15).every(x=>x<=8));
   return true;
 }
@@ -150,7 +158,7 @@ window.addEventListener('fm1-marked',event=>{
   const view=v?.laneView;
   available=!!(caps&1024)&&validSnapshot(view?.mode,11,7);
   modeSnapshot=available?view.mode:null;mode=modeSnapshot?.values??null;
-  selected=available&&view.pattern===pattern&&view.lane===lane&&view.page===page&&view.viewRevision===viewRevision&&validSnapshot(view.settings,10,9);
+  selected=available&&view.pattern===pattern&&view.lane===lane&&view.page===page&&view.viewRevision===viewRevision&&validSnapshot(view.settings,10,view.mode.values[5]===21?13:9);
   settingsSnapshot=selected?view.settings:null;settings=settingsSnapshot?.values??null;
   breakSnapshot=selected&&validSnapshot(view.breaks,12,5)?view.breaks:null;breaks=breakSnapshot?.values??null;
   $('lane-availability').textContent=protectedProject?'Project is protected. Load a supported project before editing.':available?'All 25 sound lanes are supported by this engine.':'Lane editing is unavailable in this engine. Existing instrument controls remain available.';

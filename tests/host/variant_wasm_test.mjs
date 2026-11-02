@@ -44,7 +44,7 @@ const objects = p => Object.fromEntries(Array.from({length:p.ex.web_nobj()}, (_,
 const p = await open(); render(p,30);
 const info = snap(p);
 assert.equal(info.abi,1);
-assert.equal(info.values[0],1535,'kick processing capability advertised separately');
+assert.equal(info.values[0]&~2048,1535,'legacy capabilities unchanged');assert.equal(info.values[0]&2048,2048,'reusable strip defaults advertised separately');
 assert.equal(info.values[7],0x01ffffff,'all 25 instrument sounds expose tested audio processing');
 assert.equal(info.values[5],5); assert.equal(info.values[6],25);
 assert.deepEqual(snap(p,2).values,[20,20000,0,1,80,0]);
@@ -139,4 +139,4 @@ assert.equal((await command(rejected,7)).result,-4);
 render(rejected,1900); assert.equal(rejected.ex.web_store_writes(),rejectedWrites);
 assert.deepEqual(objects(rejected),corrupt);
 console.log(JSON.stringify({realWasm:true,transportBounds:true,acceptedQueueCommands:accepted,
-  appliedTickets:true,gestureUndoRedo:true,saveReopen:true,playingStopBusy:true,corruptProtection:true,capabilities:1535}));
+  appliedTickets:true,gestureUndoRedo:true,saveReopen:true,playingStopBusy:true,corruptProtection:true,capabilities:3583}));

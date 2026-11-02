@@ -2,7 +2,7 @@
 // Desired, effective and held-note state comes only from C snapshots.
 const $=id=>document.getElementById(id);
 const inputs=[...document.querySelector('.bass-lab').querySelectorAll('[data-part]')];
-const modes=['Off','Root only','Chord tones only'];
+const modes=['Off','Root only','Chord tones only','Scale adherence'];
 const notes=['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];
 const pending=new Map(),tickets=new Set(),holds=new Map(),drafts=new Map();
 let counter=0,available=false,protectedProject=false,playing=false,caps=0,read=0,error=false;
@@ -31,7 +31,7 @@ function edit(input,text){
   if(!available||protectedProject||busy()){render();return;}
   if(playing){say('Stop playback using the instrument controls before changing bass follow.',true);render();return;}
   const part=Number(input.dataset.part),index=Number(input.dataset.field),value=Number(text);
-  if(text===''||!Number.isInteger(value)||value<0||value>(index===0?2:127)){
+  if(text===''||!Number.isInteger(value)||value<0||value>(index===0?3:127)){
     say(index===0?'Choose a supported follow mode.':'Enter a whole MIDI-note number from 0 to 127.',true);render();return;
   }
   send(3);send(13,part,index,value,true);send(4);
@@ -57,7 +57,7 @@ function render(){
     const effective=modes[v[3]]??'Unavailable';
     const held=v[5]===255?'No synth note held':`Synth MIDI note ${v[5]}`;
     const midi=v[6]===255?'No owned MIDI note':`Owned MIDI note ${v[6]} · channel ${v[7]===255?'unavailable':v[7]+1}`;
-    const behavior=v[9]?'Strict range failure · no note emitted; a new NOTE is required.':!v[3]?'Follow is off or arrangement is disabled; legacy pitches apply.':!v[4]?'No playing chord · legacy absolute pitches apply.':'Playing chord follow is active.';
+    const behavior=v[9]?'Strict range failure · no note emitted; a new NOTE is required.':v[3]===3?'Scale adherence is active, including transposition and preview notes.':!v[3]?'Follow is off or arrangement is disabled; legacy pitches apply.':!v[4]?'No playing chord · legacy absolute pitches apply.':'Playing chord follow is active.';
     $(id).textContent=`Effective: ${effective}. ${behavior} ${held}. ${midi}. Engine MIDI transport ${v[8]?'ready':'not ready'}; external receiver delivery pending.`;
   }
   const values=chord?.values;

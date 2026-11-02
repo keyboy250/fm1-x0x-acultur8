@@ -4,6 +4,7 @@
 import fs from 'node:fs';import assert from 'node:assert/strict';
 class Element extends EventTarget{
  constructor(){super();this.value='';this.disabled=false;this.hidden=false;this.children=[];this.textContent='';this.attributes={};this.classes=new Set();this.classList={toggle:(k,on)=>on?this.classes.add(k):this.classes.delete(k)};}
+ get options(){return this.children;}
  append(...items){this.children.push(...items);}replaceChildren(...items){this.children=items;this.value=items[0]?.value??'';}setAttribute(k,v){this.attributes[k]=v;}
 }
 const html=fs.readFileSync('web/emu/lane-panel.html','utf8'),elements=new Map();
@@ -18,12 +19,13 @@ globalThis.currentTime=0;await import('../../web/emu/worklet.js');await import('
 const worker=new Worklet(),memory=new WebAssembly.Memory({initial:3});worker.mem=memory;worker.sentBlits=worker.sentWrites=0;
 let caps=1535,protectedProject=0,playing=false,revision=1,written=0,read=0,initialized=0,desiredMode=0,effectiveMode=0,modePending=0,localPending=0,effectiveRate=0;
 let lengths=new Map(),rates=new Map(),gates=[0x80000001,0x80000001],slices=[[0x87654321,0,0,0x80000000],[0x12345678,0,0,0x80000000]];
+let expandedRates=0,policy=[0,0,0],playingPattern=3;
 let rejectOp=null,rejectResult=-3,gesture=false;
 const snapshot=(section,target,voice)=>{
  snapshots.push([section,target,voice]);let values;
  if(section===0)values=[caps,1,protectedProject,written,read,5,25,0];
- else if(section===11)values=[initialized,desiredMode,effectiveMode,modePending,25,8,64];
- else if(section===10)values=[initialized,lengths.get(`${target}:${voice}`)??16,rates.get(`${target}:${voice}`)??0,3,playing?2:255,7,effectiveRate,effectiveMode,localPending];
+ else if(section===11)values=[initialized,desiredMode,effectiveMode,modePending,25,expandedRates?21:8,64];
+ else if(section===10)values=[initialized,lengths.get(`${target}:${voice}`)??16,rates.get(`${target}:${voice}`)??0,playingPattern,playing?2:255,7,effectiveRate,effectiveMode,localPending,...(expandedRates?[...policy,1]:[])];
  else if(section===12&&initialized)values=[gates[voice],...slices[voice]];
  else return 0;
  const p=64,v=new Uint32Array(memory.buffer,p,20);v.fill(0);v.set([1,section,revision,values.length,...values]);return p;
@@ -34,7 +36,7 @@ worker.ex={memory,web_variant_snapshot:snapshot,web_variant_command:(abi,op,requ
  else if(op===3)gesture=true;
  else if(op===4)gesture=false;
  else if(op===18){assert.equal(gesture,true,'value follows acknowledged BEGIN');result=1;written=(written+1)>>>0;revision=(revision+1)>>>0;
-  if(index===0)lengths.set(`${target}:${voice}`,value);else if(index===1)rates.set(`${target}:${voice}`,value);else{const step=value&63,p=step>>>5,i=step&31;gates[p]=((gates[p]&~(1<<i))|(((value>>>6)&1)<<i))>>>0;const group=i>>>3,shift=(i&7)*4;slices[p][group]=((slices[p][group]&~(15<<shift))|((value>>>7)<<shift))>>>0;}
+  if(index===0)lengths.set(`${target}:${voice}`,value);else if(index===1||index===3)rates.set(`${target}:${voice}`,value);else if(index===8)expandedRates=1;else if(index>=4&&index<=6)policy[index-4]=value;else{const step=value&63,p=step>>>5,i=step&31;gates[p]=((gates[p]&~(1<<i))|(((value>>>6)&1)<<i))>>>0;const group=i>>>3,shift=(i&7)*4;slices[p][group]=((slices[p][group]&~(15<<shift))|((value>>>7)<<shift))>>>0;}
  }else if(op===19){assert.equal(gesture,true);initialized=1;desiredMode=value;modePending=playing?1:0;if(!playing)effectiveMode=value;result=1;written=(written+1)>>>0;revision=(revision+1)>>>0;}
  else revision=(revision+1)>>>0;
  const p=256,v=new DataView(memory.buffer,p,16);v.setUint32(0,request,true);v.setUint32(4,revision,true);v.setUint32(8,written,true);v.setInt32(12,result,true);return p;
@@ -143,5 +145,12 @@ for(const patch of [{request:-1},{request:2**32},{request:1.5},{abi:65536},{op:-
 for(const type of ['variant-command','lane-command']){await worker.onMessage({...command,type,op:4});const result=out.pop();assert.equal(result.type,type==='lane-command'?'lane-reply':'variant-reply');assert.equal(result.request,55);}
 const view={...worker.laneView};for(const patch of [{pattern:32},{lane:25},{page:2},{viewRevision:-1},{viewRevision:2**32},{lane:.5}]){await worker.onMessage({type:'lane-select',...view,...patch});assert.deepEqual(worker.laneView,view);}
 caps=511;snapshots.length=0;worker.publish();assert.equal(out.pop().variant.laneView,undefined);assert.ok(!snapshots.some(v=>v[0]>=10),'old capability never calls new snapshot sections');
+caps=1535;playing=false;initialized=1;expandedRates=0;policy=[0,0,0];read=written;window.dispatchEvent(new Event('fm1-ready'));await pump();frame();
+assert.equal($('lane-rate-enable').disabled,false);fire('lane-rate-enable');await settle();assert.equal(commands.at(-2).index,8);assert.equal($('lane-rate-enable').disabled,true);assert.equal($('lane-rate-policy').disabled,false);assert.equal($('lane-rate').children.length,21);
+assert.equal($('lane-rate').children[0].value,'11');assert.equal($('lane-rate').children.at(-1).value,'20');
+await select('lane-rate-family',1);await settle();assert.equal(commands.at(-2).index,4);assert.equal($('lane-rate').children.find(o=>o.value==='1').disabled,true);assert.equal($('lane-rate').children.find(o=>o.value==='14').disabled,false);
+await select('lane-rate','14');await settle();assert.equal(commands.at(-2).index,3);assert.equal($('lane-rate').value,'14');
+await select('lane-rate-boundary',1);await settle();assert.equal(commands.at(-2).index,5);await select('lane-rate-hysteresis',2);await settle();assert.equal(commands.at(-2).index,6);
+playingPattern=Number($('lane-pattern').value);playing=true;localPending=1;effectiveRate=0;frame();assert.match($('lane-timing-state').textContent,/Selected 1\/8 dotted; effective 1\/16.*after the next bar/);
 assert.equal(permissions,0);
 console.log('Lane UI/worklet: 25 sounds,32 patterns,8 rates,64 BREAK steps; stopped initialization/live pending modes; ACK/gesture/readback/ticket wrap; drafts/protection/history; startup/reload matching readiness and status preservation; namespaces/scalars/stale selection/reset; no MIDI permission PASS');

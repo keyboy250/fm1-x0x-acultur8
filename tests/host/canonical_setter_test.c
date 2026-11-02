@@ -6,7 +6,7 @@
 #undef main
 #include <assert.h>
 int main(void){
-    int32_t audio[512];for(int i=0;i<OBJ_NOBJ;i++)store_len[i]=-1;boot();engine_render(audio,256);
+    int32_t audio[512];for(int i=0;i<OBJ_NOBJ;i++)store_prev_len[i]=store_len[i]=-1;boot();engine_render(audio,256);
     /* Actual production pref_set/get and exact CC setters with separate contexts. */
     ui.part=PART_303A;
     for(int pattern=0;pattern<NPAT;pattern++)for(int bass=0;bass<NBASS;bass++)for(int field=0;field<NGEN;field++){

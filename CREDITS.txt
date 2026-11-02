@@ -1,0 +1,32 @@
+PROJECT ORIGIN AND CREDITS
+
+Acultur8 X0X Extended Edition builds on X0X for the M-VAVE FM-1,
+created and maintained by Charles Vestal and upstream contributors.
+Original project and source: https://github.com/charlesvestal/fm1-x0x
+Original manual: https://charlesvestal.github.io/fm1-x0x/manual/
+Original releases: https://github.com/charlesvestal/fm1-x0x/releases
+
+X0X is itself a fork of Felucca by Leo Kuroshita (Hugelton Instruments).
+Foundation project: https://github.com/hugelton/Felucca
+Acultur8 adds the Extended Edition changes described in our release notes;
+the original instrument,platform and upstream work retain their authorship.
+This variant does not imply endorsement by the upstream authors or M-VAVE.
+
+Additional origins retained from upstream:
+- 9W9 / 8W8: athousanddetails; ER-99 and909 samples: Matthew Cieplak.
+- Open303: Robin Schmidt; schwung-303 and schwung-tb3po: Charles Vestal;
+  Devilfish extensions after jc303 (midilab),drive after dm-Rat (Dave Mollen);
+  TB-3PO after Phazerville Hemisphere Suite by djphazer and contributors.
+- BB Gen: mestela's schwung-breakbeat,used upstream with permission.
+- Second-core research: Melodee by keremimo and Jangada by zednaked.
+  https://github.com/keremimo/melodee
+  https://github.com/zednaked/jangada
+- Browser-emulator idea: Groove OS by Peter Gombos (credit,not imported code).
+- Barlow and Terminus fonts,Fukiai web icons,and other retained notices:
+  see the complete upstream LICENSING.md and accompanying license texts.
+
+Latest audited original source:54194c54bb01e9d9b3fe9d641b3ddfa512ac04a3.
+Download/review date:24 October2026 UTC;this is a source-review timestamp,
+not an installation or publication claim. Upstream's GPL-3.0-only LICENSE,
+LICENSING.md and original notices accompany this credit record. Acultur8's
+frozen0.1.26 firmware/source identity remains separately recorded.

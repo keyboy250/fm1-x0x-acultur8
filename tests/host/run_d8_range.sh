@@ -14,6 +14,7 @@ else
 fi
 printf '%s  %s\n' b13f963eb9e4cc5457d4c66a12c0c41932f6c6f563cf9cf8139a2995ba6f5bca "$OUT/reference.c" | sha256sum -c -
 
+git -c safe.directory="$(pwd)" show "$PIN":firmware/src/dsp/drum808.h > "$OUT/drum808.h"
 REFERENCE="$(pwd)/$OUT/reference.c"
 for tail in 0 1; do
  for mode in reference current; do

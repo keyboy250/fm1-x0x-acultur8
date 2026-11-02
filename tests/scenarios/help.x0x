@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Help cards: hold one button ~1 s and a card says what it does; letting go after the card does
 # nothing else; a key, a turn or another button puts the card away and the combination works.
 wait 300

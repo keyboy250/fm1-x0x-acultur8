@@ -3,11 +3,13 @@
 """Make the X0X site for GitHub Pages (https://charlesvestal.github.io/fm1-x0x/):
 
   index.html                  what X0X is, and the three ways in: install, manual, source
-  emu/                        X0X in the browser (web/emu: build/emu, from web/emu/build.sh)
+  emu/                        X0X in the browser (web/emu: build/emu, from web/emu/build.sh), with the screen reader
+                              (words.js, words/ below, and fm1-reader's voice in emu/reader/)
   install/index.html          the web installer (web/x0x_installer.html, with fm1pkg.js, fm1ota.js
                               and the package's metadata inlined; Chrome or Edge, Web MIDI)
   breaks/index.html           your own break loops onto the FM-1 (web/x0x_breaks.html with
                               x0x_breaks.js inlined; Chrome or Edge, Web MIDI)
+  backup/index.html           the project to a file and back (web/backup/index.html; Chrome or Edge, Web MIDI)
   manual/index.html, img/     the manual (tools/manual_html.py, from docs/MANUAL.md)
   new/index.html, img/new/    what's new in each version (the same, from docs/NEW.md)
   firmware/x0x-VERSION.fwsc   the package the installer writes; also the download
@@ -41,7 +43,7 @@ LANDING = """<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
 <style>
-:root { --ground: #f4f5f6; --ink: #1c1f23; --muted: #5b626a; --rule: #d9dde1; --accent: #c8700a; --card: #fff; color-scheme: light; }
+:root { --ground: #f4f5f6; --ink: #1c1f23; --muted: #5b626a; --rule: #d9dde1; --accent: #a35a08; --card: #fff; color-scheme: light; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) { --ground: #131518; --ink: #e6e8eb; --muted: #9aa1a9; --rule: #2d3137; --accent: #f0a043; --card: #1a1d21; color-scheme: dark; }
 }
@@ -55,10 +57,12 @@ h1 { font: 700 2.6rem/1.1 "Barlow Semi Condensed", "Barlow", sans-serif; margin:
 .ways { display: grid; gap: 12px; margin: 0 0 2rem; }
 .ways a { display: block; text-decoration: none; color: var(--ink); background: var(--card); border: 1px solid var(--rule);
           border-radius: 10px; padding: 14px 18px; }
-.ways a:hover, .ways a:focus-visible { border-color: var(--accent); outline: none; }
+.ways a:hover { border-color: var(--accent); }
+.ways a:focus-visible { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: 2px; }
 .ways .card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 18px; }
 .ways .card a { color: var(--accent); text-decoration: none; border: 0; padding: 0; background: none; display: inline; }
 .ways .card a:hover, .ways .card a:focus-visible { text-decoration: underline; }
+.ways .card a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .ways .card a.new { font: 400 .95rem "Barlow", sans-serif; margin-left: .5rem; }
 .ways strong { font: 600 1.25rem "Barlow Semi Condensed", "Barlow", sans-serif; color: var(--accent); display: block; }
 .ways span { color: var(--muted); font-size: .95rem; }
@@ -66,6 +70,7 @@ p.small { color: var(--muted); font-size: .9rem; }
 .video { position: relative; aspect-ratio: 16 / 9; max-width: 100%; margin: 1.5rem 0; border-radius: 6px; overflow: hidden; background: #000; }
 .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 a { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -83,6 +88,8 @@ at your own risk.</div>
   <div class="card"><strong><a href="install/">Install v__VERSION__</a> <a class="new" href="new/">What's new?</a></strong><span>From Chrome or Edge, with the FM-1 connected by USB. Nothing to install on the computer.</span></div>
   <a href="manual/"><strong>Manual</strong><span>Getting started in ten steps, then everything else.</span></a>
   <a href="breaks/"><strong>Your own breaks</strong><span>Drop in loops and send them to the BREAK part, from Chrome or Edge.</span></a>
+  <a href="backup/"><strong>Back up your project</strong><span>Save your project to a file, and load it back later. Keep as many as you like.</span></a>
+  <a href="https://charlesvestal.github.io/fm1-reader/"><strong>Screen reader</strong><span>Hear what the screen shows, with the page's voice or your own screen reader.</span></a>
   <a href="firmware/__PKG__"><strong>Download __PKG__</strong><span>For the command-line installer: <code>python3 tools/fm1_install.py __PKG__</code></span></a>
   <a href="__REPO__"><strong>Source</strong><span>GitHub, GPL-3.0. Built on Felucca by Hügelton Instruments.</span></a>
 </nav>
@@ -105,7 +112,7 @@ def main(pkg, version, out):
     name = f"x0x-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}.fwsc"
     if out.exists():
         shutil.rmtree(out)
-    for d in ("install", "manual", "firmware", "breaks", "new"):
+    for d in ("install", "manual", "firmware", "breaks", "backup", "new"):
         (out / d).mkdir(parents=True)
     shutil.copy(pkg, out / "firmware" / name)
     # the installer
@@ -123,6 +130,8 @@ def main(pkg, version, out):
         raise SystemExit("x0x_breaks.html must contain /*LIB*/ once")
     lib = strip_module((SRC / "web" / "x0x_breaks.js").read_text(encoding="utf-8"))
     (out / "breaks" / "index.html").write_text(page.replace("/*LIB*/", lib), encoding="utf-8")
+    # the backup page (self-contained)
+    shutil.copy(SRC / "web" / "backup" / "index.html", out / "backup" / "index.html")
     # the manual (a complete page; its images beside it)
     subprocess.run([sys.executable, str(SRC / "tools" / "manual_html.py"), str(SRC / "docs" / "MANUAL.md"),
                     str(out / "manual" / "index.html")], check=True, capture_output=True)
@@ -138,8 +147,17 @@ def main(pkg, version, out):
     if not (emu / "x0x.wasm").exists():
         raise SystemExit("no build/emu/x0x.wasm: run web/emu/build.sh (needs Emscripten)")
     shutil.copytree(emu, out / "emu")
+    # the screen reader's words files (fm1-reader): every one ever made, for the devices that point at them
+    shutil.copytree(SRC / "web" / "words", out / "words")
+    (out / "reader").mkdir()                     # (the screen reader's first test address: moved)
+    (out / "reader" / "index.html").write_text(
+        '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>Screen reader · X0X</title>\n'
+        '<meta http-equiv="refresh" content="0; url=https://charlesvestal.github.io/fm1-reader/">\n</head>\n<body>\n<main>\n'
+        '<h1>The screen reader has moved</h1>\n<p>It is now at <a href="https://charlesvestal.github.io/fm1-reader/">'
+        'charlesvestal.github.io/fm1-reader</a>.</p>\n</main>\n</body>\n</html>\n', encoding="utf-8")
     (out / ".nojekyll").write_text("")
-    print(f"site: {out}: index.html, install/ ({product}), manual/, firmware/{name} ({len(raw)} B)")
+    print(f"site: {out}: index.html, install/ ({product}), manual/, breaks/, backup/, new/, firmware/{name} ({len(raw)} B)")
 
 
 if __name__ == "__main__":

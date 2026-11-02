@@ -1,0 +1,53 @@
+Install and recovery review: 0.1.60-stoppedtrace
+
+This experimental prerelease was tested on one M-VAVE FM-1. Read the documented
+qualification limits. It does not preload a personal project or native preset bank.
+
+Before installation
+Stop playback, turn MASTER fully down, connect USB, and close other MIDI clients.
+Save your own current project, then export it twice. A stopped export can commit
+unsaved work. Preserve both files and require identical bytes and valid CRCs. Keep
+your exact previous firmware and a compatible backup. Retain any separate calibration
+or sample data you depend on; a project file alone is not assumed to recover it all.
+
+Use Python 3 with mido and python-rtmidi, as required by the existing tools. From the
+extracted source root:
+  python3 tools/x0x_backup.py backup before-01.x0b
+  python3 tools/x0x_backup.py backup before-02.x0b
+  python3 tools/x0x_backup.py info before-01.x0b
+Compare the two files locally and keep both. Do not substitute someone else's backup
+as a factory reset or as a starter-preset installation method.
+
+Installation
+Check the package hash against SHA256SUMS.txt. Read the connected identity:
+  python3 tools/fm1_install.py --info
+With playback stopped and MASTER down, install the candidate asset:
+  python3 tools/fm1_install.py /path/to/x0x-0.1.60-stoppedtrace.fwsc
+Keep the installer's confirmation prompt. Do not add --yes or --force for this workflow.
+Keep power and USB connected during writing. Wait for startup and HOME, then read the
+identity again: FM-1_9000160. Verify your saved project, presets and calibration before
+playback. Begin listening at your usual quiet level.
+
+If the updater reports an error, retain its log, keep MASTER down, and inspect the
+actual running/loader identity. Do not repeatedly retry without reviewing the failure.
+Review the updater's supported continuation procedure for an interrupted loader write.
+
+Rollback and restore
+The included x0x-0.1.59-monosteady.fwsc is the exact previous engineering rollback,
+identity FM-1_9000159. It is not universal factory firmware. .59 and .60 share the
+current project and native-preset formats; offline OTA/loader checks covered both
+directions. Physical rollback after the latest saved work was not performed here.
+Verify stopped/MASTER-down state, the rollback hash, and your compatible backup before
+using that asset with the same installer. Older firmware such as .35 cannot safely
+edit newer project/default-bank formats. Match firmware and data formats.
+
+Restoring replaces project data and asks both host and device for confirmation:
+  python3 tools/x0x_backup.py restore /path/to/your-compatible-backup.x0b
+Restore only when replacement is intended. Do not automatically restore after an error.
+
+Starter preset
+Extract starter-favorite-slot1.zip and read its README and native-control reference.
+The .native68 file is neither firmware nor a project backup. The JSON exporter is
+read-only; no automatic importer or deferred mod-pack loader is promised. Manual entry
+and native STORE/RECALL are the documented review path. Preserve your own favorite
+slots and choose an empty destination when storing a new sound.

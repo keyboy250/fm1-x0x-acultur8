@@ -1,8 +1,8 @@
 # FM1-44: Expanded lane divisions and safe rate sweeps
 
-Status: requested critical extension; design only, not implemented or accepted. Extends FM1-32/33 for every individual sound lane. Preserve the qualified engine and existing projects while testing a separate candidate.
+Status: expanded runtime implemented and independently reviewed locally; complete mandatory suite9/9 and browser save/reopen PASS; qualified integration is local. Physical MIDI/device acceptance remains pending; Pages held. Extends FM1-32/33 for every individual sound lane. Preserve the qualified engine and existing projects while testing a separate candidate.
 
-## Confirmed current limitation
+## Preserved legacy baseline
 
 The local engine has eight stable rate IDs: 0=1/16, 1=1/16T, 2=1/32, 3=1/8T, 4=1/4, 5=1/8, 6=1/4T, 7=1/32T. Thus 1/8 exists locally, but 1/2 and dotted rates are missing. This is local source evidence, not proof of which build a preview is running. Drum/BREAK persisted rates and runtime latches use three bits. Changing a label or list cannot add engine timing safely.
 
@@ -35,4 +35,4 @@ Use rational musical durations. At 24 MIDI pulses per quarter, some fast dotted/
 5. Actual browser selection/readback, keyboard/narrow layout and illustrated FAQ; device menu and real DAW/receiver checks separately.
 6. Independent review and unchanged image/RAM/pool/static gates. Physical CPU, jitter, listening and performance soak remain pending until performed.
 
-Next: inventory storage and counter costs in an isolated candidate, then qualify migration and rational timing before connecting new controls. Do not mark the target complete from a dropdown or browser-only sweep filter.
+Implemented in the isolated expanded-rates-integration-20261014 candidate: versioned LAN2/format6 migration, rational scheduler, four per-sound sweep policies, hysteresis, exact-rate controls, native menus and browser controls. See EXPANDED_RATES_INTEGRATION.md for qualification and integration evidence. Composition-wide apply, randomisation policy extensions and physical device acceptance remain separate work.

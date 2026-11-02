@@ -15,6 +15,7 @@
  */
 #pragma once
 #include <stdint.h>
+#include "slow_block_diag.h"
 #include "../dsp/x0x_param.h"
 #include "../seq/sequencer.h"
 #include "../seq/motion.h"
@@ -27,6 +28,8 @@ int engine_arrangement_refresh(const arrangement_settings_t *intent);
 int engine_arrangement_queue(uint8_t block);
 int engine_lane_set(int pattern,int lane,int index,int value);
 int engine_lane_mode(int enabled);
+int engine_sync_mode(int lane,int value);
+int engine_rate_set(int pattern,int lane,int field,int value);
 int engine_lane_break_step(int pattern,int step,int gate,int slice);
 int engine_cc_refresh(int reconcile);
 /* Main context only. Nested holds permit helper calls after incoming requests defer. */
@@ -87,6 +90,10 @@ const sound_strip_config_t *engine_strip_config(int strip); /* audio context onl
 void engine_out_loud(int on);          /* 1: the output at the codec's full scale (6 dB hotter than Felucca's) */
 void engine_usb_full(int on);          /* 1: engine_render at full level, engine_volume the MASTER knob after */
 void engine_volume(int32_t *out_lr, uint32_t n);   /* ISR, after engine_render (and the USB tap) */
+int engine_phase_get(int field);
+int engine_phase_set(int field,int value);
+int engine_phase_busy(void);
+unsigned engine_phase_config(void);
 void engine_apply_sound(const sound_t *s);                  /* queue every value (load, init) */
 void engine_sound_defaults(sound_t *s);                     /* each engine's power-on values */
 void engine_sound_centre_drum_pans(sound_t *s);             /* every drum voice's PAN (its last pot) to centre */
@@ -102,6 +109,7 @@ int engine_brk_outline(int which, uint8_t *peaks, int n);   /* the loop's peaks 
 int engine_motion_part(int target, int voice);              /* the part a parameter's lane follows */
 int engine_motion_value(int lane);                          /* what the lane plays now, -1 none */
 void engine_motion_rec(int lane);                           /* record a pass from the next step */
+void engine_probability_clear(int lane); /* main, stopped transport reservation only */
 void engine_motion_hold(int lane);                          /* the knob wins for a pass */
 float engine_gr_db(void);                                   /* master compressor gain reduction (UI meter) */
 void engine_master_format(int i, char *buf);                /* a master pot in its unit */
@@ -109,3 +117,41 @@ int engine_brk_nslots(void);                                /* built-in loops + 
 const char *const *engine_brk_slot_names(void);
 
 int engine_midi_channel_allowed(int channel); /* saved pad channel remains dedicated */
+
+/* Prototype clock API: accepted generation != applied role/status; policy0 is freeze only. */
+int engine_clock_request(uint32_t protocol,unsigned role,unsigned source,unsigned policy,uint32_t *generation);
+int engine_clock_status(uint32_t protocol,uint32_t words[10]); /* snapshot: protocol,generation,role,source,state,tickLo,tickHi,age,flags,pending */
+int engine_clock_source_retire(uint32_t protocol,unsigned source,uint32_t *generation);
+
+int engine_strip_restore(unsigned strip,const sound_strip_config_t *config);
+/* Main-only, under an existing transport reservation. Prepare is the acceptance
+ * boundary; after it succeeds, finish the journal then commit before releasing
+ * the reservation. No other main producer may run between these calls. */
+int engine_strip_restore_prepare(unsigned strip,const sound_strip_config_t *config);
+void engine_strip_restore_commit(unsigned strip,const sound_strip_config_t *config);
+
+#include "runtime_diagnostics.h"
+
+void engine_timing_init(void);
+void engine_timing_status(uint32_t words[10]);
+int engine_timing_update(uint32_t rate,uint32_t expected_rate,uint32_t generation,uint32_t old_unit,uint32_t new_unit);
+
+/* Private kick audition: volatile controls, no project/CC address changes. */
+int engine_kick_get(int field);
+int engine_kick_set(int field,int value);
+const x0x_param_t *engine_kick_param(int field);
+
+int engine_kick_restore(void);
+int engine_kick_applied(int field);
+
+int engine_kick_step_get(int pattern,int step);
+int engine_kick_step_set(int pattern,int step,int tier);
+
+int engine_kick_idle(void);
+
+int engine_kick_recall_commit(void);
+
+int engine_kick_current(int field);
+
+int engine_kick_preset_reserve(void);
+void engine_kick_preset_release(void);

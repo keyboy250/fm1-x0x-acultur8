@@ -11,6 +11,8 @@ git -c safe.directory="$ROOT" cat-file -e "$BASE^{commit}"
 REF=$(mktemp -d "$OUT/source.XXXXXX")
 git -c safe.directory="$ROOT" archive --format=tar --output="$REF/source.tar" "$BASE"
 tar -xf "$REF/source.tar" -C "$REF"
+# Asset-only codec matching; independent original-PCM loss test stays mandatory.
+python3 tools/prepare_cymbal_oracle.py "$REF" --source-commit "$BASE"
 cp tests/host/lane_off_pcm.c "$REF/tests/host/lane_off_pcm.c"
 mkdir -p "$REF/build/gen" "$REF/build/host"
 cp build/gen/* "$REF/build/gen/"

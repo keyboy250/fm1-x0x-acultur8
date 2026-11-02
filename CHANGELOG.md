@@ -1,4 +1,24 @@
+## 0.1.60-stoppedtrace — experimental kick prerelease
+
+- Retain the qualified hybrid-kick, native preset and long-tail work, with stopped-event diagnostic capture.
+- Include Favorite Slot 1, verified native STORE/RECALL/restart preservation, and documented bounded zero-event observations.
+- Add banner art, the full illustrated FAQ, pinned .32/.60 comparison, complete 803-row MIDI/CC map and five tutorials.
+- Keep all original target limits and guard thresholds unchanged. Core1 stack/deadline coverage and earlier .59 event cause remain open.
+- [Documentation](docs/README.md) · [Known limits](FINAL_ACCEPTANCE.txt).
+
+## Local upstream integration qualification (0.1.3-beta1)
+
+See [included changes, storage compatibility and pending physical checks](docs/UPSTREAM_INTEGRATION_20261017.md). This build has not been installed or published.
+
 # Acultur8 X0X changelog
+
+## Unreleased - Extended Edition qualification
+
+- Bound native status-message copies and cover empty, exact, overlong, split and benchmark-refusal messages.
+- Use defined unsigned exponent-bit adjustment; retain numerical accuracy and intended bit patterns.
+- Include per-sound saved strip defaults, reviewed21-division rates and the three-second Extended Edition startup in the qualification source.
+- Keep hardware-release acceptance and Pages publication held pending the release ledger.
+
 
 ## Unreleased
 

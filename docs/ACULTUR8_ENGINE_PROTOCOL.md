@@ -47,3 +47,59 @@ Legacy format-1/2 import; default format-2 output; variant format-3 round trip; 
 ## Integrated target checkpoint — 2026-10-13
 
 The configuration-only foundation with font packing builds using the pinned official compiler/SDK: image565,204/581,564 bytes, ordinary RAM97,636/98,304, pool334,532/344,064. This leaves16,360 image bytes,668 ordinary RAM bytes and1,340 pool bytes beyond the required8KiB reserve. All15 existing static target budgets pass. The standalone strip is not yet called by the engine. Its updated object has2,564 bytes of function text, a68-byte state and an84-byte process frame. See [recorded evidence](../tests/variant_foundation_evidence.json). Physical timing/flash acceptance and future combined feature sizing remain pending.
+
+## Read-only USB-MIDI strip query (X0X command48)
+
+The physical device implements a separate versioned query. It uses the existing
+editor SysEx framing and reply buffer; it adds no parameter-write, save, apply,
+watch, streaming or update operation. It is available after normal startup.
+
+Request: `F0 7D 46 4C 30 01 token strip F7` (hexadecimal command30 = decimal48).
+`token` is0..127; `strip` is0..24. Send exactly these three arguments after the
+command. Allow only one outstanding query; clients correlate token and strip.
+Strip indices are909 voices0..10,808 voices11..21,303A22,303B23,BREAK24.
+
+Every matching query replies with `F0 7D 46 4C 30 01 token strip status ... F7`.
+Status0 is success,1 invalid arguments,2 engine edit queue busy,3 unsupported
+request version. Error replies have no data (10 bytes including F0/F7).
+
+Success replies are31 bytes including F0/F7. After status they contain:
+
+| Field | Seven-bit bytes, least significant first |
+| --- | --- |
+| Project revision |5; highest byte0..15 |
+| Consumed engine queue ticket |5; highest byte0..15 |
+| High-pass Hz |3;20..20000 |
+| Low-pass Hz |3;20..20000 |
+| Boost dB |1;0..24 |
+| Ceiling attenuation dB |1;0..48, where1 means minus1dBFS |
+| Release ms |2;10..250 |
+| Flags |1; bit0 overall strip, bit1 HP, bit2 LP, bit3 limiter |
+
+All payload bytes are seven-bit safe. Frequencies use three bytes because the
+supported range exceeds MIDI's two-byte16383 limit. Values come from the main
+thread's current project configuration, after verifying that the audio command
+queue is drained. They are not a read of saved-default storage or of mutable
+DSP state, meters, smoothing progress, measured cutoff response or audible output.
+A busy reply contains no settings; retry it with a fresh token. Queries do not
+stop playback, select a sound, write the queue, mark dirty, create undo entries,
+apply defaults or save anything. Normal unrelated application activity, including
+a previously pending autosave, remains independent of the query.
+
+`python tools/fm1_strip_read.py --strip 23` prints exact303B values as JSON.
+`--all` reads all25 sounds sequentially and refuses a mixed-revision/ticket scan.
+`--port` and optional `--output-port` disambiguate multiple devices; Windows
+numeric input/output suffixes may differ. The tool sends command48 only. It does
+not fall back to CC, sample, debug, save or firmware-update commands. Earlier
+firmware does not answer this query; a timeout must not be reported as a zero
+value or a passed readback check.
+
+
+## Candidate command49: unsaved pattern readback
+
+The separate query candidate adds bounded, CRC-protected RAM pages for all32
+patterns, all25 lanes, shared accents/swing and pattern motion/probability.
+It never calls the project backup/export flush or a save/setter/transport action.
+See [the complete ABI and nonmutation contract](PATTERN_QUERY_PROTOCOL.md) and
+`tools/fm1_pattern_read.py`. The current physical 0.1.8 predecessor does not
+support command49; local query tests are not device acceptance.

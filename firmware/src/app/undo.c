@@ -17,7 +17,7 @@
 #include <stdint.h>
 
 #ifndef UNDO_POOL
-#define UNDO_POOL 20480u                 /* X0X 0.11: 4 KB less, for the 64-step project's shadow (pool headroom) */
+#define UNDO_POOL 18432u                 /* 18 KiB: retain the 8 KiB RAM reserve with backup/accessibility; oldest history expires first. */
 #endif
 #define UNDO_MAX 32
 #define UNDO_GAP 8u                    /* unchanged bytes between changes cheaper to keep than a new run */

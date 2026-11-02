@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # P-locks: on EDIT, hold a step that is on and turn a sound knob: that step gets its own value (one
 # step of the knob's lane); a tap still toggles. SAVE + the knob, holding the step, clears it.
 wait 300

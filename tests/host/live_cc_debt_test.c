@@ -57,7 +57,7 @@ static void ordering(void){
     render();plat_midi_service();assert(cc_sources[0].exact_parts==0 && proj.sound.v[T_909][0][0]==33);render();assert(mi_r==mi_w);
 }
 int main(void){
-    for(int i=0;i<OBJ_NOBJ;i++)store_len[i]=-1;project_discard_rejected();boot();render();host_web_midi_ready(1);
+    for(int i=0;i<OBJ_NOBJ;i++)store_prev_len[i]=store_len[i]=-1;project_discard_rejected();boot();render();host_web_midi_ready(1);
     assert(host_web_midi_ingest(11u|(0xb0u<<8)|(127u<<24),2)==0);render();assert(proj.sound.v[T_909][0][0]==127);
     assert(host_web_midi_ingest(11u|(0xb0u<<8)|(128u<<24),2)==CC_REJECTED);
     assert(host_web_midi_ingest(11u|(0xb0u<<8),3)==CC_REJECTED);

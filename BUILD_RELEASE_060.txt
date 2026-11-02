@@ -1,0 +1,27 @@
+Build the reviewed 0.1.60-stoppedtrace target
+
+Read BUILDING.md for upstream prerequisites and dependency/license notices. The SDK,
+toolchain and local builder image are not redistributed in the source archive.
+
+General release command, with the documented Linux toolchain and SDK:
+  python3 tools/build.py --release 0.1.60-stoppedtrace --sdk /path/to/ac79-sdk
+Set JIELI_TOOLCHAIN to your compiler location. See BUILDING.md for platform setup.
+
+The exact locally validated builder layout mounts the compiler at /toolchain and
+SDK at /sdk. Its wrapper adds the standard-header paths needed by that preserved
+compiler layout. Inside that layout, from the source root:
+  JIELI_TOOLCHAIN=/toolchain JIELI_DOCKER=0 python3 tools/build_release_060.py
+  python3 tests/target_budget.py --report build/release-target-budget.json
+
+Expected package: build/x0x-0.1.60-stoppedtrace.fwsc
+Expected identity: FM-1_9000160
+Package SHA-256: 27b73b129e353589e01218a945ab7d121b0f21b2064dcd83d16db5341988d4c0
+Image size: 569,496 bytes
+Original target gate file SHA-256:
+0cf36d9a6c61f78aca9a3f88f03c6fb844ae70ac5bd9adc2811282df90ff04f2
+IRQ wrapper: 83 instructions; original limit: 85.
+
+Do not change limits to make a build pass. tools/kick_target_build.sh is a retained
+historical .37 helper; it does not build the current version. Generated build outputs
+are excluded from the source archive. Exact reproduction was checked in the stated
+local dependency layout; arbitrary compiler/SDK revisions are not covered by that claim.

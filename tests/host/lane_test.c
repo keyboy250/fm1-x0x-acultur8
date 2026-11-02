@@ -10,7 +10,7 @@ static int locked,irq_start;
 uint32_t plat_control_enter(void){assert(!locked);if(irq_start){irq_start=0;seq_start(&seq);seq_advance(&seq,0,&SINK);}locked=1;return 19;}
 void plat_control_leave(uint32_t saved){assert(locked && saved==19);locked=0;}
 static void render_block(void){int32_t b[512];engine_render(b,256);}
-static void fresh(void){int i;for(i=0;i<OBJ_NOBJ;i++)store_len[i]=-1;memset(stored_known,0,sizeof stored_known);project_discard_rejected();midi_connected=1;boot();render_block();}
+static void fresh(void){int i;for(i=0;i<OBJ_NOBJ;i++)store_prev_len[i]=store_len[i]=-1;memset(stored_known,0,sizeof stored_known);project_discard_rejected();midi_connected=1;boot();render_block();}
 static int command(int op,int pattern,int lane,int index,int value){variant_command_t c={1,(uint16_t)op,91,(uint8_t)pattern,(uint8_t)lane,(uint8_t)index,0,value};variant_reply_t r;int rc=variant_command(&c,&r);assert(rc==r.result);return rc;}
 static void storage(void)
 {

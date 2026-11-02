@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include "x0x_param.h"
 #include "sound_strip.h"
+#include "hybrid_kick.h"
 
 enum { D8_BD, D8_SD, D8_LT, D8_MT, D8_HT, D8_RS, D8_CP, D8_CB, D8_CY, D8_OH, D8_CH, D8_NUM, D8_KIT = D8_NUM };
 
@@ -166,7 +167,7 @@ typedef struct {
 } d8_lane_t;
 
 typedef struct {                    /* a sound's drive stage, resolved from its pots */
-    float drive, k, mk, dn, bm, steps, hold;
+    float mk, dn, steps;
 } d8_shp_t;
 
 struct drum808 {
@@ -174,13 +175,13 @@ struct drum808 {
     uint8_t sw[D8_NUM];               /* LT/MT/HT tom|conga, RS rim|clave, CP clap|maracas */
     uint8_t kpot[3];                  /* kit: level, accent, choke */
     uint8_t tpan[D8_NUM];             /* X0X: each track's pan pot (a track, not a sound: tom / conga share it) */
-    float pan_l[D8_NUM], pan_r[D8_NUM];
-    float pan_lc[D8_NUM], pan_rc[D8_NUM], pan_dl[D8_NUM], pan_dr[D8_NUM];   /* gliding: now, per sample */
+    float pan_lc[D8_NUM], pan_rc[D8_NUM];   /* gliding: now, per sample */
     float potv[D8S_NUM][D8P_NUM];     /* engineering values of pot[] */
     d8_shp_t shp[D8S_NUM];
     float vol, vel_depth;
     int32_t choke;
 
+    hybrid_kick_t hybrid;
     d8_bd_t bd;
     d8_sd_t sd;
     d8_tom_t tom[3];
@@ -218,3 +219,9 @@ int drum808_active(const drum808_t *d);
 int drum808_strip_set(drum808_t *d, int track, const sound_strip_config_t *config);
 const sound_strip_meter_t *drum808_strip_meter(const drum808_t *d, int track);
 void drum808_strip_meter_clear(drum808_t *d);
+
+void drum808_hybrid_set(drum808_t *d,int field,int value);
+void drum808_hybrid_sample(drum808_t *d,const uint8_t *data,uint32_t frames,uint32_t rate);
+
+void drum808_trigger_resolved(drum808_t *d,int track,float vel);
+int drum808_resolve_velocity(drum808_t *d,float vel,int tier);

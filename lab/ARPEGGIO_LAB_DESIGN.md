@@ -49,3 +49,10 @@ Do not show Hold/Latch, anchor/movement or humanize as working controls until th
 ## Scoped dice and locks
 
 User-requested randomisation extends from whole composition to individual controls, with inherited locks and key/scale protection. See `RANDOMISATION_DESIGN.md` and FM1-34. This supersedes seed-lock-only exploration as a required planned feature; runtime implementation remains pending.
+
+
+## Requested external MIDI gate - 2026-10-16
+
+User requested a DAW-grooved MIDI gate for arp advancement: one matching positive-velocity Note On on a configured source/channel/key (e.g. DAW label C-2) advances exactly one position. External mode follows irregular pulse spacing instead of a1/16 timer; no pulse means no step. Record numeric MIDI note because octave labels differ. Note Off/velocity-zero and unrelated inputs do not advance. Proposal only; engine/MIDI ingress, persistence, release/transport policy and physical timing acceptance pending. Pages held.
+
+See FM1-46 and ARP_EXTERNAL_GATE_NOTE.md (docs/ARP_EXTERNAL_GATE_NOTE.md in firmware checkouts). This extends the proposed Timing group with Internal / External MIDI gate, source, channel and trigger note. Existing ARP remains a stored-pattern generator until the stepping extension is implemented.

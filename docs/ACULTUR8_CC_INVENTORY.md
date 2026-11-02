@@ -4,7 +4,7 @@
 
 Generated with `python tools/cc_inventory.py --write`; validate with `--check`. No firmware compilation is performed.
 
-693 inventory rows: 679 addressed field templates/descriptor rows and 14 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 644, 'nonmusical': 3, 'diagnostic': 1, 'read_only': 1, 'action': 19, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 12}.
+803 inventory rows: 773 addressed field templates/descriptor rows and 30 explicitly unmapped/read-only/nonmusical rows. Repeated contexts enumerate the full pattern, step, block and lane extents in JSON. Categories: {'musical': 717, 'nonmusical': 7, 'diagnostic': 1, 'read_only': 1, 'action': 26, 'browser_musical': 5, 'browser_action': 8, 'nonmusical_action': 38}.
 
 ## Source-derived engine descriptor counts
 
@@ -569,6 +569,8 @@ Acceptance: exhaustive registry coverage and endpoint/enum scaling; collision/re
 | strip.24.highpass_enabled | highpass_enabled | [0, 1] | 10 / 111 | {} | musical |
 | strip.24.lowpass_enabled | lowpass_enabled | [0, 1] | 10 / 112 | {} | musical |
 | strip.24.limiter_enabled | limiter_enabled | [0, 1] | 10 / 113 | {} | musical |
+| sync.global_mode | SYNC RATE MODE | [0, 1] | none | {} | nonmusical |
+| sync.strip_override | RATE MODE | [0, 3] | none | {"strip": [0, 24]} | nonmusical |
 | pref.SQ_SWING | SWING | [0, 100] | 11 / 20 | {"pattern": [0, 31]} | musical |
 | pref.SQ_DLEN | LENGTH | [0, 63] | 11 / 21 | {"kit": [0, 1], "pattern": [0, 31]} | musical |
 | pref.SQ_DRATE | RATE | [0, 3] | 11 / 22 | {"kit": [0, 1], "pattern": [0, 31]} | musical |
@@ -633,6 +635,14 @@ Acceptance: exhaustive registry coverage and endpoint/enum scaling; collision/re
 | action.9 | CLEAR SONG | [0, 127] | 12 / 25 | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
 | action.10 | PERFORMANCE | [0, 127] | 12 / 26 | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
 | action.11 | RUN PERF TEST | [0, 127] | 12 / 27 | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.12 | DUP AS VARIATION | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.13 | EDIT BLOCK NOTES | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.14 | QUEUE BLOCK | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.15 | DELETE BLOCK | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.16 | UNDO | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.17 | PASTE KEEP ACC/SW | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| action.18 | COPY/PASTE SEQUENCES | [0, 127] | none | {"block": [0, 191], "part": [0, 4], "pattern": [0, 31]} | action |
+| system.one_core | Second core disabled at next power-on | [0, 1] | none | {} | nonmusical |
 | selector.pattern | selector.pattern | [0, 31] | 12 / 74 | {} | musical |
 | selector.part | selector.part | [0, 4] | 12 / 75 | {} | musical |
 | selector.drum | selector.drum | [0, 10] | 12 / 76 | {} | musical |
@@ -680,11 +690,11 @@ Acceptance: exhaustive registry coverage and endpoint/enum scaling; collision/re
 | arrangement.mode | arrangement.mode | [0, 9] | 12 / 118 | {} | musical |
 | arrangement.parent | arrangement.parent | [0, 255] | 12 / 119 | {} | musical |
 | arrangement.degree | arrangement.degree | [0, 7] | 13 / 0 | {"block": [0, 191]} | musical |
-| arrangement.duration | arrangement.duration | [1, 8] | 13 / 1 | {"block": [0, 191]} | musical |
+| arrangement.duration | arrangement.duration | [1, 32] | 13 / 1 | {"block": [0, 191]} | musical |
 | arrangement.pattern | arrangement.pattern | [0, 31] | 13 / 2 | {"block": [0, 191], "part": [0, 4]} | musical |
 | arrangement.mute | arrangement.mute | [0, 1] | 13 / 3 | {"block": [0, 191], "part": [0, 4]} | musical |
 | arrangement.queue | arrangement.queue | [0, 191] | 13 / 4 | {} | musical |
-| follow.mode | follow.mode | [0, 2] | 13 / 5 | {"bass": [0, 1]} | musical |
+| follow.mode | follow.mode | [0, 3] | 13 / 5 | {"bass": [0, 1]} | musical |
 | follow.low | follow.low | [0, 127] | 13 / 6 | {"bass": [0, 1]} | musical |
 | follow.high | follow.high | [0, 127] | 13 / 7 | {"bass": [0, 1]} | musical |
 | pad.channel | pad.channel | [0, 255] | 13 / 8 | {} | musical |
@@ -708,6 +718,12 @@ Acceptance: exhaustive registry coverage and endpoint/enum scaling; collision/re
 | selector.destination_pattern | Explicit pattern-copy destination | [0, 31] | 13 / 108 | {} | musical |
 | action_control.arm | Arm destructive native action | [0, 11] | 13 / 109 | {} | action |
 | action_control.cancel | Cancel source action arm | [0, 1] | 13 / 110 | {} | action |
+| rate.enable | Enable expanded rates (stopped) | [0, 1] | 13 / 111 | {"pattern": [0, 31], "strip": [0, 24]} | musical |
+| rate.exact | Expanded exact division | [0, 20] | 13 / 112 | {"pattern": [0, 31], "strip": [0, 24]} | musical |
+| rate.family | Rate sweep family | [0, 3] | 13 / 113 | {"pattern": [0, 31], "strip": [0, 24]} | musical |
+| rate.boundary | Rate latch boundary | [0, 1] | 13 / 114 | {"pattern": [0, 31], "strip": [0, 24]} | musical |
+| rate.hysteresis | Rate sweep hysteresis CC units | [0, 2] | 13 / 115 | {"pattern": [0, 31], "strip": [0, 24]} | musical |
+| rate.sweep_v1 | Family-safe rate sweep ABI1 | [0, 127] | 13 / 116 | {"pattern": [0, 31], "strip": [0, 24]} | musical |
 | output.master_knob | MASTER gain Q12 | [0, 4096] | 13 / 76 | {} | musical |
 | slice.level_percent | slice.level_percent | [0, 100] | 13 / 80 | {} | browser_musical |
 | slice.repeat | slice.repeat | [0, 1] | 13 / 81 | {} | browser_musical |
@@ -739,3 +755,97 @@ Acceptance: exhaustive registry coverage and endpoint/enum scaling; collision/re
 | ui.navigation | ui.navigation | [0, 1] | none | {} | nonmusical_action |
 | ui.keyboard_latch | ui.keyboard_latch | [0, 1] | none | {} | nonmusical_action |
 | ui.factory_reset | ui.factory_reset | [0, 1] | none | {} | nonmusical_action |
+| ui.pattern_copy.source | Stopped copy source | [0, 31] | 15 / 9 | {} | nonmusical_action |
+| ui.pattern_copy.destination | Stopped copy destination | [0, 31] | 15 / 10 | {} | nonmusical_action |
+| ui.pattern_copy.scope | Stopped copy scope | [0, 24] | 15 / 11 | {} | nonmusical_action |
+| ui.constrained_generation.mode | Constrained generation mode | [0, 4] | 14 / 91 | {} | nonmusical_action |
+| ui.constrained_generation.chord_block | Constrained generation chord_block | [0, 191] | 14 / 92 | {} | nonmusical_action |
+| ui.constrained_generation.generate_confirmed | Constrained generation generate_confirmed | [0, 1] | 14 / 93 | {} | nonmusical_action |
+| ui.drum_generation.density | Drum generation density | [0, 100] | 14 / 94 | {} | nonmusical_action |
+| ui.drum_generation.positions | Drum generation positions | [0, 3] | 14 / 95 | {} | nonmusical_action |
+| ui.drum_generation.anchors | Drum generation anchors | [0, 5] | 14 / 96 | {} | nonmusical_action |
+| ui.drum_generation.seed_index | Drum generation seed_index | [0, 255] | 14 / 97 | {} | nonmusical_action |
+| ui.drum_generation.replace_confirm | Drum generation replace_confirm | [0, 1] | 14 / 98 | {} | nonmusical_action |
+| ui.repeating_variation.every | Repeating variation every | [0, 2] | 14 / 99 | {} | nonmusical_action |
+| ui.repeating_variation.changes | Repeating variation changes | [0, 8] | 14 / 100 | {} | nonmusical_action |
+| ui.repeating_variation.anchor_lock | Repeating variation anchor_lock | [0, 3] | 14 / 101 | {} | nonmusical_action |
+| ui.repeating_variation.seed | Repeating variation seed | [0, 255] | 14 / 102 | {} | nonmusical_action |
+| ui.repeating_variation.mode | Repeating variation mode | [0, 2] | 14 / 103 | {} | nonmusical_action |
+| ui.repeating_variation.shape | Repeating variation shape | [0, 1] | 14 / 104 | {} | nonmusical_action |
+| ui.repeating_variation.range | Repeating variation range | [0, 3] | 14 / 105 | {} | nonmusical_action |
+| ui.repeating_variation.arm_confirm | Repeating variation arm_confirm | [0, 1] | 14 / 106 | {} | nonmusical_action |
+| ui.repeating_variation.off_confirm | Repeating variation off_confirm | [0, 1] | 14 / 107 | {} | nonmusical_action |
+| ui.live_overlay | Live drum display overlay (session only; default OFF) | [0, 1] | none | {} | nonmusical_action |
+| ui.freeze_commit.destination | Freeze/Commit destination | [0, 31] | 14 / 108 | {} | nonmusical_action |
+| ui.freeze_commit.freeze_request | Freeze/Commit freeze_request | [0, 1] | 14 / 109 | {} | nonmusical_action |
+| ui.freeze_commit.commit_confirm | Freeze/Commit commit_confirm | [0, 1] | 14 / 110 | {} | nonmusical_action |
+| ui.random_options.length | Random options length | [0, 64] | 14 / 111 | {} | nonmusical_action |
+| ui.random_options.note_step | Random options note_step | [0, 64] | 14 / 112 | {} | nonmusical_action |
+| remote.generation.seed_byte0 | remote.generation.seed_byte0 | [0, 255] | 14 / 115 | {} | musical |
+| remote.generation.seed_byte1 | remote.generation.seed_byte1 | [0, 255] | 14 / 116 | {} | musical |
+| remote.generation.seed_byte2 | remote.generation.seed_byte2 | [0, 255] | 14 / 117 | {} | musical |
+| remote.generation.seed_byte3 | remote.generation.seed_byte3 | [0, 255] | 14 / 118 | {} | musical |
+| remote.request_low7 | remote.request_low7 | [0, 127] | 14 / 119 | {} | musical |
+| remote.request_high7 | remote.request_high7 | [0, 127] | 15 / 0 | {} | musical |
+| remote.action_arm | remote.action_arm | [0, 7] | 15 / 1 | {} | musical |
+| remote.cancel | remote.cancel | [0, 1] | 15 / 2 | {} | musical |
+| ui.cc_mode | GLO MIDI CC MODE | [0, 2] | none | {} | nonmusical |
+| hybrid808.session.0 | HYBRID | [0, 1] | 15 / 18 | {} | musical |
+| hybrid808.session.1 | WAVE | [0, 4] | 15 / 19 | {} | musical |
+| hybrid808.session.2 | WAVE MIX | [0, 100] | 15 / 20 | {} | musical |
+| hybrid808.session.3 | WAVE HZ | [0, 100] | 15 / 21 | {} | musical |
+| hybrid808.session.4 | W DECAY | [0, 127] | 15 / 22 | {} | musical |
+| hybrid808.session.5 | W SWEEP | [0, 127] | 15 / 23 | {} | musical |
+| hybrid808.session.6 | K FILTER | [0, 1] | 15 / 24 | {} | musical |
+| hybrid808.session.7 | K CUTOFF | [0, 127] | 15 / 25 | {} | musical |
+| hybrid808.session.8 | V CUTOFF | [0, 127] | 15 / 26 | {} | musical |
+| hybrid808.session.9 | V PITCH | [0, 127] | 15 / 27 | {} | musical |
+| hybrid808.session.10 | V DECAY | [0, 127] | 15 / 28 | {} | musical |
+| hybrid808.session.11 | V BLEND | [0, 127] | 15 / 29 | {} | musical |
+| hybrid808.session.12 | LOW VEL | [0, 127] | 15 / 30 | {} | musical |
+| hybrid808.session.13 | MID VEL | [0, 127] | 15 / 31 | {} | musical |
+| hybrid808.session.14 | HIGH VEL | [0, 127] | 15 / 64 | {} | musical |
+| hybrid808.session.15 | J CHANCE | [0, 100] | 15 / 65 | {} | musical |
+| hybrid808.session.16 | J RANGE | [0, 40] | 15 / 66 | {} | musical |
+| hybrid808.session.17 | VEL TIERS | [0, 1] | 15 / 67 | {} | musical |
+| hybrid808.session.18 | S ATTACK | [0, 100] | 15 / 68 | {} | musical |
+| hybrid808.session.19 | S PUNCH | [0, 127] | 15 / 69 | {} | musical |
+| hybrid808.session.20 | S P TIME | [0, 200] | 15 / 70 | {} | musical |
+| hybrid808.session.21 | S TAIL | [0, 127] | 15 / 71 | {} | musical |
+| hybrid808.session.22 | S LEVEL | [0, 100] | 15 / 72 | {} | musical |
+| hybrid808.session.23 | V PUNCH | [0, 127] | 15 / 73 | {} | musical |
+| hybrid808.session.24 | S ENV | [0, 1] | 15 / 74 | {} | musical |
+| hybrid808.session.25 | S ATTACK | [0, 100] | 15 / 75 | {} | musical |
+| hybrid808.session.26 | S HOLD | [0, 127] | 15 / 76 | {} | musical |
+| hybrid808.session.27 | S DECAY | [0, 127] | 15 / 77 | {} | musical |
+| hybrid808.session.28 | S CURVE | [0, 127] | 15 / 78 | {} | musical |
+| hybrid808.session.29 | W ENV | [0, 1] | 15 / 79 | {} | musical |
+| hybrid808.session.30 | W ATTACK | [0, 100] | 15 / 80 | {} | musical |
+| hybrid808.session.31 | W HOLD | [0, 127] | 15 / 81 | {} | musical |
+| hybrid808.session.32 | W DECAY | [0, 127] | 15 / 82 | {} | musical |
+| hybrid808.session.33 | W CURVE | [0, 127] | 15 / 83 | {} | musical |
+| hybrid808.session.34 | CLICK | [0, 60] | 15 / 84 | {} | musical |
+| hybrid808.session.35 | C TONE | [0, 127] | 15 / 85 | {} | musical |
+| hybrid808.session.36 | C LENGTH | [0, 80] | 15 / 86 | {} | musical |
+| hybrid808.session.37 | CRUNCH | [0, 100] | 15 / 87 | {} | musical |
+| hybrid808.session.38 | SMOOTH | [0, 100] | 15 / 88 | {} | musical |
+| kick.preset.store_arm | Kick preset store_arm | [0, 1] | 15 / 90 | {} | musical |
+| kick.preset.store_execute | Kick preset store_execute | [0, 1] | 15 / 91 | {} | musical |
+| kick.preset.recall_arm | Kick preset recall_arm | [0, 1] | 15 / 92 | {} | musical |
+| kick.preset.recall_execute | Kick preset recall_execute | [0, 1] | 15 / 93 | {} | musical |
+| kick.preset.request_low7 | Kick preset request_low7 | [0, 127] | 15 / 94 | {} | musical |
+| kick.preset.request_high7 | Kick preset request_high7 | [0, 127] | 15 / 95 | {} | musical |
+| kick.step_tier | 808 kick step velocity tier | [0, 3] | 15 / 96 | {"pattern": [0, 31], "step": [0, 63]} | musical |
+| phase303b.engine | 303B PHASE engine | [0, 1] | none | {} | musical |
+| phase303b.wave | 303B PHASE wave | [0, 7] | none | {} | musical |
+| phase303b.shape | 303B PHASE shape | [0, 127] | none | {} | musical |
+| phase303b.envelope | 303B PHASE envelope | [0, 15] | none | {} | musical |
+| remote.variation.constraint_mode | Variation303 constraint mode | [0, 3] | 15 / 3 | {} | musical |
+| remote.variation.chord_block | Variation303 chord block | [0, 191] | 15 / 4 | {} | musical |
+| remote.capture.token_byte0 | Expected captured-pass token byte0 | [0, 255] | 15 / 5 | {} | musical |
+| remote.capture.token_byte1 | Expected captured-pass token byte1 | [0, 255] | 15 / 6 | {} | musical |
+| remote.capture.token_byte2 | Expected captured-pass token byte2 | [0, 255] | 15 / 7 | {} | musical |
+| remote.capture.token_byte3 | Expected captured-pass token byte3 | [0, 255] | 15 / 8 | {} | musical |
+| ui.pattern_copy.destination_scope | Scoped cross-part copy destination_scope | [0, 24] | 15 / 12 | {} | musical |
+| ui.pattern_copy.preview_arm | Scoped cross-part copy preview_arm | [0, 1] | 15 / 13 | {} | musical |
+| ui.pattern_copy.execute | Scoped cross-part copy execute | [0, 1] | 15 / 14 | {} | musical |

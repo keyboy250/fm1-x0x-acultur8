@@ -30,6 +30,9 @@ jobs:
           python-version: '3.12'
       - name: Build and run every required browser-alpha check
         run: python tools/acultur8_check.py --bootstrap
+      - name: Check native startup timing and interruption paths
+        run: |
+          docker run --rm --network=none --cap-drop=ALL --security-opt=no-new-privileges --user "$(id -u):$(id -g)" -v "$PWD:/src" -w /src acultur8-fm1-emu-builder:local sh tests/host/run_boot_intro.sh
       - name: Locate the tested site
         id: artifact
         run: |

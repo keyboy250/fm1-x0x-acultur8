@@ -30,7 +30,7 @@ static void drain(void) { int32_t block[512]; engine_render(block, 256); }
 static void fresh(void)
 {
     int i;
-    for (i = 0; i < OBJ_NOBJ; i++) store_len[i] = -1;
+    for (i = 0; i < OBJ_NOBJ; i++) store_prev_len[i]=store_len[i]=-1;
     memset(stored_known, 0, sizeof stored_known);
     project_discard_rejected();
     boot(); drain();
@@ -66,7 +66,7 @@ static void legacy(void)
         memcpy(store[OBJ_PAT0] + 4, old, sizeof old);
         memcpy(store[OBJ_PAT1] + 4, old, sizeof old);
         store_len[OBJ_PAT0] = store_len[OBJ_PAT1] = sizeof old + 4;
-        store_len[OBJ_SONG] = store_len[OBJ_MOTION] = -1;
+        store_len[OBJ_SONG] = store_prev_len[OBJ_MOTION]=store_len[OBJ_MOTION]=-1;
         assert(project_load() == 0);
         assert(proj.pat[0].drum[0].hit[0][0] == 0x80000001u);
         assert(proj.pat[0].drum[0].hit[0][1] == 0);
@@ -109,7 +109,7 @@ static void rejected(int kind)
         assert(save_stream(RAW_LEN,RAW_OFF,4,packed) == 0);    /* valid CRC, invalid extension */
         variant_defaults(&proj.variant);
     }
-    if (kind == 8) store_len[OBJ_PAT0] = -1;           /* missing first sector, remaining v3 sectors */
+    if (kind == 8) store_prev_len[OBJ_PAT0]=store_len[OBJ_PAT0]=-1;           /* missing first sector, remaining v3 sectors */
     /* Pending unsaved edit must remain undoable after a rejected candidate. */
     assert(command(VC_SET_STRIP, 0, VP_BOOST, 9) == VR_QUEUED);
     before = proj; writes = store_writes;
@@ -222,7 +222,8 @@ static void controls(void)
     for (t = 0; t < NTARGETS; t++) for (v = 0; v < engine_nvoices(t); v++) bound += engine_nparams(t,v);
     assert(bound + 1u <= 768);                         /* includes arrangement refresh after undo */
     assert(variant_snapshot(VS_INFO, 0, 0, &snapshot) == VR_OK && snapshot.count == 8);
-    assert(snapshot.value[0] == (VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE | VCAP_STRIP_AUDIO | VCAP_ARRANGEMENT | VCAP_HARMONY_METADATA | VCAP_BASS_FOLLOW | VCAP_EXTERNAL_PAD | VCAP_LANE_CLOCKS));
+    assert((snapshot.value[0] & ~VCAP_STRIP_DEFAULTS) == (VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE | VCAP_STRIP_AUDIO | VCAP_ARRANGEMENT | VCAP_HARMONY_METADATA | VCAP_BASS_FOLLOW | VCAP_EXTERNAL_PAD | VCAP_LANE_CLOCKS));
+    assert((snapshot.value[0] & VCAP_STRIP_DEFAULTS) == VCAP_STRIP_DEFAULTS);
     rev = snapshot.revision;
     assert(variant_command(&invalid, &reply) == VR_UNSUPPORTED && reply.request == 77);
     assert(command(VC_SET_STRIP, 25, VP_BOOST, 0) == VR_INVALID);

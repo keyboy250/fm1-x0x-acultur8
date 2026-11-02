@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # TB-3PO: the settings are the next line's. Turning them leaves the line as it is (and marks the
 # screen); OCT+ writes a new line, OCT- mutates it.
 wait 300

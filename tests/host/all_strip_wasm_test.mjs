@@ -45,7 +45,7 @@ for(const schema of [2,3]) {
  const raw=unpack(bufferObjects);assert.equal(raw.length,LEGACY+412);raw.writeUInt16LE(schema,VARIANT+4);
  raw[ARR]=schema===2?0:18;raw[ARR+8]=8;
  const old=encode(bufferObjects,raw),migrated=await open(current,old);
- assert.equal(snap(migrated,0)[5],5);assert.equal(snap(migrated,0)[0],1535);
+ assert.equal(snap(migrated,0)[5],5);assert.equal(snap(migrated,0)[0],3583);
  assert.equal(snap(migrated,8)[0],255,'reserved old pad channel disabled');
  assert.equal(snap(migrated,5)[0],schema===2?0:18,'validated old bass flags preserved');
  for(const strip of [11,22,24])assert.equal(snap(migrated,2,strip)[5],9);
@@ -64,4 +64,4 @@ for(const strip of [11,22,24]) {
  const reopened=await open(current,saved);await select(reopened,strip);render(reopened,40);const restoredAudio=await hit(reopened,strip);
  assert.ok(energy(restoredAudio.audio)<energy(dry.audio)*.5 && restoredAudio.outPeak<=3982,`strip ${strip} reopened processing remains audible and bounded`);
 }
-console.log(JSON.stringify({realWorkletWasm:true,sounds:25,configuredBypassBitwise:true,independentBypassBitwise:true,allAudibleLimiters:true,allMeters:true,savedConfigs:true,undoRedo:true,audibleUndoRedoReopen:true,schema4:true,schema2and3Migration:true,processingMask:0x01ffffff}));
+console.log(JSON.stringify({realWorkletWasm:true,sounds:25,configuredBypassBitwise:true,independentBypassBitwise:true,codecMatchedOracleInputs:true,allAudibleLimiters:true,allMeters:true,savedConfigs:true,undoRedo:true,audibleUndoRedoReopen:true,schema4:true,schema2and3Migration:true,processingMask:0x01ffffff}));

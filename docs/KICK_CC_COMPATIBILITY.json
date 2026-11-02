@@ -1,0 +1,1154 @@
+{
+  "previous_map": "draft-1-actions-prototype-1",
+  "new_map": "draft-2-kick-presets-1",
+  "existing_mapping_changes": [],
+  "additive_address_count": 46,
+  "new_addresses": [
+    {
+      "id": "hybrid808.session.0",
+      "name": "HYBRID",
+      "category": "musical",
+      "range": [
+        0,
+        1
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 18
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 18,
+        "lsb": 50,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": [
+        "OFF",
+        "ON"
+      ],
+      "parameter_number": 1250
+    },
+    {
+      "id": "hybrid808.session.1",
+      "name": "WAVE",
+      "category": "musical",
+      "range": [
+        0,
+        4
+      ],
+      "default": 1,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 19
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 19,
+        "lsb": 51,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": [
+        "SINE",
+        "WARM",
+        "HOLLOW",
+        "EDGE",
+        "USER1"
+      ],
+      "parameter_number": 1251
+    },
+    {
+      "id": "hybrid808.session.2",
+      "name": "WAVE MIX",
+      "category": "musical",
+      "range": [
+        0,
+        100
+      ],
+      "default": 35,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 20
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 20,
+        "lsb": 52,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": null,
+      "parameter_number": 1252
+    },
+    {
+      "id": "hybrid808.session.3",
+      "name": "WAVE HZ",
+      "category": "musical",
+      "range": [
+        0,
+        100
+      ],
+      "default": 52,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 21
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 21,
+        "lsb": 53,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": null,
+      "parameter_number": 1253
+    },
+    {
+      "id": "hybrid808.session.4",
+      "name": "W DECAY",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 58,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 22
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 22,
+        "lsb": 54,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": null,
+      "parameter_number": 1254
+    },
+    {
+      "id": "hybrid808.session.5",
+      "name": "W SWEEP",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 53,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 23
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 23,
+        "lsb": 55,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": null,
+      "parameter_number": 1255
+    },
+    {
+      "id": "hybrid808.session.6",
+      "name": "K FILTER",
+      "category": "musical",
+      "range": [
+        0,
+        1
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 24
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 24,
+        "lsb": 56,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": [
+        "OFF",
+        "ON"
+      ],
+      "parameter_number": 1256
+    },
+    {
+      "id": "hybrid808.session.7",
+      "name": "K CUTOFF",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 80,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 25
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 25,
+        "lsb": 57,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": null,
+      "parameter_number": 1257
+    },
+    {
+      "id": "hybrid808.session.8",
+      "name": "V CUTOFF",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 64,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 26
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 26,
+        "lsb": 58,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": null,
+      "parameter_number": 1258
+    },
+    {
+      "id": "hybrid808.session.9",
+      "name": "V PITCH",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 64,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 27
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 27,
+        "lsb": 59,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": null,
+      "parameter_number": 1259
+    },
+    {
+      "id": "hybrid808.session.10",
+      "name": "V DECAY",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 64,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 28
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 28,
+        "lsb": 60,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": null,
+      "parameter_number": 1260
+    },
+    {
+      "id": "hybrid808.session.11",
+      "name": "V BLEND",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 64,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 29
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 29,
+        "lsb": 61,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": null,
+      "parameter_number": 1261
+    },
+    {
+      "id": "hybrid808.session.12",
+      "name": "LOW VEL",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 65,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 30
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 30,
+        "lsb": 62,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": null,
+      "parameter_number": 1262
+    },
+    {
+      "id": "hybrid808.session.13",
+      "name": "MID VEL",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 90,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 31
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "optional_cc14": {
+        "msb": 31,
+        "lsb": 63,
+        "channel": 15,
+        "status": "optional proposal; not implemented",
+        "scaling": "round(min + cc14 * (max-min) / 16383)"
+      },
+      "choices": null,
+      "parameter_number": 1263
+    },
+    {
+      "id": "hybrid808.session.14",
+      "name": "HIGH VEL",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 110,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 64
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1264
+    },
+    {
+      "id": "hybrid808.session.15",
+      "name": "J CHANCE",
+      "category": "musical",
+      "range": [
+        0,
+        100
+      ],
+      "default": 10,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 65
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1265
+    },
+    {
+      "id": "hybrid808.session.16",
+      "name": "J RANGE",
+      "category": "musical",
+      "range": [
+        0,
+        40
+      ],
+      "default": 10,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 66
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1266
+    },
+    {
+      "id": "hybrid808.session.17",
+      "name": "VEL TIERS",
+      "category": "musical",
+      "range": [
+        0,
+        1
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 67
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": [
+        "OFF",
+        "ON"
+      ],
+      "parameter_number": 1267
+    },
+    {
+      "id": "hybrid808.session.18",
+      "name": "S ATTACK",
+      "category": "musical",
+      "range": [
+        0,
+        100
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 68
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1268
+    },
+    {
+      "id": "hybrid808.session.19",
+      "name": "S PUNCH",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 64,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 69
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1269
+    },
+    {
+      "id": "hybrid808.session.20",
+      "name": "S P TIME",
+      "category": "musical",
+      "range": [
+        0,
+        200
+      ],
+      "default": 25,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 70
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1270
+    },
+    {
+      "id": "hybrid808.session.21",
+      "name": "S TAIL",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 71
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1271
+    },
+    {
+      "id": "hybrid808.session.22",
+      "name": "S LEVEL",
+      "category": "musical",
+      "range": [
+        0,
+        100
+      ],
+      "default": 50,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 72
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1272
+    },
+    {
+      "id": "hybrid808.session.23",
+      "name": "V PUNCH",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 64,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 73
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1273
+    },
+    {
+      "id": "hybrid808.session.24",
+      "name": "S ENV",
+      "category": "musical",
+      "range": [
+        0,
+        1
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 74
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": [
+        "OFF",
+        "ON"
+      ],
+      "parameter_number": 1274
+    },
+    {
+      "id": "hybrid808.session.25",
+      "name": "S ATTACK",
+      "category": "musical",
+      "range": [
+        0,
+        100
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 75
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1275
+    },
+    {
+      "id": "hybrid808.session.26",
+      "name": "S HOLD",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 76
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1276
+    },
+    {
+      "id": "hybrid808.session.27",
+      "name": "S DECAY",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 15,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 77
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1277
+    },
+    {
+      "id": "hybrid808.session.28",
+      "name": "S CURVE",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 64,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 78
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1278
+    },
+    {
+      "id": "hybrid808.session.29",
+      "name": "W ENV",
+      "category": "musical",
+      "range": [
+        0,
+        1
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 79
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": [
+        "OFF",
+        "ON"
+      ],
+      "parameter_number": 1279
+    },
+    {
+      "id": "hybrid808.session.30",
+      "name": "W ATTACK",
+      "category": "musical",
+      "range": [
+        0,
+        100
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 80
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1280
+    },
+    {
+      "id": "hybrid808.session.31",
+      "name": "W HOLD",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 81
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1281
+    },
+    {
+      "id": "hybrid808.session.32",
+      "name": "W DECAY",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 15,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 82
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1282
+    },
+    {
+      "id": "hybrid808.session.33",
+      "name": "W CURVE",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 64,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 83
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1283
+    },
+    {
+      "id": "hybrid808.session.34",
+      "name": "CLICK",
+      "category": "musical",
+      "range": [
+        0,
+        60
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 84
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1284
+    },
+    {
+      "id": "hybrid808.session.35",
+      "name": "C TONE",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": 86,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 85
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1285
+    },
+    {
+      "id": "hybrid808.session.36",
+      "name": "C LENGTH",
+      "category": "musical",
+      "range": [
+        0,
+        80
+      ],
+      "default": 12,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 86
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1286
+    },
+    {
+      "id": "hybrid808.session.37",
+      "name": "CRUNCH",
+      "category": "musical",
+      "range": [
+        0,
+        100
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 87
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1287
+    },
+    {
+      "id": "hybrid808.session.38",
+      "name": "SMOOTH",
+      "category": "musical",
+      "range": [
+        0,
+        100
+      ],
+      "default": 0,
+      "source": "firmware/src/dsp/hybrid_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 88
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": null,
+      "parameter_number": 1288
+    },
+    {
+      "id": "kick.preset.store_arm",
+      "name": "Kick preset store_arm",
+      "category": "musical",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 90
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Committed808BD context,destination0..15,request token,arm/guarded execute;readback16",
+      "parameter_number": 1290
+    },
+    {
+      "id": "kick.preset.store_execute",
+      "name": "Kick preset store_execute",
+      "category": "musical",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 91
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Committed808BD context,destination0..15,request token,arm/guarded execute;readback16",
+      "parameter_number": 1291
+    },
+    {
+      "id": "kick.preset.recall_arm",
+      "name": "Kick preset recall_arm",
+      "category": "musical",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 92
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Committed808BD context,destination0..15,request token,arm/guarded execute;readback16",
+      "parameter_number": 1292
+    },
+    {
+      "id": "kick.preset.recall_execute",
+      "name": "Kick preset recall_execute",
+      "category": "musical",
+      "range": [
+        0,
+        1
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 93
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Committed808BD context,destination0..15,request token,arm/guarded execute;readback16",
+      "parameter_number": 1293
+    },
+    {
+      "id": "kick.preset.request_low7",
+      "name": "Kick preset request_low7",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 94
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Committed808BD context,destination0..15,request token,arm/guarded execute;readback16",
+      "parameter_number": 1294
+    },
+    {
+      "id": "kick.preset.request_high7",
+      "name": "Kick preset request_high7",
+      "category": "musical",
+      "range": [
+        0,
+        127
+      ],
+      "default": null,
+      "source": "firmware/src/app/cc_kick.inc",
+      "context": {},
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 95
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "action_policy": "Committed808BD context,destination0..15,request token,arm/guarded execute;readback16",
+      "parameter_number": 1295
+    },
+    {
+      "id": "kick.step_tier",
+      "name": "808 kick step velocity tier",
+      "category": "musical",
+      "range": [
+        0,
+        3
+      ],
+      "default": null,
+      "source": "firmware/src/app/engine.c",
+      "context": {
+        "pattern": [
+          0,
+          31
+        ],
+        "step": [
+          0,
+          63
+        ]
+      },
+      "runtime_cc": "design contract only; implementation status is in ACULTUR8_CC_RUNTIME_COVERAGE.json",
+      "live_requirement": "while playing",
+      "canonical_requirement": "validated intent + dirty/undo; audio-owner application",
+      "address": {
+        "channel": 15,
+        "cc": 96
+      },
+      "scaling": "round(min + cc7 * (max-min) / 127)",
+      "choices": [
+        "AUTO",
+        "LOW",
+        "MID",
+        "HIGH"
+      ],
+      "action_policy": "Committed source-owned pattern/step;no hit created",
+      "parameter_number": 1296
+    }
+  ]
+}

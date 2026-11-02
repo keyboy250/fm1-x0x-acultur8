@@ -5,15 +5,17 @@
  *   F0 7D 46 4C cmd args.. F7
  * INFO (1), PING (25) and the sample-slot commands SMP_BEGIN .. SMP_INFO (11..15), so
  * tools/fm1_sample_upload.py loads break loops into the three slots unchanged. The
- * parameter / preset / track commands are Felucca's instrument and are not answered. */
+ * parameter / preset / track commands are Felucca's instrument and are not answered.
+ * X0X command48 is a versioned, read-only project strip query (see protocol docs). */
 #define ED_HDR0 0x7D
 #define ED_HDR1 0x46
 #define ED_HDR2 0x4C
-enum { ED_INFO = 1, ED_SMP_BEGIN = 11, ED_SMP_WRITE, ED_SMP_END, ED_SMP_ERASE, ED_SMP_INFO, ED_SMP_READ, ED_PING = 25 };
+enum { ED_INFO = 1, ED_SMP_BEGIN = 11, ED_SMP_WRITE, ED_SMP_END, ED_SMP_ERASE, ED_SMP_INFO, ED_SMP_READ, ED_PING = 25, ED_STRIP_QUERY = 48, ED_PATTERN_QUERY = 49, ED_RUNTIME_QUERY = 50, ED_GENERATION_QUERY = 51 };
 #define ED_READ_MAX 224u                     /* X0X: SMP_READ's bytes a frame (the break page draws the slots) */
 
-static uint8_t ed_out[288];
-static uint32_t ed_n;
+static uint8_t ed_out[276] __attribute__((aligned(4)));
+typedef char ed_reply_capacity[(sizeof(ed_out)>=16+RUNTIME_DIAGNOSTIC_WORDS*5)?1:-1];
+static uint16_t ed_n; /* bounded by276-byte reply buffer */
 
 static void ed_begin(uint32_t cmd)
 {
@@ -53,7 +55,7 @@ static POLY_COLD uint32_t ed_unpack7(const uint8_t *a, uint32_t na, uint8_t *out
     }
     return n;
 }
-static uint8_t ed_smp_buf[512] __attribute__((aligned(4)));
+static uint8_t ed_smp_buf[sizeof(smp_user_hdr_t)] __attribute__((aligned(4)));
 static uint32_t ed_smp_slot(uint32_t k) { return SMP_USER_BASE + k * SMP_USER_SIZE; }
 static void ed_smp_inval(uint32_t k)
 {
@@ -103,9 +105,13 @@ static POLY_COLD int ed_smp_end(uint32_t k, const uint8_t *a, uint32_t na)
  *   PEEK  40 addr n        -> addr, n words      (n <= 16)
  *   POKE  41 addr value    -> addr, old, new
  *   CLOCK 42 iterations    -> 24 MHz ticks a fixed loop took (IRQs off), C0_TL_CKCNT before, after
+ *   CORES 43 off           -> saved (1 ok); sets GLO > 2ND CORE (1 = OFF), saves the settings and restarts
+ *   PERFT 44 [1]           -> starts the performance test on its page; with 1, reads it: done, cores, VDC14
+ *                             level, then per scenario load x 10 (2 x 7 bits) and peak %
  * A number is 5 x 7 bits, least significant first. Only these ranges, word aligned: an address
  * outside them gets no reply (a stray read of a gated block could fault). */
-enum { ED_PEEK = 40, ED_POKE, ED_CLOCK };
+enum { ED_PEEK = 40, ED_POKE, ED_CLOCK, ED_CORES, ED_PERFT };
+static uint8_t ed_restart;                    /* CORES: restart once the reply is out */
 #include "fm1_debug.h"
 static uint32_t ed_u35(const uint8_t *a)
 {
@@ -134,6 +140,32 @@ static POLY_COLD int ed_debug(uint32_t cmd, const uint8_t *a, uint32_t na)
         return 1;
     }
 #endif
+    if (cmd == ED_CORES) {
+        if (na < 1u)
+            return 0;
+        proj.set.one_core = (uint8_t)(a[0] & 1u);
+        ed_b(project_save_settings() == 0);
+        ed_restart = 1;
+        return 1;
+    }
+    if (cmd == ED_PERFT) {
+        if (na >= 1u && a[0] == 1u) {
+            ed_b(perf.test >= 0 && perf.phase == 4);
+            ed_b(plat_cpu2_on() ? 2u : 1u);
+            ed_b(plat_vdc14_level);
+            for (i = 0; i < 3u; i++) {
+                ed_b(perf.res_load[i]);
+                ed_b(perf.res_load[i] >> 7);
+                ed_b(perf.res_peak[i]);
+            }
+            ed_b(plat_sysvdd_level);
+            return 1;
+        }
+        set_view(V_PERF);
+        perf_test_start();
+        ed_b(1);
+        return 1;
+    }
     if (na < 10u)
         return 0;
     addr = ed_u35(a);
@@ -156,6 +188,12 @@ static POLY_COLD int ed_debug(uint32_t cmd, const uint8_t *a, uint32_t na)
 }
 #endif
 
+#include "pattern_query.inc"
+#include "runtime_query.inc"
+#include "generation_query.inc"
+#define ED_TIMING_TX_IDLE() plat_midi_tx_idle()
+#include "timing_query.inc"
+
 static POLY_COLD void ed_handle(const uint8_t *f, uint32_t n)
 {
     uint32_t cmd = f[3], i;
@@ -174,6 +212,39 @@ static POLY_COLD void ed_handle(const uint8_t *f, uint32_t n)
         break;
     case ED_PING:
         ed_b(0);
+        break;
+    case ED_STRIP_QUERY: {
+        uint32_t status = na != 3u ? 1u : a[0] != 1u ? 3u :
+            a[1] > 127u || a[2] >= VARIANT_STRIPS ? 1u :
+            engine_queue_read() != engine_queue_written() ? 2u : 0u;
+        ed_b(1);                                     /* protocol version */
+        ed_b(na > 1u ? a[1] : 0u);                    /* echoed request token */
+        ed_b(na > 2u ? a[2] : 127u);                  /* echoed strip */
+        ed_b(status);
+        if (!status) {
+            const sound_strip_config_t *c = &proj.variant.strip[a[2]];
+            uint32_t v = variant_current_revision(), ticket = engine_queue_written();
+            for (i = 0; i < 5u; i++) ed_b(v >> (7u * i));
+            for (i = 0; i < 5u; i++) ed_b(ticket >> (7u * i));
+            ed_b(c->highpass_hz); ed_b(c->highpass_hz >> 7); ed_b(c->highpass_hz >> 14);
+            ed_b(c->lowpass_hz); ed_b(c->lowpass_hz >> 7); ed_b(c->lowpass_hz >> 14);
+            ed_b(c->boost_db); ed_b(c->ceiling_db);
+            ed_b(c->release_ms); ed_b(c->release_ms >> 7);
+            ed_b(c->flags);
+        }
+        break;
+    }
+    case 52: /* ABI1 timing calibration: query / guarded Apply / Reset. */
+        ed_timing_query(a,na);
+        break;
+    case ED_GENERATION_QUERY:
+        ed_generation_query(a,na);
+        break;
+    case ED_RUNTIME_QUERY:
+        ed_runtime_query(a,na);
+        break;
+    case ED_PATTERN_QUERY:
+        ed_pattern_query(a,na);
         break;
     case ED_SMP_BEGIN:
     case ED_SMP_ERASE:
@@ -217,6 +288,8 @@ static POLY_COLD void ed_handle(const uint8_t *f, uint32_t n)
     case ED_PEEK:
     case ED_POKE:
     case ED_CLOCK:
+    case ED_CORES:
+    case ED_PERFT:
         if (!ed_debug(cmd, a, na))
             return;
         break;
@@ -267,6 +340,16 @@ static POLY_COLD void ed_handle(const uint8_t *f, uint32_t n)
         return;                                       /* not ours: no reply */
     }
     ed_send();
+#if X0X_DEBUG
+    if (ed_restart) {                                 /* CORES: a clean restart, as an install's */
+        fm1_delay_ms(50);
+        bootguard.pending = 0;
+        bootguard.failed = 0;
+        usb_detach();
+        fm1_delay_ms(30);
+        fm1_reboot();
+    }
+#endif
 }
 
 static POLY_COLD void ed_service(void)

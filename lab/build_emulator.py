@@ -50,9 +50,16 @@ def package_page(work=None, output=None, home_url='/', storage_namespace='acultu
     if not re.fullmatch(r'[a-zA-Z0-9_./#-]+', home_url):
         raise ValueError('Home URL must be a local path.')
     html = (work / 'web/emu/index.html').read_text('utf-8')
+    html = html.replace('id="emu-version">v0.1.0-alpha</span>',
+                        'id="emu-version" title="Browser alpha version and source build">v0.1.0-alpha · build ' + source_hash(work)[:8] + '</span>')
     html = re.sub(r'<link[^>]+fonts.googleapis.com[^>]+>\s*', '', html)
     css = re.search(r'<style>(.*?)</style>', html, re.S).group(1)
-    js = re.search(r'<script>(.*?)</script>', html, re.S).group(1)
+    js = re.search(r'<script(?: type="module")?>(.*?)</script>', html, re.S).group(1)
+    js = js.replace('import { spoken, wordsOf } from "./words.js";', (work / 'web/emu/words.js').read_text('utf-8').replace('export ', ''))
+    # Keep the portable package's screen-reader dictionary local/offline.
+    dictionaries = {p.name: __import__('json').loads(p.read_text('utf-8')) for p in (work / 'web/words').glob('*.json')}
+    js = 'const localReaderWords = ' + __import__('json').dumps(dictionaries, separators=(',', ':')) + ';\n' + js
+    js = js.replace('  for (const url of [name && new URL', '  if (localReaderWords[name]) return wordsOf(localReaderWords[name]);\n  for (const url of [name && new URL')
     js = js.replace('"x0x-emu-store"', '"' + storage_namespace + '-store-v1"')
     js = js.replace('"x0x-emu-slots"', '"' + storage_namespace + '-slots-v1"')
     js = js.replace('indexedDB.open("x0x-emu",', 'indexedDB.open("' + storage_namespace + '-loops-v1",')
@@ -66,7 +73,7 @@ def package_page(work=None, output=None, home_url='/', storage_namespace='acultu
         'window.dispatchEvent(new CustomEvent("fm1-input", {detail:m})); } node.port.postMessage(m); } }')
     js += '\nwindow.fm1SliceSend = send;\n'
     html = re.sub(r'<style>.*?</style>', '<link rel="stylesheet" href="emu.css">', html, flags=re.S)
-    html = re.sub(r'<script>.*?</script>', '<script src="emu.js"></script>', html, flags=re.S)
+    html = re.sub(r'<script(?: type="module")?>.*?</script>', '<script src="emu.js"></script>', html, flags=re.S)
     panels = '\n'.join((work / 'web/emu' / name).read_text('utf-8') for name in ['variant-panel.html', 'arrangement-panel.html', 'bass-panel.html', 'pad-panel.html', 'lane-panel.html', 'cc-input-panel.html', 'slice-panel.html'])
     html = html.replace('<section class="breaks"', panels + '\n<section class="breaks"', 1)
     html = html.replace('</head>', '<link rel="stylesheet" href="variant-ui.css">\n<link rel="stylesheet" href="arrangement-ui.css">\n<link rel="stylesheet" href="bass-ui.css">\n<link rel="stylesheet" href="pad-ui.css">\n<link rel="stylesheet" href="lane-ui.css">\n<link rel="stylesheet" href="cc-input-ui.css">\n</head>')
@@ -84,7 +91,7 @@ def package_page(work=None, output=None, home_url='/', storage_namespace='acultu
     (output / 'emu.css').write_text(css, encoding='utf-8', newline='\n')
     (output / 'emu.js').write_text(js, encoding='utf-8', newline='\n')
     shutil.copy2(work / 'assets/fonts/BarlowSemiCondensed-Medium.ttf', output)
-    for name in ['slice-import.js', 'slice-ui.js', 'slice-control.mjs', 'slice-worklet.mjs', 'variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css', 'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css', 'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs']:
+    for name in ['slice-import.js', 'slice-ui.js', 'slice-control.mjs', 'slice-worklet.mjs', 'variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css', 'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css', 'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs', 'clock-worklet.mjs']:
         shutil.copy2(work / 'web/emu' / name, output)
     if storage_namespace != 'acultur8-fm1-lab':
         slice_ui = output / 'slice-control.mjs'

@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REPO = 'https://github.com/keyboy250/fm1-x0x-acultur8'
 EMU_FILES = ('index.html', 'emu.css', 'emu.js', 'worklet.js', 'x0x.wasm',
              'slice-import.js', 'slice-ui.js', 'slice-control.mjs', 'slice-worklet.mjs', 'variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css', 'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css', 'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs',
-             'BarlowSemiCondensed-Medium.ttf', 'manifest.json')
+             'clock-worklet.mjs', 'BarlowSemiCondensed-Medium.ttf', 'manifest.json')
 
 
 def digest(path):

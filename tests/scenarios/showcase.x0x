@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Showcase: every part running on the factory sound (big beat: sends, tape delay, the master
 # compressor with PUMP), and a filter sweep, played from the panel at 128 BPM. Audio: build/scenarios/showcase/showcase.wav
 wait 300

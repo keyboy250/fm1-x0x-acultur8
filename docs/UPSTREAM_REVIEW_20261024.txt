@@ -1,0 +1,76 @@
+Original X0X download and integration review -24 October2026 UTC
+
+Original author/project:Charles Vestal,X0X for the M-VAVE FM-1
+https://github.com/charlesvestal/fm1-x0x
+Foundation:Felucca by Leo Kuroshita,Hugelton Instruments
+https://github.com/hugelton/Felucca
+
+DOWNLOAD VERIFIED
+Fresh separate clone:<local workspace>\upstream-review\20261024\fm1-x0x
+Default branch:main;HEAD:54194c54bb01e9d9b3fe9d641b3ddfa512ac04a3
+Commit date:18 October2026;subject:Credit Melodee (keremimo) and Jangada
+(zednaked) for the second core. Clone contains197 commits;working tree clean.
+Pinned source ZIP:<local workspace>\upstream-review\20261024\fm1-x0x-54194c54-source.zip
+Source ZIP SHA256:4daf134407530d756d919717177455aec0b95fefa105e8b753484ad347a7ab02
+Offline history bundle:<local workspace>\upstream-review\20261024\fm1-x0x-history.bundle
+History SHA256:68a4c901686e394657680c66f3c8595fb0197783f5bc80b88421d05a8f742f92
+
+WHAT CHANGED SINCE OUR RECORDED UPSTREAM INTEGRATION
+Base:2e31c517ded3732c58b845eb0c800fe018004b8d;exactly one newer commit.
+Three documentation files:LICENSING.md(+1),README.md(+4),docs/NEW.md(+1/-1).
+Zero changes in firmware,host,tests,tools,web or assets between those commits.
+The patch credits keremimo's Melodee and zednaked's Jangada for second-core
+startup/job hand-off and corrects the older @keremcode attribution to
+@keremimo (Melodee). These notices should be carried into our release.
+Commit:https://github.com/charlesvestal/fm1-x0x/commit/54194c54bb01e9d9b3fe9d641b3ddfa512ac04a3
+
+INTEGRATION DECISIONS
+1. Adopt visible original-project and Felucca links in current release notes,
+   every staged MIDI chart and their JSON/downloaded credit records.
+2. Preserve the upstream's new second-core credits,corrected name and complete
+   license/origin table in a four-file source-documentation overlay. Prepared
+   at:<local workspace>\release-preparation\upstream-attribution-20261024\source-overlay
+   No firmware changes or new runtime tests are required for this docs-only
+   upstream delta. Before publishing a rebuilt source package,apply the overlay
+   to a fresh packaging tree and freeze its exact corresponding-source manifest;
+   keep the current qualified firmware/source archive and receipts immutable.
+3. Keep the earlier BREAK one-knob filter deferred. Commit0417760656494d4994aadbf4cbf4751ede807b6b
+   adds BRK_FILT at sound byte578 and sound revision5. Our current revision4
+   still lacks BRK_FILT;firmware/src/seq/lanes.c owns byte578 in its LAN1/LAN2
+   storage cells (entry355,578,190). A direct cherry-pick would collide with
+   stored lane timing. Consider only with an explicit schema/storage migration,
+   old-format compatibility fixtures and renewed DSP/memory/listening checks.
+   Existing BREAK-strip high/low-pass controls are retained. This is an older
+   known deferral,not a new upstream change since the last integration.
+
+ATTRIBUTION AUDIT
+The frozen source README already named Charles Vestal and linked X0X;its
+LICENSING.md retained Felucca and component credits. The newer root MIDI review
+notes and staged charts lacked prominent original-project links. The repair
+adds these links,states Acultur8's derivative role and carries notices alongside
+the chart downloads. Previously published pages were not changed by this work.
+
+BOUNDARIES
+No runtime merge,hardware access,installation or publication. The original
+repo is a separate checkout;existing dirty workspaces and all frozen candidates
+are retained. Download/source comparison is not upstream runtime qualification.
+The old integration record has historical device-status text;current installed
+and candidate identities remain in RESUME_CHECKPOINT.json and install receipts.
+
+PRIOR FETCH CROSS-CHECK
+OFFICIAL_FIRMWARE_REVIEW_20261018.txt already recorded upstream54194c5 and
+recommended a later documentation-credit sync. Today's fresh clone resolves
+to that same commit:there are zero additional upstream commits since the
+18 October fetch. The newly performed work is the fresh pinned download,
+visible attribution repair and prepared notice overlay,not a newly discovered
+firmware update. Our original-site source already contains an X0X link/footer;
+the specific gap was the newer MIDI charts and many local review notes.
+
+FINAL LOCAL VALIDATION
+All five staged charts:visible original/foundation links,full credit downloads,
+notice/source-provenance hashes,UTF-8 contributor names and320/390/768/1440px
+layout PASS. Latest full chart search/filter/CSV/deep-link/print/fallback checks
+PASS. Control rows and frozen0.1.26 source/firmware/WASM/fixture hashes unchanged.
+QA:release-preparation/upstream-attribution-20261024/FINAL_VERIFICATION.json
+New source notice overlay is prepared for future packaging,not applied to the
+current frozen candidate. No installation or publication.

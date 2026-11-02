@@ -9,13 +9,16 @@ const pending=new Map(), tickets=new Set();
 // Neither updates settings; only an acknowledged C snapshot does that.
 const drafts=new Map(), fieldWaiting=new Map();
 let request=0, available=false, protectedProject=false, caps=0, settings=null, read=0;
-let gesture=null, error=false;
+let gesture=null, error=false, playing=false, defaultWrite=null, defaultApply=null;
 const voices=['909 BD','909 SD','909 LT','909 MT','909 HT','909 RS','909 CP','909 CH','909 OH','909 CR','909 RD','808 BD','808 SD','808 LT','808 MT','808 HT','808 RS / Clave','808 CP / Maracas','808 CB','808 CY','808 OH','808 CH','303 A','303 B','BREAK (mono)'];
 const selector=$('variant-strip');
 let selectedStrip=0, viewRevision=0, processingMask=0;
 for(const [index,name] of voices.entries()){const option=document.createElement('option');option.value=index;option.textContent=name;option.disabled=index!==0;selector.append(option);}
-function selectionBusy(){return !!gesture||pending.size>0||tickets.size>0||drafts.size>0||fieldWaiting.size>0||flagWaiting;}
-function lockSelector(){selector.disabled=selectionBusy();}
+function selectionBusy(){return !!gesture||pending.size>0||tickets.size>0||drafts.size>0||fieldWaiting.size>0||flagWaiting||defaultWrite!==null||defaultApply!==null;}
+function lockSelector(){
+ selector.disabled=selectionBusy();
+ for(const id of ['variant-default-save','variant-default-apply'])$(id).disabled=!available||protectedProject||playing||selectionBusy()||!(caps&2048);
+}
 function selectView(){settings=null;available=false;viewRevision=(viewRevision+1)>>>0;$('variant-controls').disabled=true;$('variant-meter').textContent='Gain reduction unavailable.';$('variant-availability').textContent='Checking the selected sound strip…';$('variant-title').textContent=selectedStrip===0?'909 kick · sound strip':`${voices[selectedStrip]} · sound strip`;$('variant-legend').textContent=selectedStrip===0?'Kick processing':`${voices[selectedStrip]} processing`;window.fm1SliceSend?.({type:'variant-select',strip:selectedStrip,viewRevision});}
 selector.addEventListener('change',()=>{const next=Number(selector.value);if(selectionBusy()||!Number.isInteger(next)||next<0||next>=25||!(processingMask&(1<<next))){selector.value=selectedStrip;return;}selectedStrip=next;selectView();say('Checking the selected sound strip…');});
 let flagWaiting=false, flagRevision=null;
@@ -26,13 +29,13 @@ function command(op,index=0,value=0){
   request=(request+1)&0x3fffffff;
   pending.set(request,{op,index,value,target:selectedStrip});lockSelector();
   window.fm1SliceSend({type:'variant-command',abi:1,op,request,target:selectedStrip,voice:0,index,value});
-  if(op!==3&&op!==4)say(op===7?'Requesting project save…':'Waiting for engine acknowledgement…');
+  if(op!==3&&op!==4&&op!==20&&op!==21)say(op===7?'Requesting project save…':'Waiting for engine acknowledgement…');
   return request;
 }
-function begin(input){if(!available||protectedProject)return;if(gesture&&gesture!==input)end();if(!gesture){gesture=input;command(3);command(2,4,80);}}
+function begin(input){if(!available||protectedProject)return;if(gesture&&gesture!==input)end();if(!gesture){gesture=input;command(3);}}
 function end(){if(gesture){gesture=null;command(4);}lockSelector();}
 function converted(input){const i=Number(input.dataset.index),n=Number(input.value);return i<2&&input.type==='range'?Math.round(20*Math.pow(1000,n/1000)):i===3?-n:n;}
-function display(input,value){const i=Number(input.dataset.index);input.value=i<2&&input.type==='range'?Math.round(1000*Math.log(value/20)/Math.log(1000)):i===3?-value:value;if(input.type==='range')input.setAttribute('aria-valuetext',`${i<2?value:i===3?-value:value} ${i<2?'Hz':i===3?'dBFS':'dB'}`);}
+function display(input,value){const i=Number(input.dataset.index);input.value=i<2&&input.type==='range'?Math.round(1000*Math.log(value/20)/Math.log(1000)):i===3?-value:value;if(input.type==='range')input.setAttribute('aria-valuetext',`${i<2?value:i===3?-value:value} ${i<2?'Hz':i===3?'dBFS':i===4?'ms':'dB'}`);}
 function render(forceIndex=-1){
   if(!settings)return;
   for(const input of parameters){
@@ -44,7 +47,7 @@ function render(forceIndex=-1){
 function edit(input){
   if(!available||protectedProject)return;
   const i=Number(input.dataset.index),value=converted(input);
-  if(input.value===''||!Number.isInteger(value)||(i<2?(value<20||value>20000):i===2?(value<0||value>24):(value<0||value>48))){say('Enter a whole-number value within the shown range.',true);return;}
+  if(input.value===''||!Number.isInteger(value)||(i<2?(value<20||value>20000):i===2?(value<0||value>24):i===3?(value<0||value>48):(value<10||value>250))){say('Enter a whole-number value within the shown range.',true);return;}
   begin(input);
   const sent=command(2,i,value);
   fieldWaiting.set(i,{request:sent,revision:null});
@@ -83,8 +86,25 @@ for(const input of flags)input.addEventListener('blur',()=>render());
 for(const event of ['pointerup','pointercancel','blur','pagehide'])window.addEventListener(event,end);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)end();});
 for(const [id,op] of [['variant-undo',5],['variant-redo',6],['variant-save',7]])$(id).addEventListener('click',()=>{end();command(op);});
+for(const [id,op] of [['variant-default-save',20],['variant-default-apply',21]])$(id).addEventListener('click',()=>{
+ if(!available||protectedProject||playing||selectionBusy()||!(caps&2048))return;
+ const sent=command(op);
+ if(op===20){defaultWrite={request:sent,strip:selectedStrip,accepted:false};say('Saving this sound’s default…');}
+ else {defaultApply={request:sent,ticket:null};say('Applying this sound’s saved default…');}
+ lockSelector();
+});
+window.addEventListener('fm1-store',event=>{
+ if(!defaultWrite?.accepted)return;
+ const bytes=event.detail?.store?.[7];
+ if(!bytes || bytes.byteLength!==212)return;
+ const bank=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+ if(bank.getUint32(0,true)!==0x31464453 || bank.getUint16(4,true)!==1 || !(bank.getUint32(8,true)&(1<<defaultWrite.strip)))return;
+ const name=voices[defaultWrite.strip];defaultWrite=null;
+ say(event.detail.saved?`Saved default for ${name}.`:`Browser storage failed. ${name} default is available only in this session; retry Save as sound default.`,!event.detail.saved);
+ lockSelector();
+});
 window.addEventListener('fm1-ready',()=>{
-  end();pending.clear();tickets.clear();drafts.clear();fieldWaiting.clear();settings=null;available=false;error=false;flagWaiting=false;flagRevision=null;
+  defaultWrite=defaultApply=null;playing=false;end();pending.clear();tickets.clear();drafts.clear();fieldWaiting.clear();settings=null;available=false;error=false;flagWaiting=false;flagRevision=null;
   $('variant-controls').disabled=true;
   $('variant-meter').textContent='Gain reduction unavailable.';
   $('variant-project').textContent='';
@@ -102,11 +122,15 @@ window.addEventListener('fm1-marked',event=>{
       else field.revision=m.revision>>>0;
     }
     if(sent.op===2&&sent.index===5){
-      if(m.result<0){flagWaiting=false;flagRevision=null;}
+      if(sent.op===20){if(m.result<0)defaultWrite=null;else if(defaultWrite?.request===m.request)defaultWrite.accepted=true;}
+    if(sent.op===21){if(m.result<0)defaultApply=null;else if(defaultApply?.request===m.request)defaultApply.ticket=m.ticket>>>0;}
+    if(m.result<0){flagWaiting=false;flagRevision=null;}
       else flagRevision=m.revision>>>0;
     }
+    if(sent.op===20){if(m.result<0)defaultWrite=null;else if(defaultWrite?.request===m.request)defaultWrite.accepted=true;}
+    if(sent.op===21){if(m.result<0)defaultApply=null;else if(defaultApply?.request===m.request)defaultApply.ticket=m.ticket>>>0;}
     if(m.result<0){
-      const failures={'-1':'Invalid edit.','-2':'This engine does not support the operation.','-3':sent.op===7?'Save is busy. Stop playback using the instrument controls, then press Save project again.':'Engine is busy. Try the edit again.','-4':'Project is protected. Load a supported project before editing.','-5':'Storage or history capacity is full.','-6':'Project save failed.'};
+      const failures={'-1':'Invalid edit.','-2':sent.op===20||sent.op===21?'Defaults are unsupported or damaged. Existing defaults were preserved.':'This engine does not support the operation.','-3':sent.op===7?'Save is busy. Stop playback using the instrument controls, then press Save project again.':'Engine is busy. Try the edit again.','-4':'Project is protected. Load a supported project before editing.','-5':'Storage or history capacity is full.','-6':sent.op===20?'Default save could not be verified. Retry Save as sound default.':'Project save failed.','-7':'No saved default for this sound. Set its values, then choose Save as sound default.'};
       say(failures[m.result]||`Engine rejected the operation (${m.result}).`,true);
       // A rejected ticket is never counted as an accepted edit.
       if(sent.op===3){gesture=null;command(4);}
@@ -120,6 +144,7 @@ window.addEventListener('fm1-marked',event=>{
     lockSelector();return;
   }
   if(m.type!=='frame')return;
+  playing=!!m.sync?.playing;
   const variant=m.variant;
   // View identity is transport state, not a project mirror. Ignore frames queued for a previous selection.
   if(variant&&(variant.strip!==selectedStrip||(variant.viewRevision!==undefined&&variant.viewRevision!==viewRevision)))return;
@@ -142,6 +167,9 @@ window.addEventListener('fm1-marked',event=>{
     render();
   }
   for(const ticket of tickets)if(passed(ticket))tickets.delete(ticket);
+  if(defaultApply?.ticket!==null&&defaultApply && passed(defaultApply.ticket)){
+   defaultApply=null;say(`Applied saved default for ${voices[selectedStrip]}. Save project to keep these settings.`);
+  }
   lockSelector();
   if(!error&&!tickets.size&&![...pending.values()].some(p=>p.op!==3&&p.op!==4)&&$('variant-status').textContent.startsWith('Queued'))say('Applied at the audio boundary.');
   const meters=variant.meters?.values;

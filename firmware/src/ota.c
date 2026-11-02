@@ -153,15 +153,38 @@ static uint32_t ota_take(void)
     return d;
 }
 
-/* main loop, outside a session: answer handshakes */
-static void ota_service(void)
+/* main loop, outside a session: answer handshakes. Returns the frame's decoded length (0: none), the frame in
+ * ota_dec, for the app's own commands (X0X: backup.c's 0x41 / 0x42) */
+static uint32_t ota_service(void)
 {
     uint32_t d = ota_take();
     if (d == 7u && ota_dec[2] == 0x11)
         ota_reply_identity();
+    return d;
 }
 
-/* one read request (3 tries x 5 s); data -> dst */
+/* Normal editor-enabled loop only; recovery and active updater sessions retain
+ * their original drain behaviour because no editor pass runs in those paths. */
+static uint32_t ota_editor_service(void)
+{
+    const uint8_t *p;
+    uint32_t n;
+    /* A new editor frame may arrive after ed_service() and before this pass.
+     * Leave complete editor headers for its next pass; short malformed frames
+     * still drain. Keep ota_take() unchanged for active updater sessions, where
+     * no editor pass runs and foreign frames must not block updater replies. */
+    /* An empty observation owns no frame. Do not check again through ota_take:
+     * a USB interrupt could publish an editor request between the two checks. */
+    if (!ota_frame_get(&p, &n))
+        return 0;
+    /* A pending frame is immutable until its consumer releases sx_ready. */
+    if (n >= 4u && p[0] == 0x7D && p[1] == 0x46 && p[2] == 0x4C)
+        return 0;
+    return ota_service();
+}
+
+/* one read request (3 tries x ota_try_ms, 5 s); data -> dst */
+static uint32_t ota_try_ms = 5000u;              /* a try's wait (a restore's first reads: shorter until it starts) */
 static uint32_t ota_deadline;                    /* 0 = none; else ota_now_ms() limit of the session */
 
 static int ota_read(uint32_t addr, uint8_t *dst, uint32_t len)
@@ -178,7 +201,7 @@ static int ota_read(uint32_t addr, uint8_t *dst, uint32_t len)
     for (tries = 0; tries < 3u; tries++) {
         if (ota_send_msg(0x30, q, 8))
             return -1;
-        for (t = ota_now_ms(); ota_now_ms() - t < 5000u;) {
+        for (t = ota_now_ms(); ota_now_ms() - t < ota_try_ms;) {
             ota_idle();
             d = ota_take();
             if (!d)

@@ -6,6 +6,7 @@
 #include "plat.h"
 #include "engine.h"
 #include "variant.h"
+#include "kick_settings.h"
 #include "../seq/pattern.h"
 #include "../seq/sequencer.h"
 #include "../seq/tb3po.h"
@@ -15,6 +16,10 @@
 
 #ifndef X0X_VERSION                     /* a release build passes its own (tools/build.py --release) */
 #define X0X_VERSION "DEV"
+#endif
+/* Host/development default; release build derives this from its package identity. */
+#ifndef X0X_FIRMWARE_ID
+#define X0X_FIRMWARE_ID 9000138u
 #endif
 #define PROJ_MAGIC 0x50305830u           /* "0X0P" */
 #define PROJ_FORMAT 1u
@@ -38,7 +43,8 @@ typedef struct {
                                           * project), 1-16, 17 = OFF */
     uint8_t out_loud;                    /* 1: the output 6 dB hotter (the codec's full scale) */
     uint8_t usb_full;                    /* 1: USB audio at full level, the MASTER knob for the FM-1's own outputs */
-    uint8_t rsv[1];                      /* room to grow: an older, shorter object loads (zeros here) */
+    uint8_t one_core;                    /* 1: the second core stays off (GLO > 2ND CORE, or after it crashed
+                                          * beside it); applies at the next power-on. Older projects: 0, two */
 } settings_t;
 
 /* the song and the motion lanes: one blob, split across OBJ_SONG and OBJ_MOTION */
@@ -52,7 +58,8 @@ typedef struct {
     sound_t sound;
     pattern_t pat[NPAT];
     arrange_t arr;
-    variant_settings_t variant;       /* appended: legacy project prefix offsets stay fixed */
+    variant_settings_t variant;       /* legacy prefix offsets stay fixed */
+    kick_settings_t kick;             /* format7 extension;previous bytes unchanged */
 } project_t;
 
 extern project_t proj;
@@ -64,11 +71,21 @@ void project_apply_io(void);             /* the settings into the sequencer and 
 int project_mem_pct(void);               /* how full the room for patterns, song and motion is, % */
 int project_write_protected(void);
 void project_discard_rejected(void);     /* explicit factory reset only */
+int project_save_settings(void);
+void project_flash_changed(void);
 
+/* Stopped scoped copy: 0 all, 1/2 909 kick/snare, 3/4 808 kick/snare.
+ * Always preserves destination shared accent and swing. No clipboard snapshot. */
+int ui_pattern_copy(int source,int destination,int scope);
+int ui_pattern_copy_to(int src,int dst,int source_scope,int destination_scope);
+int ui_generate_constrained(int pattern,int bass,int mode,int block,uint32_t seed);
+int ui_delete_block(int block); /* stopped, arrangement row only; preserves patterns/sounds */
+int ui_duplicate_block(int block); /* stopped, independent patterns; bank or VR_* */
 void ui_init(void);
 void ui_frame(void);
 void ui_input_only(void);
 int ui_dirty(void);
+int ui_pattern_query_busy(void); /* read-only preflight; never reserves or flushes */
 void ui_external_edit(int begin);        /* 1 starts a gesture; 0 commits it */
 void ui_external_changed(void);
 void ui_external_sound(int target, int voice, int index, int value);
@@ -92,3 +109,20 @@ uint32_t variant_current_revision(void);
 void cc_actions_reset(void);
 void project_defaults_into(project_t *destination);
 int project_checkpoint_matches(void);
+
+int project_strip_default_save(unsigned strip);
+int project_strip_default_get(unsigned strip,sound_strip_config_t *config);
+int ui_strip_default_action(unsigned strip,int apply);
+void ui_warn(const char *a, const char *b);   /* ui_say for what did not happen: a screen reader says it whole */
+/* backup and restore over USB (backup.c) */
+void ui_flush(void);                     /* stopped: the unsaved changes saved now (a backup takes the flash's) */
+int ui_saves_held(void);
+void ui_hold_saves(int on);              /* 1: no save until 0 (a backup streams the flash) */
+void ui_redraw(void);                    /* the whole screen drawn again at the next frame */
+int app_restored(void);                 /* a restore wrote the project: loaded again, as at power-on */
+
+int ui_kick_preset_action(unsigned slot,int load);
+
+int ui_kick_edit_ready(void);
+
+int ui_kick_control_ready(void);

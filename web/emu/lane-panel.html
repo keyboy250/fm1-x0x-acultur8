@@ -4,6 +4,8 @@
   <p id="lane-availability">Switch on the FM1 panel to check lane support.</p>
   <div class="lane-mode-row"><button id="lane-mode" type="button" disabled>Initialize independent lanes</button><p id="lane-mode-state">Clock mode unavailable.</p></div>
   <p>Initialize while stopped. After initialization, grouped/independent switches keep every sound's settings and take effect at the next musical bar. Grouped mode uses each drum kit's BD clock; bass and BREAK keep their own clocks.</p>
+  <button id="lane-rate-enable" type="button" disabled>Enable expanded rates</button>
+  <p>Enable while stopped after initializing lanes. Existing rhythms stay intact. Expanded projects use format 6; older firmware cannot open them.</p>
   <fieldset id="lane-selection" disabled><legend>Editor selection</legend>
     <label for="lane-pattern">Pattern ID (0–31)<select id="lane-pattern"></select></label>
     <label for="lane-sound">Sound<select id="lane-sound"></select></label>
@@ -12,6 +14,12 @@
   <fieldset id="lane-timing" disabled><legend>Selected sound timing</legend>
     <label for="lane-length">Length (steps)<input id="lane-length" type="number" min="1" max="64" step="1" inputmode="numeric"></label>
     <label for="lane-rate">Step rate<select id="lane-rate"></select></label>
+    <fieldset id="lane-rate-policy" disabled><legend>Selected sound's rate sweep policy</legend>
+      <label for="lane-rate-family">Rate family<select id="lane-rate-family"><option value="0">Straight only</option><option value="1">Straight + dotted</option><option value="2">Straight + triplet</option><option value="3">All</option></select></label>
+      <label for="lane-rate-boundary">Apply changes<select id="lane-rate-boundary"><option value="0">Next sound step</option><option value="1">Next sound step after the next bar</option></select></label>
+      <label for="lane-rate-hysteresis">Sweep hysteresis<select id="lane-rate-hysteresis"><option value="0">0 CC units</option><option value="1">1 CC unit</option><option value="2">2 CC units</option></select></label>
+      <p>Policy applies to this sound across all patterns. Changing family preserves allowed rates and moves excluded rates to the nearest allowed duration; ties choose the slower duration. MIDI sweeps run slow to fast without leaving this family. Legacy CC rate IDs stay unchanged.</p>
+    </fieldset>
     <p id="lane-timing-state">Initialize the lanes to edit their timing.</p>
   </fieldset>
   <div id="lane-break-panel" hidden>

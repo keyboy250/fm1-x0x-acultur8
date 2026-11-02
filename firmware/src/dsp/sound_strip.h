@@ -65,3 +65,9 @@ static inline void sound_strip_meter_merge(sound_strip_meter_t *m, const sound_s
     if (v->output_peak > m->output_peak) m->output_peak = v->output_peak;
     if (v->gain_min < m->gain_min) m->gain_min = v->gain_min;
 }
+
+/* Audio-owner opt-in:buffer[0..count) must already contain positive zero.
+ * Returns1 after exact state/meters update,or0 with no mutation for the caller
+ * to invoke the original processor (including filter/transition tails). */
+int sound_strip_try_zero_mono(sound_strip_t *s, float *buffer, uint32_t count,
+                                   sound_strip_meter_t *meter);

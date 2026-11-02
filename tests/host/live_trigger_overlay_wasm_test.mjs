@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: GPL-3.0-only
+import fs from 'node:fs';import assert from 'node:assert/strict';import crypto from 'node:crypto';
+let Processor;globalThis.currentTime=0;globalThis.AudioWorkletProcessor=class{constructor(){this.messages=[];this.port={postMessage:m=>this.messages.push(m)};}};globalThis.registerProcessor=(_,ctor)=>Processor=ctor;await import('../../web/emu/worklet.js');
+const wasm=fs.readFileSync(process.argv[2]),base=JSON.parse(fs.readFileSync('build/repeating-variation/baseline.json'));let polling=false,samples=[],events=[],pcm; let stable=0,last=-1,checked=0,mismatches=0,shots=new Set(); const old=process.argv[3]==='--old'; const WK=[0,2,4,6,7,9,11,12,14,16,18,19,21,23,24,26]; const wm=WK.reduce((m,k)=>m|(1<<k),0),baseKeys=[1,2,8,15].reduce((m,k)=>m|(1<<WK[k]),0);
+function diag(p,lane=1){const ptr=p.ex.web_runtime_snapshot(lane);assert.ok(ptr);return Array.from(new Uint32Array(p.mem.buffer,ptr,52));}
+function render(p,n=25){for(let i=0;i<n;i++){currentTime+=128/44100;const left=new Float32Array(128),right=new Float32Array(128);p.process([],[[left,right]]);if(pcm){pcm.update(new Uint8Array(left.buffer));pcm.update(new Uint8Array(right.buffer));}
+ const num=p.ex.web_midi_batch(64);for(let j=0;j<num;j++){const x=p.ex.web_midi_packet(j)>>>0;if(p.collect&&!(x&0x80000000)&&((x>>>8)&240)==144&&((x>>>16)&127)==38&&((x>>>24)&127)){const d=diag(p);events.push([d[32],d[31]+1]);}}p.ex.web_midi_ack(num);
+ if(polling&&p.collect){const d=diag(p);assert.equal(d[11],6);assert.equal(d[20],1);assert.equal(d[21],6);assert.equal(d[33],16);assert.equal(d[51],16);assert.equal(d[41],1);if(d[40]&&d[38]){const mask=d[38]==32?0xffffffff:(2**d[38]-1)>>>0;const want=(d[32]&1)?0x80f8:0x8106;assert.equal(d[44],(want&mask)>>>0,'accepted prefix follows actual selected pass');}const stamp=d[32]*64+d[31];stable=stamp===last?stable+1:0;last=stamp;
+ if(d[4] && stable>=10 && d[40] && d[38]>d[31]){
+  const step=d[31],hit=!!(d[44]&(1<<step)),bright=hit?(1<<WK[step]):0;
+  const actual=p.ex.web_lit_keys()&wm,dim=p.ex.web_dim_keys()&wm;
+  const fb=new Uint16Array(p.mem.buffer,p.ex.web_fb(),240*240),x=27+step*13+(step>>2)+4,y=20+11+1+3;
+  const flash=fb[y*240+x]===65535;
+  const equal=actual===bright && dim===(baseKeys&~bright) && flash===hit;
+  checked++;if(!equal)mismatches++;if(!old)assert.ok(equal,JSON.stringify({step,cycle:d[32],bright,actual,dim,flash,hit}));
+  const baseHit=[1,2,8,15].includes(step); const label=(d[32]&1)?(hit&&!baseHit?'variation-added':!hit&&baseHit?'variation-suppressed':null):'base-pass';
+  if(label&&!old&&!shots.has(label)){shots.add(label);fs.writeFileSync('build/live-trigger-overlay/'+label+'.rgb565',Buffer.from(fb.buffer,fb.byteOffset,fb.byteLength));}
+ }
+ if(samples.length<20||d[38]==16)samples.push(d);}
+}}
+function tap(p,b){p.ex.web_buttons(1<<b);render(p);p.ex.web_buttons(0);render(p);}function key(p,k){p.ex.web_keys(1<<k);render(p);p.ex.web_keys(0);render(p);}function turn(p,e,n){for(let i=0;i<Math.abs(n);i++){p.ex.web_enc(e,Math.sign(n));render(p);}}
+function stored(p){const o={};for(let i=0;i<p.ex.web_nobj();i++){const n=p.ex.web_store_len(i);if(n>=0)o[i]=Array.from(new Uint8Array(p.mem.buffer,p.ex.web_store(i),n));}return o;}
+async function run(on){currentTime=0;polling=on;events=[];samples=[];pcm=null;const p=new Processor();await p.onMessage({type:'load',wasm,store:Object.fromEntries(Object.entries(base).map(([k,v])=>[k,Uint8Array.from(v)]))});render(p,175);key(p,11);tap(p,4);tap(p,8);key(p,3);for(const k of [2,4,14,26])key(p,k);tap(p,8);turn(p,3,-2);turn(p,4,6);turn(p,5,-3);turn(p,6,-255);tap(p,13);tap(p,1);tap(p,8);turn(p,3,-3);turn(p,4,-1);turn(p,5,-3);turn(p,6,1);p.ex.web_midi_ready(1);render(p,10);const saved=stored(p);p.collect=true;pcm=crypto.createHash('sha256');tap(p,10);render(p,5800);tap(p,10);p.collect=false;const hash=pcm.digest('hex');pcm=null;assert.equal(p.ex.web_seq_playing(),0);assert.deepEqual(stored(p),saved,'queries do not save');const d=diag(p);assert.equal(p.ex.web_runtime_snapshot(24),0);
+ // Mismatch is visible rather than a false LIVE assertion: change playback to P8 while stopped.
+ tap(p,6);key(p,12);const mismatch=diag(p);assert.equal(mismatch[11],7);assert.equal(mismatch[21],6);assert.equal(mismatch[41],0);assert.equal(mismatch[40],0);
+ return {hash,events,samples,stopped:d,mismatch};}
+const a=await run(false),b=await run(true);assert.equal(a.hash,b.hash,'query/no-query PCM identical');assert.deepEqual(a.events,b.events,'query/no-query MIDI trigger stream identical');const cycles={};for(const [cy,st] of b.events)(cycles[cy]??=[]).push(st);assert.deepEqual(cycles[0],[2,3,9,16]);assert.deepEqual(cycles[1],[4,5,6,7,8,16]);assert.deepEqual(cycles[2],cycles[0]);assert.deepEqual(cycles[3],cycles[1]);fs.writeFileSync('build/live-trigger-overlay/wasm-observations'+(old?'-parent':'')+'.json',JSON.stringify({pcm:a.hash,checked,mismatches,cycles,snapshots:b.samples.slice(-20),stopped:b.stopped,mismatch:b.mismatch},null,2));assert.ok(checked>100);assert.equal(a.hash,'ee9c93df2f046b7b7dab9d74a92d27d484bdbe6db0cb0a76f5144b7ee5fa7f51');if(old)assert.ok(mismatches>0);else assert.equal(mismatches,0);console.log('LIVE OVERLAY WASM PASS: actual P7 snare panel ARM/PLAY, accepted-prefix and pass counters, mismatch, identical queried/unqueried PCM and MIDI; no saved-object writes.');

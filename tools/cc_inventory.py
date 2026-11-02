@@ -16,10 +16,10 @@ ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = Path('docs/ACULTUR8_CC_INVENTORY.json')
 MD_PATH = Path('docs/ACULTUR8_CC_INVENTORY.md')
 FILES = ['firmware/src/app/engine.c', 'firmware/src/app/engine.h', 'firmware/src/app/ui.c',
-         'firmware/src/app/x0x.h', 'firmware/src/app/variant.c', 'firmware/src/app/variant.h',
+         'firmware/src/app/x0x.h', 'firmware/src/app/block_bridge.inc', 'firmware/src/app/variant.c', 'firmware/src/app/variant.h',
          'firmware/src/seq/pattern.h', 'firmware/src/seq/lanes.h', 'firmware/src/seq/sequencer.h', 'firmware/src/seq/motion.h', 'firmware/src/seq/motion.c',
          'firmware/src/seq/tb3po.h', 'firmware/src/seq/harmony.h', 'firmware/src/dsp/drum909.c', 'firmware/src/dsp/drum808.c',
-         'firmware/src/dsp/bass303.c', 'firmware/src/dsp/fxbus.c', 'firmware/src/dsp/master.c',
+         'firmware/src/dsp/hybrid_kick.inc', 'firmware/src/dsp/bass303.c', 'firmware/src/dsp/fxbus.c', 'firmware/src/dsp/master.c',
          'firmware/src/dsp/breaks.c', 'firmware/src/dsp/sound_strip.h',
          'firmware/src/app/main_fm1.c', 'firmware/src/midi_uart.c', 'firmware/src/usb.c',
          'web/emu/index.html', 'web/emu/slice-panel.html', 'web/emu/pad-panel.html']
@@ -33,7 +33,7 @@ STRUCTS = {
     'pattern_t':['drum','bass','brk','swing','rsv'],
     'arrangement_settings_t':['flags','key','mode','parent','bass_low','bass_high','pad_channel','pad_root','pad_low','pad_high','degree'],
     'sound_strip_config_t':['highpass_hz','lowpass_hz','boost_db','ceiling_db','release_ms','flags'],
-    'settings_t':['magic','format','palette','keyled','clk_out','notes_out','bpm_x10','accent_q7','keysound','autosave_off','rsv_bright','stereo','snd_rev','midi_ch','out_loud','usb_full','rsv'],
+    'settings_t':['magic','format','palette','keyled','clk_out','notes_out','bpm_x10','accent_q7','keysound','autosave_off','rsv_bright','stereo','snd_rev','midi_ch','out_loud','usb_full','one_core'],
     'lane_t':['used','gen','pat','part','t','v','i','rsv','val'],
 }
 
@@ -233,8 +233,16 @@ def build(root=ROOT):
                 scaling='log-frequency proposal; endpoints exact' if i<2 else 'round(min + cc7 * (max-min) / 127)')
     ui=texts['firmware/src/app/ui.c']
     refs=enum_names(ui,'R_NONE')
-    expected='R_NONE R_ENG R_SWING R_DLEN R_DRATE R_BLEN R_BRATE R_BDIR R_BTRANS R_GEN R_BRKSET R_BRKSLOT R_TEMPO R_ACCENT R_CLKOUT R_NOTEOUT R_PALETTE R_KEYLED R_KEYSOUND R_AUTOSAVE R_ACT R_SBAR R_SPAT R_SLEN R_STALLS R_HDR R_TAPE R_MIDICH R_OUTLOUD R_SREP R_BATT R_USBFULL R_FREEPLAY'.split()
+    expected='R_NONE R_ENG R_SWING R_DLEN R_DRATE R_BLEN R_BRATE R_BDIR R_BTRANS R_GEN R_BRKSET R_BRKSLOT R_TEMPO R_ACCENT R_CLKOUT R_NOTEOUT R_PALETTE R_KEYLED R_KEYSOUND R_AUTOSAVE R_ACT R_SBAR R_SPAT R_SLEN R_STALLS R_HDR R_TAPE R_MIDICH R_OUTLOUD R_SREP R_BATT R_USBFULL R_FREEPLAY R_RATEENABLE R_RATEFAMILY R_RATEBOUNDARY R_RATEHYST R_RATEEXACT R_STRIP R_STRIPFLAG R_STRIPDEFAULT R_CORES R_BMODE R_BDEGREE R_BMUTE'.split()
+    expected+=['R_AKEY','R_ASCALE','R_AFOLLOW','R_COPYCFG','R_NEWGEN','R_DRUMGEN','R_VARIATION','R_CAPTURE','R_RANDOM','R_SYNCMODE','R_SYNCLOCAL','R_CCMODE'] # native aliases and stopped LAN3 policy selectors
+    expected+=['R_PHASE','R_KICK','R_KPRESET','R_KVEL']
     if refs!=expected:raise ValueError('UI reference coverage must be updated')
+    add('sync.global_mode','SYNC RATE MODE',1,None,category='nonmusical',default=0,
+        choices=['ALL','STRAIGHT'],live_requirement='stopped',runtime_parameter='engine_sync_mode(-1,value)',
+        status='native panel; no direct MIDI CC address assigned')
+    add('sync.strip_override','RATE MODE',3,None,category='nonmusical',default=0,
+        choices=['GLOBAL','STRAIGHT','STR+TRIPLET','ALL'],context={'strip':[0,24]},live_requirement='stopped',
+        runtime_parameter='engine_sync_mode(strip,value)',status='native panel; no direct MIDI CC address assigned')
     # Every pref kind accounted for, including nonmusical/read-only rows.
     seq=descriptors(ui,'SEQ_P',symbols); sq=enum_names(ui,'SQ_SWING')[:-1]
     for i,(symbol,d) in enumerate(zip(sq,seq)):
@@ -259,8 +267,9 @@ def build(root=ROOT):
     for i,d in enumerate(descriptors(ui,'SONG_P',symbols)):
         add(f'song.{i}',d['name'],d['max'],972+i,default=d['default'],context={'block':[0,191]} if i<5 else {})
     for i,d in enumerate(descriptors(ui,'ACT_P',symbols)):
-        add(f'action.{i}',d['name'] or 'No action',127,None if i==0 else 984+i,'action',
+        add(f'action.{i}',d['name'] or 'No action',127,None if i==0 or i>=12 else 984+i,'action',
             action_policy='edge-trigger; explicit safety/preflight; no storage operation in audio callback',context={'pattern':[0,31],'part':[0,4],'block':[0,191]})
+    add('system.one_core','Second core disabled at next power-on',1,None,'nonmusical',source='firmware/src/app/x0x.h',runtime_parameter='Native settings control only; no CC address; next power-on')
     # Structured data and controls not represented by x0x_param_t.
     specs=[('selector.pattern',31,{}),('selector.part',4,{}),('selector.drum',10,{}),('selector.bass',1,{}),
            ('selector.step',63,{}),('selector.block_low',127,{}),('selector.block_high',1,{}),('selector.motion_low',127,{}),('selector.motion_high',1,{}),
@@ -279,9 +288,9 @@ def build(root=ROOT):
            ('generator.new',1,{'pattern':[0,31],'bass':[0,1]}),('generator.mutate',1,{'pattern':[0,31],'bass':[0,1]}),
            ('generator.seed_byte',255,{'pattern':[0,31],'bass':[0,1],'seed_byte':[0,3]}),
            ('arrangement.enabled',1,{}),('arrangement.length',192,{}),('arrangement.key',11,{}),('arrangement.mode',9,{}),('arrangement.parent',255,{}),
-           ('arrangement.degree',7,{'block':[0,191]}),('arrangement.duration',8,{'block':[0,191]}),('arrangement.pattern',31,{'block':[0,191],'part':[0,4]}),
+           ('arrangement.degree',7,{'block':[0,191]}),('arrangement.duration',32,{'block':[0,191]}),('arrangement.pattern',31,{'block':[0,191],'part':[0,4]}),
            ('arrangement.mute',1,{'block':[0,191],'part':[0,4]}),('arrangement.queue',191,{}),
-           ('follow.mode',2,{'bass':[0,1]}),('follow.low',127,{'bass':[0,1]}),('follow.high',127,{'bass':[0,1]}),
+           ('follow.mode',3,{'bass':[0,1]}),('follow.low',127,{'bass':[0,1]}),('follow.high',127,{'bass':[0,1]}),
            ('pad.channel',255,{}),('pad.root',127,{}),('pad.low',127,{}),('pad.high',127,{}),
            ('selector.kit',1,{}),('selector.strip',24,{}),('selector.seed_byte',3,{}),
            ('selector.commit',1,{}),('selector.parameter_low',127,{}),('selector.parameter_high',15,{}),
@@ -295,6 +304,9 @@ def build(root=ROOT):
         if row['id'] in ('pref.SQ_DRATE','pref.SQ_BRATE'):row['dynamic_max']='7 with initialized typed lane storage; original descriptor max3 for legacy projects; next local step'
         if row['id']=='arrangement.mode': row['range'][1]=symbols['HARMONY_CHROMATIC']
         if row['id']=='arrangement.duration':row['range'][0]=1
+        if row['id'] in ('arrangement.duration','follow.mode'):
+            row['coarse_range']=[1,8] if row['id']=='arrangement.duration' else [0,2]
+            row['scaling']='Preserve legacy coarse range; full semantic range is available through exact-value transactions and native/browser controls'
         if row['id']=='arrangement.parent':row['allowed_values']=list(range(7))+[symbols['HARMONY_NO_PARENT']]
         if row['id']=='pad.channel':row['allowed_values']=list(range(16))+[255]
         if row['id']=='motion.value':
@@ -322,6 +334,9 @@ def build(root=ROOT):
     add('selector.destination_pattern','Explicit pattern-copy destination',31,1132,source='firmware/src/app/cc.c',action_policy='source draft destination; selector.commit freezes it; never UI focus')
     add('action_control.arm','Arm destructive native action',11,1133,'action',source='firmware/src/app/cc.c',action_policy='0 cancels; action2/3/4/5/7/8/9 binds source/context/project revision')
     add('action_control.cancel','Cancel source action arm',1,1134,'action',source='firmware/src/app/cc.c',action_policy='1 cancels source arm; 0 does nothing')
+    for field,label,maximum in [('enable','Enable expanded rates (stopped)',1),('exact','Expanded exact division',20),('family','Rate sweep family',3),('boundary','Rate latch boundary',1),('hysteresis','Rate sweep hysteresis CC units',2),('sweep_v1','Family-safe rate sweep ABI1',127)]:
+        number=1135+['enable','exact','family','boundary','hysteresis','sweep_v1'].index(field)
+        add('rate.'+field,label,maximum,number,context={'pattern':[0,31],'strip':[0,24]},source='firmware/src/seq/rate_families.h',runtime_parameter='native shared engine; legacy lane.rate1129 unchanged')
     add('output.master_knob','MASTER gain Q12',4096,1100,source='web/emu/index.html',
         canonical_requirement='define live remote gain vs physical ADC pickup; current pot is runtime, not project intent')
     for i,(key,maximum,category) in enumerate([
@@ -342,8 +357,81 @@ def build(root=ROOT):
     for row in rows:
         if row['address']:row['parameter_number']=(row['address']['channel']-1)*len(CCS)+CCS.index(row['address']['cc'])
     covered={name:'descriptor or structured field' for name in refs}
-    covered.update({'R_NONE':'sentinel','R_HDR':'non-selectable header','R_BATT':'read-only', 'R_ACT':'all ACT_P actions'})
-    result={'schema':1,'map_version':'draft-1-actions-prototype-1','runtime_cc':RUNTIME_NOTE,
+    for field,maximum in [('source',31),('destination',31),('scope',24)]:
+        add('ui.pattern_copy.'+field,'Stopped copy '+field,maximum,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native UI only; confirmed staged paste; no new remote CC binding')
+    for field,maximum in [('mode',4),('chord_block',191),('generate_confirmed',1)]:
+        add('ui.constrained_generation.'+field,'Constrained generation '+field,maximum,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native UI only; stopped confirmed generation; no remote CC binding')
+    for field,maximum in [('density',100),('positions',3),('anchors',5),('seed_index',255),('replace_confirm',1)]:
+        add('ui.drum_generation.'+field,'Drum generation '+field,maximum,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native UI only; stopped confirmed generation; no remote CC binding')
+    for field,maximum in [('every',2),('changes',8),('anchor_lock',3),('seed',255),('mode',2),('shape',1),('range',3),('arm_confirm',1),('off_confirm',1)]:
+        add('ui.repeating_variation.'+field,'Repeating variation '+field,maximum,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native UI only; stopped transient playback recipe; no project write or remote MIDI binding')
+    add('ui.live_overlay','Live drum display overlay (session only; default OFF)',1,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native drum VAR OPTIONS knob4 only; no project save, Undo, CC binding or timing-acceptance claim')
+    for field,maximum in [('destination',31),('freeze_request',1),('commit_confirm',1)]:
+        add('ui.freeze_commit.'+field,'Freeze/Commit '+field,maximum,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native UI only; runtime full-pass request and stopped confirmed destination commit; no remote MIDI binding')
+    for field,maximum in [('length',64),('note_step',64)]:
+        add('ui.random_options.'+field,'Random options '+field,maximum,None,'nonmusical_action',source='firmware/src/app/ui.c',action_policy='Native UI only; stopped confirmed generation or selected NOTE pitch randomization; no remote MIDI binding')
+    covered.update({'R_RANDOM':'native-only generated length and selected-note step; no MIDI binding','R_CAPTURE':'native-only runtime Freeze and confirmed destination commit; no MIDI binding','R_VARIATION':'native-only transient playback recipe; no MIDI binding','R_DRUMGEN':'native-only transient drum recipe; no MIDI binding','R_NEWGEN':'native-only transient generation mode and chord-block selector; no MIDI binding','R_COPYCFG':'native-only source/destination/scope; no MIDI binding', 'R_NONE':'sentinel','R_HDR':'non-selectable header','R_BATT':'read-only', 'R_ACT':'all ACT_P actions; block actions 12-15 and Undo action 16 and scoped paste action 17 and copy submenu action 18 and confirmed generation action 19 and drum generation action 20 and variation arm/off actions 21/22 and frozen commit action23 native only', 'R_BMODE':'alias arrangement.enabled', 'R_BDEGREE':'alias arrangement.degree', 'R_BMUTE':'alias arrangement.mute'})
+    # Compatible first remote-generation slice; existing addresses unchanged.
+    extension=[{'id': 'ui.constrained_generation.mode', 'maximum': 4, 'slot': 1203}, {'id': 'ui.constrained_generation.chord_block', 'maximum': 191, 'slot': 1204}, {'id': 'ui.constrained_generation.generate_confirmed', 'maximum': 1, 'slot': 1205}, {'id': 'ui.random_options.length', 'maximum': 64, 'slot': 1223}, {'id': 'ui.random_options.note_step', 'maximum': 64, 'slot': 1224}, {'id': 'remote.generation.seed_byte0', 'maximum': 255, 'slot': 1227}, {'id': 'remote.generation.seed_byte1', 'maximum': 255, 'slot': 1228}, {'id': 'remote.generation.seed_byte2', 'maximum': 255, 'slot': 1229}, {'id': 'remote.generation.seed_byte3', 'maximum': 255, 'slot': 1230}, {'id': 'remote.request_low7', 'maximum': 127, 'slot': 1231}, {'id': 'remote.request_high7', 'maximum': 127, 'slot': 1232}, {'id': 'remote.action_arm', 'maximum': 7, 'slot': 1233}, {'id': 'remote.cancel', 'maximum': 1, 'slot': 1234}]
+    for item in extension:
+        row=next((r for r in rows if r['id']==item['id']),None)
+        if row is None:
+            add(item['id'],item['id'],item['maximum'],item['slot'],'musical',source='firmware/src/app/cc_generation.inc')
+            row=rows[-1]
+        else:
+            q,offset=divmod(item['slot'],88)
+            row['address']={'channel':q+1,'cc':CCS[offset]}
+            row['action_policy']='Explicit source-owned stopped generation; guarded request/result, no UI focus'
+        row['parameter_number']=item['slot']
+    for offset,field,maximum in [(0,'density',100),(1,'positions',3),(2,'anchors',5),(3,'seed_index',255),(4,'replace_confirm',1)]:
+        row=next(r for r in rows if r['id']=='ui.drum_generation.'+field)
+        q,idx=divmod(1206+offset,88);row['address']={'channel':q+1,'cc':CCS[idx]}
+        row['parameter_number']=1206+offset;row['action_policy']='Source-owned stopped drum generation; arm3, explicit context, shared length, request and result'
+    add('ui.cc_mode','GLO MIDI CC MODE',2,None,'nonmusical',source='firmware/src/app/ui.c',choices=['FULL','SIMPLE','OFF'],action_policy='Session-only native GLO; invalidates pending CC contexts/arms; readback and non-CC MIDI remain available')
+    covered['R_CCMODE']='Native GLO diagnostic mode; command51 page7 readback; not remotely writable'
+    covered['R_SYNCMODE']='Native stopped global synced-rate selection policy; sync.global_mode; no direct CC'
+    covered['R_SYNCLOCAL']='Native stopped per-sound synced-rate override; sync.strip_override; no direct CC'
+    covered['R_PHASE']='Native stopped 303B engine/phase controls; schema6 song-header extension; no direct CC'
+    covered['R_KICK']='Saved stopped808 kick controls;fixed target;format7 project extension'
+    covered['R_KPRESET']='Native16-slot kick preset selector andconfirmed actions'
+    covered['R_KVEL']='Stopped held kick step tier;explicitpattern/step MIDI context'
+    for index,d in enumerate(descriptors(texts['firmware/src/dsp/hybrid_kick.inc'],'HK_PARAMS',symbols)):
+        add('hybrid808.session.'+str(index),d['name'],d['max'],1250+index,'musical',default=d['default'],choices=d['choices'],source='firmware/src/dsp/hybrid_kick.inc',live_requirement='live fixed808BD,next-hit latch;format7 save/Undo;command51 desired12,audio-next13,current-hit19')
+
+    for index,name in enumerate(('store_arm','store_execute','recall_arm','recall_execute','request_low7','request_high7')):
+        add('kick.preset.'+name,'Kick preset '+name,127 if index>=4 else 1,1290+index,source='firmware/src/app/cc_kick.inc',action_policy='Committed808BD context,destination0..15,request token,arm/guarded execute;readback16')
+    add('kick.step_tier','808 kick step velocity tier',3,1296,source='firmware/src/app/engine.c',choices=['AUTO','LOW','MID','HIGH'],context={'pattern':[0,31],'step':[0,63]},action_policy='Committed source-owned pattern/step;no hit created')
+    for field,maximum,default in [('engine',1,0),('wave',7,0),('shape',127,64),('envelope',15,8)]:
+        add('phase303b.'+field,'303B PHASE '+field,maximum,None,'musical',default=default,
+            source='firmware/src/app/engine.c',live_requirement='stopped transport and released 303B',
+            canonical_requirement='schema6 song reserved bytes; validated stopped intent; audio-owner queue; Undo/save',
+            action_policy='Private hardware-first prototype; native knobs and variant command22; no direct MIDI CC binding')
+    structured['phase303b_song_header']={'rsv[0]':'Schema6 engine bit7, envelope bits3..6, wave bits0..2',
+                                      'rsv[1]':'Schema6 marker bit7, shape bits0..6; schema5 remains reserved'}
+    covered['R_DRUMGEN']='Remote typed drum recipe and guarded generation; no UI focus'
+    for offset,field in enumerate(('every','changes','anchor_lock','seed','mode','shape','range','arm_confirm','off_confirm')):
+        row=next(r for r in rows if r['id']=='ui.repeating_variation.'+field);q,idx=divmod(1211+offset,88)
+        row['address']={'channel':q+1,'cc':CCS[idx]};row['parameter_number']=1211+offset
+        row['action_policy']='Source-owned runtime variation;explicit context,arm4/5,guarded apply/OFF;no saved pattern mutation'
+    add('remote.variation.constraint_mode','Variation303 constraint mode',3,1235,source='firmware/src/app/cc_generation.inc',choices=['GEN','KEY','CHORD','BOTH'])
+    add('remote.variation.chord_block','Variation303 chord block',191,1236,source='firmware/src/app/cc_generation.inc')
+    covered['R_VARIATION']='Remote runtime variation recipe/apply/OFF;overlay switch remains native only'
+    for offset,field in enumerate(('destination','freeze_request','commit_confirm')):
+        row=next(r for r in rows if r['id']=='ui.freeze_commit.'+field);q,idx=divmod(1220+offset,88)
+        row['address']={'channel':q+1,'cc':CCS[idx]};row['parameter_number']=1220+offset;row['action_policy']='Explicit Freeze arm6/pending full-pass receipt;Commit arm7,held capture token,stopped destination transaction'
+    for byte in range(4):add('remote.capture.token_byte'+str(byte),'Expected captured-pass token byte'+str(byte),255,1237+byte,source='firmware/src/app/cc_capture.inc')
+    covered['R_CAPTURE']='Remote guarded Freeze/Commit plus complete HELD note/gate readback;UI focus independent'
+    for offset,field in enumerate(('source','destination','scope','destination_scope','preview_arm','execute')):
+        key='ui.pattern_copy.'+field;maximum=31 if offset<2 else 24 if offset<4 else 1
+        if offset<3:
+            row=next(r for r in rows if r['id']==key);q,idx=divmod(1241+offset,88);row['address']={'channel':q+1,'cc':CCS[idx]};row['parameter_number']=1241+offset;row['action_policy']='Private explicit copy recipe;guarded preview/arm and request execute;no UI focus'
+        else:add(key,'Scoped cross-part copy '+field,maximum,1241+offset,source='firmware/src/app/cc_copy.inc',action_policy='Private explicit copy recipe;guarded preview/arm and request execute')
+    covered['R_COPYCFG']='Scoped/cross-part copy recipe,preview/arm,guarded execute and page10 readback;legacy copy unchanged'
+    # Every assigned entry exposes the same immutable numeric target as its wire address.
+    for row in rows:
+        if row['address'] and 'parameter_number' not in row:
+            row['parameter_number']=(row['address']['channel']-1)*88+CCS.index(row['address']['cc'])
+    result={'schema':1,'map_version':'draft-2-kick-presets-1','runtime_cc':RUNTIME_NOTE,
             'source_hashes':{p:hashlib.sha256(t.encode()).hexdigest() for p,t in raw.items()},
             'descriptor_counts':counts,'ui_ref_coverage':covered,'structured_field_coverage':structured,
             'ingress_context_proof':{'USB':'firmware/src/usb.c:4,960; main_fm1.c:146 TIMER5 ISR, not main loop',
@@ -395,6 +483,8 @@ def value_domain(row, target=None):
 def scaled_value(row, raw, bits=7, target=None):
     if bits not in (7,14) or type(raw) is not int or not 0<=raw<1<<bits:raise ValueError('Invalid CC precision/value')
     values=value_domain(row,target);den=(1<<bits)-1
+    if bits==7 and 'coarse_range' in row:
+        low,high=row['coarse_range'];values=list(range(low,high+1))
     return values[(raw*(len(values)-1)+den//2)//den]
 
 

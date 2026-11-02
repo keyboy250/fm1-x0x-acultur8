@@ -28,7 +28,7 @@ static int32_t audio[512], active_capture[100*512];
 static void render(void) {engine_render(audio,256);assert(!pending_job);}
 static void fresh(void)
 {
-    int i;for(i=0;i<OBJ_NOBJ;i++)store_len[i]=-1;
+    int i;for(i=0;i<OBJ_NOBJ;i++)store_prev_len[i]=store_len[i]=-1;
     memset(stored_known,0,sizeof stored_known);project_discard_rejected();boot();
     engine_guard_enable(0);engine_usb_full(1);render();
 }

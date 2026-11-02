@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Part patterns, the song, knob motion: each part its own pattern, bars arranged, moves recorded.
 wait 300
 # the 909 (on screen at boot): a kick on the quarters
@@ -132,6 +137,11 @@ expect lanes 1
 tap SAVE
 expect store_writes 6
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 expect lanes 1
 expect songlen 3
 expect songbar2.3 5

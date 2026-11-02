@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # 64 steps and 32 patterns: OCT- / OCT+ page through the steps four pages of 16; HOME's OCT- / OCT+
 # choose patterns 1-16 or 17-32; everything saves packed and comes back; a project too big to
 # pack is not saved (MEMORY FULL) and the flash keeps what it had.
@@ -48,6 +53,11 @@ expect pattern 31
 expect hit0.0.2 1
 tap SAVE
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 wait 300
 tap HOME
 tap OCT+
@@ -65,6 +75,11 @@ expect hit0.0.32 1
 noise 7
 tap SAVE
 reboot
+# Reload/startup also opens HOME; explicitly restore this fixture's editor context.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 wait 300
 expect pattern 1
 expect hit0.0.63 1

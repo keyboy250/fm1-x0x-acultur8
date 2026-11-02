@@ -44,7 +44,7 @@ void motion_step(motion_t *m, int part, int pat, int step, int next, int pass)
         lane_t *l = &m->lane[k];
         lane_rt_t *r = &m->rt[k];
         int v, nv;
-        if (!l->used || l->part != part)
+        if (!l->used || l->t==MOT_KICK_VELOCITY || l->part != part)
             continue;
         if (r->gen != l->gen) {                        /* a reused slot: a fresh runtime */
             r->gen = l->gen;
@@ -111,7 +111,7 @@ void motion_tick(motion_t *m, uint32_t n)
         const lane_t *l = &m->lane[k];
         lane_rt_t *r = &m->rt[k];
         uint32_t L, a;
-        if (!r->ramp || !l->used || r->gen != l->gen || l->part >= MOT_PARTS)
+        if (l->t==MOT_KICK_VELOCITY || !r->ramp || !l->used || r->gen != l->gen || l->part >= MOT_PARTS)
             continue;
         L = m->len[l->part][r->part_parity];
         if (!L)
@@ -128,7 +128,7 @@ void motion_release(motion_t *m)
     int k, p;
     for (k = 0; k < NLANE; k++) {
         lane_rt_t *r = &m->rt[k];
-        if (m->lane[k].used && r->gen == m->lane[k].gen)
+        if (m->lane[k].used && m->lane[k].t!=MOT_KICK_VELOCITY && r->gen == m->lane[k].gen)
             to_base(m, &m->lane[k], r);
         r->rec_last = MOT_NONE;
         r->hold_left = 0;

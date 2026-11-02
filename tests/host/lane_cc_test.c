@@ -20,7 +20,7 @@ uint32_t plat_control_enter(void){assert(!locked);
     if(irq_start){irq_start=0;seq_start(&seq);seq_advance_poly(&seq,0,&SINK);}locked=1;return 29;}
 void plat_control_leave(uint32_t saved){assert(locked && saved==29);locked=0;}
 static void render(void){int32_t block[512];engine_render(block,256);}
-static void fresh(void){for(int i=0;i<OBJ_NOBJ;i++)store_len[i]=-1;memset(stored_known,0,sizeof stored_known);project_discard_rejected();mi_w=mi_r=mi_ready=0;mi_claimed=0xffffffffu;boot();render();for(int i=0;i<CC_SOURCES;i++)cc_reset_source(i);}
+static void fresh(void){for(int i=0;i<OBJ_NOBJ;i++)store_prev_len[i]=store_len[i]=-1;memset(stored_known,0,sizeof stored_known);project_discard_rejected();mi_w=mi_r=mi_ready=0;mi_claimed=0xffffffffu;boot();render();for(int i=0;i<CC_SOURCES;i++)cc_reset_source(i);}
 static void context(int source,int p,int lane,int step){assert(!cc_parameter(1010,p,source));assert(!cc_parameter(1069,lane,source));assert(!cc_parameter(1014,step,source));assert(!cc_parameter(1071,1,source));}
 static int length(int p,int lane){return poly_length(proj.pat,(uint8_t *)&proj.sound,p,lane);}
 static int rate(int p,int lane){return poly_rate(proj.pat,(uint8_t *)&proj.sound,p,lane);}

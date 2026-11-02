@@ -138,3 +138,65 @@ REX import guidance now sits beside the preview's WAV/JSON controls and has a pr
 ## Fresh composite slice qualification — 2026-10-14
 
 Final inventory-corrected main suite completed exit0: all9mandatorychecks, including reviewed portable-server HTTP regression, PASS; artifact build/site-hywy_bhp has40independentlyverifiedSHAentries. Source45ba2c1b2dfa955d8afc8b7f24b66f4211b7bd7cf8c1e79b07c1e524a11c283a; WASM e8d5dc0adef7c2f28eca7b7ee5f457ae0d02dee54f1504dfc8c12f2d760c6854 remains683698bytes, identical to accepted muted actualworklet evidence. REXguide anchor resolves in the packaged project subpath; nativeheaderunchanged. First fingerprint-drift failure retained, not reported as a pass. Source commit/PR is next; no Pages or hardware release. Recovery build/pre-slice-pr20-20261014 retains trackedbinarydiff and all16untracked source files.
+
+## User-requested reboot pause — 2026-10-14T03:57:01.921686+00:00
+
+Implementation and active agent work paused at user request. Source commit1b667706/PR20open; local9requiredchecks and40hashesPASS; remoteCI38508354643observedinprogress, not merged. NewPagesdeploymentheld. Clockstatic15PASS doesnotqualify integration: independentreviewfoundlateStart/Continue revival after retirement/immediate modecommit; repair/tests pending. Ratefoundation native/sanitizerPASS, unwired; FM1-44doing, notcomplete. See REBOOT_RESUME_PLAN.md for exact artifacts, consistent origins, recovery and nexttwo workingday acceptance priorities. No physical/flashing/hearing/DAW acceptance claimed.
+
+## 2026-10-14 — Reboot resume, source PR20 merged, isolated clock repair
+
+
+PR #20 is merged at `7bca4df442bd3191e95c4dc06444dccbdf303607` following explicit source-only user approval. Required CI38508354643 succeeded at exact head1b667706. Pages upload and publication were skipped and remain held. Checked40-file preview is restored at the prior8133 origin; stored browser projects have not been retested after reboot.
+
+This separate repair copy preserves the original frozen role/quad candidate byte-for-byte. Pre-fix native logs reproduce both source-retirement and immediately completed role-change late-publication failures (exit134). The repair captures generation and retirement state under the platform guard, then validates the same capture and publishes request flags under that guard. This rejects old intent across completed or unacknowledged boundaries while preserving a new explicit Start after retirement. The first overly broad retired-state rejection failed the unchanged transport fixture; the refined repair passes it. Source and tests are in `build/race-repair.patch`; exact identities and receipts are in `RACE_REPAIR_RECEIPT.json`.
+
+Native clock/Start/Continue/physical PLAY races, legacy sequencing, production USB service/consumer, unchanged transport, variant, bass and pad checks pass. Fresh actual C/WASM production worklet checks pass clock ownership/loss/recovery, all11 native actions and CC input across25 sounds/eight rates. These are synthetic host checks; the WASM test does not reproduce physical IRQ interleavings.
+
+Pinned official target: image581396/581564 (168 spare), ordinary RAM98292/98304 (12 spare), pool335720/344064 (152 above8192 reserve). Original15 static gates and the matching caller/helper family pass without relaxed limits. Final WASM683951 bytes, source62eadf55a25e57068d1493bda550065235fec00230e387dd9698588990c9dd46. Physical IRQ timing, stack and delivery remain unqualified.
+
+Next boundary: independent final review, narrow reconciliation against source after PR20, then the complete nine-check mandatory suite and packaged browser checks. Do not integrate the old dfef patch or this isolated repair on the strength of scoped checks alone. Copied `QUALIFICATION_*` files describe the inherited pre-repair snapshot; this receipt describes the repaired source. No full mandatory-suite pass, merged clock, rate implementation, device qualification or Pages promotion is claimed.
+
+
+## Reviewed clock integration — 2026-10-14
+
+Clock repair independently reviewed PASS and integrated locally from commit12d32d695387ef83601ec3c4cc9cddce08f3a0cd. Fresh complete mandatory suite9/9 PASS; all41 frozen artifact hashes verified; original15 target gates and caller/helper aggregate PASS. Production guard preserves exact ICFG state; generation/retirement publication, reserved Start/Continue and MIDI replacement ownership are covered. Target image581444/581564, RAM98292/98304, pool335720/344064 (120image,12RAM and152above8192reserve spare). Real muted AudioContext clock/role/source-loss checks PASS using exact production worklet/WASM; no MIDI permission or physical receiver claimed. Physical IRQ timing, stack, DAW/receiver and soak remain pending. Expanded rates remain unwired. Pages held; no remote push or clock merge. Existing8133 preview and browser storage preserved; this local integration does not reload that frozen PR20 preview. See docs/CLOCK_REVIEWED_INTEGRATION.md. This supersedes the older paused/unintegrated clock status.
+
+
+## Visible browser version - 2026-10-14
+
+Added a version badge beside X0X, visible before switching on: v0.1.0-alpha · build 818989d7. Build identifier comes from the packaged source fingerprint. Fresh offline build passed with WASM unchanged from the reviewed clock repair; five emulator packaging and six static package tests pass. All41 artifact hashes verified in build/site-version-visible-20261014. Pages remains held; hosted page and existing8133 preview were not replaced.
+
+
+## Expanded rate families: qualified local integration
+
+Expanded rates reviewed and integrated locally2026-10-14 from e227ad728f40a2128ef892f6d0d171aff30e3413. All21 straight/dotted/triplet divisions and four per-sound family-safe MIDI sweep policies are wired to actual firmware/native/browser; hysteresis0..2, safe step/bar latching, LAN2/project6 migration, old firmware refusal and legacyCC105 preservation pass. Complete mandatory suite9/9, original15 static gates, independent79-body clock/helper review and actual browser BD8/CH3 save/reopen PASS. Exact lossless HH packing retains pinned PCM/state/tail parity. Image579364/581564, ordinaryRAM98300/98304, pool335772/344064; physical receiver/DAW/native menu/IRQ/stack/listening/soak remain pending. Local preview8133 now serves v0.1.0-alpha build25641496 at the same origin; user saves retained and expansion is explicit/stopped. Pages held; no remote push/deployment. Supersedes the older unwired/planned status. See docs/EXPANDED_RATES_INTEGRATION.md and build/expanded-rates-reviewed-integration-20261014/RATE_INTEGRATION_RECEIPT.json.
+
+
+## Per-sound defaults resumed - 2026-10-14
+
+Resumed per-sound filter/limiter defaults for both browser and FM1 hardware. Isolated candidate implements an independent defaults bank, explicit stopped Save as sound default / Apply saved default, atomic selected-only recall with Undo/Redo, editable release10..250ms and native filter/limiter/default pages. Pre-ride focused native/WASM checks pass all25 sounds, reopen, isolation and refusal paths. First target build exceeds flash by1908bytes; latest lossless ride-prefix draft compiles but PCM/sanitizer, new target/original15 gates, complete suite and actual browser durability/acceptance remain pending. No defaults integration or preview promotion yet. Reviewed rate preview remains build25641496. Pages held.
+
+User confirmed separate defaults for each sound, persisted in both browser and FM1 hardware. Work remains isolated in `strip-defaults-integration-20261014` on `feat/sound-strip-user-defaults`. Read `docs/STRIP_DEFAULTS_REBOOT_CHECKPOINT.md` for the preserved shutdown evidence; this resumed entry supersedes its pause instruction for defaults qualification only.
+
+2026-10-16 reboot pause: checkpoint saved in build/resume-defaults-20261016; defaults remain isolated. Focused oversized-bank and Stop/undo regressions green; fresh full suite, target and browser acceptance pending. Legacy host-store compatibility fix saved, not qualified. Pages held. See STRIP_DEFAULTS_REBOOT_CHECKPOINT.md.
+
+## 2026-10-16 resumed per-sound defaults testing
+
+2026-10-16 resumed qualification: focused native all25 defaults, Stop/Undo atomicity, actual WASM/worklet, UI failure/retry and legacy host-store compatibility pass. Isolated browser8135 confirms BD/CH independent defaults, Undo/Redo, reload durability and no automatic project replacement. Frozen target passes unchanged15 gates and supplemental helper ledger: image578000, RAM98300, pool335772. Pinned HH/ride PCM and sanitizer checks pass. Complete mandatory suite still running; no integration or preview promotion. Physical NOR/power-loss/menu/IRQ/stack/listening/DAW/soak pending. Pages held. See STRIP_DEFAULTS_POSTREBOOT_QUALIFICATION.md for preserved failures and exact evidence.
+
+Complete mandatory suite terminal PASS9/9,31 host scenarios, original15 target gates and supplemental helper ledger PASS. Obsolete BREAK LOOPS navigation corrected in WASM/host fixtures with native page regression coverage. See STRIP_DEFAULTS_POSTREBOOT_QUALIFICATION.md. FM1-45 remains open for integration and separate physical acceptance; Pages held.
+
+
+## External MIDI arp gate requested - 2026-10-16
+
+User requested a DAW-grooved MIDI gate for arp advancement: one matching positive-velocity Note On on a configured source/channel/key (e.g. DAW label C-2) advances exactly one position. External mode follows irregular pulse spacing instead of a1/16 timer; no pulse means no step. Record numeric MIDI note because octave labels differ. Note Off/velocity-zero and unrelated inputs do not advance. Proposal only; engine/MIDI ingress, persistence, release/transport policy and physical timing acceptance pending. Pages held.
+
+Recorded as FM1-46. No firmware, audio, storage or deployment change accompanies this note; preserve current defaults qualification and accepted rate preview. See docs/ARP_EXTERNAL_GATE_NOTE.md.
+
+## 2026-10-17 - Physical FM1 installation and303B default recall
+
+2026-10-17 physical FM1: stock V15 backed up as two matching1MiB reads. Reviewed rates/defaults build and then boot-animation candidate installed (FM-1_900).303A/303B filters and limiter pages visible.303B saved HP146Hz/LP10240Hz with individual filters enabled; HP100->146Hz recall verified before and after normal power cycle. Only HP recall/persistence is accepted. Apply after restart showed a blank message despite successful recall (FM1-49). Other fields/sounds/isolation/audio/DAW/IRQ/stack/soak/power-loss remain pending. Pages held.
+
+Requested default policy (FM1-48): normal HP150Hz; selected drums may use55..149Hz; no default below55Hz; LP at most11000Hz.146Hz/10240Hz are manual quantized test values;146Hz is below a strict150Hz standard. Choose exact supported values/drum exceptions and resolve default policy versus hard editing limits. No global preset change or hard clamp has been implemented.
+
+Boot intro (FM1-47): image578896 (+896) bytes, ordinary RAM98300, pool335772; no persistent RAM increase. Original resource/helper and sanitizer timer-wrap/2second/watchdog/USB/button/OTA/ROM tests pass. Package SHA256 f9ebebb9cea5c164cef974e2932bc873bed8b9abd9dc04116a6ab5397e0d9799 installed. UI/powercycle used; animation-specific visual/skip acceptance still pending. No repair, repeat flash or publication in this documentation checkpoint. Pause at user request; resume with FM1-49.

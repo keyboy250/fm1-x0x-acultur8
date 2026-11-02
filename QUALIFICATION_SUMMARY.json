@@ -1,0 +1,47 @@
+{
+  "status": "EXPERIMENTAL_PRERELEASE_QUALIFICATION_WITH_DOCUMENTED_LIMITS",
+  "firmware_version": "0.1.60-stoppedtrace",
+  "identity": "FM-1_9000160",
+  "software": {
+    "required_engine_checks": 135,
+    "host_scenarios": 39,
+    "additional_kick_groups": 6,
+    "host_WASM_fallback_identity": 9000138,
+    "source_code_scope": "Samefirmware/host/web/tests as the byte-checked frozen.60source; review-sourcechanges are metadata/docs/buildhelper only."
+  },
+  "target": {
+    "gates": 15,
+    "IRQ_instructions": 83,
+    "unchanged_IRQ_limit": 85,
+    "guard_thresholds_unchanged": true,
+    "image_bytes": 569496,
+    "RAM_bytes": 98300,
+    "RAM_limit_bytes": 98304,
+    "pool_bytes": 335836,
+    "pool_limit_bytes": 344064
+  },
+  "hardware_observations": {
+    "P11_user_timed_minutes": 25,
+    "dropouts": 0,
+    "guards": 0,
+    "measured_IRQ_stack_bytes": 1092,
+    "IRQ_stack_capacity_bytes": 7936,
+    "native_STORE_RECALL_and_normal_restart": "PASS",
+    "saved_current_project_preservation": "BYTE_IDENTICAL",
+    "selected_starter_30s_user_listening": "No surprises;0dropouts/0guards;previouskickrestored"
+  },
+  "open": [
+    "Core1physicalstackandbroaderdeadlinecoverage",
+    "Earlier.59twoeventsunreproduced/unexplained",
+    "Finalpublicreleasechannel/claimsdecision",
+    "Noautomaticpresetimportorrecordedaudiodemo"
+  ],
+  "release_channel": "prerelease",
+  "documentation": {
+    "full_FAQ_topics_retained": 71,
+    "illustrated_FAQ_diagrams": 23,
+    "all_CC_rows": 803,
+    "tutorials": 5,
+    "links_and_actual_browser_map_search": "PASS"
+  }
+}

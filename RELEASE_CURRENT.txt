@@ -1,0 +1,54 @@
+Acultur8 FM-1 kick review candidate
+0.1.60-stoppedtrace / FM-1_9000160
+
+Prepared for an experimental prerelease with documented limits.
+Stable-release timing and stack acceptance remains open.
+
+This package retains the tested firmware bytes. Assembly changed documentation,
+release metadata and a build wrapper only. DSP, target budgets, IRQ limits, guard
+thresholds, sample rate, buffer size and persistent formats remain unchanged.
+
+The kick features include hybrid 808 shaping, velocity expression, native preset
+STORE/RECALL, and the existing long-tail retrigger handling. Favorite Slot 1 is the
+selected starter preset. Its ZIP contains JSON, an exact native record and a control
+reference. It does not contain the user's patterns or a custom sample.
+
+The change introduced by .60 extends diagnostic capture to dropout events while
+stopped. It is not an attributed fix for the two earlier .59 counter events.
+
+Software validation
+- 135 required engine checks, including 39 host scenarios.
+- Six additional kick regression groups and the native kick oracle.
+- Focused .60 capture/decoder, paired-record, exact PCM/state and updater checks.
+- An independent rebuild of this review source matches the tested image, ELF,
+  disassembly and package byte for byte.
+- Host/WASM retains its existing fallback identity 9000138; the physical firmware
+  target is 9000160. Host checks do not establish device timing acceptance.
+
+Physical observations on one FM-1
+- A user-timed 25-minute complex P11 run: 0 dropouts and 0 guard engagements.
+- Measured IRQ stack high-water: 1,092 / 7,936 bytes.
+- Representative quiet listening, filter and limiter sweeps, overlapping long-tail
+  listening, and a separate audition of the selected starter preset.
+- Native STORE, RECALL from a different setting, and normal power-cycle persistence.
+- Saved project equality and preservation of all 25 strips, 16 presets and calibration.
+
+All 15 original target gates remain unchanged. The IRQ wrapper is 83 instructions
+against the original limit of 85. Image: 569,496 bytes. General RAM: 98,300 / 98,304
+bytes. Pool: 335,836 / 344,064 bytes.
+
+The measured IRQ stack is not a whole-system or physical core1 stack bound. The
+.59 events remain unreproduced and unexplained. These observations do not guarantee
+every pattern, MIDI setup, automation combination or power-loss condition.
+
+Read INSTALL_RECOVERY.txt, BUILD_RELEASE_060.txt and FINAL_ACCEPTANCE.txt. Historical
+notes and build helpers remain provenance, not current build instructions. The
+preset exporter is read-only. No automatic preset importer, mod-pack loader or
+native Tightness Factor is included in this scope.
+
+Upstream: Charles Vestal and contributors, X0X
+https://github.com/charlesvestal/fm1-x0x
+Foundation: Leo Kuroshita / Hugelton Instruments, Felucca
+https://github.com/hugelton/Felucca
+LICENSE, LICENSING.md, CREDITS.txt and LICENSES are retained. Attribution does not
+imply upstream endorsement of these Acultur8 changes.

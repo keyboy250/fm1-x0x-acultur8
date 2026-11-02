@@ -41,6 +41,9 @@ const command = async(p,op,index=0,value=0,target=0) => {
 };
 const open = async(store,wasm=bytes) => {
   const p=new Processor(); await p.onMessage({type:'load',wasm,store}); render(p,175);
+  // The stopped instrument-audition fixture explicitly opens EDIT from startup HOME.
+  await p.onMessage({type:'buttons',mask:1<<4});render(p,25);
+  await p.onMessage({type:'buttons',mask:0});render(p,25);
   if (!store) await command(p,1,3,24); // lower kick Level pot to leave master headroom for boost comparison
   return p;
 };

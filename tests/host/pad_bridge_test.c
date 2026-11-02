@@ -20,13 +20,17 @@ int main(void) {
     assert(host_web_midi_batch(16)==4);
     uint32_t posted[4];for(int i=0;i<4;i++)posted[i]=host_web_midi_packet(i);
     uint32_t epoch=host_web_midi_epoch();assert(host_web_midi_ready(0)==0 && host_web_midi_epoch()==epoch+1);
-    assert(host_web_midi_packet(0)==(posted[0]|0x80000000u));for(int i=1;i<4;i++)assert(host_web_midi_packet(i)==posted[i]);
+    assert(host_web_midi_packet(0)==(posted[0]|0x80000000u));
+    for(int i=1;i<3;i++)assert(host_web_midi_packet(i)==posted[i]);
+    assert(host_web_midi_packet(3)==(posted[3]|0x80000000u));
+    for(int i=0;i<4;i++)assert(web_midi_ring[(web_midi_r+(uint32_t)i)%64]==posted[i]);
     /* Router had a posted in-flight batch: dispositions cancel its unsent On,
-       then accepted-prefix ACK shifts remaining Off/clock without replay. */
+       then accepted-prefix ACK shifts remaining Off and cancelled old clock
+       without replay or modification of any published ring slot. */
     assert(host_web_midi_ack(5)==-1 && host_web_midi_ack(-1)==-1 && host_web_midi_pending()==4);
     assert(host_web_midi_ack(1)==0 && host_web_midi_packet(0)==p[1] && host_web_midi_batch(16)==-1);
     assert(host_web_midi_ready(1)==0);uint32_t fresh=packet(0x90,62,90);assert(plat_midi_out(fresh));
-    assert(host_web_midi_packet(2)==p[3] && host_web_midi_packet(3)==0);assert(host_web_midi_ack(3)==0);
+    assert(host_web_midi_packet(2)==(p[3]|0x80000000u) && host_web_midi_packet(3)==0);assert(host_web_midi_ack(3)==0);
     assert(host_web_midi_batch(16)==1 && host_web_midi_packet(0)==fresh);assert(host_web_midi_ack(1)==0);
     /* Complete batch publication across wrap rejects at free5, accepts at free6. */
     uint32_t tx[6];for(int i=0;i<6;i++)tx[i]=packet(0x98,40+i,90);
@@ -43,5 +47,5 @@ int main(void) {
     engine_notes_clear();assert(host_web_midi_packet(0)&0x80000000u);assert(host_web_midi_ack(1)==0);
     assert(plat_midi_out(packet(0x90,72,0)));epoch=host_web_midi_epoch();project_defaults();assert(host_web_midi_epoch()>epoch);
     assert(host_web_midi_batch(16)==1 && !(host_web_midi_packet(0)&0x80000000u));assert(host_web_midi_ack(1)==0);
-    puts("browser FIFO native: explicit detached default, prefix ACK/in-flight cancellation, new epoch audition, velocity0/Off/clock preservation, wrap/full/6atomic and actual Stop/reset hooks PASS");return 0;
+    puts("browser FIFO native: detached default, ACK-only cursor, immutable ring slots, cancelled stale attacks/realtime, new epoch audition, velocity0/Off preservation, wrap/full/6atomic and actual Stop/reset hooks PASS");return 0;
 }

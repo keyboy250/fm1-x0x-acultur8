@@ -12,7 +12,7 @@ uint32_t plat_control_enter(void){assert(!locked);if(irq_start){irq_start=0;seq.
 void plat_control_leave(uint32_t saved){assert(locked&&saved==37);locked=0;}
 static void render(void){int32_t audio[512];engine_render(audio,256);}
 static void fresh(void){
-    for(int i=0;i<OBJ_NOBJ;i++)store_len[i]=-1;
+    for(int i=0;i<OBJ_NOBJ;i++)store_prev_len[i]=store_len[i]=-1;
     memset(stored_known,0,sizeof stored_known);project_discard_rejected();
     mi_w=mi_r=mi_ready=0;mi_claimed=0xffffffffu;memset(&cc_stats,0,sizeof cc_stats);
     /* Recreate a process boot after deliberately injected persistent states. */

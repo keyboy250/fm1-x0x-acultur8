@@ -14,10 +14,13 @@ export function midiBytes(packet){
   return bytes;
 }
 export const noteOn=p=>(((p>>>8)&240)===144&&((p>>>24)&127)>0);
+const OUTPUT_PROTOCOL=0x00020001;
 export class MidiRouter {
   constructor({send,navigator=globalThis.navigator,now=()=>performance.now(),changed=()=>{}}){
     this.send=send;this.navigator=navigator;this.now=now;this.changed=changed;
     this.access=null;this.output=null;this.route=0;this.epoch=0;this.active=false;
+    this.transportEpoch=0;
+    this.outputProtocol=0;
     this.playing=true;this.engine=false;this.owned=true;this.pending=0;
     this.drainWaiting=false;this.flight=null;this.lastBatch=null;this.request=0;
     this.rpcs=new Map();this.ledger=new Uint8Array(16*128);
@@ -58,7 +61,7 @@ export class MidiRouter {
     // assigned to the original output until an explicit cleanup retry.
     this.invalidation++;this.route=(this.route+1)>>>0;
     this.active=false;this.engine=false;this.playing=true;this.owned=true;
-    this.epoch=0;this.pending=0;this.flight=null;this.lastBatch=null;this.drainWaiting=false;
+    this.epoch=0;this.transportEpoch=0;this.outputProtocol=0;this.pending=0;this.flight=null;this.lastBatch=null;this.drainWaiting=false;
     this.closing=false;this.nextId=null;this.clockAt=null;this.buttonMask=0;this.attackHold=null;
     if(this.openingOp){this.opening=false;this.openingOp=null;}
     this.switching=false;this.switchingOp=null;
@@ -91,7 +94,7 @@ export class MidiRouter {
     const request=++this.request;
     return new Promise((resolve,reject)=>{
       this.rpcs.set(request,{resolve,reject,route:this.route});
-      this.send({type,request,route:this.route,...fields});
+      this.send({type,protocol:OUTPUT_PROTOCOL,request,route:this.route,...fields});
       this.report();
     });
   }
@@ -135,7 +138,7 @@ export class MidiRouter {
     this.invalidation++;
     this.active=false;this.clockAt=null;this.drainWaiting=false;
     // The old route remains selected, with both C and API-accepted ownership.
-    if(this.output)this.send({type:'midi-route',route:this.route,ready:false,request:0});
+    if(this.output)this.send({type:'midi-route',protocol:OUTPUT_PROTOCOL,route:this.route,ready:false,request:0});
     this.report(text);
   }
   async retry(){
@@ -169,7 +172,7 @@ export class MidiRouter {
   }
   updateFrame(frame){
     const v=frame.variant?.pad,info=frame.variant?.info;
-    this.engine=!!(info?.values[0]&256)&&v?.abi===1&&v.section===8&&v.values.length===16;
+    this.engine=this.outputProtocol===OUTPUT_PROTOCOL&&!!(info?.values[0]&256)&&v?.abi===1&&v.section===8&&v.values.length===16;
     this.playing=!!frame.sync?.playing;this.bpm=frame.sync?.bpm||120;
     // C reports this only after scanning buttons and consuming transport requests
     // at a subsequent engine render. Even an overlay that consumes PLAY can ack.
@@ -185,7 +188,7 @@ export class MidiRouter {
   pump(){
     if(!this.active||this.drainWaiting||this.flight||!this.output)return;
     this.drainWaiting=true;
-    this.send({type:'midi-drain',route:this.route});
+    this.send({type:'midi-drain',protocol:OUTPUT_PROTOCOL,route:this.route});
   }
   track(bytes){
     const kind=bytes[0]&240,key=(bytes[0]&15)*128+(bytes[1]||0);
@@ -197,6 +200,7 @@ export class MidiRouter {
     }
   }
   acceptBatch(m){
+    if(m.protocol!==OUTPUT_PROTOCOL||this.outputProtocol!==OUTPUT_PROTOCOL){this.active=false;this.engine=false;this.report('MIDI output protocol mismatch. Original-output cleanup remains owned; load matching engine/worklet/router before reconnecting.');return;}
     if(m.route!==this.route||!Array.isArray(m.packets)||m.packets.length>16||m.count!==m.packets.length||
       !m.packets.length||m.packets.some(p=>!Number.isInteger(p)||p<0||p>0xffffffff)||
       !Number.isInteger(m.batch)||m.batch<0||m.batch>0xffffffff||!Number.isInteger(m.epoch)||m.epoch<0||m.epoch>0xffffffff||
@@ -204,8 +208,11 @@ export class MidiRouter {
     this.drainWaiting=false;this.flight=m;this.lastBatch=m.batch;
     let prefix=0,failure=null;
     for(const packet of m.packets){
-      // Stop/disconnect invalidation cancels only positive-velocity attacks.
-      if((packet>>>31)||(noteOn(packet)&&(m.epoch!==this.epoch||!this.active||this.closing||this.attackHold!==null))){prefix++;this.cancelled++;continue;}
+      // Candidate: stale transport/attack epochs cancel; Note Off stays owned.
+      const realtime=[248,250,251,252].includes((packet>>>8)&255);
+      if((packet>>>31)||(noteOn(packet)&&(m.epoch!==this.epoch||!this.active||this.closing||this.attackHold!==null))||
+         (realtime&&(((m.epoch-this.transportEpoch)|0)<0||!this.active||
+           (((packet>>>8)&255)!==252&&(this.closing||this.attackHold!==null))))){prefix++;this.cancelled++;continue;}
       if(!this.active||!this.output||this.output.state!=='connected')break;
       const bytes=midiBytes(packet);
       if(!bytes){failure='Invalid MIDI packet retained for inspection.';break;}
@@ -213,27 +220,40 @@ export class MidiRouter {
       catch(error){failure='MIDI send failed; unsent suffix retained on '+this.output.name+': '+error.message;break;}
     }
     this.flight.ackAt=this.now();
-    this.send({type:'midi-ack',route:this.route,batch:m.batch,epoch:m.epoch,prefix});
+    this.flight.ackPrefix=prefix;
+    this.send({type:'midi-ack',protocol:OUTPUT_PROTOCOL,route:this.route,batch:m.batch,epoch:m.epoch,prefix});
     if(failure)this.halt(failure);
     this.report();
   }
   receive(m){
+    // A replacement engine starts with route0. Its capability must be learned
+    // before a fresh frame can authorize a new route; old state/ACK still uses
+    // the retained route generation and cannot inherit cleanup ownership.
+    if(m.type==='midi-output-capability'&&m.supported===true){
+      this.outputProtocol=m.protocol===OUTPUT_PROTOCOL?OUTPUT_PROTOCOL:0;
+      if(!this.outputProtocol){this.engine=false;this.active=false;}
+      this.report();return;
+    }
     if(m.type==='midi-route-reply'){
       const wait=this.rpcs.get(m.request);if(!wait)return;
+      if(m.protocol!==OUTPUT_PROTOCOL){this.rpcs.delete(m.request);wait.reject(Error('MIDI output protocol mismatch.'));return;}
       if(!Number.isInteger(m.result)||(m.result===0&&m.route!==wait.route))return;
       this.rpcs.delete(m.request);m.result===0?wait.resolve(m):wait.reject(Error('Engine route rejected ('+m.result+'); stop playback and retain the original output.'));
       this.report();return;
     }
+    if(m.type==='midi-output-capability'&&m.supported===false){this.outputProtocol=0;this.engine=false;this.active=false;this.report('This engine lacks the required MIDI transport cancellation protocol. Output remains inactive; original cleanup ownership is retained.');return;}
     if(m.route!==this.route)return;
     if(m.type==='midi-state'){
-      if(!Number.isInteger(m.epoch)||m.epoch<0||m.epoch>0xffffffff||!Number.isInteger(m.pending)||m.pending<0||m.pending>64)return;
+      if(m.protocol!==OUTPUT_PROTOCOL||!Number.isInteger(m.transportEpoch)||m.transportEpoch<0||m.transportEpoch>0xffffffff||!Number.isInteger(m.epoch)||m.epoch<0||m.epoch>0xffffffff||!Number.isInteger(m.pending)||m.pending<0||m.pending>64){this.outputProtocol=0;this.engine=false;this.active=false;this.report('MIDI output protocol mismatch; output remains inactive.');return;}
+      this.outputProtocol=OUTPUT_PROTOCOL;
       this.epoch=m.epoch>>>0;this.pending=m.pending;
+      this.transportEpoch=m.transportEpoch>>>0;
       if(!m.inflight&&!this.flight)this.drainWaiting=false;
       this.maybeSwitch();
       this.report();return;
     }
     if(m.type==='midi-batch'){this.acceptBatch(m);return;}
-    if(m.type==='midi-acknowledged'&&this.flight?.batch===m.batch){
+    if(m.type==='midi-acknowledged'&&m.protocol===OUTPUT_PROTOCOL&&this.flight?.batch===m.batch&&this.flight.route===m.route&&this.flight.epoch===m.epoch&&this.flight.ackPrefix===m.prefix){
       this.rtt=Math.max(0,this.now()-this.flight.ackAt);this.maxRtt=Math.max(this.maxRtt,this.rtt);this.ackCount++;
       this.flight=null;
       // Do not spin-retry a failed suffix. An active route can drain next prefix.

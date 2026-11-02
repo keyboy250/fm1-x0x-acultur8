@@ -79,7 +79,11 @@ typedef struct {
     float decay, volume, pitch, drive;
     int32_t dist_type;
     d9_shape_t shape;
-    const int16_t *buf;
+#if defined(X0X_RAW_HH) || defined(X0X_RAW_PCM)
+    const int16_t *buf;           /* independent source oracle: decoded codec assets */
+#else
+    const uint8_t *buf;           /* mu-law (x0x_mulaw) */
+#endif
     uint32_t len;
     uint32_t pos, frac;           /* 32.32 read position */
     uint32_t inc, incf;           /* 32.32 playback rate */
@@ -127,6 +131,11 @@ void drum909_render(drum909_t *d, float *dry, float *rev, float *dly, int n);
 /* X0X stereo: each voice placed by its PAN into dry_l / dry_r (sends mono); all centred, both are
  * drum909_render's dry exactly */
 void drum909_render_st(drum909_t *d, float *dry_l, float *dry_r, float *rev, float *dly, int n);
+/* Optional caller-owned scratch holds min(n,256) floats, disjoint from all
+ * output ranges and not concurrently used. NULL preserves the legacy route.
+ * No pointer is retained. Original synthesis block size and mix order remain. */
+void drum909_render_st_scratch(drum909_t *d, float *dry_l, float *dry_r,
+                               float *rev, float *dly, int n, float *scratch);
 void drum909_pan_settle(drum909_t *d);   /* every pan to its target at once (the kit is silent: no zipper) */
 int drum909_nparams(int voice);
 const x0x_param_t *drum909_param(int voice, int i);

@@ -102,6 +102,14 @@ static float glide(float current, float target)
     return fm_fabsf(delta) < 1e-7f * fm_maxf(target, 1.0f) ? target : current + STRIP_SMOOTH * delta;
 }
 
+/* Exact representation check keeps signed-zero/asymmetric states on the
+ * original stereo path. Uses the existing fastmath bit representation. */
+static int strip_same_bits(float a, float b)
+{
+    fm_bits_t x, y; x.f = a; y.f = b;
+    return x.u == y.u;
+}
+
 static float lowpass(float input, float g, float *z)
 {
     float v = (input - *z) * g;
@@ -111,9 +119,9 @@ static float lowpass(float input, float g, float *z)
 }
 
 /* Same scale factor on both sides; the clamp only catches single-precision rounding. */
-static float guard(sound_strip_t *s, float *l, float *r, float ceiling, int desired)
+static float guard(sound_strip_t *s, float *l, float *r, float ceiling, int desired, int mono)
 {
-    float peak = fm_maxf(fm_fabsf(*l), fm_fabsf(*r));
+    float peak = mono ? fm_fabsf(*l) : fm_maxf(fm_fabsf(*l), fm_fabsf(*r));
     float want = desired && peak > ceiling ? ceiling / peak : 1.0f;
     uint32_t remaining = STRIP_GUARD_REMAINING(s);
     if (desired && want < s->guard_gain) {
@@ -123,12 +131,63 @@ static float guard(sound_strip_t *s, float *l, float *r, float ceiling, int desi
         guard_count(s, --remaining);
         if (!remaining) s->guard_gain = want;
     } else s->guard_gain = want;
-    *l *= s->guard_gain; *r *= s->guard_gain;
+    *l *= s->guard_gain;
+    if (mono) *r = *l; else *r *= s->guard_gain;
     if (desired) { /* clamp only catches single-precision rounding */
         *l = fm_clampf(*l, -ceiling, ceiling);
-        *r = fm_clampf(*r, -ceiling, ceiling);
+        if (mono) *r = *l; else *r = fm_clampf(*r, -ceiling, ceiling);
     }
     return s->guard_gain;
+}
+
+
+/* Audio-owner controls stay fixed for a call. The entry gate requires exact
+ * settled coefficients, mono state symmetry, unity wet mix and no guard fade.
+ * Preserve each original arithmetic operation, including the unity wet blend. */
+static void strip_mono_steady(sound_strip_t *s, float *buffer, uint32_t count,
+                              sound_strip_meter_t *meter)
+{
+    const uint32_t active = s->flags & STRIP_STAGES;
+    const float hp = s->hp, lp = s->lp, boost = s->boost;
+    const float bound = fm_minf(s->ceiling, s->ceiling_target);
+    const float release = s->release, mix = s->mix;
+    float hz = s->hp_z[0], lz = s->lp_z[0], gain = s->gain;
+    uint32_t i;
+    for (i = 0; i < count; i++) {
+        float dry = buffer[i], x = dry, used_gain = 1.0f;
+        if (active & SOUND_STRIP_HIGHPASS) x -= lowpass(x, hp, &hz);
+        if (active & SOUND_STRIP_LOWPASS) x = lowpass(x, lp, &lz);
+        x *= boost;
+        if (active & SOUND_STRIP_LIMITER) {
+            float peak = fm_fabsf(x);
+            float want = peak > bound ? bound / peak : 1.0f;
+            if (want < gain) gain = want;
+            else {
+                float next = gain + (want - gain) * release;
+                gain = next == gain ? want : next;
+            }
+            x *= gain;
+            used_gain = gain;
+        }
+        x = dry + (x - dry) * mix;
+        if (active & SOUND_STRIP_LIMITER) {
+            float peak = fm_fabsf(x);
+            float want = peak > bound ? bound / peak : 1.0f;
+            s->guard_gain = want;
+            x *= want;
+            x = fm_clampf(x, -bound, bound);
+            used_gain = fm_minf(used_gain, want);
+        }
+        buffer[i] = x;
+        if (meter) {
+            meter->input_peak = fm_maxf(meter->input_peak, fm_fabsf(dry));
+            meter->output_peak = fm_maxf(meter->output_peak, fm_fabsf(x));
+            meter->gain_min = fm_minf(meter->gain_min, used_gain);
+        }
+    }
+    if (active & SOUND_STRIP_HIGHPASS) s->hp_z[0] = s->hp_z[1] = hz;
+    if (active & SOUND_STRIP_LOWPASS) s->lp_z[0] = s->lp_z[1] = lz;
+    s->gain = gain;
 }
 
 void sound_strip_process(sound_strip_t *s, float *l, float *r, uint32_t count,
@@ -142,32 +201,57 @@ void sound_strip_process(sound_strip_t *s, float *l, float *r, uint32_t count,
         if (meter) meter->output_peak = meter->input_peak;
         return; /* preserve every input bit, including signed zero */
     }
+    const int mono = l == r && strip_same_bits(s->hp_z[0], s->hp_z[1]) &&
+        strip_same_bits(s->lp_z[0], s->lp_z[1]);
+    /* Audio owner keeps targets fixed during this call. Once coefficients
+     * already equal target bits, every glide would return those same bits. */
+    const int settled = strip_same_bits(s->hp, s->hp_target) &&
+        strip_same_bits(s->lp, s->lp_target) && strip_same_bits(s->boost, s->boost_target) &&
+        strip_same_bits(s->ceiling, s->ceiling_target);
+    /* Audio-owner controls are fixed during this call. With enabled,matching
+     * stages and exact unity mix, every fade update/snapping step returns1. */
+    const uint32_t initial_desired = (s->flags >> 8) & SOUND_STRIP_FLAGS;
+    const int wet_steady = s->mix == 1.0f && (initial_desired & SOUND_STRIP_ENABLED) &&
+        (s->flags & STRIP_STAGES) == (initial_desired & STRIP_STAGES);
+    if (mono && settled && wet_steady && STRIP_GUARD_REMAINING(s) == 0) {
+        strip_mono_steady(s, l, count, meter);
+        return;
+    }
     for (i = 0; i < count; i++) {
         float dry_l = l[i], dry_r = r[i], x = dry_l, y = dry_r;
         uint32_t desired = (s->flags >> 8) & SOUND_STRIP_FLAGS;
         uint32_t active = s->flags & STRIP_STAGES;
         int stage_change = active != (desired & STRIP_STAGES);
-        int want_wet = (desired & SOUND_STRIP_ENABLED) && !stage_change;
         float bound, used_gain = 1.0f;
-        if (want_wet) s->mix = fm_minf(1.0f, s->mix + STRIP_SMOOTH);
-        else s->mix = fm_maxf(0.0f, s->mix - STRIP_SMOOTH);
-        if (s->mix < 1e-6f) s->mix = 0.0f;
-        if (s->mix > 1.0f - 1e-6f) s->mix = 1.0f;
+        if (!wet_steady) {
+            int want_wet = (desired & SOUND_STRIP_ENABLED) && !stage_change;
+            if (want_wet) s->mix = fm_minf(1.0f, s->mix + STRIP_SMOOTH);
+            else s->mix = fm_maxf(0.0f, s->mix - STRIP_SMOOTH);
+            if (s->mix < 1e-6f) s->mix = 0.0f;
+            if (s->mix > 1.0f - 1e-6f) s->mix = 1.0f;
+        }
         if (s->mix == 0.0f) {
             clear_audio(s);
             if (stage_change) s->flags = (s->flags & ~STRIP_STAGES) | (desired & STRIP_STAGES);
         } else {
-            s->hp = glide(s->hp, s->hp_target); s->lp = glide(s->lp, s->lp_target);
-            s->boost = glide(s->boost, s->boost_target); s->ceiling = glide(s->ceiling, s->ceiling_target);
+            if (!settled) {
+                s->hp = glide(s->hp, s->hp_target); s->lp = glide(s->lp, s->lp_target);
+                s->boost = glide(s->boost, s->boost_target); s->ceiling = glide(s->ceiling, s->ceiling_target);
+            }
             if (active & SOUND_STRIP_HIGHPASS) {
-                x -= lowpass(x, s->hp, &s->hp_z[0]); y -= lowpass(y, s->hp, &s->hp_z[1]);
+                x -= lowpass(x, s->hp, &s->hp_z[0]);
+                if (mono) { y = x; s->hp_z[1] = s->hp_z[0]; }
+                else y -= lowpass(y, s->hp, &s->hp_z[1]);
             }
             if (active & SOUND_STRIP_LOWPASS) {
-                x = lowpass(x, s->lp, &s->lp_z[0]); y = lowpass(y, s->lp, &s->lp_z[1]);
+                x = lowpass(x, s->lp, &s->lp_z[0]);
+                if (mono) { y = x; s->lp_z[1] = s->lp_z[0]; }
+                else y = lowpass(y, s->lp, &s->lp_z[1]);
             }
-            x *= s->boost; y *= s->boost;
+            x *= s->boost;
+            if (mono) y = x; else y *= s->boost;
             if (active & SOUND_STRIP_LIMITER) {
-                float peak = fm_maxf(fm_fabsf(x), fm_fabsf(y));
+                float peak = mono ? fm_fabsf(x) : fm_maxf(fm_fabsf(x), fm_fabsf(y));
                 float want;
                 bound = fm_minf(s->ceiling, s->ceiling_target);
                 want = peak > bound ? bound / peak : 1.0f;
@@ -178,18 +262,19 @@ void sound_strip_process(sound_strip_t *s, float *l, float *r, uint32_t count,
                      * Finish that converged release so silent-source activity is finite. */
                     s->gain = next == s->gain ? want : next;
                 }
-                x *= s->gain; y *= s->gain;
+                x *= s->gain;
+                if (mono) y = x; else y *= s->gain;
                 used_gain = s->gain;
             }
             x = dry_l + (x - dry_l) * s->mix;
-            y = dry_r + (y - dry_r) * s->mix;
+            if (mono) y = x; else y = dry_r + (y - dry_r) * s->mix;
         }
         /* Ceiling changes/enabling must bound the mixed output immediately. */
         if (STRIP_GUARD_REMAINING(s) || (desired & (SOUND_STRIP_ENABLED | SOUND_STRIP_LIMITER)) ==
                        (SOUND_STRIP_ENABLED | SOUND_STRIP_LIMITER)) {
             int guard_desired = (desired & (SOUND_STRIP_ENABLED | SOUND_STRIP_LIMITER)) ==
                        (SOUND_STRIP_ENABLED | SOUND_STRIP_LIMITER);
-            float final_gain = guard(s, &x, &y, fm_minf(s->ceiling, s->ceiling_target), guard_desired);
+            float final_gain = guard(s, &x, &y, fm_minf(s->ceiling, s->ceiling_target), guard_desired, mono);
             used_gain = fm_minf(used_gain, final_gain);
         }
         /* Once the fade reaches dry, do not rewrite either input sample. */
@@ -200,4 +285,34 @@ void sound_strip_process(sound_strip_t *s, float *l, float *r, uint32_t count,
             meter->gain_min = fm_minf(meter->gain_min, used_gain);
         }
     }
+}
+
+/* The caller has filled count mono samples with positive zero. Other state
+ * returns unhandled without mutation,including filter/transition tails. */
+int sound_strip_try_zero_mono(sound_strip_t *s, float *buffer, uint32_t count,
+                                   sound_strip_meter_t *meter)
+{
+    uint32_t desired = (s->flags >> 8) & SOUND_STRIP_FLAGS;
+    (void)buffer;
+    if (!(desired & (SOUND_STRIP_HIGHPASS | SOUND_STRIP_LOWPASS)) &&
+        (desired & SOUND_STRIP_ENABLED) && (s->flags & STRIP_STAGES) == (desired & STRIP_STAGES) &&
+        s->mix == 1.0f && STRIP_GUARD_REMAINING(s) == 0 && s->guard_gain == 1.0f &&
+        s->gain >= 0.0f && s->gain <= 1.0f && s->release >= 0.0f && s->release <= 1.0f &&
+        s->boost >= 1.0f && s->boost <= 16.0f && s->ceiling > 0.0f && s->ceiling <= 1.0f &&
+        strip_same_bits(s->hp, s->hp_target) && strip_same_bits(s->lp, s->lp_target) &&
+        strip_same_bits(s->boost, s->boost_target) && strip_same_bits(s->ceiling, s->ceiling_target)) {
+        if (meter) { meter->input_peak = meter->output_peak = 0.0f; meter->gain_min = 1.0f; }
+        if (count && (desired & SOUND_STRIP_LIMITER)) {
+            uint32_t i;
+            float next = s->gain + (1.0f - s->gain) * s->release;
+            s->gain = next == s->gain ? 1.0f : next;
+            if (meter) meter->gain_min = s->gain;
+            for (i = 1; i < count && s->gain < 1.0f; i++) {
+                next = s->gain + (1.0f - s->gain) * s->release;
+                s->gain = next == s->gain ? 1.0f : next;
+            }
+        }
+        return 1;
+    }
+    return 0;
 }

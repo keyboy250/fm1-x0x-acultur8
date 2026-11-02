@@ -28,6 +28,7 @@
 
 #define FM1_C1_CON (*(volatile uint32_t *)0x1EEE004u)
 #define FM1_C1_CLK (*(volatile uint32_t *)0x00010008u)
+#include "../src/worker_trace.h"
 #define FM1_C1_T4 (*(volatile uint32_t *)0x10804u)       /* TIMER4, 24 MHz */
 #define FM1_C1_SYNC() __asm__ volatile("csync" ::: "memory")
 
@@ -39,16 +40,24 @@ typedef struct {
     volatile uint32_t job, arg;                 /* core 0: job + 1 hands fn(arg) over */
     void (*volatile fn)(uint32_t);
     volatile uint32_t check;                    /* FM1_C1_CHECK of fn, arg and job */
-    uint32_t pad0[12];
+    volatile uint32_t dispatch_tick;
+    uint32_t pad0[11];
     volatile uint32_t alive, done;              /* core 1: started; the last job it finished */
     volatile uint32_t bad, bad_job, bad_done, bad_fn;   /* jobs it would not run: how many, the last one */
-    uint32_t pad1[10];
+    volatile uint32_t worker_start_tick,worker_end_tick,worker_stamp_job;
+    uint32_t pad1[7];
 } fm1_c1_mb_t;
+typedef char fm1_mailbox_stays_128[(sizeof(fm1_c1_mb_t)==128)?1:-1];
 static fm1_c1_mb_t fm1_c1_mb __attribute__((aligned(64)));
 volatile uint32_t fm1_c1_trace;                 /* breadcrumbs (fm1_cpu1.S, fm1_c1_main) */
 static uint8_t fm1_c1_on;                       /* started and answering: core 0 may hand it work */
 #define FM1_C1_CHECK(fn, arg, job) ((uint32_t)(uintptr_t)(fn) ^ (arg) ^ (job) * 0x9E3779B1u)
-static uint8_t fm1_c1_gave_up;                  /* 1 = it read a wrong job, 2 = it did not finish one */
+static uint8_t fm1_c1_gave_up;                  /* 1 = it read a wrong job, 2 = it did not finish one, 3 = barred */
+/* one core until power-off (after Melodee 1.0.2): set when core 1 is given up or core 0 crashes beside it;
+ * .noinit survives a warm reset, power-off clears it. Not static: see fm1_crash (fm1_irq.h) */
+#define FM1_C1_BAR_MAGIC 0x43314241u            /* "C1BA" */
+struct { uint32_t magic, barred; } fm1_c1_bar __attribute__((section(".noinit")));
+static void fm1_cpu1_bar(void) { fm1_c1_bar.magic = FM1_C1_BAR_MAGIC; fm1_c1_bar.barred = 1; }
 
 void fm1_c1_main(void);
 void __attribute__((section(".c1_text"), noreturn, used)) fm1_c1_main(void)
@@ -76,7 +85,10 @@ void __attribute__((section(".c1_text"), noreturn, used)) fm1_c1_main(void)
             void (*fn)(uint32_t) = fm1_c1_mb.fn;
             uint32_t arg = fm1_c1_mb.arg;
             if (fn && fm1_c1_mb.check == FM1_C1_CHECK(fn, arg, j)) {
+                fm1_c1_mb.worker_start_tick = FM1_C1_T4;
                 fn(arg);                        /* the work itself runs from the flash */
+                fm1_c1_mb.worker_end_tick = FM1_C1_T4;
+                fm1_c1_mb.worker_stamp_job = j;
                 done = j;
                 FM1_C1_SYNC();
                 fm1_c1_mb.done = j;
@@ -119,6 +131,10 @@ static int fm1_cpu1_start(void)
     if (fm1_c1_on)
         return 0;
     fm1_cpu1_hold();
+    if (fm1_c1_bar.magic == FM1_C1_BAR_MAGIC && fm1_c1_bar.barred == 1u) {
+        fm1_c1_gave_up = 3;
+        return -1;
+    }
     for (i = 0; i < FM1_C1_STACK_WORDS; i++)
         _c1_ustack[i] = FM1_C1_MARK;
     fm1_c1_mb.alive = 0;
@@ -150,12 +166,15 @@ static int fm1_cpu1_start(void)
 static inline int fm1_cpu1_run(void (*fn)(uint32_t), uint32_t arg)
 {
     uint32_t job;
-    if (!fm1_c1_on)
+    if (!fm1_c1_on) {
+        worker_trace_add(0,arg,0,0,0,0,0,WTR_UNAVAILABLE);
         return 0;
+    }
     job = fm1_c1_mb.job + 1u;
     fm1_c1_mb.fn = fn;
     fm1_c1_mb.arg = arg;
     fm1_c1_mb.check = FM1_C1_CHECK(fn, arg, job);
+    fm1_c1_mb.dispatch_tick = FM1_C1_T4;
     FM1_C1_SYNC();
     fm1_c1_mb.job = job;
     FM1_C1_SYNC();
@@ -171,14 +190,25 @@ static inline int fm1_cpu1_wait(void)
         FM1_C1_SYNC();
         if (fm1_c1_mb.bad) {                    /* a unit that cannot run it: one core */
             fm1_cpu1_hold();
+            fm1_cpu1_bar();
             fm1_c1_gave_up = 1;
+            worker_trace_add(fm1_c1_mb.job,fm1_c1_mb.arg,fm1_c1_mb.dispatch_tick,
+                0,0,t0,FM1_C1_T4,WTR_BAD_JOB);
             return -1;
         }
-        if (fm1_c1_mb.done == fm1_c1_mb.job)
+        if (fm1_c1_mb.done == fm1_c1_mb.job) {
+            uint32_t seen=FM1_C1_T4;
+            worker_trace_add(fm1_c1_mb.job,fm1_c1_mb.arg,fm1_c1_mb.dispatch_tick,
+                fm1_c1_mb.worker_start_tick,fm1_c1_mb.worker_end_tick,t0,seen,
+                fm1_c1_mb.worker_stamp_job==fm1_c1_mb.job?WTR_OK:WTR_MISMATCH);
             return 0;
+        }
         if (FM1_C1_T4 - t0 > 24000u * 8u) {     /* 8 ms: far past any stretch (or it faulted) */
             fm1_cpu1_hold();
+            fm1_cpu1_bar();
             fm1_c1_gave_up = 2;
+            worker_trace_add(fm1_c1_mb.job,fm1_c1_mb.arg,fm1_c1_mb.dispatch_tick,
+                0,0,t0,FM1_C1_T4,WTR_TIMEOUT);
             return -1;
         }
     }

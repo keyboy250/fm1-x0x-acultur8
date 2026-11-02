@@ -34,6 +34,17 @@ enum { FM1_IRQ_EXCEPTION = 1, FM1_IRQ_ALNK0 = 11, FM1_IRQ_SPI1 = 16, FM1_IRQ_UAR
 
 static inline uint32_t fm1_icfg(void) { uint32_t v; __asm__ volatile("%0 = icfg" : "=r"(v)); return v; }
 static inline void fm1_icfg_set(uint32_t v) { __asm__ volatile("icfg = %0" ::"r"(v) : "memory"); }
+/* Save/restore the exact ICFG global gate; preserve the caller's CLI state.
+ * All target register operations and serialization stay within the HAL. */
+static inline uint32_t fm1_irq_gate_save(void)
+{
+    uint32_t saved=fm1_icfg();
+    fm1_icfg_set(saved&~0x100u);
+    __asm__ volatile("csync" ::: "memory");
+    return saved;
+}
+static inline void fm1_irq_gate_restore(uint32_t saved) { fm1_icfg_set(saved); }
+
 static inline void fm1_irq_off(void) { __asm__ volatile("cli" ::: "memory"); }
 static inline void fm1_irq_on(void) { __asm__ volatile("csync\n\tsti" ::: "memory"); }
 

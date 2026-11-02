@@ -1,0 +1,23 @@
+Experimental prerelease: qualification boundaries
+
+Completed evidence includes the exact .60 source's 135 required checks, 39 host
+scenarios and six additional kick groups; focused diagnostic and target checks;
+unchanged static limits; byte-identical independent builds; bounded P11 playback and
+quiet interactive listening; native STORE/RECALL and normal restart persistence;
+and selected-starter listening followed by exact restoration of the previous sound.
+
+Open before an unconditional stable-release claim
+1. Physical core1 stack, whole-call-chain coverage and broader worst-case deadline
+   margins remain unmeasured. IRQ high-water is only the observed IRQ stack.
+2. The two final .59 counter events remain unexplained. They did not recur during the
+   controlled .60 idle, query, short-transition, 5-minute and 25-minute P11 checks.
+   Diagnostic capture capability does not establish that a root cause was fixed.
+3. The starter includes a control reference, but no automatic JSON importer. That
+   delivery boundary must remain clear in the release and installation notes.
+4. The selected channel is an experimental prerelease. Stable-release acceptance
+   remains open. Refer to the GitHub release page for publication status.
+
+The user selected review of an explicitly scoped prerelease. Open timing and stack
+work remains necessary before an unconditional stable-release claim. Do not relabel
+open work as passed.
+No further firmware installation is requested by this documentation review.

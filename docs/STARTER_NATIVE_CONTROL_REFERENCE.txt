@@ -1,0 +1,71 @@
+Favorite Slot 1 - native control reference
+
+Values decoded from the post-restart slot1 record, verified by the existing codec.
+Raw values are included so displayed envelope milliseconds are not confused with stored integers.
+C TONE display is approximate here; exact raw value and JSON remain authoritative.
+
+Select the808kick. Enter values through existing sound pages/SELECT parameter list.
+Do not treat the native68 payload as firmware or a complete project backup.
+After manualentry, readback should match native SHA256 26a58b68a273c58d419eea917e882a074b91aec9f18d3612bf9b0fc2536ac6ed.
+Choose an empty destination slot and use native KIT/STORE KICK confirmation to retain your own copy.
+
+Hybrid controls: index | control | stored raw | panel value
+ 0 | HYBRID                    |   1 | ON
+ 1 | WAVE                      |   0 | SINE
+ 2 | WAVE MIX                  | 100 | 100
+ 3 | WAVE HZ                   |  52 | 52
+ 4 | WAVE SHAPE / W DECAY      |  58 | 58
+ 5 | W SWEEP                   |  53 | 53
+ 6 | K FILTER                  |   0 | OFF
+ 7 | K CUTOFF                  |  80 | 80
+ 8 | V CUTOFF                  |  64 | 0 %
+ 9 | V PITCH                   |  64 | 0 %
+10 | V DECAY                   |  64 | 0 %
+11 | V BLEND                   |  64 | 0 %
+12 | LOW VEL                   |  65 | 65
+13 | MID VEL                   |  90 | 90
+14 | HIGH VEL                  | 110 | 110
+15 | J CHANCE                  |  10 | 10
+16 | J RANGE                   |  10 | 10
+17 | VEL TIERS                 |   0 | OFF
+18 | S ATTACK                  |   0 | 0
+19 | S PUNCH                   |  64 | 0 %
+20 | S P TIME                  |  25 | 25
+21 | S TAIL                    |   0 | 0
+22 | S LEVEL                   |  76 | 76
+23 | V PUNCH                   |  64 | 0 %
+24 | S ENV                     |   0 | OFF
+25 | S ATTACK                  |   0 | 0 ms
+26 | S HOLD                    |   0 | 0 ms
+27 | SYNTH ENV / S DECAY       |  15 | 358 ms
+28 | S CURVE                   |  79 | 23 %
+29 | W ENV                     |   1 | ON
+30 | W ATTACK                  |   2 | 2 ms
+31 | W HOLD                    |  24 | 94 ms
+32 | WAVE ENV / W DECAY        |   5 | 122 ms
+33 | W CURVE                   |  33 | -48 %
+34 | CLICK                     |  10 | 10
+35 | C TONE                    |  48 | ~2226 Hz
+36 | C LENGTH                  |  16 | 16 ms
+37 | CRUNCH                    |  60 | 60
+38 | SMOOTH                    |   0 | 0
+
+Original808BD parameters: index | name | stored raw | panel value
+ 0 | Level      |  49 | 49
+ 1 | Tone       |  29 | 29
+ 2 | Decay      |  29 | 29
+ 3 | Tune       |  40 | 40
+ 4 | Attack     |  20 | 20
+ 5 | Drive      |   0 | 0
+ 6 | Dist       |   0 | DIODE
+ 7 | Rev        |   9 | 9
+ 8 | Dly        |   0 | 0
+ 9 | Pan        |  64 | C
+
+Kick strip:
+Highpass 60 Hz; lowpass 1013 Hz; boost 5 dB.
+Limiter ceiling -7 dBFS; release 73 ms.
+Enable bits: strip=True, HP=True, LP=True, limiter=True.
+
+Shared kit levels, global FX, patterns and external sample data are not part of this preset.
+No recorded-audio preview or public import acceptance is claimed by this reference.

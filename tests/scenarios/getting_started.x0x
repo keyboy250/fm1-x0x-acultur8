@@ -1,6 +1,11 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # The manual's Getting started, step by step: each step as the manual words it, checked.
 wait 300
-# 1. X0X opens on the 909, every part empty. A kick: black key 1 (heard), white keys 1, 5, 9, 13
+# 1. The tour enters the 909 editor from HOME, every part empty. A kick: black key 1 (heard), white keys 1, 5, 9, 13
 expect view 1
 expect part 0
 peakreset

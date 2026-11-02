@@ -1,5 +1,14 @@
 # Felucca editor protocol (SysEx over USB-MIDI)
 
+> X0X compatibility: this is inherited Felucca documentation. The X0X device
+> implements INFO, PING and sample-slot operations, not the generic parameter,
+> preset or track controls below. Extended Edition builds with command48 add
+> a read-only strip query; see [the X0X protocol](../docs/ACULTUR8_ENGINE_PROTOCOL.md#read-only-usb-midi-strip-query-x0x-command48)
+> and `tools/fm1_strip_read.py`.
+> The separate pattern-query candidate adds read-only RAM pattern pages on command49;
+> see [the candidate protocol](../docs/PATTERN_QUERY_PROTOCOL.md) and
+> `tools/fm1_pattern_read.py`. It does not use stopped project export or save.
+
 The firmware side is `firmware/src/editor.c`. Commands 16-26 (user presets and live sync) form protocol v2; commands 27-30 (tracks) form protocol v3; commands 31-32 (any track's parameters) form protocol v4.
 
 **v3 (four tracks):** the device has four tracks: 1..3 are synth parts, 4 is the drum track. One

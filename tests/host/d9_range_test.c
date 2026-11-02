@@ -1,7 +1,20 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #define _POSIX_C_SOURCE 200809L
 #ifdef D9_ORACLE_REFERENCE
+/* The legacy oracle predates the observer-state owner in current drum909.c.
+ * Supply that diagnostic-only storage for the current engine linked around it;
+ * do not modify the immutable reference renderer or its pinned hash. */
+#include "../../firmware/src/dsp/d9_workload_diag.h"
+d9_workload_state_t d9_workload_state;
 #include D9_REFERENCE_C
+/* Test-only compatibility for the immutable pre-batch oracle. The reference
+ * still renders through its original path; its pinned source/hash is untouched. */
+void drum909_render_st_scratch(drum909_t *d, float *l, float *r, float *rev,
+                               float *dly, int n, float *scratch)
+{
+    (void)scratch;
+    drum909_render_st(d, l, r, rev, dly, n);
+}
 #else
 #include "../../firmware/src/dsp/drum909.c"
 #endif
@@ -11,6 +24,20 @@
 #include <assert.h>
 static uint32_t bits(float x){uint32_t b;memcpy(&b,&x,4);return b;}
 static uint64_t hashbytes(const void *p,size_t n){const uint8_t *b=p;uint64_t h=14695981039346656037ull;while(n--)h=(h^*b++)*1099511628211ull;return h;}
+/* Hash logical PCM, independent of byte-coded versus decoded mu-law storage. */
+static uint64_t sample_hash(const void *buf,unsigned len){
+ uint64_t h=14695981039346656037ull;
+ for(unsigned i=0;i<len;i++){
+#ifdef D9_ORACLE_REFERENCE
+  int16_t sample=((const int16_t *)buf)[i];
+#else
+  int16_t sample=d9_sample_read(buf,i);
+#endif
+  const uint8_t *b=(const uint8_t *)&sample;
+  for(unsigned n=0;n<sizeof sample;n++)h=(h^b[n])*1099511628211ull;
+ }
+ return h;
+}
 
 static void long_tail_cases(const char *path){
  char name[512];assert(snprintf(name,sizeof name,"%s.tails",path)<(int)sizeof name);FILE *f=fopen(name,"wb");assert(f);
@@ -42,7 +69,7 @@ int main(int argc,char **argv){
   if(p->names){printf(" labels");for(int n=0;n<=p->max;n++)printf(" [%s]",p->names[n]);}else printf(" null-labels");putchar('\n');
  }
  memset(&d,0,sizeof d);drum909_init(&d);
- for(int n=0;n<4;n++)printf("sample %d %u %016llx\n",n,d.smp[n].len,(unsigned long long)hashbytes(d.smp[n].buf,d.smp[n].len*sizeof(int16_t)));
+ for(int n=0;n<4;n++)printf("sample %d %u %016llx\n",n,d.smp[n].len,(unsigned long long)sample_hash(d.smp[n].buf,d.smp[n].len));
  for(int v=0;v<=DR_KIT;v++){
   assert(!drum909_param(v,-1)&&!drum909_param(v,drum909_nparams(v)));
   for(int i=0;i<drum909_nparams(v);i++){

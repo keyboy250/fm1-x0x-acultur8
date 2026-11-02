@@ -20,7 +20,7 @@ const objects=p=>Object.fromEntries(Array.from({length:p.ex.web_nobj()},(_,i)=>{
   const n=p.ex.web_store_len(i);return [i,n<0?null:new Uint8Array(p.mem.buffer,p.ex.web_store(i),n).slice()];}).filter(([,v])=>v));
 const play=async(p)=>{await p.onMessage({type:'buttons',mask:1<<10});render(p,14);await p.onMessage({type:'buttons',mask:0});render(p,14);};
 const p=await open();
-assert.equal(snap(p,0).values[0],1535);assert.equal(snap(p,0).values[5],5);
+assert.equal(snap(p,0).values[0],3583);assert.equal(snap(p,0).values[5],5);
 assert.deepEqual(snap(p,5).values.slice(3,6),[255,255,255]);
 // Fixture produced by the native test using the independent schema-1 raw length/header.
 const fixture=fs.readFileSync(process.argv[3]??'build/host/arrangement_schema1_store.bin');
@@ -47,7 +47,7 @@ assert.equal(frame.variant.arrangement.values[2],191);
 assert.deepEqual(frame.variant.block.values,[31,30,29,28,27,31,8,0]);
 assert.equal(frame.variant.block.revision,selected.revision);
 const before=snap(p,5),savedBefore=objects(p);
-for(const args of [[8,192,0,0,0],[8,0,64,0,0],[8,0,0,32,0],[8,0,0,0,2**25],
+for(const args of [[8,192,0,0,0],[8,0,0,0,-1],[8,0,0,32,0],[8,0,0,0,2**25],
   [9,0,0,1,12],[9,0,0,2,9],[10,0,0,0,193],[11,192,0,0,0],[12,192,0,0,0]]) {
   assert.equal((await command(p,...args)).result,-1);assert.deepEqual(snap(p,5),before);assert.deepEqual(objects(p),savedBefore);
 }

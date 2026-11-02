@@ -134,7 +134,7 @@ static int check(const char *what, int ok) { printf("%-56s %s\n", what, ok ? "ok
 int main(int argc, char **argv)
 {
     size_t olen;
-    uint8_t *old, head[0x4000];
+    uint8_t *old, head[0x4000], panel_guard[0x2000];
     uint32_t ofo, nfo;
     int bad = 0, rc;
     if (argc < 3) { printf("usage: ldr_test OLD.fwsc NEW.fwsc\n"); return 2; }
@@ -146,6 +146,8 @@ int main(int argc, char **argv)
     memset(nor, 0xFF, sizeof nor);
     memcpy(nor, old + ofo, 0x93000);
     memcpy(head, nor, sizeof head);
+    for (unsigned i=0;i<sizeof panel_guard;i++) panel_guard[i]=(uint8_t)(i*37u+19u);
+    memcpy(nor+0xDC000,panel_guard,sizeof panel_guard);
     {
         uint8_t r[112] = {0};
         r[2] = 0x0D; r[3] = 0x5A; r[4] = 0x01; r[5] = 0x5A; r[6] = 0x41; r[7] = 0x54;
@@ -160,10 +162,12 @@ int main(int argc, char **argv)
     bad += check("finish asked (0xF0000000)", f0_asked >= 1);
     bad += check("update record cleared (RAM + flash)", record_cleared && nor[0xE4F06] == 0xFF);
     bad += check("no write outside the allowed windows", bad_range == 0);
+    bad += check("both panel sectors byte-preserved", !memcmp(nor+0xDC000,panel_guard,sizeof panel_guard));
     /* same package again: nothing to erase */
     erases = 0; requests = 0;
     rc = ldr_session();
     bad += check("re-run with the same package erases nothing", rc == 0 && erases == 0);
+    bad += check("both panel sectors preserved after same-package run", !memcmp(nor+0xDC000,panel_guard,sizeof panel_guard));
     /* a package for another chip key is refused before any erase */
     {
         uint8_t save = logical[nfo + 0x4000 + 5];

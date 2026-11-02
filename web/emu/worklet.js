@@ -2,7 +2,10 @@
 // X0X in an AudioWorklet: x0x.wasm is the whole FM-1 app (web/emu/x0x_web.c). Each render
 // quantum asks it for 128 frames, which runs the device's clock forward; between quanta the page's
 // input goes in and, about 30 times a second, the screen, the lights and any saved objects go out.
+// The screen reader (fm1-reader's protocol): the page's reader SysEx goes in through web_sysex, and
+// what the device says (whole F0..F7 frames from web_said_buf) goes out as soon as it is said.
 
+import { ClockWorkletBridge } from './clock-worklet.mjs';
 import { MidiWorkletBridge } from './midi-worklet.mjs';
 import { CcInputWorkletBridge } from './cc-input-worklet.mjs';
 import { SliceWorkletControl, validateMarked } from './slice-worklet.mjs';
@@ -28,14 +31,16 @@ class X0X extends AudioWorkletProcessor {
     this.loadGeneration = 0;
     this.legacyMaster = 2800; // older binaries lack remote MASTER/readback
     this.loading = false;
-    this.midi = new MidiWorkletBridge(() => this.ex, m => this.port.postMessage(m));
+    this.midi = new MidiWorkletBridge(() => this.loading ? null : this.ex, m => this.port.postMessage(m));
     this.ccInput = new CcInputWorkletBridge(() => this.loading ? null : this.ex, m => this.port.postMessage(m));
+    this.performanceClock=new ClockWorkletBridge(()=>this.loading?null:this.ex,m=>this.port.postMessage(m),()=>this.mem);
     this.sliceControl = new SliceWorkletControl(this,m=>this.port.postMessage(m));
     this.port.onmessage = (e) => this.onMessage(e.data);
   }
 
   async onMessage(m) {
     if (!m || typeof m !== 'object') return;
+    if (this.performanceClock.message(m)) return;
     if (this.midi.message(m)) return;
     if (this.ccInput.message(m)) return;
     if (this.sliceControl.message(m)) return;
@@ -64,6 +69,7 @@ class X0X extends AudioWorkletProcessor {
           Object.assign(reply, {request:view.getUint32(0,true), revision:view.getUint32(4,true),
             ticket:view.getUint32(8,true), result:view.getInt32(12,true)});
           if (reply.result >= 0) {
+            if (m.op === 20) this.sentWrites = -1; // Replay bank for durable browser acknowledgement, including native no-op saves.
             if (m.op === 3) this.editOwner = owner;
             else if ([4,5,6].includes(m.op)) this.editOwner = null;
           }
@@ -90,6 +96,11 @@ class X0X extends AudioWorkletProcessor {
       return;
     }
     if (m.type === "load") {
+      // Keep the original MIDI producer alive until its selected route and
+      // every posted/latched/queued prefix have completed cleanup.
+      if(this.midi.ready||this.midi.flight||this.midi.latched||
+         (this.ex?.web_midi_pending&&this.ex.web_midi_pending()))
+        throw new Error('Disconnect the MIDI output and complete cleanup before replacing the engine.');
       const generation = ++this.loadGeneration;
       const requestedMaster=this.ex?.web_master_state ? this.ex.web_master_state()&8191 : this.ex ? this.legacyMaster : m.master ?? 2800;
       const masterQ12=Number.isInteger(requestedMaster)&&requestedMaster>=0&&requestedMaster<=4096?requestedMaster:2800;
@@ -127,6 +138,7 @@ class X0X extends AudioWorkletProcessor {
         this.legacyMaster=masterQ12;
         ex.web_boot();
         this.ex = ex;this.sliceControl.reset();
+        this.midi=new MidiWorkletBridge(()=>this.loading?null:this.ex,m=>this.port.postMessage(m));
         this.mem = memory;
         this.sentWrites = writes;
         this.editOwner = null;
@@ -186,6 +198,12 @@ class X0X extends AudioWorkletProcessor {
       this.ex.web_sync_off();this.ex.web_marked_stop();this.markedOn=false;this.syncOn=false;
     } else if (m.type === "marked-level") {
       this.markedGain=Math.max(0,Math.min(1,m.gain));this.markedLayer=!!m.layer;
+    } else if (m.type === "sysex") {
+               // a reader's SysEx, the bytes between F0 and F7
+      if(!this.ex.web_sysex_in || !this.ex.web_sysex || !Array.isArray(m.bytes) || m.bytes.length>64 || !m.bytes.every(v=>Number.isInteger(v)&&v>=0&&v<128))return;
+      const b = m.bytes.slice();
+      new Uint8Array(this.mem.buffer, this.ex.web_sysex_in(), b.length).set(b);
+      this.ex.web_sysex(b.length);
     } else if (m.type === "slot") {                // a user break slot: {k, name, zones: [{pcm, rate}]}
       const ex = this.ex, name = new Uint8Array(this.mem.buffer, ex.web_slot_namebuf(), 9);
       name.fill(0);
@@ -264,6 +282,12 @@ class X0X extends AudioWorkletProcessor {
     this.midi.tick();
     this.busy += clock() - t0;
     this.frames += n;
+    const said = this.ex.web_said_len ? this.ex.web_said_len() : 0;
+    if (said) {                                       // what the device said for the reader
+      const bytes = new Uint8Array(this.mem.buffer, this.ex.web_said_buf(), said).slice();
+      this.ex.web_said_clear();
+      this.port.postMessage({ type: "said", bytes }, [bytes.buffer]);
+    }
     out[0].set(new Float32Array(this.mem.buffer, this.ex.web_out_l(), n));
     if (out[1]) out[1].set(new Float32Array(this.mem.buffer, this.ex.web_out_r(), n));
     if(this.markedOn||this.syncOn){

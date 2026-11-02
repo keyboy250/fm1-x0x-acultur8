@@ -101,4 +101,4 @@ static void glide(void){
     engine_usb_full(0);for(int i=0;i<512;i++)block[i]=tap[i];engine_volume(block,256);assert(!memcmp(block,tap,sizeof block));
     puts("MASTER unchanged USB-full tap and linked downstream gain glide, no new sample processing PASS");
 }
-int main(void){for(int i=0;i<OBJ_NOBJ;i++)store_len[i]=-1;boot();render();stationary_pickup();pickup();canonical();glide();assert(sizeof(master_control_t)==4);puts("MASTER prototype native PASS; packed state4B replaces4B, no physical proof");return 0;}
+int main(void){for(int i=0;i<OBJ_NOBJ;i++)store_prev_len[i]=store_len[i]=-1;boot();render();stationary_pickup();pickup();canonical();glide();assert(sizeof(master_control_t)==4);puts("MASTER prototype native PASS; packed state4B replaces4B, no physical proof");return 0;}

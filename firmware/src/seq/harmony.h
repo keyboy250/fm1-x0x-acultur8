@@ -21,6 +21,10 @@ typedef struct {
 } harmony_triad_t;
 typedef enum { HARMONY_ROOT_ONLY, HARMONY_CHORD_TONES } harmony_note_mode_t;
 
+/* Transpose in semitones, then choose the nearest scale note within bounds.
+ * Ties choose lower. A range containing no legal note fails without output. */
+int harmony_scale_note(int key,int mode,int source,int transpose,int low,int high,uint8_t *out);
+
 /* Return 1 on success, 0 on invalid input or no complete voicing in the inclusive
  * MIDI range. Output remains untouched on failure. Closest root to root_hint;
  * equal-distance ties choose the lower voicing. All note inputs must be 0..127. */

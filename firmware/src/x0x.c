@@ -127,10 +127,20 @@ static void ota_commit(const uint8_t *parm)
 
 #include "app/slots.c"
 #include "app/x0x.h"
+#define ANN_NAME "X0X " X0X_VERSION
+#include "ann_words.h"            /* the link to X0X's words file (tools/gen_words.py, from firmware/words.tsv) */
+#include "announce.c"             /* the screen as text for a screen reader (web/reader) */
+static int ann_wire_send(const uint8_t *p, uint32_t n)   /* never waits: no room (nobody reading), not sent */
+{
+    if (!usb.config || usb.suspended || SXQ - (so_w - so_r) < (n + 2u) / 3u)
+        return -1;
+    return ota_wire_send(p, n);
+}
 #include "app/panel.c"
 #include "app/plat_fm1.c"
 #include "app/project.c"
 #include "app/ui.c"
 #include "app/cc.c"
 #include "app/editor.c"
+#include "backup.c"               /* the project to a file and back, over USB (hooks: main_fm1.c) */
 #include "app/main_fm1.c"

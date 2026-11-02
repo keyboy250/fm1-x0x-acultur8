@@ -9,7 +9,7 @@
 static uint16_t number(int channel,int controller){return (uint16_t)((channel-1)*88+(controller<32?controller:controller-32));}
 static uint32_t packet(int channel,int controller,int value){return 11u|((uint32_t)(175+channel)<<8)|((uint32_t)controller<<16)|((uint32_t)value<<24);}
 static void fresh(void){
-    for(int i=0;i<OBJ_NOBJ;i++)store_len[i]=-1;
+    for(int i=0;i<OBJ_NOBJ;i++)store_prev_len[i]=store_len[i]=-1;
     memset(stored_known,0,sizeof stored_known);project_discard_rejected();
     mi_w=mi_r=mi_ready=0;mi_claimed=0xffffffffu;memset(&cc_stats,0,sizeof cc_stats);for(int s=0;s<CC_SOURCES;s++)cc_reset_source(s);
     boot();int32_t block[512];engine_render(block,256);ui.dirty=0;
@@ -30,13 +30,28 @@ static void decoder_equivalence(void){
         /* Only these formerly unsupported rows gain typed history dispatch;
          * preserve the frozen map/holes and every other native descriptor. */
         if(n>=1132u&&n<=1134u){assert(!present);present=1;expected=n==1132u?10u+(15u<<14):25u+((n-1133u)<<14);}
+        if(n>=1135u&&n<=1140u){assert(!present);present=1;expected=26u+((n-1135u)<<14);}
+        /* Independently enumerate only the13 new generation bindings. Every
+         * other frozen hole and every old binding must remain identical. */
+        static const uint16_t added_number[]={1203,1204,1205,1223,1224,1227,1228,1229,1230,1231,1232,1233,1234};
+        static const uint8_t added_field[]={0,1,12,2,3,4,5,6,7,8,9,10,11};
+        for(unsigned i=0;i<13;i++)if(n==added_number[i]){assert(!present);present=1;expected=27u+((uint32_t)added_field[i]<<14);}
+        if(n>=1206u&&n<=1210u){assert(!present);present=1;expected=27u+((13u+n-1206u)<<14);}
+        if(n>=1211u&&n<=1219u){assert(!present);present=1;expected=27u+((18u+n-1211u)<<14);}
+        if(n==1235u||n==1236u){assert(!present);present=1;expected=27u+((27u+n-1235u)<<14);}
+        if(n>=1220u&&n<=1222u){assert(!present);present=1;expected=27u+((29u+n-1220u)<<14);}
+        if(n>=1237u&&n<=1240u){assert(!present);present=1;expected=27u+(1u<<5)+((n-1237u)<<14);}
+        if(n>=1241u&&n<=1246u){assert(!present);present=1;expected=27u+(2u<<5)+((n-1241u)<<14);}
+        if(n>=1250u&&n<=1288u){assert(!present);present=1;unsigned f=n-1250u;expected=28u+((f%32u)<<5)+((f/32u)<<10);}
+        if(n>=1290u&&n<=1295u){assert(!present);present=1;expected=30u+((n-1290u)<<14);}
+        if(n==1296u){assert(!present);present=1;expected=29u;}
         if(n==1117u || n==1118u){assert(present && expected==0);expected=24u+((n-1117u)<<14);}
         assert(rc==(present?CC_APPLIED:CC_UNSUPPORTED));
         assert(word==expected);if(original_present)at++;
     }
-    assert(at==CC_REFERENCE_COUNT && CC_BINDINGS_COUNT==CC_REFERENCE_COUNT+3);
+    assert(at==CC_REFERENCE_COUNT && CC_BINDINGS_COUNT==CC_REFERENCE_COUNT+97);
     assert(sizeof cc_binding_runs==CC_RUN_COUNT*8u);
-    puts("CC range decoder: frozen676 addresses/all65536 holes; 1117/1118 history plus three explicit action-protocol holes1132..1134; all original bindings preserved PASS");
+    puts("CC range decoder: frozen676 addresses/all65536 holes; 1117/1118 history plus three explicit action-protocol holes1132..1134 and six versioned rate fields1135..1140; all original bindings preserved PASS");
 }
 int main(void){decoder_equivalence();
     fresh();seq_start(&seq);render();assert(seq.playing);

@@ -5,7 +5,8 @@
  * the lanes (~30 KB, mostly empty steps) are one stream packed with lz.c across the four objects
  * OBJ_PAT0, OBJ_PAT1, OBJ_SONG, OBJ_MOTION (PROJ_STREAM). The first carries the raw length and a
  * CRC of the raw bytes, so a stream torn by a power cut between two objects, or one that does not
- * unpack, loads as the defaults rather than as garbage. A save packs once to measure (nothing is
+ * unpack, is never loaded as garbage: the objects' previous copies (storage.c keeps two) are tried
+ * instead, which give the save before; only when no mix of copies checks out, the defaults. A save packs once to measure (nothing is
  * written if it would not fit: "MEMORY FULL") and once to write; an object whose bytes did not
  * change is not written again.
  *
@@ -23,14 +24,18 @@ project_t proj;
 #define PROJ_VARIANT_STREAM 3u
 #define PROJ_ARRANGEMENT_STREAM 4u
 #define PROJ_LANE_STREAM 5u
+#define PROJ_RATE_STREAM 6u
+#define PROJ_KICK_STREAM 7u
+#define LANE_FORMAT(f) ((f)==PROJ_LANE_STREAM || (f)==PROJ_RATE_STREAM || (f)==PROJ_KICK_STREAM)
 #define LANE_RAW_OFF __builtin_offsetof(project_t,sound)
-#define LANE_RAW_LEN (sizeof(project_t)-LANE_RAW_OFF)
+#define LANE_RAW_LEN (__builtin_offsetof(project_t,kick)-LANE_RAW_OFF)
+#define KICK_RAW_LEN (sizeof(project_t)-LANE_RAW_OFF)
 static const uint8_t STREAM_OBJ[] = {OBJ_PAT0, OBJ_PAT1, OBJ_SONG, OBJ_MOTION};
 #define NSTREAM ((int)sizeof STREAM_OBJ)
 #define STREAM_HDR 16u                  /* in the first object: format, raw length, raw CRC, packed length */
 #define STREAM_CAP (NSTREAM * (PLAT_STORE_MAX - 4u) - (STREAM_HDR - 4u))
 #define RAW_OFF __builtin_offsetof(project_t, pat)
-#define RAW_LEN (sizeof(project_t) - RAW_OFF)   /* the patterns and the arrangement, contiguous */
+#define RAW_LEN (__builtin_offsetof(project_t,kick) - RAW_OFF)   /* the patterns and the arrangement, contiguous */
 #define LEGACY_RAW_LEN (__builtin_offsetof(project_t, variant) - RAW_OFF)
 #define SCHEMA1_RAW_LEN (LEGACY_RAW_LEN + 208u)
 typedef char raw_fits[(RAW_LEN < 0xFFFFu) ? 1 : -1];
@@ -40,6 +45,9 @@ typedef char legacy_prefix_fixed[(__builtin_offsetof(project_t, variant) == 3094
 static void arrange_defaults(void);
 static uint32_t packed_len;             /* the last save's (or load's) packed stream, bytes */
 static uint8_t rejected_save;
+static int kick_velocity_valid(const lane_t *L,const kick_settings_t *k){for(int i=0;i<NLANE;i++)if(L[i].used&&L[i].t==MOT_KICK_VELOCITY){if(!k->active||L[i].part!=1||L[i].v||L[i].i||L[i].rsv||L[i].pat>=NPAT)return 0;for(int j=0;j<NSTEPS;j++)if(L[i].val[j]!=MOT_NONE&&(L[i].val[j]<1||L[i].val[j]>3))return 0;for(int j=0;j<i;j++)if(L[j].used&&L[j].t==MOT_KICK_VELOCITY&&L[j].pat==L[i].pat)return 0;}return 1;}
+static int phase_saved_valid(const variant_settings_t *v,const song_t *song)
+{return v->schema!=6u || (song->rsv[1]&128u)!=0;}
 static int arrangement_song_valid(const song_t *song)
 {
     int b, p;
@@ -68,6 +76,7 @@ void project_defaults_into(project_t *destination)
     destination->set.snd_rev = PROJ_SND_REV;
     engine_sound_defaults(&destination->sound);
     variant_defaults(&destination->variant);
+    kick_settings_defaults(&destination->kick);
     memset(&destination->arr,0,sizeof destination->arr);
     /* the 303 lines start empty, like the drums: OCT+ on TB-3PO (or keyboard mode) writes one */
     for (i = 0; i < NPAT; i++)
@@ -77,6 +86,9 @@ void project_defaults_into(project_t *destination)
 void project_defaults(void)
 {
     cc_actions_reset();
+    /* A reserved project swap retains explicit Start/Continue received during
+     * its hold. Unreserved defaults retire the old session and run intent. */
+    if(!seq.transport_hold)seq_transport_retire(&seq);
     engine_notes_clear();
     project_defaults_into(&proj);
 }
@@ -99,8 +111,8 @@ static uint8_t io_buf[PLAT_STORE_MAX] __attribute__((aligned(4)));
 
 /* what each object last held on the flash (a hash of its payload), so a save writes only the
  * objects that changed: an autosave usually erases one or two sectors, not six */
-static uint32_t stored_hash[OBJ_NOBJ];
-static uint8_t stored_known[OBJ_NOBJ];
+static uint32_t stored_hash[OBJ_MOTION+1];
+static uint8_t stored_known[OBJ_MOTION+1];
 static POLY_COLD uint32_t hash_of(const uint8_t *p, uint32_t n)        /* FNV-1a */
 {
     uint32_t h = 2166136261u;
@@ -266,8 +278,14 @@ static POLY_COLD int save_stream(uint32_t raw_len, uint32_t raw_off,uint32_t for
 /* the reader: the objects in turn, from io_buf */
 typedef struct {
     int k, n;
-    uint32_t pos, left, format;
+    uint32_t pos, left, format, prev;
 } st_in_t;
+
+static POLY_COLD int stream_obj_load(int k, uint32_t prev)      /* object k of the stream into io_buf, its copy per prev */
+{
+    return (prev >> k) & 1u ? plat_store_load_prev(STREAM_OBJ[k], io_buf, sizeof io_buf)
+                            : plat_store_load(STREAM_OBJ[k], io_buf, sizeof io_buf);
+}
 
 static POLY_COLD int st_get(void *ctx)
 {
@@ -277,10 +295,10 @@ static POLY_COLD int st_get(void *ctx)
     while (s->pos >= (uint32_t)s->n) {
         if (++s->k >= NSTREAM)
             return -1;
-        s->n = plat_store_load(STREAM_OBJ[s->k], io_buf, sizeof io_buf);
+        s->n = stream_obj_load(s->k, s->prev);
         if (s->n < 4 || get32(io_buf) != s->format)
             return -1;
-        stored_known[STREAM_OBJ[s->k]] = 1;
+        stored_known[STREAM_OBJ[s->k]] = !((s->prev >> s->k) & 1u);   /* a previous copy: written again next save */
         stored_hash[STREAM_OBJ[s->k]] = hash_of(io_buf, (uint32_t)s->n);
         s->pos = 4u;
     }
@@ -289,19 +307,45 @@ static POLY_COLD int st_get(void *ctx)
 }
 
 /* Decode into borrowed staging memory: live project bytes are untouched until fully validated. */
-static POLY_COLD int load_stream(int n, uint32_t format, uint8_t *raw, uint32_t raw_len)
+static POLY_COLD int load_stream(int n, uint32_t format, uint8_t *raw, uint32_t raw_len, uint32_t prev)
 {
     uint32_t crc = get32(io_buf + 8), plen = get32(io_buf + 12);
-    st_in_t s = {0, n, STREAM_HDR, plen, format};
+    st_in_t s = {0, n, STREAM_HDR, plen, format, prev};
     lz_src_t src = {st_get, &s};
     if (n < (int)STREAM_HDR || get32(io_buf + 4) != raw_len || !plen || plen > STREAM_CAP)
         return -1;
-    stored_known[STREAM_OBJ[0]] = 1;
+    stored_known[STREAM_OBJ[0]] = !(prev & 1u);
     stored_hash[STREAM_OBJ[0]] = hash_of(io_buf, (uint32_t)n);
     if (lz_decompress(&src, raw, raw_len) || s.left || crc32_of(raw, raw_len) != crc)
         return -1;
     packed_len = plen;
     return 0;
+}
+
+/* Recover only streams of the recognized format into scratch; live bytes stay untouched.
+ * For lane formats the sound object must match the CRC-protected sound in the stream. */
+static POLY_COLD int load_stream_recover(uint32_t format, uint8_t *raw, uint32_t raw_len)
+{
+    uint32_t prev, count;
+    int n;
+    for (count=0; count<=NSTREAM; count++) for(prev=0;prev<(1u<<NSTREAM);prev++) {
+        if((uint32_t)__builtin_popcount(prev)!=count)continue;
+        n=stream_obj_load(0,prev);
+        if(n<4 || get32(io_buf)!=format || load_stream(n,format,raw,raw_len,prev))continue;
+        if(LANE_FORMAT(format)) {
+            uint32_t copy,k; int matched=0;
+            for(copy=0;copy<2 && !matched;copy++) {
+                n=copy ? plat_store_load_prev(OBJ_SOUND,io_buf,sizeof io_buf) : plat_store_load(OBJ_SOUND,io_buf,sizeof io_buf);
+                if(n!=(int)sizeof(sound_t)+4 || get32(io_buf)!=PROJ_FORMAT)continue;
+                for(k=0;k<sizeof(sound_t) && io_buf[k+4]==raw[k];k++);
+                if(k==sizeof(sound_t)){matched=1;if(copy)project_flash_changed();}
+            }
+            if(!matched)continue;
+        }
+        if(prev)project_flash_changed();
+        return 0;
+    }
+    return -1;
 }
 
 /* ---- format 1: 16 patterns of 32 steps, 32-step lanes ---------------------------------------- */
@@ -465,6 +509,12 @@ static void patterns_defaults(void)
         pattern_init(&proj.pat[i], 0x3B0u + (uint32_t)i * 977u, 0x5A1u + (uint32_t)i * 613u);
 }
 
+void project_flash_changed(void)
+{
+    memset(stored_known,0,sizeof stored_known);
+    checkpoint_verified=0;
+}
+
 /* Packed streams are validated in synchronized canvas scratch before changing the live project. */
 static POLY_COLD int project_load_impl(void)
 {
@@ -474,6 +524,7 @@ static POLY_COLD int project_load_impl(void)
     settings_t set;
     if (!engine_queue_space()) return -9;
     n = plat_store_load(OBJ_PAT0, io_buf, sizeof io_buf);
+    if(n<0)n=plat_store_load_prev(OBJ_PAT0,io_buf,sizeof io_buf);
     if (n >= 4) format = get32(io_buf);
     if (n < 0) {
         /* A lost first sector must not turn a remaining packed save into fresh defaults. */
@@ -486,32 +537,32 @@ static POLY_COLD int project_load_impl(void)
         }
     }
     if (n >= 0 && (n < 4 || (format != PROJ_FORMAT && format != PROJ_STREAM &&
-        format != PROJ_VARIANT_STREAM && format != PROJ_ARRANGEMENT_STREAM && format!=PROJ_LANE_STREAM))) {
+        format != PROJ_VARIANT_STREAM && format != PROJ_ARRANGEMENT_STREAM && !LANE_FORMAT(format)))) {
         rejected_save = 1;
         return -8;
     }
-    if (format == PROJ_STREAM || format == PROJ_VARIANT_STREAM || format == PROJ_ARRANGEMENT_STREAM || format==PROJ_LANE_STREAM) {
-        raw_len = format == PROJ_STREAM ? LEGACY_RAW_LEN : format == PROJ_VARIANT_STREAM ? SCHEMA1_RAW_LEN : format==PROJ_LANE_STREAM?LANE_RAW_LEN:RAW_LEN;
-        if(format==PROJ_LANE_STREAM)raw_off=LANE_RAW_OFF;
+    if (format == PROJ_STREAM || format == PROJ_VARIANT_STREAM || format == PROJ_ARRANGEMENT_STREAM || LANE_FORMAT(format)) {
+        raw_len = format == PROJ_STREAM ? LEGACY_RAW_LEN : format == PROJ_VARIANT_STREAM ? SCHEMA1_RAW_LEN : format==PROJ_KICK_STREAM?KICK_RAW_LEN:LANE_FORMAT(format)?LANE_RAW_LEN:RAW_LEN;
+        if(LANE_FORMAT(format))raw_off=LANE_RAW_OFF;
         stage = ui_project_stage(raw_len);
         if (!stage) return -9;
-        if (load_stream(n, format, stage, raw_len) ||
+        if (load_stream_recover(format, stage, raw_len) ||
             (format == PROJ_VARIANT_STREAM && !variant_schema1_valid((const variant_settings_t *)(stage + LEGACY_RAW_LEN))) ||
             (format == PROJ_ARRANGEMENT_STREAM &&
              ((!variant_saved_valid((const variant_settings_t *)(stage + LEGACY_RAW_LEN)) || ((const variant_settings_t *)(stage+LEGACY_RAW_LEN))->arrangement.flags&POLY_FLAG) ||
-              !arrangement_song_valid((const song_t *)(stage + __builtin_offsetof(project_t,arr) - RAW_OFF))))) {
+              (!arrangement_song_valid((const song_t *)(stage + __builtin_offsetof(project_t,arr) - RAW_OFF)) || !phase_saved_valid((const variant_settings_t *)(stage+LEGACY_RAW_LEN),(const song_t *)(stage+__builtin_offsetof(project_t,arr)-RAW_OFF)))))) {
             ui_project_stage_finish(0);
             rejected_save = 1;
             return -8;
         }
-        if(format==PROJ_LANE_STREAM){
+        if(LANE_FORMAT(format)){
             const variant_settings_t *v=(const variant_settings_t *)(stage+__builtin_offsetof(project_t,variant)-LANE_RAW_OFF);
-            int sn=plat_store_load(OBJ_SOUND,io_buf,sizeof io_buf);uint32_t k;
-            if(!variant_valid(v) || !(v->arrangement.flags&POLY_FLAG) ||
-                !poly_valid((const pattern_t *)(stage+sizeof(sound_t)),stage) ||
-                !arrangement_song_valid((const song_t *)(stage+__builtin_offsetof(project_t,arr)-LANE_RAW_OFF)) ||
-                sn!=sizeof(sound_t)+4 || get32(io_buf)!=PROJ_FORMAT){ui_project_stage_finish(0);rejected_save=1;return -8;}
-            for(k=0;k<sizeof(sound_t);k++)if(io_buf[k+4]!=stage[k]){ui_project_stage_finish(0);rejected_save=1;return -8;}
+
+            if(!variant_valid(v) ||
+                (format==PROJ_KICK_STREAM?(!kick_settings_valid((const kick_settings_t *)(stage+__builtin_offsetof(project_t,kick)-LANE_RAW_OFF)) || !((const kick_settings_t *)(stage+__builtin_offsetof(project_t,kick)-LANE_RAW_OFF))->active || !kick_velocity_valid((const lane_t *)(stage+__builtin_offsetof(project_t,arr)+__builtin_offsetof(arrange_t,lane)-LANE_RAW_OFF),(const kick_settings_t *)(stage+__builtin_offsetof(project_t,kick)-LANE_RAW_OFF))):!(v->arrangement.flags&POLY_FLAG)) ||
+                ((v->arrangement.flags&POLY_FLAG) && !poly_valid((const pattern_t *)(stage+sizeof(sound_t)),stage)) ||
+                (format!=PROJ_KICK_STREAM && poly_expanded(stage)!=(format==PROJ_RATE_STREAM)) ||
+                (!arrangement_song_valid((const song_t *)(stage+__builtin_offsetof(project_t,arr)-LANE_RAW_OFF)) || !phase_saved_valid(v,(const song_t *)(stage+__builtin_offsetof(project_t,arr)-LANE_RAW_OFF)))){ui_project_stage_finish(0);rejected_save=1;return -8;}
         }
         loaded_packed = packed_len;
     }
@@ -539,10 +590,11 @@ static POLY_COLD int project_load_impl(void)
     if (stage) {
         uint32_t b;
         for (b = 0; b < raw_len; b++) ((uint8_t *)&proj)[raw_off + b] = stage[b];
-        if (format == PROJ_VARIANT_STREAM || format == PROJ_ARRANGEMENT_STREAM || format==PROJ_LANE_STREAM) {
+        if (format == PROJ_VARIANT_STREAM || format == PROJ_ARRANGEMENT_STREAM || LANE_FORMAT(format)) {
             if(proj.variant.schema<4){proj.variant.arrangement.pad_channel=255;
                 proj.variant.arrangement.flags=(uint8_t)((proj.variant.arrangement.flags&~ARR_NOTES_OUT)|(proj.set.notes_out?ARR_NOTES_OUT:0));}
-            proj.variant.schema = VARIANT_SCHEMA; proj.variant.bytes = sizeof proj.variant;
+            if(proj.variant.schema!=6u)proj.variant.schema = VARIANT_SCHEMA;
+            proj.variant.bytes = sizeof proj.variant;
         }
     } else {
         if (load_patterns1()) {                       /* half a set is no set: the defaults */
@@ -598,13 +650,15 @@ static POLY_COLD int project_save_impl(void)
 {
     int p;
     uint32_t raw_len, format, measured,raw_off=RAW_OFF;
-    if (rejected_save || !variant_valid(&proj.variant)) return -8;
+    if (rejected_save || !variant_valid(&proj.variant) || !phase_saved_valid(&proj.variant,&proj.arr.song)) return -8;
     format = variant_is_default(&proj.variant) ? PROJ_STREAM : PROJ_ARRANGEMENT_STREAM;
     raw_len = format == PROJ_STREAM ? LEGACY_RAW_LEN : RAW_LEN;
-    if(proj.variant.arrangement.flags&POLY_FLAG){if(!poly_valid(proj.pat,(const uint8_t *)&proj.sound))return -8;format=PROJ_LANE_STREAM;raw_off=LANE_RAW_OFF;raw_len=LANE_RAW_LEN;}
+    if(proj.variant.arrangement.flags&POLY_FLAG){if(!poly_valid(proj.pat,(const uint8_t *)&proj.sound))return -8;format=poly_expanded((const uint8_t *)&proj.sound)?PROJ_RATE_STREAM:PROJ_LANE_STREAM;raw_off=LANE_RAW_OFF;raw_len=LANE_RAW_LEN;}
+    if(!kick_settings_valid(&proj.kick)||!kick_velocity_valid(proj.arr.lane,&proj.kick))return -8;
+    if(proj.kick.active){format=PROJ_KICK_STREAM;raw_off=LANE_RAW_OFF;raw_len=KICK_RAW_LEN;}
     /* Preflight before settings/sound writes, so a full project cannot partly replace a save. */
     if (stream_measure(raw_len,raw_off, &measured)) return -7;
-    if ((format == PROJ_ARRANGEMENT_STREAM || format==PROJ_LANE_STREAM) && !arrangement_song_valid(&proj.arr.song)) return -8;
+    if ((format == PROJ_ARRANGEMENT_STREAM || LANE_FORMAT(format)) && !arrangement_song_valid(&proj.arr.song)) return -8;
     for (p = 0; p < 5; p++)
         proj.set.midi_ch[p] = (uint8_t)(seq.ch[p] == SEQ_CH_OFF ? 17 : seq.ch[p] + 1);
     proj.set.bpm_x10 = (uint16_t)(seq.bpm * 10.0f + 0.5f);
@@ -621,9 +675,89 @@ static POLY_COLD int project_save_impl(void)
 int project_save(void)
 {
     int rc;
-    if (!engine_transport_reserve()) return -9;
+    if (ui_saves_held() || !engine_transport_reserve()) return -9;
     rc = project_save_impl();
     checkpoint_verified=(uint8_t)(rc==0);if(!rc){checkpoint_hash=project_fingerprint();cc_actions_reset();}
     engine_transport_release();
     return rc;
+}
+
+/* Reusable per-sound defaults are independent of projects/undo. No resident bank:
+ * stopped main-thread operations reuse the existing project I/O buffer. */
+#define STRIP_DEFAULT_MAGIC 0x31464453u /* SDF1 */
+typedef struct {uint32_t magic;uint16_t schema,bytes;uint32_t mask;sound_strip_config_t strip[VARIANT_STRIPS];} strip_default_bank_t;
+typedef struct { uint32_t magic; uint16_t schema,bytes; uint32_t mask;
+    sound_strip_config_t strip[VARIANT_STRIPS]; uint16_t kick_mask,kick_reserved; kick_preset_t kick[KICK_PRESET_SLOTS]; } kick_default_bank_t;
+#define STRIP_LEGACY_BYTES sizeof(strip_default_bank_t)
+typedef char strip_default_bank_fits[(sizeof(kick_default_bank_t)+1u <= sizeof io_buf) ? 1 : -1];
+static POLY_COLD int strip_default_bank_load(void)
+{
+    kick_default_bank_t *bank=(kick_default_bank_t *)io_buf;
+    /* Storage returns a truncated length. Read one sentinel byte beyond the
+     * schema so a larger/future object cannot masquerade as a valid prefix. */
+    int n=plat_store_load(OBJ_STRIP_DEFAULTS,io_buf,sizeof *bank+1u);unsigned i;
+    if(n==-1)return VR_MISSING;
+    if(bank->magic!=STRIP_DEFAULT_MAGIC || bank->mask&~0x01ffffffu)return VR_UNSUPPORTED;
+    if(n==(int)STRIP_LEGACY_BYTES && bank->schema==1 && bank->bytes==STRIP_LEGACY_BYTES){memset(io_buf+STRIP_LEGACY_BYTES,0,sizeof *bank-STRIP_LEGACY_BYTES);}
+    else if(n!=(int)sizeof *bank || bank->schema!=2 || bank->bytes!=sizeof *bank || bank->kick_reserved)return VR_UNSUPPORTED;
+    for(i=0;i<VARIANT_STRIPS;i++)if((bank->mask&(1u<<i))&&!sound_strip_config_valid(&bank->strip[i]))return VR_UNSUPPORTED;
+    for(i=0;i<KICK_PRESET_SLOTS;i++)if(bank->kick_mask&(1u<<i)){
+        const kick_preset_t *k=&bank->kick[i];if(!kick_settings_valid(&k->kick)||!k->kick.active||!sound_strip_config_valid(&k->strip))return VR_UNSUPPORTED;
+        for(int f=0;f<16;f++){const x0x_param_t *d=f<engine_nparams(T_808,0)?engine_param(T_808,0,f):0;if(d?k->base[f]>d->max:k->base[f]!=0)return VR_UNSUPPORTED;}
+    }
+    return VR_OK;
+}
+POLY_COLD int project_strip_default_save(unsigned strip)
+{
+    kick_default_bank_t *bank=(kick_default_bank_t *)io_buf;
+    int rc; sound_strip_config_t config;
+    if(strip>=VARIANT_STRIPS)return VR_INVALID;
+    config=proj.variant.strip[strip];if(!sound_strip_config_valid(&config))return VR_INVALID;
+    rc=strip_default_bank_load();
+    if(rc==VR_MISSING){memset(bank,0,sizeof *bank);bank->magic=STRIP_DEFAULT_MAGIC;bank->schema=1;bank->bytes=STRIP_LEGACY_BYTES;}
+    else if(rc!=VR_OK)return rc;
+    if((bank->mask&(1u<<strip))&&!memcmp(&config,&bank->strip[strip],sizeof config))return VR_OK;
+    bank->mask|=1u<<strip;bank->strip[strip]=config;
+    if(plat_store_save(OBJ_STRIP_DEFAULTS,bank,bank->bytes))return VR_IO;
+    if(strip_default_bank_load()!=VR_OK || !(bank->mask&(1u<<strip)) ||
+       memcmp(&config,&bank->strip[strip],sizeof config))return VR_IO;
+    return VR_OK;
+}
+POLY_COLD int project_strip_default_get(unsigned strip,sound_strip_config_t *config)
+{
+    kick_default_bank_t *bank=(kick_default_bank_t *)io_buf;
+    int rc;if(strip>=VARIANT_STRIPS||!config)return VR_INVALID;
+    rc=strip_default_bank_load();if(rc!=VR_OK)return rc;
+    if(!(bank->mask&(1u<<strip)))return VR_MISSING;
+    *config=bank->strip[strip];return VR_OK;
+}
+
+POLY_COLD int project_kick_preset_save(unsigned slot){
+ kick_default_bank_t *bank=(kick_default_bank_t *)io_buf;kick_preset_t current;int rc;
+ if(slot>=KICK_PRESET_SLOTS)return VR_INVALID;
+ memset(&current,0,sizeof current);current.kick=proj.kick;current.kick.active=1;current.strip=proj.variant.strip[11];
+ for(int f=0;f<engine_nparams(T_808,0);f++)current.base[f]=proj.sound.v[T_808][0][f];
+ if(!kick_settings_valid(&current.kick)||!sound_strip_config_valid(&current.strip))return VR_INVALID;
+ if(current.kick.cfg[HK_SOURCE]==4 && current.kick.sample_fingerprint!=engine_kick_sample_fingerprint())return VR_MISSING;
+ rc=strip_default_bank_load();if(rc==VR_MISSING){memset(bank,0,sizeof *bank);bank->magic=STRIP_DEFAULT_MAGIC;}else if(rc!=VR_OK)return rc;
+ if((bank->kick_mask&(1u<<slot))&&!memcmp(&bank->kick[slot],&current,sizeof current))return VR_OK;
+ bank->schema=2;bank->bytes=sizeof *bank;bank->kick_mask|=(uint16_t)(1u<<slot);bank->kick[slot]=current;
+ if(plat_store_save(OBJ_STRIP_DEFAULTS,bank,sizeof *bank))return VR_IO;
+ if(strip_default_bank_load()!=VR_OK || !(bank->kick_mask&(1u<<slot)) || memcmp(&bank->kick[slot],&current,sizeof current))return VR_IO;
+ return VR_OK;
+}
+POLY_COLD int project_kick_preset_get(unsigned slot,kick_preset_t *preset){
+ kick_default_bank_t *bank=(kick_default_bank_t *)io_buf;int rc;
+ if(slot>=KICK_PRESET_SLOTS||!preset)return VR_INVALID;
+ rc=strip_default_bank_load();if(rc!=VR_OK)return rc;if(!(bank->kick_mask&(1u<<slot)))return VR_MISSING;
+ *preset=bank->kick[slot];return VR_OK;
+}
+
+int project_save_settings(void)
+{
+    /* Core recovery may persist settings before audio starts, but must not
+     * overwrite metadata belonging to a rejected/future project or backup. */
+    if (rejected_save) return -8;
+    if (ui_saves_held()) return -9;
+    return save_obj(OBJ_SET, &proj.set, sizeof proj.set);
 }

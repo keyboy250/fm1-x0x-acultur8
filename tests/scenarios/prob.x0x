@@ -1,3 +1,8 @@
+# Startup policy: confirm HOME, then enter EDIT for this editor-oriented regression.
+wait 300
+expect view 0
+tap EDIT
+expect view 1
 # Probability: hold a step (SEQ or EDIT) and turn SELECT: its chance, in 5 % steps (a T_PROB lane,
 # one per drum track; 100 % is no lane). Played: a kick on every step, step 1 at 50 %, step 2 at
 # 5 %, with NOTES OUT on, so midi_out.txt counts the kicks that played.

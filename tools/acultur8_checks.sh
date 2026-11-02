@@ -17,7 +17,21 @@ OUT=build/host
 W='-O2 -ffp-contract=off -Wall -Wextra -Wdouble-promotion -Werror'
 run() { name="$1"; shift; printf '\nRequired check: %s\n' "$name"; "$@"; }
 compile() { name="$1"; shift; cc "$@" -o "$OUT/$name"; run "$name" "$OUT/$name"; }
+run fastmath_sanitizers sh tests/host/run_fastmath_sanitizers.sh
+run pattern_copy sh tests/host/run_pattern_copy.sh
+run block_bridge sh tests/host/run_block_bridge.sh
+run block_delete sh tests/host/run_block_delete.sh
+run long_scale sh tests/host/run_long_scale.sh
+run long_scale_wasm node tests/host/long_scale_wasm_test.mjs build/emu/x0x.wasm
+run native_message_bounds sh tests/host/run_message_bounds.sh
+run strip_query sh tests/host/run_strip_query.sh
+run phase303b sh tests/host/run_phase303b.sh
+run pattern_query sh tests/host/run_pattern_query.sh
+run upstream_integration sh tests/host/run_upstream_integration.sh
+run boot_intro sh tests/host/run_boot_intro.sh
 run portable_alpha_server python3 -m unittest tests.test_serve_alpha
+run clock_transport sh tests/host/run_clock.sh
+run clock_roles_wasm node tests/host/clock_roles_wasm_test.mjs build/emu/x0x.wasm
 run bass_follow sh tests/host/run_bass_follow.sh
 run bass_follow_wasm sh tests/host/run_bass_follow_wasm.sh
 run external_pad sh tests/host/run_pad.sh
@@ -29,6 +43,7 @@ run pointer_keys node tests/host/pointer_keys_test.mjs build/emu/x0x.wasm
 run individual_lanes sh tests/host/run_lane.sh
 run individual_lanes_off_pcm sh tests/host/run_lane_off_pcm.sh
 run individual_lanes_wasm sh tests/host/run_lane_wasm.sh
+run expanded_rate_families sh tests/host/run_rate_families.sh
 run lane_ui node tests/host/lane_ui_test.mjs
 run worklet_gesture node tests/host/worklet_gesture_test.mjs build/emu/x0x.wasm
 run cc_inventory python3 tools/cc_inventory.py --check
@@ -57,6 +72,8 @@ run arrangement sh tests/host/run_arrangement.sh
 run arrangement_wasm node tests/host/arrangement_wasm_test.mjs build/emu/x0x.wasm build/host/arrangement_schema1_store.bin
 run variant sh tests/host/run_variant.sh
 run variant_wasm node tests/host/variant_wasm_test.mjs build/emu/x0x.wasm
+run strip_defaults sh tests/host/run_strip_defaults.sh
+run host_store_compat python3 tests/host_store_compat_test.py build/host/x0x_host
 run kick_wasm node tests/host/kick_wasm_test.mjs build/emu/x0x.wasm
 run all909_strip sh tests/host/run_all909_strip.sh
 run drum909_ranges sh tests/host/run_d9_range.sh
@@ -72,7 +89,7 @@ run font_packing python3 tests/test_font_packing.py
 run font_pinned_oracle python3 tests/test_font_pinned_oracle.py
 compile harmony $W -std=c99 -pedantic tests/host/harmony_test.c firmware/src/seq/harmony.c
 compile fastmath -O2 -ffp-contract=off -Wall -Wextra -Werror tests/host/fastmath_test.c -lm
-compile sequencer -O2 -ffp-contract=off -Wall -Wextra tests/host/seq_test.c firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c firmware/src/seq/pattern.c firmware/src/seq/harmony.c
+compile sequencer -O2 -ffp-contract=off -Wall -Wextra tests/host/seq_test.c tests/host/control_guard_stub.c firmware/src/seq/sequencer.c firmware/src/seq/tb3po.c firmware/src/seq/pattern.c firmware/src/seq/harmony.c
 compile encoder -O2 -w -Ifirmware/hal tests/host/encoder_test.c
 compile bass303_lite -std=c99 -O2 -ffp-contract=off -w -Ifirmware/src/dsp -Ifirmware/src tests/host/bass303_lite_test.c firmware/src/dsp/bass303.c -lm
 compile uac -O2 -w -Ifirmware/src -Ifirmware/hal tests/host/uac_test.c -lm
@@ -89,7 +106,7 @@ run breaks sh tests/host/run_breaks.sh
 run synthetic-upload-fixtures python3 tests/host/make_test_loops.py build/test_loops
 run upload-images python3 tools/upload_breaks.py --dry-run build/test_upload build/test_loops/loop*.wav
 run breaks-web node web/test_breaks.mjs
-printf 'wav emu_ref.wav\nwait 500\ntapkey b0\ntapkey w0\ntapkey w8\ntap PLAY\nwait 2960\nwavstop\n' > "$OUT/emu_ref.x0x"
+printf 'wav emu_ref.wav\nwait 500\ntap EDIT\ntapkey b0\ntapkey w0\ntapkey w8\ntap PLAY\nwait 2960\nwavstop\n' > "$OUT/emu_ref.x0x"
 run host-reference build/host/x0x_host "$OUT/emu_ref.x0x" "$OUT"
 run wasm-host-parity node tests/host/emu_test.mjs build/emu/x0x.wasm "$OUT/emu_ref.wav"
 run wasm-slots node tests/host/emu_slots_test.mjs build/emu/x0x.wasm build/test_loops/loop1.wav

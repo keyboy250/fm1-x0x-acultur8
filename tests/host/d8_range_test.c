@@ -9,7 +9,34 @@
 #include "../../firmware/src/dsp/drum808.c"
 #endif
 static uint32_t float_bits(float x){uint32_t n;memcpy(&n,&x,4);return n;}
-static uint64_t state_hash(const void *p,size_t n){const uint8_t *b=p;uint64_t h=14695981039346656037ull;while(n--)h=(h^*b++)*1099511628211ull;return h;}
+static uint64_t state_hash(const void *p,size_t ignored){const drum808_t *d=p;uint64_t h=14695981039346656037ull;(void)ignored;
+{const uint8_t *b=(const uint8_t *)&d->pot;size_t n=sizeof d->pot;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->sw;size_t n=sizeof d->sw;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->kpot;size_t n=sizeof d->kpot;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->tpan;size_t n=sizeof d->tpan;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->pan_lc;size_t n=sizeof d->pan_lc;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->pan_rc;size_t n=sizeof d->pan_rc;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->potv;size_t n=sizeof d->potv;while(n--)h=(h^*b++)*1099511628211ull;}
+for(int v=0;v<D8S_NUM;v++){float common[]={d->potv[v][D8P_DRIVE],1.0f+d->potv[v][D8P_DRIVE],d->shp[v].mk,d->shp[v].dn,clampf(((1.0f+d->potv[v][D8P_DRIVE])-.85f)/1.15f,0,1),d->shp[v].steps,((1.0f+d->potv[v][D8P_DRIVE])<1.0f?1.0f:1.0f+((1.0f+d->potv[v][D8P_DRIVE])-1.0f)*1.7f)};const uint8_t *b=(const uint8_t *)common;size_t n=sizeof common;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->vol;size_t n=sizeof d->vol;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->vel_depth;size_t n=sizeof d->vel_depth;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->choke;size_t n=sizeof d->choke;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->bd;size_t n=sizeof d->bd;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->sd;size_t n=sizeof d->sd;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->tom;size_t n=sizeof d->tom;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->rs;size_t n=sizeof d->rs;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->cl;size_t n=sizeof d->cl;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->cp;size_t n=sizeof d->cp;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->ma;size_t n=sizeof d->ma;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->bank;size_t n=sizeof d->bank;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->cb;size_t n=sizeof d->cb;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->ch;size_t n=sizeof d->ch;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->oh;size_t n=sizeof d->oh;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->cy;size_t n=sizeof d->cy;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->lane;size_t n=sizeof d->lane;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->strip;size_t n=sizeof d->strip;while(n--)h=(h^*b++)*1099511628211ull;}
+{const uint8_t *b=(const uint8_t *)&d->strip_meter;size_t n=sizeof d->strip_meter;while(n--)h=(h^*b++)*1099511628211ull;}
+return h;}
 static void render_case(drum808_t *d,int track,FILE *pcm){
  float l[64]={0},r[64]={0},rev[64]={0},dly[64]={0};
  if(track<D8_NUM)drum808_trigger(d,track,0.91f);else for(int t=0;t<D8_NUM;t++)drum808_trigger(d,t,0.91f);
@@ -44,7 +71,7 @@ static void long_tail_cases(const char *path){
 
 int main(int argc,char **argv){
  assert(argc==2);FILE *pcm=fopen(argv[1],"wb");assert(pcm);drum808_t d;int cases=0;
- printf("runtime-size %zu\n",sizeof d);
+ /* Runtime layout changed; compare every shared meaningful state field and PCM. */
  for(int sound=0;sound<D8S_NUM;sound++)for(int slot=0;slot<D8P_NUM;slot++){
 #ifndef D8_ORACLE_REFERENCE
   const d8_range_t *r=&k_ranges[k_spec[sound][slot].range];unsigned def=k_spec[sound][slot].def;

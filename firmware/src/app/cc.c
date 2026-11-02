@@ -3,15 +3,28 @@
  * Canonical writes are bounded and IRQ-excluded; the existing CQ remains main
  * producer/audio consumer. No new CQ type and no per-CC storage writes. */
 #include "cc.h"
+#include "../seq/rate_families.h"
 #include "cc_bindings.h"
 cc_stats_t cc_stats;
 int cc_recover(void){if(!engine_queue_space())return 0;seq_stop(&seq);return engine_cc_refresh(1);}
 typedef struct {uint8_t pattern,part,drum,bass,step,block_low,block_high,motion_low,motion_high,kit,strip,seed_byte;} cc_context_t;
-typedef struct {cc_context_t draft,applied;uint16_t parameter;uint32_t exact;uint8_t ready,exact_parts,action_high;cc_action_guard_t guard;uint16_t native_high;uint8_t armed,destination_draft,destination_applied,destination_ready;} cc_source_t;
+typedef struct {uint32_t seed;uint16_t request,last_request,result_request;uint8_t mode:3,seed_mask:4,drum:1;uint8_t block,length,step;uint8_t state:3,reason:4,rsv2:1;uint8_t flags;} cc_generation_t;
+typedef char cc_generation_size_16[(sizeof(cc_generation_t)==16)?1:-1];
+typedef struct {cc_context_t draft,applied;uint32_t exact;cc_action_guard_t guard;cc_generation_t generation;uint16_t parameter,rate_tag,native_high;uint8_t ready,exact_parts,action_high,rate_bin,armed,destination_draft,destination_applied,destination_ready;} cc_source_t;
+typedef char cc_source_size_72[(sizeof(cc_source_t)==72)?1:-1];
 static cc_source_t cc_sources[CC_SOURCES];
-static uint8_t cc_action_reason[CC_SOURCES];
-void cc_actions_reset(void){ui_cc_job_reset();unsigned s;for(s=0;s<CC_SOURCES;s++)cc_sources[s].armed=0;}
-void cc_reset_source(uint8_t source){if(source<CC_SOURCES){plat_midi_clear_cc_source(source);plat_master_detach(source);memset(&cc_sources[source],0,sizeof cc_sources[source]);cc_action_reason[source]=CA_OK;}}
+static uint8_t cc_action_reason[CC_SOURCES] X0X_POOL;
+#include "cc_generation.inc"
+#include "cc_kick.inc"
+void cc_actions_reset(void){ui_cc_job_reset();unsigned s;for(s=0;s<CC_SOURCES;s++){cf_cancel_pending(&cc_sources[s]);cc_sources[s].armed=0;cc_sources[s].generation.flags&=(uint8_t)~CG_ARM;}}
+void cc_reset_source(uint8_t source){if(source<CC_SOURCES){plat_midi_clear_cc_source(source);cf_cancel_pending(&cc_sources[source]);plat_master_detach(source);memset(&cc_sources[source],0,sizeof cc_sources[source]);cc_action_reason[source]=CA_OK;if(cg_generation!=UINT32_MAX)cg_generation++;}}
+unsigned cc_mode(void){return ui.cc_mode;}
+int cc_set_mode(unsigned mode){
+    if(mode>2)return CC_REJECTED;
+    if(ui.cc_mode!=mode){ui.cc_mode=(uint8_t)mode;cc_actions_reset();for(unsigned s=0;s<CC_SOURCES;s++)cc_reset_source((uint8_t)s);}
+    return CC_APPLIED;
+}
+static int cc_mode_allows(unsigned kind){return !ui.cc_mode || (ui.cc_mode==1 && (kind==CCK_SOUND || kind==CCK_STRIP));}
 uint32_t cc_source_field(uint8_t source,unsigned field){
     if(source>=CC_SOURCES)return 0xffffffffu;
     if(field<12)return ((const uint8_t *)&cc_sources[source].applied)[field];
@@ -62,6 +75,10 @@ static POLY_COLD int cc_max(int kind,int a,int b,int c,const cc_context_t *x){
     static const uint8_t prefmax[]={1,1,1,7,1,5,127,127,191,127};
     const x0x_param_t *p;
     switch(kind){
+    case CCK_KICK:p=engine_kick_param(a+32*b);return p?p->max:-1;
+    case CCK_KICKSTEP:return 3;
+    case CCK_KICKPRESET:return c>=4?127:1;
+    case CCK_REMOTE:{if(a==1)return c<4?255:-1;if(a==2)return c<2?31:c<4?24:c<6?1:-1;static const uint8_t maxima[]={4,191,64,64,255,255,255,255,127,127,7,1,1,100,3,5,255,1,2,8,3,255,2,1,3,1,1,3,191,31,1,1};return c<32?maxima[c]:-1;}
     case CCK_SOUND:p=engine_param(a,b,c);return p?p->max:-1;
     case CCK_STRIP:return c<2?20000:c==2?24:c==3?48:c==4?250:c==5?15:1;
     case CCK_SEQ:return ((proj.variant.arrangement.flags&POLY_FLAG) && (c==SQ_DRATE || c==SQ_BRATE))?7:c<NSQ?SEQ_P[c].max:-1;
@@ -81,14 +98,15 @@ static POLY_COLD int cc_max(int kind,int a,int b,int c,const cc_context_t *x){
     case CCK_PERF:return c==2||c==3||c==4?31:1;
     case CCK_GENACTION:return 1;
     case CCK_SEED:return 255;
-    case CCK_ARR:return c==0?1:c==1?192:c==2?11:c==3?HARMONY_CHROMATIC:c==4?255:c==5?7:c==6?8:c==7?31:c==8?1:191;
-    case CCK_FOLLOW:return c==0?2:127;
+    case CCK_ARR:return c==0?1:c==1?192:c==2?11:c==3?HARMONY_CHROMATIC:c==4?255:c==5?7:c==6?32:c==7?31:c==8?1:191;
+    case CCK_FOLLOW:return c==0?3:127;
     case CCK_PAD:return c==0?255:127;
     case CCK_EXACT:return c==2?3:c==3?1:127;
     case CCK_ACTION:return c>=1&&c<=11?127:-1;
     case CCK_ACTIONCTL:return c?1:11;
     case CCK_MASTER:return 4096;
     case CCK_TRANSPORT:case CCK_HISTORY:return 1;
+    case CCK_RATE:return c==0?1:c==1?20:c==2?3:c==3?1:c==4?2:127;
     case CCK_LANE:return c==0?64:c==1?7:1;
     default:return -1;
     }
@@ -110,7 +128,7 @@ static POLY_COLD int cc_arrangement(int kind,int field,uint32_t value,const cc_c
         else if(field==2)changed=&candidate.key;
         else if(field==3)changed=&candidate.mode;
         else if(field==4)changed=&candidate.parent;
-        else if(field==5)changed=&candidate.degree[block];
+        else if(field==5){changed=&candidate.degree[block];value|=candidate.degree[block]&24u;}
         if(changed)*changed=(uint8_t)value;
         if(!arrangement_valid(&candidate))return CC_REJECTED;
     }
@@ -129,7 +147,12 @@ static POLY_COLD int cc_arrangement(int kind,int field,uint32_t value,const cc_c
     }else if(changed){
         ((uint8_t *)&proj.variant.arrangement)[changed-(uint8_t *)&candidate]=(uint8_t)value;
     }else if(field==1)proj.arr.song.len=(uint16_t)value;
-    else if(field==6)proj.arr.song.bar[block].mute=(uint8_t)((proj.arr.song.bar[block].mute&31u)|((value-1)<<5));
+    else if(field==6){
+        unsigned bars=value-1;
+        proj.arr.song.bar[block].mute=(uint8_t)((proj.arr.song.bar[block].mute&31u)|((bars&7u)<<5));
+        proj.variant.arrangement.degree[block]=(uint8_t)((proj.variant.arrangement.degree[block]&7u)|(bars&24u));
+        if(bars&24u)proj.variant.arrangement.flags|=ARR_EXTENDED;
+    }
     else if(field==7)proj.arr.song.bar[block].pat[x->part]=(uint8_t)value;
     else if(field==8){unsigned mask=1u<<x->part;uint8_t *mute=&proj.arr.song.bar[block].mute;*mute=(uint8_t)((*mute&~mask)|(value?mask:0));}
     (void)engine_cc_refresh(2); /* capacity reserved, sole main producer */
@@ -138,7 +161,12 @@ static POLY_COLD int cc_arrangement(int kind,int field,uint32_t value,const cc_c
 static POLY_COLD int cc_apply(int kind,int a,int b,int c,uint32_t value,cc_source_t *source){
     cc_context_t *x=&source->applied;pattern_t *p=&proj.pat[x->pattern];int k,block=cc_block(x),lane=cc_lane(x);
     uint32_t saved;lane_t target;
+    if(kind==CCK_KICKPRESET)return kp_apply(source,c,value);
+    if(kind==CCK_KICK){if(!ui_kick_control_ready())return CC_REJECTED;if(!engine_queue_space())return CC_BUSY;if(!engine_kick_set(a+32*b,(int)value))return CC_REJECTED;ui_external_changed();return CC_APPLIED;}
+    if(kind==CCK_KICKSTEP){if(!source->ready||x->part!=1||x->kit!=1||x->drum!=0||!ui_kick_control_ready())return CC_REJECTED;if(!engine_kick_step_set(x->pattern,x->step,(int)value))return CC_REJECTED;ui_external_changed();return CC_APPLIED;}
+    if(kind==CCK_REMOTE)return cg_apply(source,a==2?36+c:a==1?32+c:c,value);
     if(kind==CCK_SELECTOR){
+        if(c<13 || c==15)cg_changed(source);
         if(c<13 || c==15)source->armed=0;
         if(c==15){source->destination_draft=(uint8_t)value;source->destination_ready|=1u;source->ready=0;source->exact_parts=0;return 0;}
         if(c<12){((uint8_t *)&source->draft)[c]=(uint8_t)value;source->ready=0;source->exact_parts=0;return 0;}
@@ -154,7 +182,7 @@ static POLY_COLD int cc_apply(int kind,int a,int b,int c,uint32_t value,cc_sourc
         uint32_t target;int result=cc_lookup(source->parameter,&target);
         /* Framing is only accepted through its ordinary CC addresses. Exact
          * redispatch must neither recurse into commit nor alter its own context. */
-        if(!result && ((target&31u)==CCK_EXACT || (target&31u)==CCK_SELECTOR))result=CC_REJECTED;
+        if(!result && ((target&31u)==CCK_EXACT || (target&31u)==CCK_SELECTOR || ((target&31u)==CCK_REMOTE && ((target>>14)&31u)>=8 && ((target>>14)&31u)<12)))result=CC_REJECTED;
         else if(!result)result=cc_parameter(source->parameter,source->exact,(uint8_t)(source-cc_sources));
         /* The ingress retries this same commit after audio frees CQ space. */
         if(result!=CC_BUSY)source->exact_parts=0;
@@ -172,7 +200,7 @@ static POLY_COLD int cc_apply(int kind,int a,int b,int c,uint32_t value,cc_sourc
         if(!source->ready || (act==4&&!(source->destination_ready&2u)))reason=CA_CONTEXT;
         else if(kind==CCK_ACTIONCTL && !destructive)reason=CA_INVALID;
         else reason=ui_cc_action_ready(act);
-        if(!reason && kind==CCK_ACTIONCTL){reason=ui_cc_action_arm(act,&source->guard);if(!reason)source->armed=(uint8_t)act;}
+        if(!reason && kind==CCK_ACTIONCTL){source->generation.flags&=(uint8_t)~(CG_ARM|CG_LAST);reason=ui_cc_action_arm(act,&source->guard);if(!reason)source->armed=(uint8_t)act;}
         else if(!reason){
             if(destructive && source->armed!=act)reason=CA_CONFIRM;
             else reason=ui_cc_action(act,x->pattern,x->part,source->destination_applied,block,destructive?&source->guard:0);
@@ -208,6 +236,23 @@ static POLY_COLD int cc_apply(int kind,int a,int b,int c,uint32_t value,cc_sourc
         proj.variant.strip[a]=cfg;ui_external_changed();return 0;
     }
     if(kind==CCK_TRANSPORT){source->action_high|=(uint8_t)(1u<<(2+c));if(c==0)seq_start(&seq);else if(c==1)seq_stop(&seq);else ui.rec=1;return 0;}
+    if(kind==CCK_RATE){
+        if(!source->ready || !(proj.variant.arrangement.flags&POLY_FLAG))return CC_REJECTED;
+        if(!c && (seq.playing||seq.req_stop||seq.req_start||seq.req_cont))return CC_REJECTED;
+        if(c==5){
+            if(!poly_expanded((const uint8_t *)&proj.sound))return CC_REJECTED;
+            unsigned family=poly_sync_family(proj.pat,(const uint8_t *)&proj.sound,x->strip),h=(unsigned)poly_rate_config(proj.pat,(const uint8_t *)&proj.sound,x->strip,2);
+            uint16_t tag=(uint16_t)(0x8000u|x->pattern|(x->strip<<5)|(family<<10));
+            unsigned prior=source->rate_tag==tag?source->rate_bin:RF_INVALID,bin;
+            if(prior!=RF_INVALID && rf_ordered(family,prior)!=(unsigned)poly_rate(proj.pat,(const uint8_t *)&proj.sound,x->pattern,x->strip))prior=RF_INVALID;
+            bin=rf_sweep(family,value,h,prior);
+            if(rf_ordered(family,bin)==(unsigned)poly_rate(proj.pat,(const uint8_t *)&proj.sound,x->pattern,x->strip)){source->rate_tag=tag;source->rate_bin=(uint8_t)bin;return CC_APPLIED;}
+            if(!engine_queue_space())return CC_BUSY;
+            if(!engine_rate_set(x->pattern,x->strip,1,(int)rf_ordered(family,bin)))return CC_REJECTED;
+            source->rate_tag=tag;source->rate_bin=(uint8_t)bin;
+        }else {if(!engine_queue_space())return CC_BUSY;if(!engine_rate_set(x->pattern,x->strip,c,(int)value))return CC_REJECTED;source->rate_tag=0;}
+        ui_external_changed();return CC_APPLIED;
+    }
     if(kind==CCK_LANE){
         if(c<2 && (!source->ready || !(proj.variant.arrangement.flags&POLY_FLAG)))return CC_REJECTED;
         /* Initial conversion is a structural stopped transaction. Ineligible
@@ -272,7 +317,7 @@ static POLY_COLD int cc_apply(int kind,int a,int b,int c,uint32_t value,cc_sourc
         if(c==0){proj.set.out_loud=(uint8_t)value;engine_out_loud(value);}
         else if(c==1){proj.set.usb_full=(uint8_t)value;engine_usb_full(value);}
         else if(c==2)ui.freeplay[x->bass]=(uint8_t)value;
-        else if(c==3)proj.arr.song.bar[block].mute=(uint8_t)((proj.arr.song.bar[block].mute&31u)|(value<<5));
+        else if(c==3){proj.arr.song.bar[block].mute=(uint8_t)((proj.arr.song.bar[block].mute&31u)|(value<<5));proj.variant.arrangement.degree[block]&=7u;}
         else if(c==4){perf.stalls_on=(uint8_t)value;plat_stalls_enable(value);}
         else if(c==6||c==7){if(value>=(uint32_t)engine_brk_nslots())goto invalid; if(c==6)p->brk.slot_a=(uint8_t)value;else p->brk.slot_b=(uint8_t)value;}
         else if(c==8){source->draft.block_low=(uint8_t)(value&127u);source->draft.block_high=(uint8_t)(value>>7);source->ready=0;}
@@ -330,13 +375,14 @@ POLY_COLD int cc_parameter(uint16_t number,uint32_t value,uint8_t source){
     if(source>=CC_SOURCES)return CC_REJECTED;
     if(cc_lookup(number,&word))return CC_UNSUPPORTED;
     s=&cc_sources[source];kind=word&31;a=(word>>5)&31;b=(word>>10)&15;c=(word>>14)&31;
-    if(project_write_protected()&&kind!=CCK_MASTER&&kind!=CCK_SELECTOR&&kind!=CCK_EXACT&&!(kind==CCK_TRANSPORT&&c==1)&&!(kind==CCK_HISTORY&&!value)&&kind!=CCK_ACTION&&kind!=CCK_ACTIONCTL)return CC_REJECTED;
+    if(project_write_protected()&&kind!=CCK_MASTER&&kind!=CCK_SELECTOR&&kind!=CCK_EXACT&&!(kind==CCK_TRANSPORT&&c==1)&&!(kind==CCK_HISTORY&&!value)&&kind!=CCK_ACTION&&kind!=CCK_ACTIONCTL&&kind!=CCK_REMOTE)return CC_REJECTED;
+    if(!cc_mode_allows((unsigned)kind))return CC_UNSUPPORTED;
     max=cc_max(kind,a,b,c,&s->applied);
     if(kind==CCK_MOTION&&!c&&value==MOT_NONE)return cc_apply(kind,a,b,c,value,s);
     if(kind==CCK_PAD&&!c){if(value>15&&value!=255)return CC_REJECTED;}
     else if(kind==CCK_ARR&&c==4){if(value>6&&value!=255)return CC_REJECTED;}
     else if(max<0)return CC_UNSUPPORTED;
-    else if(value>(uint32_t)max)return CC_REJECTED;
+    else if(value>(uint32_t)max){if(kind==CCK_REMOTE)cg_changed(s);return CC_REJECTED;}
     if(kind==CCK_STRIP&&((c<2&&value<20)||(c==4&&value<10)))return CC_REJECTED;
     if(kind==CCK_ARR&&c==6&&!value)return CC_REJECTED;
     if(kind==CCK_LANE&&!c&&!value)return CC_REJECTED;
@@ -356,6 +402,7 @@ POLY_COLD int cc_message(uint32_t packet,uint8_t source){
     else value=max<0?0:(int)(((uint32_t)raw*(uint32_t)max+63)/127);
     if(kind==CCK_STRIP&&c==4)value=10+(raw*240+63)/127;
     if(kind==CCK_ARR&&c==6)value=1+(raw*7+63)/127;
+    if(kind==CCK_FOLLOW&&!c)value=(raw*2+63)/127; /* preserve legacy coarse mapping; Scale uses exact value3 */
     if(kind==CCK_LANE&&!c)value=1+(raw*63+63)/127;
     result=cc_parameter(number,(uint32_t)value,source);
     if(result==CC_APPLIED)cc_stats.accepted++;else if(result==CC_BUSY)cc_stats.busy++;else if(result==CC_UNSUPPORTED)cc_stats.unsupported++;else cc_stats.rejected++;

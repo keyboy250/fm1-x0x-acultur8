@@ -1,0 +1,26 @@
+{
+  "reference": "qualified quadratic+704+HAL official image581124",
+  "disassemblySHA256": "21485de927f33dd646c2793249a4d45f1cd44a0fad3d21dce835fc4ea7874a4f",
+  "originalTargetBudgetSHA256": "0cf36d9a6c61f78aca9a3f88f03c6fb844ae70ac5bd9adc2811282df90ff04f2",
+  "model": {
+    "nest_weight": 4,
+    "divide_extra_weight": 8,
+    "max_depth": 4
+  },
+  "functions": {
+    "seq_advance": {
+      "insns": 495,
+      "loop": 480,
+      "div": 3,
+      "call": 21,
+      "cost": 14973
+    },
+    "seq_advance_arrangement": {
+      "insns": 906,
+      "loop": 890,
+      "div": 25,
+      "call": 34,
+      "cost": 45295
+    }
+  }
+}

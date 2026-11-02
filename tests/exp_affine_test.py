@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Affine layout proof, domain rejection, every decoder width and final guard."""
+"""Affine API compatibility and pinned pre-clock accessor widths/final guard.
+
+The current production segmented accessor is qualified by exp_segments_test.
+"""
 import hashlib
 import random
 import re
@@ -71,7 +74,11 @@ class Affine(unittest.TestCase):
             oldargv = sys.argv
             try:
                 sys.argv = ["gen", str(root / "x0x_drum_samples.h")]
-                g.main()
+                source=subprocess.check_output(['git','show','7bca4df442bd3191e95c4dc06444dccbdf303607:tools/gen_drum_samples.py'])
+                self.assertEqual(hashlib.sha256(source).hexdigest(),'e87925d392b2c3ff83191c97e323ac6f089ee5e405d1d3c9cf8b083c865c5d64')
+                namespace={'__file__':str(g.SRC/'tools/gen_drum_samples.py'),'__name__':'pinned_affine_reference'}
+                exec(compile(source,'pinned_affine_reference','exec'),namespace)
+                namespace['main']()
             finally:
                 sys.argv = oldargv
             original = (root / "x0x_drum_tables.h").read_text()

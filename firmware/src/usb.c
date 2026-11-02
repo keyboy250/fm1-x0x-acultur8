@@ -120,8 +120,8 @@ static uint8_t sx_frame[640];
 static uint32_t sx_pos;
 static volatile uint32_t sx_frame_len;
 static volatile uint8_t sx_ready, sx_collect, sx_busy;
-#define SXQ 64u
-static uint32_t sx_out_q[SXQ];
+#define SXQ 128u                                  /* a whole announce.c SAY (~85 packets) fits */
+static uint32_t sx_out_q[SXQ] __attribute__((section(".pool")));
 static volatile uint32_t so_w, so_r;
 #endif
 
@@ -130,22 +130,93 @@ static volatile uint32_t so_w, so_r;
 static uint32_t midi_in_q[MQ], midi_out_q[MQ];
 static volatile uint32_t mi_w, mi_r, mo_w, mo_r;
 #if X0X_CC
+static volatile uint8_t mo_cancel_attacks,mo_cancel_transport;
+static volatile uint32_t usb_midi_generation,usb_midi_observed_generation;
+static volatile uint8_t mi_retired_clock[3];
+static void midi_out_deadlines_retire(void);
+static void midi_out_cancel(int transport) {
+    mo_cancel_attacks=(uint8_t)(mo_w-mo_r);
+    if(transport){mo_cancel_transport=mo_cancel_attacks;midi_out_deadlines_retire();}
+    RING_PUBLISH();
+}
+/* Preserve prior global interrupt enable state. Existing irq_save/restore is
+ * unsuitable here: its restore unconditionally enables interrupts. Loader is
+ * excluded; test adapters supply hooks without target assembly. */
+#ifndef MIDI_TX_ENTER
+static uint32_t midi_tx_enter(void) {return fm1_irq_gate_save();}
+static void midi_tx_leave(uint32_t saved) {fm1_irq_gate_restore(saved);}
+#define MIDI_TX_ENTER() midi_tx_enter()
+#define MIDI_TX_LEAVE(saved) midi_tx_leave(saved)
+#endif
+static void midi_in_retire_clock(uint8_t mask) {
+    uint32_t saved=MIDI_TX_ENTER(),n=mi_w-mi_r,i;
+    for(i=0;i<3;i++)if(mask&(1u<<i))mi_retired_clock[i]=(uint8_t)n;
+    RING_PUBLISH();MIDI_TX_LEAVE(saved);
+}
+static int midi_usb_ready(void) {
+    return usb.config&&!usb.suspended && usb_midi_generation==usb_midi_observed_generation && usb_midi_generation!=UINT32_MAX;
+}
+static void midi_usb_state(uint8_t config,uint8_t suspended,int reset) {
+    uint32_t saved=MIDI_TX_ENTER();
+    if(reset||usb.config!=config||usb.suspended!=suspended){
+        if(usb_midi_generation!=UINT32_MAX)usb_midi_generation++;
+        midi_out_cancel(1);
+    }
+    usb.config=config;usb.suspended=suspended;RING_PUBLISH();MIDI_TX_LEAVE(saved);
+}
+#ifndef MIDI_TX_BEFORE_COMMIT
+#define MIDI_TX_BEFORE_COMMIT() ((void)0)
+#endif
 #include "midi_cc_ingress.h"
+#else
+#define midi_usb_ready() (usb.config&&!usb.suspended)
+#define midi_usb_state(cvalue,svalue,reset_event) ((void)(reset_event),usb.config=(cvalue),usb.suspended=(svalue))
 #endif
 
 #include "midi_ring.h"
+#if X0X_CC
+/* Explicitly initialized transient metadata in otherwise unused NOINIT RAM.
+ * It is never a persistent setting and consumes no audio/pool headroom. */
+#include "midi_deadline.h"
+static midi_deadline_t midi_deadline __attribute__((section(".noinit")));
+static void midi_out_deadlines_retire(void) {
+    uint32_t i,end=mo_w;for(i=mo_r;i!=end;i++)midi_deadline.due[i%MQ]=0;
+}
+static __attribute__((noinline)) void midi_audio_begin(uint32_t now) { midi_deadline_begin(&midi_deadline,now); }
+static void midi_audio_end(void) { midi_deadline.active=0; }
+void plat_midi_audio_position(uint32_t frame) { midi_deadline.frame=frame; }
+static int midi_out_timed(const uint32_t *packets,uint32_t count) {
+    uint32_t w=mo_w,i;
+    if(!midi_usb_ready() || !count || count>6u || w-mo_r>MQ-count)return 0;
+    uint32_t due=midi_deadline_value(&midi_deadline);
+    for(i=0;i<count;i++)midi_deadline.due[(w+i)%MQ]=due;
+    return midi_ring_try_batch(midi_out_q,&mo_w,&mo_r,MQ,packets,count,midi_usb_ready());
+}
+#endif
 static int midi_out_event(uint32_t pkt) /* bounded enqueue feedback, audio/main single producer */
 {
-    return midi_ring_try_put(midi_out_q,&mo_w,&mo_r,MQ,pkt,usb.config && !usb.suspended);
+#if X0X_CC
+    return midi_out_timed(&pkt,1);
+#else
+    return midi_ring_try_put(midi_out_q,&mo_w,&mo_r,MQ,pkt,midi_usb_ready());
+#endif
 }
 static int midi_out_pair(uint32_t first,uint32_t second)
 {
-    return midi_ring_try_pair(midi_out_q,&mo_w,&mo_r,MQ,first,second,usb.config && !usb.suspended);
+#if X0X_CC
+    uint32_t packets[2]={first,second};return midi_out_timed(packets,2);
+#else
+    return midi_ring_try_pair(midi_out_q,&mo_w,&mo_r,MQ,first,second,midi_usb_ready());
+#endif
 }
 
 static int midi_out_batch(const uint32_t *packets,uint32_t count)
 {
-    return midi_ring_try_batch(midi_out_q,&mo_w,&mo_r,MQ,packets,count,usb.config && !usb.suspended);
+#if X0X_CC
+    return midi_out_timed(packets,count);
+#else
+    return midi_ring_try_batch(midi_out_q,&mo_w,&mo_r,MQ,packets,count,midi_usb_ready());
+#endif
 }
 
 /* ------------------------------------------------------- descriptors --- */
@@ -471,7 +542,7 @@ static void ep0_service(void)
     case 0x0009:                                        /* SET_CONFIGURATION: 0 or 1 only */
         if (s[2] > 1u)
             goto stall;
-        usb.config = s[2];
+        midi_usb_state(s[2],usb.suspended,0);
         if (usb.config == 1u)
             ep1_config();
         else
@@ -713,6 +784,9 @@ static void ota_frame_done(void)
 static void ep1_tx(void)
 {
     uint32_t csr, n = 0;
+#if X0X_CC
+    uint32_t stage_r=mo_r,stage_start,stage_count=0;
+#endif
 #if FELUCCA_OTA
     if (mo_w == mo_r && so_w == so_r)
         return;
@@ -736,24 +810,77 @@ static void ep1_tx(void)
         n += 4u;
         so_r++;
     }
+    /* SysEx prefix is never cancelled by musical transport. */
+#endif
+#if X0X_CC
+    stage_start=n;
+#endif
+#if FELUCCA_OTA
+#if X0X_CC
+    while (!sx_busy && so_r == so_w && stage_r != mo_w && n < 64u) {
+#else
     while (!sx_busy && so_r == so_w && mo_r != mo_w && n < 64u) {
+#endif
+#else
+#if X0X_CC
+    while (stage_r != mo_w && n < 64u) {
 #else
     while (mo_r != mo_w && n < 64u) {
 #endif
+#endif
         uint32_t pkt;
         RING_PUBLISH();                                 /* the audio ISR (producer) can preempt us: */
+#if X0X_CC
+        pkt = midi_out_q[stage_r % MQ]; /* r remains published until commitment */
+        /* Cancelled entries may retire before their old deadline, so fresh
+         * Stop/owned Off cannot be held behind future attacks or clock. */
+        {
+            uint32_t ahead=stage_r-mo_r,status=(pkt>>8)&255u;
+            int cancelled=(ahead<mo_cancel_attacks && (status&240u)==144u && (pkt>>24)&127u) ||
+                          (ahead<mo_cancel_transport && status>=248u && status<=252u && status!=249u);
+            if(!cancelled && !midi_deadline_ready(midi_deadline.due[stage_r%MQ],fm1_ticks()))break;
+        }
+#else
         pkt = midi_out_q[mo_r % MQ];                    /* slot read strictly between the index checks */
+#endif
         ep1tx[n] = (uint8_t)pkt;
         ep1tx[n + 1] = (uint8_t)(pkt >> 8);
         ep1tx[n + 2] = (uint8_t)(pkt >> 16);
         ep1tx[n + 3] = (uint8_t)(pkt >> 24);
         n += 4u;
         RING_PUBLISH();
+#if X0X_CC
+        stage_r++;stage_count++;
+#else
         mo_r++;
+#endif
     }
+#if X0X_CC
+    MIDI_TX_BEFORE_COMMIT();
+    uint32_t saved=MIDI_TX_ENTER(),out=stage_start,i;
+    /* At most16 words. Compact only the consumer-owned endpoint staging buffer,
+     * never published ring slots. Stop can preempt staging, not this decision. */
+    for(i=0;i<stage_count;i++) {
+        uint32_t at=stage_start+4u*i,status=ep1tx[at+1];
+        if((i<mo_cancel_attacks && (status&240u)==144u && (ep1tx[at+3]&127u)) ||
+           (i<mo_cancel_transport && (status==248u||status==250u||status==251u||status==252u)))continue;
+        if(out!=at){ep1tx[out]=ep1tx[at];ep1tx[out+1]=ep1tx[at+1];ep1tx[out+2]=ep1tx[at+2];ep1tx[out+3]=ep1tx[at+3];}
+        out+=4u;
+    }
+    mo_cancel_attacks=mo_cancel_attacks>stage_count?(uint8_t)(mo_cancel_attacks-stage_count):0;
+    mo_cancel_transport=mo_cancel_transport>stage_count?(uint8_t)(mo_cancel_transport-stage_count):0;
+    RING_PUBLISH();mo_r=stage_r;n=out;
+    /* DMA-address/count publication is the software handoff boundary. Restore
+     * IRQ state before the potentially20000-poll SIE work below. Already handed
+     * endpoint words (<=16) cannot be recalled by a later Stop. */
+    if(n)fm1_usb_ep_send(1,ep1tx,n);
+    MIDI_TX_LEAVE(saved);
+    if(!n)return;
+#else
     if (!n)
         return;
     fm1_usb_ep_send(1, ep1tx, n);
+#endif
     sie_wr(S_TXCSR1, sie_rd(S_TXCSR1) | 0x01u);
     usb.tx_pkts++;
 }
@@ -986,9 +1113,9 @@ static void usb_poll(void)                              /* TIMER5 ISR, 2 kHz */
             if (f != usb.frame) {
                 usb.frame = f;
                 usb.frame_same = 0;
-                usb.suspended = 0;
+                midi_usb_state(usb.config,0,0);
             } else if (++usb.frame_same >= 10u && !usb.suspended) {   /* 100 ms frozen: unplugged / host asleep */
-                usb.suspended = 1;
+                midi_usb_state(usb.config,1,0);
                 usb.frame_stalls++;
             }
         }
@@ -1003,16 +1130,18 @@ static void usb_poll(void)                              /* TIMER5 ISR, 2 kHz */
 #endif
     if (iu & 0x01u) {                                   /* suspend: the bus went idle */
         usb.suspends++;
-        usb.suspended = 1;
+        midi_usb_state(usb.config,1,0);
     }
     if (iu & 0x02u)                                     /* resume */
-        usb.suspended = 0;
+        midi_usb_state(usb.config,0,0);
     if (iu & 0x04u) {                                   /* bus reset */
         usb.resets++;
         sie_wr(S_FADDR, 0);
-        usb.config = 0;
-        usb.suspended = 0;
+        midi_usb_state(0,0,1);
         mo_r = mo_w;                                    /* nothing stale for the next host */
+#if X0X_CC
+        mo_cancel_attacks=mo_cancel_transport=0;
+#endif
         usb.sx_on = 0;
 #if FELUCCA_OTA
         so_r = so_w;
@@ -1057,6 +1186,9 @@ static void usb_poll(void)                              /* TIMER5 ISR, 2 kHz */
 
 static void usb_start(void)                             /* boot, or main-loop retry while usb.up == 0 */
 {
+#if X0X_CC
+    midi_deadline.active=0; midi_deadline.base=0; midi_deadline.frame=0;
+#endif
     usb.timeouts = 0;
     fm1_usb_reset();                                    /* reset whatever the ROM left */
     fm1_delay_ms(25);

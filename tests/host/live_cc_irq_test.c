@@ -1,3 +1,4 @@
+#include "timing_rate_test_state.h"
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Compile the production USB/TRS producer paths with CC enabled. Interrupt
  * interleavings are injected deterministically; main callback asserts context. */
@@ -31,6 +32,7 @@ static void test_rx_sync(void){assert(in_irq);}
 #define fm1_usb_sie_rd_start test_sie_read
 #define fm1_usb_sie_data test_sie_data
 #define fm1_usb_rx_sync test_rx_sync
+static uint32_t fm1_ticks(void){return 0;}
 #include "usb.c"
 #include "midi_uart.c"
 int cc_message(uint32_t packet,uint8_t source){

@@ -4,15 +4,19 @@
 
 Writes two headers (both flash-resident `static const` data):
 
-  x0x_drum_samples.h  the hi-hat, ride and crash PCM as int16 (assets/909/*.wav,
-                      from ER-99 via 9W9, GPL-3.0). hh.wav is 24-bit: it is
-                      rounded to 16 bits here (the 909's own cymbals are 6-bit).
+  x0x_drum_samples.h  the hi-hat, ride and crash as 8-bit mu-law (G.711) with
+                      its 256-entry int16 decode table (assets/909/*.wav, from
+                      ER-99 via 9W9, GPL-3.0): 110 KB instead of 221 KB of int16,
+                      37 dB below the signal (the 909's own cymbals are 6-bit).
+                      hh.wav is 24-bit: it is rounded to 16 bits first.
   x0x_drum_tables.h   the tanh lookup used by every saturator, and 9W9's EXP pot
                       curves (er99_pots.h: min * (max/min)^(pot/127)) evaluated
                       here, so the device needs no powf and gets the same values
                       9W9 computes with libm.
 
-  tools/gen_drum_samples.py [build/gen/x0x_drum_samples.h]
+  tools/gen_drum_samples.py [build/gen/x0x_drum_samples.h] [--ref-wavs DIR]
+--ref-wavs also writes the samples as the device plays them (mu-law decoded,
+16-bit) to DIR/{hh,ride,crash}.wav, for the 9W9 reference in tests/host.
 The tables header is written next to the samples header.
 """
 import math
@@ -98,6 +102,26 @@ def arr(ctype, name, vals, fmt=str, per=12, shared=False):
         lines.append("    " + ", ".join(fmt(v) for v in vals[i:i + per]) + ",")
     lines.append("};")
     return "\n".join(lines)
+
+
+MU_BIAS, MU_CLIP = 0x84, 32635
+
+
+def mulaw_enc(x):
+    """G.711 mu-law of an int16"""
+    sign = 0x80 if x < 0 else 0
+    x = min(-x if x < 0 else x, MU_CLIP) + MU_BIAS
+    e, m = 7, 0x4000
+    while e > 0 and not x & m:
+        e -= 1
+        m >>= 1
+    return ~(sign | e << 4 | (x >> (e + 3)) & 0x0F) & 0xFF
+
+
+def mulaw_dec(u):
+    u = ~u & 0xFF
+    x = ((((u & 0x0F) << 3) + MU_BIAS) << ((u >> 4) & 7)) - MU_BIAS
+    return -x if u & 0x80 else x
 
 
 def pot_exp(lo, hi, pot):
@@ -186,22 +210,119 @@ def pack_exp_affine(rows, block_size=EXP_BLOCK_SIZE):
     return bytes(descriptors), bytes(blob)
 
 
+def pack_exp_segments(rows):
+    """Exact unsigned quadratic predictors on cost-optimal variable segments.
+
+    Descriptor bytes: base32, slope24, curvature24, offset16, width8, end8.
+    Per-curve first-descriptor indices are bytes. End is exclusive in 2..128;
+    valid pots locate a segment in at most 64 steps. All arithmetic restores
+    the original finite word; neither floats nor approximate values are used.
+    """
+    starts, descriptors, blob, read_end = bytearray(), bytearray(), bytearray(), 0
+    for row in rows:
+        if len(row) != 128 or any(type(w) is not int or not 0 <= w <= 0x7f7fffff for w in row):
+            raise ValueError("EXP rows require 128 finite nonnegative IEEE32 words")
+        # Deterministic dynamic programming minimizes actual descriptor+data
+        # bytes, with earlier starts winning ties. Guards are global, not per
+        # segment, and add at most three bytes at the end of the blob.
+        best = [(0, [])] + [None] * 128
+        for end in range(2, 129):
+            for start in range(end - 1):
+                if best[start] is None:
+                    continue
+                words = row[start:end]
+                curvature = max(0, min((words[i+2] - 2*words[i+1] + words[i]
+                                       for i in range(len(words)-2)), default=0) // 2)
+                slope = min((word - words[0] - curvature*i*i) // i
+                            for i, word in enumerate(words) if i)
+                residuals = [word - words[0] - slope*i - curvature*i*i
+                             for i, word in enumerate(words)]
+                width = max(1, max(residuals).bit_length())
+                if not (0 <= slope <= 0xffffff and curvature <= 0xffffff and
+                        min(residuals) >= 0 and width <= 25):
+                    continue
+                cost = best[start][0] + 14 + ((end-start)*width + 7) // 8
+                if best[end] is None or cost < best[end][0]:
+                    best[end] = (cost, best[start][1] + [(start, end, slope, curvature, width, residuals)])
+        if best[128] is None:
+            raise ValueError("EXP row has no bounded unsigned segment encoding")
+        first = len(descriptors) // 14
+        if first > 255:
+            raise ValueError("EXP first descriptor exceeds uint8_t")
+        starts.append(first)
+        for start, end, slope, curvature, width, residuals in best[128][1]:
+            offset = len(blob)
+            if offset > 0xffff:
+                raise ValueError("EXP byte offset exceeds uint16_t")
+            descriptors.extend(row[start].to_bytes(4, "little") + slope.to_bytes(3, "little") +
+                               curvature.to_bytes(3, "little") + offset.to_bytes(2, "little") +
+                               bytes([width, end]))
+            packed = bytearray(((end-start)*width + 7) // 8)
+            for i, residual in enumerate(residuals):
+                for bit in range(width):
+                    if residual & (1 << bit):
+                        position = i*width + bit
+                        packed[position // 8] |= 1 << (position % 8)
+            blob.extend(packed)
+            read_end = max(read_end, offset + ((end-start-1)*width // 8) + 4)
+    if not starts:
+        raise ValueError("EXP packing requires at least one row")
+    blob.extend(bytes(max(0, read_end - len(blob))))
+    return bytes(starts), bytes(descriptors), bytes(blob)
+
+
+def pack_pcm_blocks(pcm):
+    """Exact int16 random access; 64-frame minimum plus fixed-width residuals."""
+    meta, data = [], bytearray()
+    for start in range(0, len(pcm), 64):
+        block = pcm[start:start + 64]
+        minimum = min(block)
+        width = (max(block) - minimum).bit_length()
+        offset = len(data)
+        assert offset < 65536 and width <= 16
+        meta.extend([offset & 255, offset >> 8, minimum & 255,
+                     (minimum >> 8) & 255, width])
+        bits = sum((v - minimum) << (i * width) for i, v in enumerate(block))
+        data.extend(bits.to_bytes((len(block) * width + 7) // 8, 'little'))
+    # Decoder can read a bounded three-byte window even at the final sample.
+    data.extend(b'\0\0\0')
+    return meta, list(data)
+
+
 def main():
-    out_s = Path(sys.argv[1]) if len(sys.argv) > 1 else SRC / "build" / "gen" / "x0x_drum_samples.h"
+    args = sys.argv[1:]
+    ref_wavs = None
+    if "--ref-wavs" in args:
+        i = args.index("--ref-wavs")
+        ref_wavs = Path(args[i + 1])
+        del args[i:i + 2]
+    out_s = Path(args[0]) if args else SRC / "build" / "gen" / "x0x_drum_samples.h"
     out_t = out_s.parent / "x0x_drum_tables.h"
     out_s.parent.mkdir(parents=True, exist_ok=True)
 
     hdr = ["/* Generated by tools/gen_drum_samples.py -- do not edit.",
            " * Hi-hat, ride and crash from ER-99 (Matthew Cieplak) via 9W9, GPL-3.0.",
-           " * Mono, 44.1 kHz, int16 (full scale 32768). */",
-           "#pragma once", "#include <stdint.h>", ""]
+           " * Mono, 44.1 kHz, 8-bit mu-law (G.711); x0x_mulaw decodes to int16 (full scale 32768). */",
+           "#pragma once", "#include <stdint.h>", "",
+           arr("int16_t", "x0x_mulaw", [mulaw_dec(u) for u in range(256)], per=16), ""]
     total = 0
     for name, fn in SAMPLES:
         pcm, bits = read_wav(ASSETS / fn)
         total += len(pcm)
         hdr.append(f"/* {fn}: {len(pcm)} frames, source {bits}-bit */")
         hdr.append(f"#define {name.upper()}_LEN {len(pcm)}u")
-        hdr.append(arr("int16_t", name, pcm, per=16))
+        mu = [mulaw_enc(v) for v in pcm]
+        hdr.append("#if defined(X0X_RAW_HH) || defined(X0X_RAW_PCM)")
+        hdr.append(arr("int16_t", name, [mulaw_dec(v) for v in mu], per=16))
+        hdr.append("#else")
+        hdr.append(arr("uint8_t", name, mu, per=24))
+        hdr.append("#endif")
+        if ref_wavs:
+            ref_wavs.mkdir(parents=True, exist_ok=True)
+            body = b"".join(struct.pack("<h", mulaw_dec(u)) for u in mu)
+            (ref_wavs / fn).write_bytes(b"RIFF" + struct.pack("<I", 36 + len(body)) + b"WAVEfmt " +
+                                        struct.pack("<IHHIIHH", 16, 1, 1, 44100, 88200, 2, 16) +
+                                        b"data" + struct.pack("<I", len(body)) + body)
         hdr.append("")
     out_s.write_text("\n".join(hdr))
 
@@ -216,10 +337,10 @@ def main():
     for i, (n, lo, hi) in enumerate(EXP_RANGES):
         t.append(f"#define X0X_EXP_{n} {i}   /* {lo:g} .. {hi:g} */")
     t.append(f"#define X0X_EXP_COUNT {len(EXP_RANGES)}")
-    # Exact IEEE32 affine blocks: unsigned prediction plus packed residuals.
+    # Exact IEEE32 quadratic segments: unsigned prediction plus packed residuals.
     # One contiguous byte object permits bounded cross-row four-byte loads.
     t.append("#include <stdint.h>")
-    t.append(f"#define X0X_EXP_BLOCK_SIZE {EXP_BLOCK_SIZE}u")
+
     t.append("#ifdef X0X_DRUM_TABLES_DEFINE")
     t.append("#ifdef X0X_EXP_RAW_REFERENCE /* Pinned native oracle only; never firmware. */")
     t.append(f"const float x0x_pot_exp[{len(EXP_RANGES)}][128] = {{")
@@ -232,26 +353,29 @@ def main():
     t.append("};")
     t.append("__attribute__((noinline)) float x0x_pot_exp_value(unsigned curve,unsigned pot){return x0x_pot_exp[curve][pot];}")
     t.append("#else")
-    descriptors, packed = pack_exp_affine([
+    starts, descriptors, packed = pack_exp_segments([
         [struct.unpack('<I', struct.pack('<f', pot_exp(lo, hi, p)))[0] for p in range(128)]
         for _, lo, hi in EXP_RANGES
     ])
-    t.append(arr("uint8_t", "x0x_exp_blocks", descriptors, lambda x: f"0x{x:02x}", per=10))
+    t.append(arr("uint8_t", "x0x_exp_starts", starts))
+    t.append(arr("uint8_t", "x0x_exp_segments", descriptors, lambda x: f"0x{x:02x}", per=14))
     t.append(arr("uint8_t", "x0x_exp_packed", packed, lambda x: f"0x{x:02x}", per=16))
     t.extend([
         "/* Internal control-only accessor; caller validates curve/count and pot0..127.",
         " * Integer decode restores the original float bits, never interpolates. */",
         "__attribute__((noinline)) float x0x_pot_exp_value(unsigned curve, unsigned pot)",
         "{",
-        "    const uint8_t *c=x0x_exp_blocks+10u*(curve*(128u/X0X_EXP_BLOCK_SIZE)+pot/X0X_EXP_BLOCK_SIZE);",
-        "    unsigned index=pot%X0X_EXP_BLOCK_SIZE, width=c[9], bit=index*width;",
+        "    const uint8_t *c=x0x_exp_segments+14u*x0x_exp_starts[curve];",
+        "    unsigned start=0; while(pot>=c[13]) { start=c[13]; c+=14; }",
+        "    unsigned index=pot-start, width=c[12], bit=index*width;",
         "    uint32_t base=(uint32_t)c[0]|((uint32_t)c[1]<<8)|((uint32_t)c[2]<<16)|((uint32_t)c[3]<<24);",
         "    uint32_t slope=(uint32_t)c[4]|((uint32_t)c[5]<<8)|((uint32_t)c[6]<<16);",
-        "    unsigned offset=(unsigned)c[7]|((unsigned)c[8]<<8);",
+        "    uint32_t curvature=(uint32_t)c[7]|((uint32_t)c[8]<<8)|((uint32_t)c[9]<<16);",
+        "    unsigned offset=(unsigned)c[10]|((unsigned)c[11]<<8);",
         "    const uint8_t *p=x0x_exp_packed+offset+(bit>>3);",
         "    uint32_t word=(uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24);",
         "    union { uint32_t bits; float value; } result;",
-        "    result.bits=base+slope*index+((word>>(bit&7u))&((1u<<width)-1u));",
+        "    result.bits=base+(slope+curvature*index)*index+((word>>(bit&7u))&((1u<<width)-1u));",
         "    return result.value;",
         "}",
         "#endif /* X0X_EXP_RAW_REFERENCE */",
@@ -261,7 +385,7 @@ def main():
     ])
     t.append("")
     out_t.write_text("\n".join(t))
-    print(f"gen_drum_samples: {total} frames ({total * 2} bytes) -> {out_s.name}; "
+    print(f"gen_drum_samples: {total} frames ({total} bytes, mu-law) -> {out_s.name}; "
           f"tanh {TANH_N + 2} + {len(EXP_RANGES)} pot curves -> {out_t.name}")
 
 

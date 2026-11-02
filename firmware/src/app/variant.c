@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "x0x.h"
+#include "../seq/rate_families.h"
 
 static uint32_t variant_revision;
 void variant_changed(void) { variant_revision++; }
@@ -22,13 +23,15 @@ static int arrangement_degree_valid(const arrangement_settings_t *a, uint8_t deg
 int arrangement_valid(const arrangement_settings_t *a)
 {
     int i;
-    if (a->flags & ~ARR_FLAGS || arrangement_bass_mode(a->flags,0)>BASS_FOLLOW_CHORD ||
-        arrangement_bass_mode(a->flags,1)>BASS_FOLLOW_CHORD || a->key > 11 || a->mode > HARMONY_CHROMATIC ||
+    if (a->flags & ~ARR_FLAGS || arrangement_bass_mode(a->flags,0)>BASS_FOLLOW_SCALE ||
+        arrangement_bass_mode(a->flags,1)>BASS_FOLLOW_SCALE || a->key > 11 || a->mode > HARMONY_CHROMATIC ||
         (a->parent > HARMONY_LOCRIAN && a->parent != 255) ||
         (a->pad_channel > 15 && a->pad_channel != 255) || a->pad_root > 127 ||
         a->pad_low > a->pad_high || a->pad_high > 127) return 0;
     for (i = 0; i < 2; i++) if (a->bass_low[i] > a->bass_high[i] || a->bass_high[i] > 127) return 0;
-    for (i = 0; i < NSONG; i++) if (!arrangement_degree_valid(a,a->degree[i])) return 0;
+    for (i = 0; i < NSONG; i++) if ((a->degree[i]&~31u) ||
+        (!(a->flags&ARR_EXTENDED) && (a->degree[i]&24u)) ||
+        !arrangement_degree_valid(a,ARR_DEGREE(a->degree[i]))) return 0;
     return 1;
 }
 
@@ -43,9 +46,16 @@ void variant_defaults(variant_settings_t *v)
 POLY_COLD int variant_valid(const variant_settings_t *v)
 {
     uint32_t i;
-    if (v->magic != VARIANT_MAGIC || v->schema != VARIANT_SCHEMA || v->bytes != sizeof *v) return 0;
+    if (v->magic != VARIANT_MAGIC || (v->schema != VARIANT_SCHEMA && v->schema != 6u) || v->bytes != sizeof *v) return 0;
     for (i = 0; i < VARIANT_STRIPS; i++) if (!sound_strip_config_valid(&v->strip[i])) return 0;
     return arrangement_valid(&v->arrangement);
+}
+
+static int arrangement_legacy_valid(const arrangement_settings_t *a)
+{
+    if((a->flags&ARR_EXTENDED) || arrangement_bass_mode(a->flags,0)>BASS_FOLLOW_CHORD ||
+       arrangement_bass_mode(a->flags,1)>BASS_FOLLOW_CHORD)return 0;
+    return arrangement_valid(a);
 }
 
 POLY_COLD int variant_schema2_valid(const variant_settings_t *v)
@@ -53,17 +63,17 @@ POLY_COLD int variant_schema2_valid(const variant_settings_t *v)
     uint32_t i;
     if (v->magic != VARIANT_MAGIC || v->schema != 2 || v->bytes != sizeof *v || v->arrangement.flags & ~ARR_ENABLED) return 0;
     for (i=0;i<VARIANT_STRIPS;i++) if (!sound_strip_config_valid(&v->strip[i])) return 0;
-    return arrangement_valid(&v->arrangement);
+    return arrangement_legacy_valid(&v->arrangement);
 }
 POLY_COLD int variant_schema3_valid(const variant_settings_t *v)
 {
     uint32_t i;
     if(v->magic!=VARIANT_MAGIC || v->schema!=3 || v->bytes!=sizeof *v || (v->arrangement.flags & ~31u))return 0;
     for(i=0;i<VARIANT_STRIPS;i++)if(!sound_strip_config_valid(&v->strip[i]))return 0;
-    return arrangement_valid(&v->arrangement);
+    return arrangement_legacy_valid(&v->arrangement);
 }
 POLY_COLD int variant_schema4_valid(const variant_settings_t *v)
-{unsigned i;if(v->magic!=VARIANT_MAGIC || v->schema!=4 || v->bytes!=sizeof *v || v->arrangement.flags&~63u)return 0;for(i=0;i<VARIANT_STRIPS;i++)if(!sound_strip_config_valid(&v->strip[i]))return 0;return arrangement_valid(&v->arrangement);}
+{unsigned i;if(v->magic!=VARIANT_MAGIC || v->schema!=4 || v->bytes!=sizeof *v || v->arrangement.flags&~63u)return 0;for(i=0;i<VARIANT_STRIPS;i++)if(!sound_strip_config_valid(&v->strip[i]))return 0;return arrangement_legacy_valid(&v->arrangement);}
 POLY_COLD int variant_saved_valid(const variant_settings_t *v)
 { return variant_valid(v) || variant_schema2_valid(v) || variant_schema3_valid(v) || variant_schema4_valid(v); }
 
@@ -80,7 +90,7 @@ POLY_COLD int variant_is_default(const variant_settings_t *v)
     sound_strip_config_t d;
     arrangement_settings_t a;
     uint32_t i, b;
-    if (!variant_valid(v)) return 0;
+    if (!variant_valid(v) || v->schema==6u) return 0;
     sound_strip_config_default(&d);
     for (i = 0; i < VARIANT_STRIPS; i++)
         for (b = 0; b < sizeof d; b++)
@@ -141,6 +151,14 @@ POLY_COLD int variant_command(const variant_command_t *c, variant_reply_t *r)
     if (c->reserved) goto done;
     if (project_write_protected()) { result = VR_PROTECTED; goto done; }
     switch (c->op) {
+    case VC_SET_PHASE:
+        if(c->target!=1 || c->voice || c->index>3 || c->value<0 || c->value>(c->index==0?1:c->index==1?7:c->index==2?127:15))break;
+        if(engine_phase_set(c->index,c->value)){ui_external_changed();result=VR_QUEUED;}else result=VR_BUSY;
+        break;
+    case VC_SAVE_STRIP_DEFAULT: case VC_APPLY_STRIP_DEFAULT:
+        if(c->target<VARIANT_STRIPS && !c->voice && !c->index && !c->value)
+            result=ui_strip_default_action(c->target,c->op==VC_APPLY_STRIP_DEFAULT);
+        break;
     case VC_SET_SOUND: {
         const x0x_param_t *p;
         if (c->target >= NTARGETS || c->voice >= engine_nvoices(c->target) || c->index >= engine_nparams(c->target,c->voice)) break;
@@ -170,13 +188,14 @@ POLY_COLD int variant_command(const variant_command_t *c, variant_reply_t *r)
     case VC_SET_BLOCK: {
         song_bar_t b;
         int i;
-        uint8_t degree = c->voice >> 3;
-        if (c->target >= NSONG || c->voice & 192u || c->index > 31 ||
+        uint8_t degree = (c->voice >> 3)&7u;
+        uint8_t meta = degree | ((c->voice>>6)<<3);
+        if (c->target >= NSONG || c->index > 31 ||
             c->value < 0 || (uint32_t)c->value > 0x1ffffffu ||
             !arrangement_degree_valid(&proj.variant.arrangement,degree)) break;
         for (i = 0; i < NTRACKS; i++) b.pat[i] = (uint8_t)(((uint32_t)c->value >> (i * 5)) & 31u);
         b.mute = (uint8_t)(c->index | ((c->voice & 7u) << 5));
-        if (!engine_arrangement_block(&proj.arr.song.bar[c->target],&proj.variant.arrangement.degree[c->target],&b,degree)) {
+        if (!engine_arrangement_block(&proj.arr.song.bar[c->target],&proj.variant.arrangement.degree[c->target],&b,meta)) {
             result = VR_BUSY; break;
         }
         ui_external_changed(); result = VR_QUEUED; break;
@@ -199,7 +218,7 @@ POLY_COLD int variant_command(const variant_command_t *c, variant_reply_t *r)
         uint8_t *dst; unsigned shift;
         if (c->target>=NBASS || c->voice || c->index>2 || c->value<0 || c->value>127) break;
         if (!c->index) {
-            if (c->value>BASS_FOLLOW_CHORD) break;
+            if (c->value>BASS_FOLLOW_SCALE) break;
             shift=1+2*c->target;
             candidate.flags=(uint8_t)((candidate.flags & ~(3u<<shift)) | ((unsigned)c->value<<shift));
             dst=&proj.variant.arrangement.flags;
@@ -239,6 +258,12 @@ POLY_COLD int variant_command(const variant_command_t *c, variant_reply_t *r)
             !(proj.variant.arrangement.flags & ARR_ENABLED)) break;
         result = engine_arrangement_queue(c->target) ? VR_QUEUED : VR_BUSY; break;
     case VC_SET_LANE:
+        if(c->index>=3 && c->index<=8){
+            if(c->target>=NPAT||c->voice>=25)break;
+            result=engine_rate_set(c->target,c->voice,c->index==8?0:c->index-2,c->value)?VR_QUEUED:VR_INVALID;
+            if(result==VR_QUEUED)ui_external_changed();
+            break;
+        }
         if(c->target>=NPAT || c->voice>=POLY_LANES || c->index>2 || (c->index==2 ? (c->voice!=24 || c->value<0 || c->value>1151 || ((unsigned)c->value>>7)>8) : (c->value<(c->index?0:1) || c->value>(c->index?7:64))) || !(proj.variant.arrangement.flags&POLY_FLAG))break;
         result=(c->index==2?engine_lane_break_step(c->target,c->value&63,(c->value>>6)&1,(c->value>>7)&15):engine_lane_set(c->target,c->voice,c->index,c->value))?VR_QUEUED:VR_BUSY;
         if(result==VR_QUEUED)ui_external_changed();
@@ -273,7 +298,7 @@ POLY_COLD int variant_snapshot(int section, int target, int voice, variant_snaps
     if (section == VS_INFO) {
         s->count = 8;
         s->value[0] = VCAP_SOUND | VCAP_STRIP_CONFIG | VCAP_UNDO | VCAP_SAVE | VCAP_STRIP_AUDIO |
-            VCAP_ARRANGEMENT | VCAP_HARMONY_METADATA | VCAP_BASS_FOLLOW | VCAP_EXTERNAL_PAD | VCAP_LANE_CLOCKS;
+            VCAP_ARRANGEMENT | VCAP_HARMONY_METADATA | VCAP_BASS_FOLLOW | VCAP_EXTERNAL_PAD | VCAP_LANE_CLOCKS | VCAP_STRIP_DEFAULTS;
         s->value[1] = (uint32_t)ui_dirty(); s->value[2] = (uint32_t)project_write_protected();
         s->value[3] = engine_queue_written(); s->value[4] = engine_queue_read();
         s->value[5] = VARIANT_SCHEMA; s->value[6] = VARIANT_STRIPS;
@@ -281,7 +306,7 @@ POLY_COLD int variant_snapshot(int section, int target, int voice, variant_snaps
     } else if(section==VS_LANE_MODE) {
         if(target || voice)return VR_INVALID;
         s->count=7;s->value[0]=(proj.variant.arrangement.flags&POLY_FLAG)!=0;
-        s->value[1]=s->value[0]?poly_mode((const uint8_t *)&proj.sound):0;s->value[2]=seq.lane_enabled;s->value[3]=s->value[1]!=s->value[2];s->value[4]=25;s->value[5]=8;s->value[6]=64;
+        s->value[1]=s->value[0]?poly_mode((const uint8_t *)&proj.sound):0;s->value[2]=seq.lane_enabled;s->value[3]=s->value[1]!=s->value[2];s->value[4]=25;s->value[5]=poly_sync_enabled((const uint8_t *)&proj.sound)?RF_COUNT:poly_expanded((const uint8_t *)&proj.sound)?21:8;s->value[6]=64;
     } else if(section==VS_LANE_BREAK){
         if(target<0 || target>=NPAT || voice<0 || voice>1 || !(proj.variant.arrangement.flags&POLY_FLAG))return VR_INVALID;
         s->count=5;for(i=0;i<32;i++){int step=voice*32+i;s->value[0]|=(unsigned)poly_break_gate(proj.pat,(const uint8_t *)&proj.sound,target,step)<<i;s->value[1+i/8]|=(unsigned)poly_break_slice(proj.pat,(const uint8_t *)&proj.sound,target,step)<<((i%8)*4);}
@@ -291,6 +316,13 @@ POLY_COLD int variant_snapshot(int section, int target, int voice, variant_snaps
         if(s->value[0]){s->value[1]=poly_length(proj.pat,(const uint8_t *)&proj.sound,target,voice);s->value[2]=poly_rate(proj.pat,(const uint8_t *)&proj.sound,target,voice);}
         else {s->value[1]=part<NKIT?proj.pat[target].drum[part].len:part==TRK_BRK?16:proj.pat[target].bass[part-NKIT].len;s->value[2]=part<NKIT?proj.pat[target].drum[part].rate:part==TRK_BRK?RATE_16:proj.pat[target].bass[part-NKIT].rate;}
         s->value[3]=seq.ppat[part];s->value[4]=seq.lane_sound && seq.playing?seq_lane_position(&seq,voice):255;s->value[5]=seq.lane_sound?seq_lane_cycles(&seq,voice):seq.t[part].bars;s->value[6]=seq.lane_sound?(uint32_t)seq_lane_latched_rate(&seq,voice):s->value[2];s->value[7]=seq.lane_enabled;s->value[8]=seq.lane_sound && seq.playing && seq.ppat[part]==target && (seq.lane_pending&(1u<<voice));
+        if(s->value[0] && poly_expanded((const uint8_t *)&proj.sound)){s->count=13;for(i=0;i<3;i++)s->value[9+i]=(uint32_t)poly_rate_config(proj.pat,(const uint8_t *)&proj.sound,voice,i);s->value[12]=1;
+            if(poly_sync_enabled((const uint8_t *)&proj.sound)){s->count=16;s->value[12]=2;s->value[13]=poly_sync_mode(proj.pat,(const uint8_t *)&proj.sound);s->value[14]=poly_sync_override(proj.pat,(const uint8_t *)&proj.sound,voice);s->value[15]=poly_sync_family(proj.pat,(const uint8_t *)&proj.sound,voice);}}
+    } else if(section==VS_PHASE){
+        if(target!=1 || voice)return VR_INVALID;
+        s->count=5;
+        for(i=0;i<4;i++)s->value[i]=(unsigned)engine_phase_get(i);
+        s->value[4]=proj.variant.schema;
     } else if (section == VS_SOUND) {
         if (target < 0 || target >= NTARGETS || voice < 0 || voice >= engine_nvoices(target)) return VR_INVALID;
         n = engine_nparams(target, voice);
@@ -315,8 +347,8 @@ POLY_COLD int variant_snapshot(int section, int target, int voice, variant_snaps
         s->count = 8;
         for (i = 0; i < NTRACKS; i++) s->value[i] = proj.arr.song.bar[target].pat[i];
         s->value[5] = proj.arr.song.bar[target].mute & 31u;
-        s->value[6] = (uint32_t)SONG_REP(&proj.arr.song.bar[target]);
-        s->value[7] = proj.variant.arrangement.degree[target];
+        s->value[6] = ARR_BARS(&proj.arr.song.bar[target],proj.variant.arrangement.degree[target]);
+        s->value[7] = ARR_DEGREE(proj.variant.arrangement.degree[target]);
     } else if (section == VS_ARRANGEMENT) {
         const arrangement_settings_t *a = &proj.variant.arrangement;
         const volatile arrangement_runtime_t *r = &seq.arrangement;
@@ -328,7 +360,7 @@ POLY_COLD int variant_snapshot(int section, int target, int voice, variant_snaps
         s->value[6] = r->tick; s->value[7] = seq.song_rep;
         s->value[8] = a->key; s->value[9] = a->mode; s->value[10] = a->parent;
         s->value[11] = r->degree; s->value[12] = r->key; s->value[13] = r->mode; s->value[14] = r->parent;
-        s->value[15] = ((r->mute >> 5) + 1u);
+        s->value[15] = 1u+(r->mute>>5)+((r->clock_started&6u)<<2);
     } else if (section == VS_BASS_FOLLOW) {
         const arrangement_settings_t *a=&proj.variant.arrangement;
         const seq_track_t *t;
@@ -336,7 +368,7 @@ POLY_COLD int variant_snapshot(int section, int target, int voice, variant_snaps
         if (target<0 || target>=NBASS || voice) return VR_INVALID;
         t=&seq.t[TRK_BASS0+target];s->count=10;
         s->value[0]=arrangement_bass_mode(a->flags,target);s->value[1]=a->bass_low[target];s->value[2]=a->bass_high[target];
-        s->value[3]=(seq.arrangement.flags&ARR_ENABLED)?arrangement_bass_mode(seq.arrangement.flags,target):0;
+        s->value[3]=((seq.arrangement.flags&ARR_ENABLED) || arrangement_bass_mode(seq.arrangement.flags,target)==BASS_FOLLOW_SCALE)?arrangement_bass_mode(seq.arrangement.flags,target):0;
         spec=(harmony_spec_t){seq.arrangement.key,seq.arrangement.mode,seq.arrangement.degree,seq.arrangement.parent};
         s->value[4]=(seq.playing && (seq.arrangement.flags&ARR_ENABLED) && harmony_resolve(&spec,60,0,127,&chord))?1:0;
         s->value[5]=t->sounding?(t->held_note&127u):255;

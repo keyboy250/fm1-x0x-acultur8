@@ -49,6 +49,8 @@ static uint32_t st_crc32(const void *p, uint32_t n)   /* zlib CRC-32, 4 bits per
 
 static uint32_t st_sector(uint32_t obj, uint32_t copy)  /* flash offset of copy A (0) / B (1) */
 {
+    if (obj == OBJ_STRIP_DEFAULTS)
+        return copy ? 0xFE000u : 0x9F000u;
     if (obj == OBJ_SET)
         return 0xFC000u + copy * ST_SECTOR;
     if (obj == OBJ_PANEL)
@@ -109,7 +111,31 @@ static int st_load(uint32_t obj, void *dst, uint32_t max)
 {
     uint32_t i;
     st_hdr_t h;
-    if (st_current(obj, &h) < 0)
+    if (st_current(obj, &h) < 0) {
+        /* Distinguish an absent defaults bank from damaged/future content. */
+        if (obj == OBJ_STRIP_DEFAULTS || obj == OBJ_PANEL) {
+            uint32_t magic[2];
+            if (st_read(st_sector(obj,0),magic,4) || st_read(st_sector(obj,1),magic+1,4) ||
+                magic[0] != UINT32_MAX || magic[1] != UINT32_MAX) return -2;
+        }
+        return -1;
+    }
+    if (!h.len) return -1;
+    if (h.len > max)
+        h.len = max;
+    for (i = 0; i < h.len; i++)
+        ((uint8_t *)dst)[i] = st_buf[i];
+    return (int)h.len;
+}
+
+/* the copy before the current one, if it is valid too: its length, or -1 (a stream torn across
+ * objects falls back to the copies of the save before: project.c load_stream) */
+static int st_load_prev(uint32_t obj, void *dst, uint32_t max)
+{
+    uint32_t i;
+    st_hdr_t h;
+    int cur = st_current(obj, &h);
+    if (cur < 0 || st_head(obj, (uint32_t)!cur, &h) || st_body(obj, (uint32_t)!cur, &h))
         return -1;
     if (h.len > max)
         h.len = max;

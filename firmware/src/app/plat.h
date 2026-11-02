@@ -41,20 +41,33 @@ void plat_keys_dim(uint32_t keys);     /* these keys light dim (a second level; 
 void plat_play_red(int red);           /* PLAY lights green; red (its other LED) while recording (before plat_leds) */
 
 /* USB MIDI, 4-byte USB-MIDI event packets (cable 0) */
+#if defined(X0X_HOST) || defined(X0X_WEB)
+#define plat_midi_audio_position(frame) ((void)(frame))
+#else
+void plat_midi_audio_position(uint32_t frame);
+#endif
 int plat_midi_connected(void);
 int plat_midi_in(uint32_t *pkt);       /* 1 = got one (called from the audio ISR) */
 int plat_midi_pair(uint32_t first,uint32_t second);
 int plat_midi_batch(const uint32_t *packets,uint32_t count);
 void plat_midi_cancel(void); /* browser pending attacks only; physical no-op */ /* atomic two-slot transaction */
+void plat_midi_retire_clock(uint8_t sources);
+void plat_midi_transport_cancel(void); /* candidate browser transport+attacks invalidation */
 int plat_midi_out(uint32_t pkt);      /* queue one (audio ISR or main loop) */
 
 /* persistent storage (Felucca storage.c objects: A/B sectors, CRC, torn-write safe) */
 int plat_store_load(uint32_t obj, void *dst, uint32_t max);   /* bytes loaded, < 0 = none / bad */
 int plat_store_save(uint32_t obj, const void *src, uint32_t len);   /* 0 = ok */
+int plat_store_load_prev(uint32_t obj, void *dst, uint32_t max);   /* the copy before the current one, < 0 = none */
+int plat_timing_load(uint32_t words[4]); /* rate, generation, unit, record status */
+int plat_timing_save(uint32_t rate,uint32_t generation,uint32_t old_unit,uint32_t new_unit);
+int plat_midi_tx_idle(void);
 #define PLAT_STORE_MAX 3840u           /* bytes per object */
-enum { OBJ_SET, OBJ_SOUND, OBJ_PAT0, OBJ_PAT1, OBJ_PANEL, OBJ_SONG, OBJ_MOTION, OBJ_NOBJ };
+enum { OBJ_SET, OBJ_SOUND, OBJ_PAT0, OBJ_PAT1, OBJ_PANEL, OBJ_SONG, OBJ_MOTION, OBJ_STRIP_DEFAULTS, OBJ_NOBJ };
 /* flash: OBJ_SET 0xFC000; SOUND / PAT0 / PAT1 / SONG 0x97000.. (2 sectors each); OBJ_PANEL 0xDC000,
  * OBJ_MOTION 0xDE000 (all inside Felucca's data area, 0x97000..0xDFFFF) */
+
+/* OBJ_STRIP_DEFAULTS uses the two otherwise unused sectors0x9F000/0xFE000. */
 
 /* user sample slots (break loops), read in place; 0 = empty slot */
 #define PLAT_NSLOTS 3
@@ -73,6 +86,10 @@ int plat_cpu2_run(void (*fn)(uint32_t), uint32_t arg);   /* ISR: 1 = the second 
 int plat_cpu2_wait(void);              /* ISR: 0 = done; -1 = it failed (and is off): do the job here */
 int plat_cpu2_gave_up(void);           /* why it is off: 0 no, 1 it read a wrong job (fm1-x0x#10), 2 one did not finish */
 uint32_t plat_cpu2_bad(void);          /* wrong jobs it saw (0 on a unit that runs both cores) */
+int plat_cpu2_barred(void);            /* 1: since power-on it was given up, or core 0 crashed beside it */
+int plat_vdc14_mv(void);               /* VDC14 as set at start, mV (PERF) */
+int plat_sysvdd_mv(void);              /* SYSVDD (the core) as set at start, mV (PERF) */
+int plat_last_crash(uint32_t v[5]);    /* 1: a crash since power-on (vec, pc, emu, dbg, rets as its red screen) */
 uint32_t plat_xruns(void);
 
 /* performance (the PERF screen; firmware/hal/fm1_perf.h): a counter for timing stages, the CPU's

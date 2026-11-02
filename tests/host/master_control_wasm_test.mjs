@@ -13,17 +13,17 @@ async function cc(raw){const r=await send({type:'cc-input-batch',route,packets:[
 await p.onMessage({type:'load',wasm,master:2800});render(35);assert.deepEqual(state(),{q12:2800,owner:1,pickupPending:false});await enable();
 // Actual index listeners/readback; only DOM plumbing is replaced.
 const html=fs.readFileSync('web/emu/index.html','utf8');const input=html.slice(html.indexOf('// ---------------------------------------------------------------- state and input'),html.indexOf('// ---------------------------------------------------------------- screen and lights'));
-const element=()=>({attrs:new Map(),listeners:new Map(),style:{},classList:{toggle(){}},setAttribute(k,v){this.attrs.set(k,String(v));},getAttribute(k){return this.attrs.get(k);},hasAttribute(k){return this.attrs.has(k);},removeAttribute(k){this.attrs.delete(k);},getBBox(){return {x:0,y:0,width:20,height:20};},insertBefore(){},addEventListener(k,v){this.listeners.set(k,v);},setPointerCapture(){}});
+const element=()=>({attrs:new Map(),listeners:new Map(),style:{},classList:{toggle(){}},setAttribute(k,v){this.attrs.set(k,String(v));},getAttribute(k){return this.attrs.get(k);},hasAttribute(k){return this.attrs.has(k);},removeAttribute(k){this.attrs.delete(k);},getBBox(){return {x:0,y:0,width:20,height:20};},insertBefore(){},addEventListener(k,v){this.listeners.set(k,v);},setPointerCapture(){},append(){}});
 const knobs={},queue=[];
 const el=(tag,attrs)=>{const e=element();for(const [name,value] of Object.entries(attrs))e.setAttribute(name,value);return e;};
-const ctx=vm.createContext({device:element(),document:{createElement:element,getElementById:element},el,text(){},TRAY:'tray',KNOB:'knob',LABEL:'label',buttons:{},keys:[],knobs,WHITE_K:[],BLACK_K:[],BTN:{},performance:{now:()=>0},setTimeout(){},addEventListener(){},post:m=>queue.push(p.onMessage(m))});
+const ctx=vm.createContext({device:element(),controls:element(),descs:element(),nDesc:0,$:()=>({checked:true,addEventListener(){}}),prefs:{},savePrefs(){},document:{createElement:element,getElementById:element},el,text(){},TRAY:'tray',KNOB:'knob',LABEL:'label',buttons:{},keys:[],knobs,WHITE_K:[],BLACK_K:[],BTN:{},performance:{now:()=>0},setTimeout(){},addEventListener(){},post:m=>queue.push(p.onMessage(m))});
 const constructor=html.slice(html.indexOf('function knob(x, y, r, label, role)'),html.indexOf('knob(105, 100, 24, "MASTER", "master");'));
 assert.ok(constructor.startsWith('function knob(x, y, r, label, role)'),'production knob constructor is present');
 vm.runInContext(constructor+'\nknob(105,100,24,"MASTER","master");',ctx);const knob=knobs.MASTER;
-const hit=html.slice(html.indexOf('function hit(c, cls)'),html.indexOf('for (const k of Object.values(knobs)) hit(k'));
-assert.ok(hit.startsWith('function hit(c, cls)'),'production touch target constructor is present');
-vm.runInContext(hit+'\nhit(knobs.MASTER,"knob");',ctx);
-assert.equal(knob.hit.attrs.get('role'),'slider');assert.equal(knob.hit.attrs.get('aria-label'),'MASTER');assert.equal(knob.hit.attrs.get('tabindex'),'0');
+const hit=html.slice(html.indexOf('function hit(c, kind, name, does)'),html.indexOf('for (const n of ["MASTER", "SELECT", "PRESETS", "ALGORITHM"]) hit'));
+assert.ok(hit.startsWith('function hit(c, kind, name, does)'),'production touch target constructor is present');
+vm.runInContext(hit+'\nhit(knobs.MASTER,"knob","MASTER","Master gain");',ctx);
+assert.equal(knob.hit.attrs.get('role'),'slider');assert.equal(knob.hit.attrs.get('aria-label'),'MASTER');assert.equal(knob.hit.tabIndex,0);
 assert.equal(knob.g.attrs.get('aria-hidden'),'true');for(const name of ['role','aria-label','tabindex'])assert.equal(knob.g.attrs.has(name),false,'drawing relinquishes accessible control attributes');
 vm.runInContext(input,ctx);vm.runInContext('turn(knobs.MASTER,1)',ctx);assert.equal(vm.runInContext('master',ctx),2864,'power-off knob still sets next boot level');vm.runInContext('node={port:{postMessage:post}}',ctx);
 const ui=()=>vm.runInContext('master',ctx);

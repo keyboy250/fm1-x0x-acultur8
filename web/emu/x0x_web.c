@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 static void web_audio(const int32_t *blk, uint32_t n);
+#define X0X_WEB_SYSEX 1
 #include "../../host/x0x_host.c"
 #include "../../firmware/src/app/variant.h"
 
@@ -17,6 +18,8 @@ static void web_audio(const int32_t *blk, uint32_t n);
 /* Bounded browser MIDI FIFO. Host strips attributes; exports live here after undef. */
 __attribute__((used,visibility("default"))) int web_midi_ready(int ready) {return host_web_midi_ready(ready);}
 __attribute__((used,visibility("default"))) uint32_t web_midi_epoch(void) {return host_web_midi_epoch();}
+__attribute__((used,visibility("default"))) uint32_t web_midi_transport_epoch(void) {return host_web_midi_transport_epoch();}
+__attribute__((used,visibility("default"))) uint32_t web_midi_output_version(void) {return host_web_midi_output_version();}
 __attribute__((used,visibility("default"))) uint32_t web_midi_cancel(void) {return host_web_midi_cancel();}
 __attribute__((used,visibility("default"))) uint32_t web_midi_pending(void) {return host_web_midi_pending();}
 __attribute__((used,visibility("default"))) int web_midi_batch(int max) {return host_web_midi_batch(max);}
@@ -30,6 +33,9 @@ __attribute__((used,visibility("default"))) uint32_t web_cc_source(int source,in
 __attribute__((used,visibility("default"))) uint32_t web_cc_stat(int index){return index<0||index>=6?0xffffffffu:((uint32_t *)&cc_stats)[index];}
 __attribute__((used,visibility("default"))) uint32_t web_cc_pending(void){return mi_w-mi_r;}
 __attribute__((used,visibility("default"))) uint32_t web_cc_version(void){return 0x00010001u;} /* ABI1 / map1; partial candidate, not complete coverage */
+__attribute__((used,visibility("default"))) uint32_t web_cc_mode(void){return cc_mode();}
+static uint32_t web_generation_words[24];
+__attribute__((used,visibility("default"))) uint32_t *web_generation_snapshot(unsigned source,unsigned page,unsigned index){int n=cc_generation_snapshot(source,page,index,web_generation_words+1);if(n<0)return 0;web_generation_words[0]=(uint32_t)n;return web_generation_words;}
 /* Browser slice CC ABI1. Host-only: no firmware capability or MIDI-source0/1 claim.
  * Exact take returns0 success,-1 invalid21-bit domain,-2 mismatch/context.
  * Route admission belongs to the correlated worklet request, not this C ABI. */
@@ -49,6 +55,13 @@ __attribute__((used,visibility("default"))) uint32_t web_slice_control_state(voi
       ((perf_testing()||save_wait)?16u:0u)|
       ((engine_queue_read()!=engine_queue_written()||mi_w!=mi_r)?32u:0u);
 }
+
+static uint32_t web_clock_words[10],web_clock_generation;
+__attribute__((used,visibility("default"))) uint32_t web_clock_version(void){return CLOCK_PROTOCOL;}
+__attribute__((used,visibility("default"))) int web_clock_command(uint32_t protocol,unsigned role,unsigned source,unsigned policy){return engine_clock_request(protocol,role,source,policy,&web_clock_generation);}
+__attribute__((used,visibility("default"))) int web_clock_retire(uint32_t protocol,unsigned source){return engine_clock_source_retire(protocol,source,&web_clock_generation);}
+__attribute__((used,visibility("default"))) uint32_t web_clock_expected(void){return web_clock_generation;}
+__attribute__((used,visibility("default"))) uint32_t *web_clock_snapshot(uint32_t protocol){return engine_clock_status(protocol,web_clock_words)?0:web_clock_words;}
 
 /* Fixed-size, shared-engine editor bridge. Never expose live project memory. */
 static variant_reply_t web_variant_reply;
@@ -112,6 +125,23 @@ __attribute__((used, visibility("default"))) void web_render(uint32_t n)
 }
 
 __attribute__((used, visibility("default"))) void web_boot(void) { boot(); }
+
+/* the screen reader (announce.c): the page hands the device a reader's SysEx (between F0 and F7) and takes
+ * what it says back, whole F0..F7 frames, from web_said_buf (web_said_len bytes; web_said_clear when read) */
+static uint8_t said_buf[4096], sx_in[64];
+static uint32_t said_n;
+static void web_said(const uint8_t *p, uint32_t n)
+{
+    if (said_n + n <= sizeof said_buf) {
+        memcpy(said_buf + said_n, p, n);
+        said_n += n;
+    }
+}
+__attribute__((used, visibility("default"))) uint8_t *web_said_buf(void) { return said_buf; }
+__attribute__((used, visibility("default"))) uint32_t web_said_len(void) { return said_n; }
+__attribute__((used, visibility("default"))) void web_said_clear(void) { said_n = 0; }
+__attribute__((used, visibility("default"))) uint8_t *web_sysex_in(void) { return sx_in; }
+__attribute__((used, visibility("default"))) void web_sysex(uint32_t n) { ann_frame(sx_in, n > sizeof sx_in ? sizeof sx_in : n, now_ms); }
 __attribute__((used, visibility("default"))) void web_buttons(uint32_t m) { held_btn = m; }
 __attribute__((used, visibility("default"))) void web_buttons_tagged(uint32_t m,uint32_t ticket) {if(ticket){held_btn=m;web_input_pending=ticket;}}
 __attribute__((used, visibility("default"))) uint32_t web_input_ticket(void) {return web_input_applied;}
@@ -284,3 +314,7 @@ __attribute__((used, visibility("default"))) int web_seq_playing(void) { return 
 __attribute__((used, visibility("default"))) float web_seq_beat(void) { return (float)sync_beat(); }
 __attribute__((used, visibility("default"))) void web_seq_set_bpm(float bpm) { if(isfinite(bpm)&&bpm>=20&&bpm<=275)seq.bpm=bpm; }
 __attribute__((used, visibility("default"))) void web_seq_play(int on) { if(on)seq_start(&seq);else seq_stop(&seq); }
+
+static uint32_t web_runtime_words[RUNTIME_DIAGNOSTIC_WORDS];
+__attribute__((used,visibility("default"))) uint32_t *web_runtime_snapshot(int lane)
+{return lane<0 || engine_runtime_snapshot((unsigned)lane,web_runtime_words)?0:web_runtime_words;}

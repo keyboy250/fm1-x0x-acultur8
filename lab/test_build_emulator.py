@@ -37,7 +37,7 @@ class BuildPackagingTest(unittest.TestCase):
             self.assertIn('href="cc-input-ui.css"', page)
             for name in ('variant-ui.js', 'variant-ui.css', 'arrangement-ui.js', 'arrangement-ui.css',
                          'bass-ui.js', 'bass-ui.css', 'pad-ui.js', 'pad-ui.css', 'lane-ui.js', 'lane-ui.css',
-                         'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs',
+                         'cc-input-ui.js', 'cc-input-ui.css', 'cc-input-router.mjs', 'cc-input-worklet.mjs', 'midi-router.mjs', 'midi-worklet.mjs', 'clock-worklet.mjs',
                          'slice-control.mjs', 'slice-worklet.mjs'):
                 self.assertEqual((output / name).read_bytes(), (WORK / 'web/emu' / name).read_bytes())
             self.assertIn('href="manual.txt"', page)

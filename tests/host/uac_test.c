@@ -1,3 +1,4 @@
+#include "timing_rate_test_state.h"
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* The USB audio input (usb.c, FELUCCA_UAC) against clocks that do not agree: the FM-1's I2S renders
  * 512-frame halves (two 256-frame blocks back to back) at RATE_IN while the host takes a 1 ms packet

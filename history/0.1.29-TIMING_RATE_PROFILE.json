@@ -1,0 +1,18 @@
+{
+  "candidate": "0.1.29-timefix",
+  "identity": "FM-1_9000129",
+  "build_environment": {
+    "X0X_TIMING_RATE_HZ": "44119"
+  },
+  "scope": "Experimental profile for this unit,not universal calibration",
+  "baseline_default_hz": 44100,
+  "measured_control_wav_sha256": "4457490d571c0f75bec96ae0746d9e459c5e27048337e46346ada98509f34c21",
+  "measured_parent_audio_bpm": 134.05939483534473,
+  "parent_engine_nominal_bpm": 134.000553205,
+  "inferred_rate_hz_relative_to_focusrite": 44119.36496407021,
+  "selected_integer_profile_hz": 44119,
+  "candidate_engine_at_selected_rate_bpm": 134.000393083,
+  "modeled_bpm_at_inferred_physical_rate": 134.00150156979413,
+  "modeled_early_ms_at_bar129": 2.5689300055944386,
+  "limits": "Prediction from previous analog recording,not corrected firmware hardware acceptance. TIMER4 absolute24MHz accuracy is assumed;no live calibration or stored profile UI added."
+}

@@ -35,6 +35,7 @@
 #include "pattern.h"
 #include "harmony.h"
 #include "lanes.h"
+#include "../timing_rate.h"
 
 #define FS 44100u
 #define TRK_DRUM 0                    /* + kit: 0 = 909, 1 = 808 */
@@ -54,14 +55,15 @@ static inline uint32_t seq_part_mask(int p)
 #define NSONG 192
 #define ARR_ENABLED 1u
 #define ARR_NOTES_OUT 32u /* schema4 tracked mirror; settings_t is outside undo journal */
-#define ARR_FLAGS (63u | POLY_FLAG)
-enum { BASS_FOLLOW_OFF, BASS_FOLLOW_ROOT, BASS_FOLLOW_CHORD };
+#define ARR_EXTENDED 64u /* fail-closed marker for packed 9-32 bar durations */
+#define ARR_FLAGS (63u | ARR_EXTENDED | POLY_FLAG)
+enum { BASS_FOLLOW_OFF, BASS_FOLLOW_ROOT, BASS_FOLLOW_CHORD, BASS_FOLLOW_SCALE };
 static inline unsigned arrangement_bass_mode(unsigned flags,int b) { return (flags >> (1+2*b)) & 3u; }
 typedef struct {
     uint8_t flags, key, mode, parent;
     uint8_t bass_low[2], bass_high[2];
     uint8_t pad_channel, pad_root, pad_low, pad_high;
-    uint8_t degree[NSONG];
+    uint8_t degree[NSONG]; /* low3: degree; bits3-4: upper two duration bits */
 } arrangement_settings_t;
 typedef char arrangement_settings_size_204[(sizeof(arrangement_settings_t) == 204) ? 1 : -1];
 /* Current block/global intent is latched on musical boundaries; never a second song table. */
@@ -69,7 +71,7 @@ typedef struct {
     const arrangement_settings_t *intent;
     uint8_t flags, key, mode, parent;
     uint8_t pat[NTRACKS], mute, degree, tick;
-    uint8_t queued, editing, clock_started, reserved;
+    uint8_t queued, editing, clock_started, reserved; /* clock_started: bit0 clock; bits1-2 latched duration high */
 } arrangement_runtime_t;
 #define SEQ_CH_OFF 0xFFu
 /* a step's chance (the T_PROB lanes): 1-100 = that percentage, PROB_COND + k = the cycle k in the order
@@ -86,6 +88,8 @@ static inline void prob_cond(int k, int *a, int *b)
     *a = k + 1;
     *b = n;
 }
+#define ARR_DEGREE(meta) ((meta)&7u)
+#define ARR_BARS(b,meta) (1u+((b)->mute>>5)+(((meta)&24u)<<0))
 #define SONG_REP(b) (((b)->mute >> 5) + 1)    /* a bar plays 1-8 times: mute's bits 5-7 (the parts use 0-4) */
 typedef struct {
     uint8_t pat[NTRACKS];             /* each part's pattern */
@@ -98,7 +102,7 @@ typedef struct {
 } song_t;
 
 typedef struct {
-    int (*drum)(void *ctx, int kit, int voice, float vel);      /* 0: the hit did not play (its chance) */
+    int (*drum)(void *ctx, int kit, int voice, float vel);      /* 0: rejected;1: normal velocity;2..128: resolved MIDI velocity+1 */
     void (*bass_on)(void *ctx, int part, int note, int accent, int slide);
     void (*bass_off)(void *ctx, int part);
     void (*brk)(void *ctx, int step16, int bar, float samples_per_16th, int enabled);
@@ -112,6 +116,8 @@ typedef struct {
     int (*midi_pair_try)(void *ctx,uint8_t st1,uint8_t n1,uint8_t v1,uint8_t st2,uint8_t n2,uint8_t v2);
     int (*midi_batch_try)(void *ctx,const uint32_t *packets,uint32_t count); /* atomic <=6 USB-MIDI packets */
     void (*midi_cancel)(void *ctx); /* browser-only stale queued attacks; physical sink leaves null */
+    void (*midi_transport_cancel)(void *ctx); /* explicit Stop transport epoch */
+    void (*clock_retire)(void *ctx,uint8_t sources); /* bounded audio-owned ingress cutoff */
 } seq_sink_t;
 
 typedef struct {                      /* one part's runtime */
@@ -120,22 +126,50 @@ typedef struct {                      /* one part's runtime */
     uint8_t started;                  /* the first step has fired since start */
     uint8_t sounding;                 /* 303: a note is held */
     uint8_t held_note;
-    uint8_t source_note; /* accepted untransposed NOTE for live CC reprojection; runtime only */
+    uint8_t source_note; /* accepted source NOTE; bit7 temporary pitch overlay; runtime only */
     uint8_t trigger_rejected; /* uses existing alignment gap; chance failure is not strict failure */
+    uint8_t variation_step;           /* former alignment byte: played steps in local pass */
     uint32_t to_next;                 /* samples to the next step (Q8 fraction) */
     uint32_t to_off;                  /* 303: samples to the gate falling, Q8; 0 = none */
     uint32_t rng;                     /* DIR_RANDOM and auto-mutate */
     uint16_t bars;                    /* wraps since the pattern started (auto-mutate) */
     uint8_t ext_ticks;                /* external clock: ticks into this step */
+    uint8_t variation_cycle;          /* former tail padding: local passes, wraps at 256 */
 } seq_track_t;
+typedef char seq_track_size_24[(sizeof(seq_track_t)==24)?1:-1];
 
 typedef struct { uint32_t to_next; uint16_t bars; uint8_t pos,ext_ticks; } seq_lane_clock_t;
 typedef char lane_clock_size_8[(sizeof(seq_lane_clock_t)==8)?1:-1];
+#define CLOCK_PROTOCOL ((1u << 16) | 1u) /* version1 / basic capability1, not a register address */
+enum { CLOCK_LEGACY, CLOCK_STANDALONE, CLOCK_LEAD, CLOCK_FOLLOW };
+enum { CLOCK_STOPPED, CLOCK_WAITING, CLOCK_RUNNING, CLOCK_LOST, CLOCK_TRANSITION };
+#define CLOCK_RETIRED 1u
+#define CLOCK_TICK_VALID 2u
+#define CLOCK_CONFIG_APPLIED 4u
+#define CLOCK_INVALIDATED 8u
+/* Runtime only; no persistent settings ABI change. Explicit 20 bytes, no spare-byte assumption. */
 typedef struct {
+    uint32_t tick_lo,tick_hi,generation,age;
+    uint8_t role_source,state,pending,flags;
+} clock_runtime_t;
+typedef char clock_runtime_size_20[(sizeof(clock_runtime_t)==20)?1:-1];
+/* One selected lane's accepted forward pass. Runtime only; never serialized. */
+enum { FREEZE_RECORD, FREEZE_REQUEST, FREEZE_HELD };
+typedef struct {
+    bpart_t bass; /* drums use step[].flags as accepted-hit bits */
+    volatile uint8_t state,count;
+    uint8_t destination,reserved;
+} pattern_freeze_t;
+typedef char freeze_size_148[(sizeof(pattern_freeze_t)==148)?1:-1];
+typedef struct {
+    pattern_freeze_t *freeze;
+    pattern_variation_t variation; /* stopped-configured, transient playback overlay */
+    volatile clock_runtime_t clock; /* audio state; main snapshots/retirement under guard */
     uint8_t *lane_sound; /* audio-owned published metadata view; null retains old algorithm */
     seq_lane_clock_t lane[20]; /* voices1..10; voice0 and pitched lanes reuse t[] */
     uint32_t lane_pending; /* applied intent awaits a local step, one bit per lane */
     uint8_t lane_enabled; /* effective musical-boundary clock mode; uses alignment padding */
+    uint16_t *rate_units; /* LAN2: engine-owned .pool, BPM tenths per in-flight interval; 0 means external Q10 */
     uint8_t lane_rate[10]; /* 25 x 3 bits, latched through current interval */
     pattern_t *pat;                   /* NPAT patterns (the project's) */
     song_t *song;                     /* the project's song (may be 0) */
@@ -163,10 +197,9 @@ typedef struct {
     uint32_t ext_since;               /* samples since the last external clock (tempo estimate) */
     uint32_t ext_period;              /* smoothed samples per external clock, Q8 */
     volatile uint32_t ext_pending;    /* external clocks received, not yet consumed */
-    /* Audio-owner publication; main reads under stopped reservation. Saturate
-     * at UINT32_MAX so old confirmations can never revive after wrap. */
-    volatile uint32_t transport_epoch, stop_epoch;
+    volatile uint32_t transport_epoch, stop_epoch; /* preserve qualified action witnesses */
     volatile uint8_t req_start, req_stop, req_cont; /* transport requests from the UI / MIDI */
+    uint8_t out_stop_pending;          /* bit0 retry FC; bit1 retired local-only Stop; target not qualified */
     uint32_t mut_rng[NBASS];          /* auto-mutate random streams */
     uint8_t bass_notes_out[NBASS], bass_channels_out[NBASS]; /* actually emitted ownership;255 inactive */
     uint8_t pad_notes_out[3], pad_channel_out, pad_status; /* five runtime bytes;255 inactive */
@@ -177,6 +210,10 @@ typedef struct {
 typedef char seq_transport_epochs_aligned[((__builtin_offsetof(seq_t,transport_epoch)|__builtin_offsetof(seq_t,stop_epoch))&3u)==0?1:-1];
 
 /* Audio owner: a single effective flag proves pointer/nonempty-song prerequisites. */
+static inline int seq_arrangement_empty(const seq_t *s)
+{
+    return s->arrangement.intent && (s->arrangement.intent->flags&ARR_ENABLED) && s->song && !s->song->len;
+}
 static inline __attribute__((always_inline)) void seq_arrangement_apply_flags(seq_t *s)
 {
     const arrangement_settings_t *intent = s->arrangement.intent;
@@ -184,6 +221,7 @@ static inline __attribute__((always_inline)) void seq_arrangement_apply_flags(se
     if (!s->playing && intent) {
         if (s->song && s->song_start >= s->song->len) s->song_start = 0;
         s->arrangement.queued = 255;
+        if(seq_arrangement_empty(s))s->req_start=s->req_cont=0;
     }
 }
 static inline __attribute__((always_inline)) void seq_arrangement_apply(seq_t *s, const arrangement_settings_t *intent)
@@ -197,6 +235,9 @@ static inline __attribute__((always_inline)) void seq_arrangement_queue(seq_t *s
     else { s->song_start = block; s->arrangement.queued = 255; }
 }
 
+int seq_freeze_matches(const seq_t *s,int lane);
+int seq_freeze_held(const seq_t *s,int lane);
+int seq_bass_resolve(seq_t *s,int b,int source,int transpose,uint8_t *note);
 void seq_init(seq_t *s, pattern_t *patterns);
 uint32_t seq_until_event(seq_t *s, uint32_t n);
 void seq_advance(seq_t *s, uint32_t k, const seq_sink_t *o);
@@ -214,6 +255,7 @@ int seq_lane_latched_rate(const seq_t *s,int lane);
 
 /* main loop / MIDI side (all are flag writes picked up at the next block) */
 void seq_start(seq_t *s);             /* from step 1 of the current (or cued) pattern */
+void seq_transport_retire(seq_t *s); /* explicit route/load invalidation, not note reconciliation */
 void seq_stop(seq_t *s);
 void seq_notes_clear(seq_t *s,const seq_sink_t *sink);
 void seq_midi_prepare(seq_t *s,int connected,const seq_sink_t *sink); /* cleanup only; never retries On */
@@ -224,7 +266,9 @@ int seq_pad_channel_available(const seq_t *s,int channel);
 int seq_pad_desired(const seq_t *s,uint8_t notes[3]);
 int seq_pad_pending(const seq_t *s);
 void seq_continue(seq_t *s);
-void seq_ext_clock(seq_t *s);         /* one 24-ppqn tick (USB MIDI 0xF8) */
+void seq_ext_clock(seq_t *s);
+int seq_clock_admit(seq_t *s,unsigned source,unsigned status);
+void seq_clock_request(seq_t *s,uint8_t packed,const seq_sink_t *o);         /* one 24-ppqn tick (USB MIDI 0xF8) */
 void seq_cue(seq_t *s, int pattern);  /* every part, at the end of the bar (now, if stopped) */
 void seq_cue_part(seq_t *s, int part, int pattern);
 void seq_chain(seq_t *s, int a, int b);
@@ -236,3 +280,5 @@ uint32_t seq_step_q8(const seq_t *s, int rate);
 float seq_tempo(const seq_t *s);      /* the tempo in effect (internal or measured) */
 int seq_part_len(const seq_t *s, int t);         /* steps in part t's pattern */
 int seq_next_step(seq_t *s, int t, int p);       /* the step after p (direction; no commit) */
+
+void seq_lane_mark_pending(seq_t *s,int lane,int rate);

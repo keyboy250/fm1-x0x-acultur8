@@ -7,6 +7,11 @@ extern cc_stats_t cc_stats;
 /* Main context only. IRQ producers may only publish input packets. */
 int cc_message(uint32_t packet,uint8_t source);
 int cc_parameter(uint16_t number,uint32_t value,uint8_t source);
+int cc_generation_snapshot(unsigned source,unsigned page,unsigned index,uint32_t *words);
+void cc_generation_reset(void);
+void cc_generation_service(void);
+unsigned cc_mode(void);
+int cc_set_mode(unsigned mode); /* main-only native GLO;0 FULL,1 SIMPLE,2 OFF */
 void cc_reset_source(uint8_t source);
 int cc_coalescable(uint32_t packet);
 int cc_recover(void);

@@ -10,11 +10,12 @@ assert.ok(input.includes('function pointerUp'));
 const WHITE=[0,2,4,6,7,9,11,12,14,16,18,19,21,23,24,26],BLACK=[1,3,5,8,10,13,15,17,20,22,25];
 function surface(send=()=>{}){
  let now=0,serial=0;const timers=new Map(),captures=new Map(),messages=[],globals=new Map();
- const element=()=>({listeners:new Map(),classList:{toggle(){}},setAttribute(){},
+ const element=()=>({listeners:new Map(),classList:{toggle(){}},setAttribute(){},focus(){},contains(){return true;},
    addEventListener(type,fn){this.listeners.set(type,fn);},setPointerCapture(id){captures.set(id,this);},hasPointerCapture(id){return captures.get(id)===this;}});
  const device=element(),keys=Array.from({length:27},()=>({g:element(),hit:element()}));
  const buttons={PLAY:{bit:10,g:element(),hit:element()}},context=vm.createContext({
    device,keys,buttons,knobs:{},WHITE_K:WHITE,BLACK_K:BLACK,BTN:{PLAY:10,REC:11,SEL:1,HOME:6,'OCT-':12,'OCT+':13},
+   $:()=>({checked:true,addEventListener(){}}),prefs:{},savePrefs(){},setState(){},document:{activeElement:{}},clearTimeout:id=>timers.delete(id),
    performance:{now:()=>now},setTimeout:(fn,delay)=>{timers.set(++serial,{fn,at:now+delay});return serial;},
    addEventListener:(type,fn)=>globals.set(type,fn),post:m=>{messages.push(m);send(m);}});
  vm.runInContext(input,context);vm.runInContext('node={port:{postMessage:post}}',context);
@@ -43,7 +44,7 @@ function surface(send=()=>{}){
  s.up(7);s.advance(0);assert.equal(s.mask(),0);
  // Independent touch contacts and computer-keyboard ownership remain additive.
  s.down(0,1);s.down(7,2);s.keyboard('keydown','KeyQ');s.up(0,1,'pointercancel');assert.equal(s.mask(),1|(1<<7));
- s.keyboard('keyup','KeyQ');assert.equal(s.mask(),1<<7);s.up(7,2,'pointercancel');assert.equal(s.mask(),0);
+ s.keyboard('keyup','KeyQ');s.advance(59);assert.equal(s.mask(),1|(1<<7));s.advance(1);assert.equal(s.mask(),1<<7);s.up(7,2,'pointercancel');assert.equal(s.mask(),0);
  s.down(0,1);s.down(0,2);s.up(0,1,'pointercancel');assert.equal(s.mask(),1);s.up(0,2,'pointercancel');assert.equal(s.mask(),0);
  // Lost capture without a replacement still retains a short valid press.
  s.down(0);s.up(0,1,'lostpointercapture');s.advance(59);assert.equal(s.mask(),1);s.advance(1);assert.equal(s.mask(),0);
@@ -64,7 +65,11 @@ async function instrument(){
    s.advance(128000/44100);while(pending.length)await p.onMessage(pending.shift());
    currentTime+=128/44100;p.process([],[[new Float32Array(128),new Float32Array(128)]]);
  }};
- await render(175);return {p,s,render};
+ await render(175);
+ // This fixture tests step editing; the new startup screen is HOME.
+ await p.onMessage({type:"buttons",mask:1<<4});await render(25);
+ await p.onMessage({type:"buttons",mask:0});await render(25);
+ return {p,s,render};
 }
 const whiteMask=WHITE.reduce((mask,k)=>mask|(1<<k),0),pattern=p=>p.ex.web_lit_keys()&whiteMask;
 {

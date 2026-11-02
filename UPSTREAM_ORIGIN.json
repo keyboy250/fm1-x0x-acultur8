@@ -1,0 +1,58 @@
+{
+  "original_project": "https://github.com/charlesvestal/fm1-x0x",
+  "original_author": "Charles Vestal and upstream contributors",
+  "foundation_project": "https://github.com/hugelton/Felucca",
+  "foundation_author": "Leo Kuroshita / Hugelton Instruments",
+  "parent_provenance": {
+    "original_project": "https://github.com/charlesvestal/fm1-x0x",
+    "original_author": "Charles Vestal and upstream contributors",
+    "foundation_project": "https://github.com/hugelton/Felucca",
+    "foundation_author": "Leo Kuroshita / Hugelton Instruments",
+    "parent_provenance": {
+      "original_project": "https://github.com/charlesvestal/fm1-x0x",
+      "original_author": "Charles Vestal and upstream contributors",
+      "foundation_project": "https://github.com/hugelton/Felucca",
+      "foundation_author": "Leo Kuroshita / Hugelton Instruments",
+      "parent_credits_packet": {
+        "original_project": "https://github.com/charlesvestal/fm1-x0x",
+        "original_author": "Charles Vestal and upstream contributors",
+        "foundation_project": "https://github.com/hugelton/Felucca",
+        "foundation_author": "Leo Kuroshita / Hugelton Instruments",
+        "downloaded_commit": "54194c54bb01e9d9b3fe9d641b3ddfa512ac04a3",
+        "previous_integration_review_base": "2e31c517ded3732c58b845eb0c800fe018004b8d",
+        "runtime_delta_files": 0,
+        "credits_applied": true,
+        "packaging_revision": "credits-1",
+        "qualified_firmware_sha256": "e57da98b5377abb969c07870b9e756e8f249d0a1bd1912074520fa7611490772",
+        "original_qualified_source_sha256": "3cd9d7b8aa0ba00b8afdfcb995507a277824e51a9ef2f3e87b2a72a29702737a"
+      },
+      "candidate_version": "0.1.27-sysexfix",
+      "candidate_identity": "FM-1_9000127",
+      "parent_source_sha256": "101d1ba1942b2396250fcd944c06756655666e8504d312aae0a4a62ad363397f",
+      "runtime_changes": [
+        "normal-loop SysEx mailbox ownership guard",
+        "capability build identity"
+      ],
+      "credits_preserved": true,
+      "published": false
+    },
+    "parent_source_sha256": "aaab66e844803bba066948b3551ceb6ce83e4343798b79eaacb11ba36ea0536f",
+    "candidate_version": "0.1.28-inboxfix",
+    "candidate_identity": "FM-1_9000128",
+    "runtime_changes": [
+      "normal-loop empty-inbox ownership return",
+      "capability build identity"
+    ],
+    "credits_preserved": true,
+    "published": false
+  },
+  "parent_source_sha256": "72c382d4f91e0a5565dd304b18d729f09df0e2c31dc78acdbb55377c596f85c5",
+  "candidate_version": "0.1.28-clockfix",
+  "candidate_identity": "FM-1_9000128",
+  "runtime_changes": [
+    "Timestamp outgoing musical MIDI packets by audio sample position",
+    "Service published due USB TX during render;RX/editor/configuration remain outside render"
+  ],
+  "credits_preserved": true,
+  "published": false
+}
