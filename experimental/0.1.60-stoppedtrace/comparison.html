@@ -1,0 +1,150 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Feature comparison: public .32 to kick .60 · Acultur8 FM-1 Kick</title><meta name="description" content="A styled comparison of the pinned public .32 release and .60 kick prerelease: new controls, inherited features, evidence and open qualification."><link rel="canonical" href="https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.60-stoppedtrace/comparison.html"><meta property="og:type" content="website"><meta property="og:title" content="Feature comparison: public .32 to kick .60 · Acultur8 FM-1 Kick"><meta property="og:description" content="A styled comparison of the pinned public .32 release and .60 kick prerelease: new controls, inherited features, evidence and open qualification."><meta property="og:url" content="https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.60-stoppedtrace/comparison.html"><meta property="og:image" content="https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.60-stoppedtrace/images/social-banner.png"><meta property="og:image:alt" content="Acultur8 FM-1 Kick experimental prerelease, mint waveforms and amber bass rings"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.60-stoppedtrace/images/social-banner.png"><link rel="stylesheet" href="site.css"></head><body><a class="skip" href="#content">Skip to content</a><header><nav aria-label="Main navigation"><a class="brand" href="index.html">ACULTUR8<span style="color:var(--mint)"> / KICK</span></a><a  href="index.html">Overview</a><a  href="faq.html">FAQ</a><a  href="midi.html">MIDI / CC</a><a class=active aria-current=page href="comparison.html">Compare</a><a  href="tutorials.html">Tutorials</a></nav></header><main id="content"><p class="eyebrow">Comparative features / pinned release baseline</p><h1>What changed.<br>What stayed. What’s next.</h1><p class="lede">Compare the public .32 Acultur8 release with this .60 kick prerelease. Clear feature scope, with the evidence and limits beside each claim.</p><div class="grid"><article class="card"><span class="pill">KICK ADDITIONS</span><h2>A deeper kick.</h2><p>Hybrid layers, separate envelopes, velocity expression and 16 native preset slots.</p></article><article class="card"><span class="pill">INHERITED FOUNDATION</span><h2>The wider engine.</h2><p>909, 808, two 303 parts, BREAK, all 25 sound strips and the established song workflow.</p></article><article class="card"><span class="pill open">QUALIFICATION OPEN</span><h2>Know the bounds.</h2><p>Physical core1 stack/deadline coverage and the cause of earlier .59 counter events remain open.</p></article></div><div class="note">Baseline: Acultur8 <a href="https://github.com/keyboy250/fm1-x0x-acultur8/tree/v0.1.32-straightbeta">v0.1.32-straightbeta</a>, compared with reviewed <a href="https://github.com/keyboy250/fm1-x0x-acultur8/blob/v0.1.60-stoppedtrace/docs/FEATURE_COMPARISON.md">.60 source documentation</a>. This is not a comparison against the latest upstream X0X. New Acultur8 work is distinguished from inherited features.</div><p>Scroll sideways on smaller screens to read the complete comparison.</p><div class="table-scroll comparison" tabindex="0" role="region" aria-label="Feature comparison between Acultur8 public .32 and .60 kick prerelease"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Public .32 baseline</th>
+<th>.60 kick prerelease</th>
+<th>Evidence / limits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>909, 808, two 303 parts, BREAK and song workflow</td>
+<td>Existing X0X/Acultur8 foundation</td>
+<td>Retained</td>
+<td>Inherited engine, not a new .60 invention</td>
+</tr>
+<tr>
+<td>All 25 sound strips</td>
+<td>Already documented</td>
+<td>Retained, with exact-output strip/workload changes in later development</td>
+<td>Full software checks; physical sweeps covered representative kick controls, not every combination</td>
+</tr>
+<tr>
+<td>Per-sound HP/LP, boost and limiter</td>
+<td>Already documented</td>
+<td>Retained; shared mono processing work reduced</td>
+<td>Exact PCM/state comparisons and representative quiet tests</td>
+</tr>
+<tr>
+<td>Independent lanes and expanded rate families</td>
+<td>Present in earlier Acultur8</td>
+<td>Retained</td>
+<td>Do not present these as new kick-only features</td>
+</tr>
+<tr>
+<td>Arrangement/chords/bass following</td>
+<td>Already documented</td>
+<td>Retained</td>
+<td>Host/scenario evidence; no complete DAW/live-set certification</td>
+</tr>
+<tr>
+<td>Hybrid 808 wave layer and 39 controls</td>
+<td>Not in pinned .32 drum808 source</td>
+<td>Active saved hybrid kick with built-in sources and optional USER1 reference</td>
+<td>Current source, exact-value codec and scoped listening</td>
+</tr>
+<tr>
+<td>Separate synth/wave envelopes and click shaping</td>
+<td>No hybrid layer in that pinned source</td>
+<td>Current hybrid controls</td>
+<td>Screen milliseconds differ from stored raw values</td>
+</tr>
+<tr>
+<td>Native kick preset bank</td>
+<td>No 16-slot hybrid kick bank in pinned .32</td>
+<td>16 native kick slots; confirmed STORE/RECALL</td>
+<td>Exact record readback, unchanged other slots and normal restart passed</td>
+</tr>
+<tr>
+<td>Starter sound</td>
+<td>No Favorite Slot 1 package in pinned release</td>
+<td>One selected preset, not an untuned draft bank</td>
+<td>Export bytes, codec round-trip and separate quiet audition passed</td>
+</tr>
+<tr>
+<td>Kick step velocity tiers and jitter</td>
+<td>Not part of the pinned hybrid extension</td>
+<td>LOW/MID/HIGH tiers, per-step selection, jitter and modulation</td>
+<td>Retained ABI; no new independent resolved-velocity telemetry claim</td>
+</tr>
+<tr>
+<td>Long-tail hybrid retrigger handling</td>
+<td>Not applicable to the absent hybrid layer</td>
+<td>Existing residual-ramp handling retained</td>
+<td>Current-sound and overlapping 1,773 ms quiet checks; not exhaustive phase/velocity coverage</td>
+</tr>
+<tr>
+<td>PHASE 303B option</td>
+<td>Not part of that release's stated extension</td>
+<td>Native option retained from later development</td>
+<td>Four native/unmapped inventory rows; do not imply direct CC binding</td>
+</tr>
+<tr>
+<td>Complete inventory</td>
+<td>753 rows, draft-1-actions-prototype-1</td>
+<td>803 rows, draft-2-kick-presets-1</td>
+<td>50 added inventory rows: 46 addressed kick controls/actions/tier plus 4 native PHASE entries</td>
+</tr>
+<tr>
+<td>Preset action guards</td>
+<td>No later kick-preset ABI</td>
+<td>Explicit context, request token, arm/execute and stopped-only transaction</td>
+<td>Source-owned MIDI contexts are independent of panel focus</td>
+</tr>
+<tr>
+<td>Timing/calibration and clock routing</td>
+<td>Earlier timing work already present</td>
+<td>Retained</td>
+<td>Calibration preserved across normal restart; no new universal MIDI-jitter claim</td>
+</tr>
+<tr>
+<td>P2/P11 workload reduction work</td>
+<td>Earlier engine checkpoint</td>
+<td>Later hat/table RAM placement and strip work reductions retained</td>
+<td>Host improvements and bounded device observations, not every workload</td>
+</tr>
+<tr>
+<td>Stopped dropout capture</td>
+<td>Earlier diagnostic behavior differs</td>
+<td>.60 can retain a dropout block even when stopped</td>
+<td>A diagnostic capability, not attribution of a fixed root cause</td>
+</tr>
+<tr>
+<td>Test scope</td>
+<td>Earlier release's own evidence</td>
+<td>135 checks, 39 host scenarios, six kick groups; current bounded device checks</td>
+<td>Host identity 9000138 and target identity 9000160 are distinct</td>
+</tr>
+<tr>
+<td>Sustained physical observation</td>
+<td>Keep earlier results in their original scope</td>
+<td>User-timed complex P11 25 minutes, 0 dropouts / 0 guards</td>
+<td>One unit and workload; earlier .59 events remain unexplained</td>
+</tr>
+<tr>
+<td>Physical core1 / full stack and deadlines</td>
+<td>Not established by this comparison</td>
+<td>Still open</td>
+<td>IRQ 1,092 / 7,936 B is not a whole-system or core1 bound</td>
+</tr>
+<tr>
+<td>Automatic preset importer / mod-pack loader</td>
+<td>Not promised here</td>
+<td>Deferred; JSON exporter is read-only</td>
+<td>Use the supplied native-control reference and an empty destination slot</td>
+</tr>
+<tr>
+<td>Native Tightness Factor</td>
+<td>Not included by this comparison</td>
+<td>Deferred</td>
+<td>Do not promise it in promo or tutorials</td>
+</tr>
+<tr>
+<td>Browser, Pages and physical acceptance</td>
+<td>Separate evidence boundaries</td>
+<td>Remain separate</td>
+<td>Documentation is now online; it does not certify every browser/DAW setup</td>
+</tr>
+</tbody>
+</table></div><div class="actions"><a class="button primary" href="https://github.com/keyboy250/fm1-x0x-acultur8/releases/tag/v0.1.60-stoppedtrace">Read the prerelease notes</a><a class="button" href="faq.html">Search the FAQ</a></div></main><footer><p><strong>ACULTUR8 · FM-1 KICK · 0.1.60-stoppedtrace</strong> / Experimental prerelease</p><p>Built on <a href="https://github.com/charlesvestal/fm1-x0x">X0X by Charles Vestal and contributors</a>, based on Felucca by Leo Kuroshita / Hugelton Instruments. Acultur8 additions are independent; no upstream or manufacturer endorsement is implied.</p><p><a href="https://github.com/keyboy250/fm1-x0x-acultur8/releases/tag/v0.1.60-stoppedtrace">GitHub release, source and recovery downloads</a> · <a href="../../">Project home &amp; earlier releases</a></p></footer></body></html>

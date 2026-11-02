@@ -1,0 +1,14 @@
+ACULTUR8 FM-1 KICK / EXPERIMENTAL PRERELEASE
+
+Hybrid kick shaping. Native presets. Your groove.
+Explore the FM-1 kick prerelease, with a searchable FAQ, complete MIDI/CC map, feature comparison and tutorials. Read the tested scope and recovery steps before updating.
+
+https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.60-stoppedtrace/
+
+Longer caption:
+Shape the hybrid 808 kick, add expression to each hit and keep a favourite in the native preset bank. One tested FM-1 completed a user-timed 25-minute complex pattern with 0 dropouts / 0 guards. This is a bounded observation, not a guarantee for every setup; physical core1 stack/deadline qualification and earlier .59 event attribution remain open.
+
+Downloads: https://github.com/keyboy250/fm1-x0x-acultur8/releases/tag/v0.1.60-stoppedtrace
+Banner: https://keyboy250.github.io/fm1-x0x-acultur8/experimental/0.1.60-stoppedtrace/images/social-banner.png
+
+No social post has been sent automatically.
